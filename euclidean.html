@@ -1,0 +1,132 @@
+
+<!doctype html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module euclidean</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>euclidean</strong></big></big> ($Date: 2008/21/04 $)</font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap_v0.1/euclidean.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap_v0.1/euclidean.py</a></font></td></tr></table>
+    <p><tt>Euclidean&nbsp;is&nbsp;a&nbsp;collection&nbsp;of&nbsp;python&nbsp;utilities&nbsp;for&nbsp;complex&nbsp;numbers,&nbsp;paths,&nbsp;polygons&nbsp;&amp;&nbsp;Vec3s.<br>
+&nbsp;<br>
+To&nbsp;use&nbsp;euclidean,&nbsp;install&nbsp;python&nbsp;2.x&nbsp;on&nbsp;your&nbsp;machine,&nbsp;which&nbsp;is&nbsp;avaliable&nbsp;from&nbsp;<a href="http://www.python.org/download/">http://www.python.org/download/</a><br>
+&nbsp;<br>
+Then&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;euclidean&nbsp;is&nbsp;in,&nbsp;type&nbsp;'python'&nbsp;in&nbsp;a&nbsp;shell&nbsp;to&nbsp;run&nbsp;the&nbsp;python&nbsp;interpreter.&nbsp;&nbsp;Finally&nbsp;type<br>
+'import&nbsp;euclidean'&nbsp;to&nbsp;import&nbsp;these&nbsp;utilities&nbsp;and&nbsp;'from&nbsp;vec3&nbsp;import&nbsp;Vec3'&nbsp;to&nbsp;import&nbsp;the&nbsp;Vec3&nbsp;class.<br>
+&nbsp;<br>
+&nbsp;<br>
+Below&nbsp;are&nbsp;examples&nbsp;of&nbsp;euclidean&nbsp;use.<br>
+&nbsp;<br>
+&gt;&gt;&gt;&nbsp;from&nbsp;euclidean&nbsp;import&nbsp;*<br>
+&gt;&gt;&gt;&nbsp;from&nbsp;vec3&nbsp;import&nbsp;Vec3<br>
+&gt;&gt;&gt;&nbsp;origin=Vec3()<br>
+&gt;&gt;&gt;&nbsp;right=Vec3(1.0,0.0,0.0)<br>
+&gt;&gt;&gt;&nbsp;back=Vec3(0.0,1.0,0.0)<br>
+&gt;&gt;&gt;&nbsp;<a href="#-getAngleAroundZAxisDifference">getAngleAroundZAxisDifference</a>(back,&nbsp;right)<br>
+1.5707963267948966<br>
+&gt;&gt;&gt;&nbsp;<a href="#-getPointMaximum">getPointMaximum</a>(right,back)<br>
+1.0,&nbsp;1.0,&nbsp;0.0<br>
+&gt;&gt;&gt;&nbsp;polygon=[origin,&nbsp;right,&nbsp;back]<br>
+&gt;&gt;&gt;&nbsp;<a href="#-getPolygonLength">getPolygonLength</a>(polygon)<br>
+3.4142135623730949<br>
+&gt;&gt;&gt;&nbsp;<a href="#-getPolygonArea">getPolygonArea</a>(polygon)<br>
+0.5</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#fffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="math.html">math</a><br>
+</td><td width="25%" valign=top></td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-addXIntersections"><strong>addXIntersections</strong></a>(loop, solidIndex, xIntersectionList, y)</dt><dd><tt>Add&nbsp;the&nbsp;x&nbsp;intersections&nbsp;for&nbsp;a&nbsp;loop.</tt></dd></dl>
+ <dl><dt><a name="-addXIntersectionsFromLoops"><strong>addXIntersectionsFromLoops</strong></a>(loops, solidIndex, xIntersectionList, y)</dt><dd><tt>Add&nbsp;the&nbsp;x&nbsp;intersections&nbsp;for&nbsp;the&nbsp;loops.</tt></dd></dl>
+ <dl><dt><a name="-compareSolidXByX"><strong>compareSolidXByX</strong></a>(solidXFirst, solidXSecond)</dt></dl>
+ <dl><dt><a name="-getAngleAroundZAxisDifference"><strong>getAngleAroundZAxisDifference</strong></a>(subtractFromVec3, subtractVec3)</dt><dd><tt>Get&nbsp;the&nbsp;angle&nbsp;around&nbsp;the&nbsp;Z&nbsp;axis&nbsp;difference&nbsp;between&nbsp;a&nbsp;pair&nbsp;of&nbsp;Vec3s.<br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+subtractFromVec3&nbsp;--&nbsp;Vec3&nbsp;whose&nbsp;angle&nbsp;will&nbsp;be&nbsp;subtracted&nbsp;from<br>
+subtractVec3&nbsp;--&nbsp;Vec3&nbsp;whose&nbsp;angle&nbsp;will&nbsp;be&nbsp;subtracted</tt></dd></dl>
+ <dl><dt><a name="-getAroundLoop"><strong>getAroundLoop</strong></a>(begin, end, loop)</dt><dd><tt>Get&nbsp;an&nbsp;arc&nbsp;around&nbsp;a&nbsp;loop.</tt></dd></dl>
+ <dl><dt><a name="-getAwayPath"><strong>getAwayPath</strong></a>(path, radius)</dt><dd><tt>Get&nbsp;a&nbsp;loop&nbsp;with&nbsp;only&nbsp;the&nbsp;points&nbsp;that&nbsp;are&nbsp;far&nbsp;enough&nbsp;away&nbsp;from&nbsp;each&nbsp;other.</tt></dd></dl>
+ <dl><dt><a name="-getDistanceSquaredToPlaneSegment"><strong>getDistanceSquaredToPlaneSegment</strong></a>(segmentBegin, segmentEnd, point)</dt><dd><tt>Get&nbsp;the&nbsp;distance&nbsp;squared&nbsp;from&nbsp;a&nbsp;point&nbsp;to&nbsp;the&nbsp;x&nbsp;&amp;&nbsp;y&nbsp;components&nbsp;of&nbsp;a&nbsp;segment.</tt></dd></dl>
+ <dl><dt><a name="-getHalfSimplifiedLoop"><strong>getHalfSimplifiedLoop</strong></a>(loop, radius, remainder)</dt><dd><tt>Get&nbsp;the&nbsp;loop&nbsp;with&nbsp;half&nbsp;of&nbsp;the&nbsp;points&nbsp;inside&nbsp;the&nbsp;channel&nbsp;removed.</tt></dd></dl>
+ <dl><dt><a name="-getNearestDistanceSquaredIndex"><strong>getNearestDistanceSquaredIndex</strong></a>(point, loop)</dt><dd><tt>Get&nbsp;the&nbsp;distance&nbsp;squared&nbsp;to&nbsp;the&nbsp;nearest&nbsp;segment&nbsp;of&nbsp;the&nbsp;loop&nbsp;and&nbsp;index&nbsp;of&nbsp;that&nbsp;segment.</tt></dd></dl>
+ <dl><dt><a name="-getPathLength"><strong>getPathLength</strong></a>(path)</dt><dd><tt>Get&nbsp;the&nbsp;length&nbsp;of&nbsp;a&nbsp;path&nbsp;(&nbsp;an&nbsp;open&nbsp;polyline&nbsp;).</tt></dd></dl>
+ <dl><dt><a name="-getPathRoundZAxisByPlaneAngle"><strong>getPathRoundZAxisByPlaneAngle</strong></a>(planeAngle, path)</dt><dd><tt>Get&nbsp;Vec3&nbsp;array&nbsp;rotated&nbsp;by&nbsp;a&nbsp;plane&nbsp;angle.<br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+planeAngle&nbsp;-&nbsp;plane&nbsp;angle&nbsp;of&nbsp;the&nbsp;rotation<br>
+path&nbsp;-&nbsp;Vec3&nbsp;array&nbsp;whose&nbsp;rotation&nbsp;will&nbsp;be&nbsp;returned</tt></dd></dl>
+ <dl><dt><a name="-getPlaneDot"><strong>getPlaneDot</strong></a>(vec3First, vec3Second)</dt><dd><tt>Get&nbsp;the&nbsp;dot&nbsp;product&nbsp;of&nbsp;the&nbsp;x&nbsp;and&nbsp;y&nbsp;components&nbsp;of&nbsp;a&nbsp;pair&nbsp;of&nbsp;Vec3s.</tt></dd></dl>
+ <dl><dt><a name="-getPlaneDotPlusOne"><strong>getPlaneDotPlusOne</strong></a>(vec3First, vec3Second)</dt><dd><tt>Get&nbsp;the&nbsp;dot&nbsp;product&nbsp;plus&nbsp;one&nbsp;of&nbsp;the&nbsp;x&nbsp;and&nbsp;y&nbsp;components&nbsp;of&nbsp;a&nbsp;pair&nbsp;of&nbsp;Vec3s.</tt></dd></dl>
+ <dl><dt><a name="-getPointMaximum"><strong>getPointMaximum</strong></a>(firstPoint, secondPoint)</dt><dd><tt>Get&nbsp;a&nbsp;point&nbsp;with&nbsp;each&nbsp;component&nbsp;the&nbsp;maximum&nbsp;of&nbsp;the&nbsp;respective&nbsp;components&nbsp;of&nbsp;a&nbsp;pair&nbsp;of&nbsp;Vec3s.</tt></dd></dl>
+ <dl><dt><a name="-getPointMinimum"><strong>getPointMinimum</strong></a>(firstPoint, secondPoint)</dt><dd><tt>Get&nbsp;a&nbsp;point&nbsp;with&nbsp;each&nbsp;component&nbsp;the&nbsp;minimum&nbsp;of&nbsp;the&nbsp;respective&nbsp;components&nbsp;of&nbsp;a&nbsp;pair&nbsp;of&nbsp;Vec3s.</tt></dd></dl>
+ <dl><dt><a name="-getPointPlusSegmentWithLength"><strong>getPointPlusSegmentWithLength</strong></a>(length, point, segment)</dt><dd><tt>Get&nbsp;point&nbsp;plus&nbsp;a&nbsp;segment&nbsp;scaled&nbsp;to&nbsp;a&nbsp;given&nbsp;length.</tt></dd></dl>
+ <dl><dt><a name="-getPolar"><strong>getPolar</strong></a>(angle, radius)</dt><dd><tt>Get&nbsp;polar&nbsp;complex&nbsp;from&nbsp;counterclockwise&nbsp;angle&nbsp;from&nbsp;1,&nbsp;0&nbsp;and&nbsp;radius.<br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+angle&nbsp;--&nbsp;counterclockwise&nbsp;angle&nbsp;from&nbsp;1,&nbsp;0<br>
+radius&nbsp;--&nbsp;radius&nbsp;of&nbsp;complex</tt></dd></dl>
+ <dl><dt><a name="-getPolygonArea"><strong>getPolygonArea</strong></a>(polygon)</dt><dd><tt>Get&nbsp;the&nbsp;xy&nbsp;plane&nbsp;area&nbsp;of&nbsp;a&nbsp;polygon.</tt></dd></dl>
+ <dl><dt><a name="-getPolygonLength"><strong>getPolygonLength</strong></a>(polygon)</dt><dd><tt>Get&nbsp;the&nbsp;length&nbsp;of&nbsp;a&nbsp;polygon&nbsp;perimeter.</tt></dd></dl>
+ <dl><dt><a name="-getRotatedClockwiseQuarterAroundZAxis"><strong>getRotatedClockwiseQuarterAroundZAxis</strong></a>(vector3)</dt><dd><tt>Get&nbsp;vector3&nbsp;rotated&nbsp;a&nbsp;quarter&nbsp;clockwise&nbsp;turn&nbsp;around&nbsp;Z&nbsp;axis.</tt></dd></dl>
+ <dl><dt><a name="-getRotatedWiddershinsQuarterAroundZAxis"><strong>getRotatedWiddershinsQuarterAroundZAxis</strong></a>(vector3)</dt><dd><tt>Get&nbsp;Vec3&nbsp;rotated&nbsp;a&nbsp;quarter&nbsp;widdershins&nbsp;turn&nbsp;around&nbsp;Z&nbsp;axis.</tt></dd></dl>
+ <dl><dt><a name="-getRoundXAxis"><strong>getRoundXAxis</strong></a>(angle, vector3)</dt><dd><tt>Get&nbsp;Vec3&nbsp;rotated&nbsp;around&nbsp;X&nbsp;axis&nbsp;from&nbsp;widdershins&nbsp;angle&nbsp;and&nbsp;Vec3.<br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+angle&nbsp;-&nbsp;widdershins&nbsp;angle&nbsp;from&nbsp;1,&nbsp;0<br>
+vector3&nbsp;-&nbsp;Vec3&nbsp;whose&nbsp;rotation&nbsp;will&nbsp;be&nbsp;returned</tt></dd></dl>
+ <dl><dt><a name="-getRoundYAxis"><strong>getRoundYAxis</strong></a>(angle, vector3)</dt><dd><tt>Get&nbsp;Vec3&nbsp;rotated&nbsp;around&nbsp;Y&nbsp;axis&nbsp;from&nbsp;widdershins&nbsp;angle&nbsp;and&nbsp;Vec3.<br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+angle&nbsp;-&nbsp;widdershins&nbsp;angle&nbsp;from&nbsp;1,&nbsp;0<br>
+vector3&nbsp;-&nbsp;Vec3&nbsp;whose&nbsp;rotation&nbsp;will&nbsp;be&nbsp;returned</tt></dd></dl>
+ <dl><dt><a name="-getRoundZAxis"><strong>getRoundZAxis</strong></a>(angle, vector3)</dt><dd><tt>Get&nbsp;Vec3&nbsp;rotated&nbsp;around&nbsp;Z&nbsp;axis&nbsp;from&nbsp;widdershins&nbsp;angle&nbsp;and&nbsp;Vec3.<br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+angle&nbsp;-&nbsp;widdershins&nbsp;angle&nbsp;from&nbsp;1,&nbsp;0<br>
+vector3&nbsp;-&nbsp;Vec3&nbsp;whose&nbsp;rotation&nbsp;will&nbsp;be&nbsp;returned</tt></dd></dl>
+ <dl><dt><a name="-getRoundZAxisByPlaneAngle"><strong>getRoundZAxisByPlaneAngle</strong></a>(planeAngle, vector3)</dt><dd><tt>Get&nbsp;Vec3&nbsp;rotated&nbsp;by&nbsp;a&nbsp;plane&nbsp;angle.<br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+planeAngle&nbsp;-&nbsp;plane&nbsp;angle&nbsp;of&nbsp;the&nbsp;rotation<br>
+vector3&nbsp;-&nbsp;Vec3&nbsp;whose&nbsp;rotation&nbsp;will&nbsp;be&nbsp;returned</tt></dd></dl>
+ <dl><dt><a name="-getRoundedPoint"><strong>getRoundedPoint</strong></a>(point)</dt><dd><tt>Get&nbsp;point&nbsp;with&nbsp;each&nbsp;component&nbsp;rounded.</tt></dd></dl>
+ <dl><dt><a name="-getRoundedToThreePlaces"><strong>getRoundedToThreePlaces</strong></a>(number)</dt><dd><tt>Get&nbsp;value&nbsp;rounded&nbsp;to&nbsp;three&nbsp;places&nbsp;as&nbsp;string.</tt></dd></dl>
+ <dl><dt><a name="-getSimplifiedLoop"><strong>getSimplifiedLoop</strong></a>(loop, radius)</dt><dd><tt>Get&nbsp;loop&nbsp;with&nbsp;points&nbsp;inside&nbsp;the&nbsp;channel&nbsp;removed.</tt></dd></dl>
+ <dl><dt><a name="-getWiddershinsDot"><strong>getWiddershinsDot</strong></a>(vec3First, vec3Second)</dt><dd><tt>Get&nbsp;the&nbsp;magintude&nbsp;of&nbsp;the&nbsp;positive&nbsp;dot&nbsp;product&nbsp;plus&nbsp;one&nbsp;of&nbsp;the&nbsp;x&nbsp;and&nbsp;y&nbsp;components&nbsp;of&nbsp;a&nbsp;pair&nbsp;of&nbsp;Vec3s,&nbsp;with&nbsp;the&nbsp;reversed&nbsp;sign&nbsp;of&nbsp;the&nbsp;cross&nbsp;product.</tt></dd></dl>
+ <dl><dt><a name="-getXIntersection"><strong>getXIntersection</strong></a>(firstPoint, secondPoint, y)</dt><dd><tt>Get&nbsp;where&nbsp;the&nbsp;line&nbsp;crosses&nbsp;y.</tt></dd></dl>
+ <dl><dt><a name="-getZComponentCrossProduct"><strong>getZComponentCrossProduct</strong></a>(vec3First, vec3Second)</dt><dd><tt>Get&nbsp;z&nbsp;component&nbsp;cross&nbsp;product&nbsp;of&nbsp;a&nbsp;pair&nbsp;of&nbsp;Vec3s.</tt></dd></dl>
+ <dl><dt><a name="-isClose"><strong>isClose</strong></a>(overlapDistanceSquared, loop, pointIndex)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;the&nbsp;point&nbsp;close&nbsp;to&nbsp;another&nbsp;point&nbsp;on&nbsp;the&nbsp;loop.</tt></dd></dl>
+ <dl><dt><a name="-isLineCrossingInsideXSegment"><strong>isLineCrossingInsideXSegment</strong></a>(segmentFirstX, segmentSecondX, vector3First, vector3Second, y)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;line&nbsp;is&nbsp;crossing&nbsp;inside&nbsp;the&nbsp;x&nbsp;segment.</tt></dd></dl>
+ <dl><dt><a name="-isSegmentCompletelyInX"><strong>isSegmentCompletelyInX</strong></a>(segment, xFirst, xSecond)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;segment&nbsp;overlaps&nbsp;within&nbsp;x.</tt></dd></dl>
+ <dl><dt><a name="-isWiddershins"><strong>isWiddershins</strong></a>(polygon)</dt><dd><tt>Determines&nbsp;if&nbsp;the&nbsp;polygon&nbsp;goes&nbsp;round&nbsp;in&nbsp;the&nbsp;widdershins&nbsp;direction.</tt></dd></dl>
+ <dl><dt><a name="-isWithinChannel"><strong>isWithinChannel</strong></a>(channelRadius, pointIndex, loop)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;the&nbsp;point&nbsp;is&nbsp;within&nbsp;the&nbsp;channel&nbsp;between&nbsp;two&nbsp;adjacent&nbsp;points.</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>__author__</strong> = 'Enrique Perez (perez_enrique@yahoo.com)'<br>
+<strong>__date__</strong> = '$Date: 2008/21/04 $'<br>
+<strong>__license__</strong> = 'GPL 3.0'</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#7799ee">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Author</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#7799ee"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Enrique&nbsp;Perez&nbsp;(perez_enrique@yahoo.com)</td></tr></table>
+</body></html>
