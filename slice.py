@@ -1,5 +1,5 @@
 """
-Slice is a script to slice a GNU Triangulated Surface file.
+Slice is a script to slice a GNU Triangulated Surface file.  Slice is the first script of the skeinforge tool chain.
 
 To run slice, install python 2.x on your machine, which is avaliable from http://www.python.org/download/
 
