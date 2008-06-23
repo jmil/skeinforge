@@ -296,7 +296,8 @@ class PreferencesDialog:
 		self.master.destroy()
 
 	def openBrowser( self ):
-		os.system( webbrowser.get().name + ' ' + self.displayPreferences.filenameHelp )#used this instead of webbrowser.open() to workaround webbrowser open() bug
+		webbrowser.open(os.path.abspath(os.path.join("doc", self.displayPreferences.filenameHelp)))
+#		os.system( webbrowser.get().name + ' ' + self.displayPreferences.filenameHelp )#used this instead of webbrowser.open() to workaround webbrowser open() bug
 
 	def savePreferences( self ):
 		for preference in self.displayPreferences.archive:
