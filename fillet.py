@@ -1,6 +1,11 @@
 """
 Fillet is a script to fillet or bevel the corners on a gcode file.
 
+Fillets rounds the corners slightly in a variety of ways.  This is to reduce corner blobbing and sudden extruder acceleration.
+The default radio button choice is 'Bevel'.  If the default choice is 'Do Not Fillet', the gcode text is handed over the next tool in the
+skeinforge chain.  To run fillet, in a shell type:
+> python fillet.py
+
 To run fillet, install python 2.x on your machine, which is avaliable from http://www.python.org/download/
 
 To use the preferences dialog you'll also need Tkinter, which probably came with the python installation.  If it did not, look for it at:
@@ -18,14 +23,16 @@ To turn an STL file into filled, filleted gcode, first import the file using the
 of Art of Illusion.  Then from the Scripts submenu in the Tools menu, choose Export GNU Triangulated Surface and select the
 imported STL shape.  Then type 'python slice.py' in a shell in the folder which slice & fillet are in and when the dialog pops up, set
 the parameters and click 'Save Preferences'.  Then type 'python fill.py' in a shell in the folder which fill is in and when the dialog
-pops up, set the parameters and click 'Save Preferences'.  Then type 'python comb.py' in a shell in the folder which fill is in and when the dialog
-pops up, change the parameters if you wish but the default 'Comb Hair' is fine.  Then type 'python fillet.py' in a shell and when the dialog pops up,
-change the parameters if you wish but the default bevel is fine.  Then click 'Fillet', choose the file which you exported in
-Export GNU Triangulated Surface and the filled & filleted file will be saved with the suffix '_fillet'.
+pops up, set the parameters and click 'Save Preferences'.  Then type 'python comb.py' in a shell in the folder which fill is in and
+when the dialog pops up, change the parameters if you wish but the default 'Comb Hair' is fine.  Then type 'python stretch.py' in a
+shell in the folder which fill is in and when the dialog pops up, change the parameters if you wish but the default stretch is
+conservative.  Then type 'python fillet.py' in a shell and when the dialog pops up, change the parameters if you wish but the
+default bevel is fine.  Then click 'Fillet', choose the file which you exported in Export GNU Triangulated Surface and the filled &
+filleted file will be saved with the suffix '_fillet'.
 
 To write documentation for this program, open a shell in the fillet.py directory, then type 'pydoc -w fillet', then open 'fillet.html' in
-a browser or click on the '?' button in the dialog.  To use other functions of fillet, type 'python' in a shell to run the python interpreter,
-then type 'import fillet' to import this program.
+a browser or click on the '?' button in the dialog.  To use other functions of fillet, type 'python' in a shell to run the python
+interpreter, then type 'import fillet' to import this program.
 
 The computation intensive python modules will use psyco if it is available and run about twice as fast.  Psyco is described at:
 http://psyco.sourceforge.net/index.html
@@ -33,11 +40,11 @@ http://psyco.sourceforge.net/index.html
 The psyco download page is:
 http://psyco.sourceforge.net/download.html
 
-The following examples fillet the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder which contains
-Hollow Square.gcode, Hollow Square.gts and fillet.py.  The fillet function executes the preferred fillet type, which can be set in the dialog or by changing
-the preferences file 'fillet.csv' with a text editor or a spreadsheet program set to separate tabs.  The functions filletChainFile and
-getFilletChainGcode check to see if the text has been combed, if not they call the getCombChainGcode in comb.py to fill the text; once they
-have the combed text, then they fillet.
+The following examples fillet the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder
+which contains Hollow Square.gcode, Hollow Square.gts and fillet.py.  The fillet function executes the preferred fillet type, which
+can be set in the dialog or by changing the preferences file 'fillet.csv' with a text editor or a spreadsheet program set to separate
+tabs.  The functions filletChainFile and getFilletChainGcode check to see if the text has been combed, if not they call the
+getStretchChainGcode in stretch.py to fill the text; once they have the stretched text, then they fillet.
 
 
 > pydoc -w fillet
@@ -146,11 +153,11 @@ many lines of gcode
 """
 
 from vec3 import Vec3
-import comb
 import cStringIO
 import euclidean
 import gcodec
 import preferences
+import stretch
 import time
 import vectorwrite
 
@@ -244,8 +251,7 @@ def filletChainFile( filename = '' ):
 	suffixFilename = filename[ : filename.rfind( '.' ) ] + '_fillet.gcode'
 	gcodec.writeFileText( suffixFilename, getFilletChainGcode( gcodeText, filletPreferences ) )
 	print( 'The filleted file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
-	if filletPreferences.writeSVG.value:
-		vectorwrite.writeVectorFile( suffixFilename )
+	vectorwrite.writeSkeinforgeVectorFile( suffixFilename )
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to fillet the file.' )
 
 def filletFile( filename = '' ):
@@ -269,8 +275,7 @@ def filletFile( filename = '' ):
 	suffixFilename = filename[ : filename.rfind( '.' ) ] + '_fillet.gcode'
 	gcodec.writeFileText( suffixFilename, getFilletGcode( gcodeText, filletPreferences ) )
 	print( 'The filleted file is saved as ' + suffixFilename )
-	if filletPreferences.writeSVG.value:
-		vectorwrite.writeVectorFile( suffixFilename )
+	vectorwrite.writeSkeinforgeVectorFile( suffixFilename )
 
 def getArcPointGcode( filletPreferences, gcodeText ):
 	"Arc point a gcode linear move text into a helical point move gcode text."
@@ -297,9 +302,9 @@ def getBevelGcode( filletPreferences, gcodeText ):
 	return skein.output.getvalue()
 
 def getFilletChainGcode( gcodeText, filletPreferences = None ):
-	"Fillet a gcode linear move text.  Chain comb the gcode if it is not already combed."
-	if not gcodec.isProcedureDone( gcodeText, 'comb' ):
-		gcodeText = comb.getCombChainGcode( gcodeText )
+	"Fillet a gcode linear move text.  Chain stretch the gcode if it is not already stretched."
+	if not gcodec.isProcedureDone( gcodeText, 'stretch' ):
+		gcodeText = stretch.getStretchChainGcode( gcodeText )
 	return getFilletGcode( gcodeText, filletPreferences )
 
 def getFilletGcode( gcodeText, filletPreferences = None ):
@@ -324,9 +329,11 @@ def getFilletGcode( gcodeText, filletPreferences = None ):
 class BevelSkein:
 	"A class to bevel a skein of extrusions."
 	def __init__( self ):
+		self.bridgeExtrusionWidthOverSolid = 1.0
 		self.extruderActive = False
-		self.feedrateMinute = 600.0
+		self.feedrateMinute = 960.0
 		self.halfExtrusionWidth = 0.2
+		self.layerHalfExtrusionWidth = self.halfExtrusionWidth
 		self.lineIndex = 0
 		self.lines = None
 		self.oldActiveLocation = None
@@ -370,9 +377,7 @@ class BevelSkein:
 	def linearMove( self, splitLine ):
 		"Bevel a linear move."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-		indexOfF = gcodec.indexOfStartingWithSecond( "F", splitLine )
-		if indexOfF > 0:
-			self.feedrateMinute = gcodec.getDoubleAfterFirstLetter( splitLine[ indexOfF ] )
+		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
 		if not self.extruderActive:
 			return
 		if self.oldActiveLocation != None:
@@ -398,10 +403,12 @@ class BevelSkein:
 			firstWord = ''
 			if len( splitLine ) > 0:
 				firstWord = splitLine[ 0 ]
-			if firstWord == 'M109':
-				self.halfExtrusionWidth = 0.5 * gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] ) * filletPreferences.filletRadiusOverHalfExtrusionWidth.value
-			elif firstWord == 'M112':
-				self.addLine( 'M111 (fillet)' )
+			if firstWord == '(<extrusionWidth>':
+				self.halfExtrusionWidth = 0.5 * float( splitLine[ 1 ] ) * filletPreferences.filletRadiusOverHalfExtrusionWidth.value
+			elif firstWord == '(<bridgeExtrusionWidthOverSolid>':
+				self.bridgeExtrusionWidthOverSolid = float( splitLine[ 1 ] )
+			elif firstWord == '(<extrusionStart>':
+				self.addLine( '(<procedureDone> fillet )' )
 				return
 			self.addLine( line )
 
@@ -419,12 +426,16 @@ class BevelSkein:
 		if firstWord == 'M103':
 			self.extruderActive = False
 			self.oldActiveLocation = None
+		elif firstWord == '(<layerStart>':
+			self.layerHalfExtrusionWidth = self.halfExtrusionWidth
+		elif firstWord == '(<bridgeLayer>':
+			self.layerHalfExtrusionWidth = self.halfExtrusionWidth * self.bridgeExtrusionWidthOverSolid
 		if self.shouldAddLine:
 			self.addLine( line )
 
 	def splitPointGetAfter( self, location, nextActive, oldActiveLocation ):
 		"Bevel a point and return the end of the bevel."
-		bevelLength = 0.5 * self.halfExtrusionWidth
+		bevelLength = 0.5 * self.layerHalfExtrusionWidth
 		beforeSegment = oldActiveLocation.minus( location )
 		beforeSegmentLength = beforeSegment.length()
 		if beforeSegmentLength == 0.0:
@@ -473,11 +484,11 @@ class ArcSegmentSkein( BevelSkein ):
 		if beforeSegmentLength == 0.0:
 			self.shouldAddLine = True
 			return location
-		radius = self.halfExtrusionWidth
+		radius = self.layerHalfExtrusionWidth
 		afterSegmentNormalized = afterSegment.times( 1.0 / afterSegmentLength )
 		beforeSegmentNormalized = beforeSegment.times( 1.0 / beforeSegmentLength )
 		betweenCenterDotNormalized = afterSegmentNormalized.plus( beforeSegmentNormalized )
-		if betweenCenterDotNormalized.length() < 0.01 * self.halfExtrusionWidth:
+		if betweenCenterDotNormalized.length() < 0.01 * self.layerHalfExtrusionWidth:
 			self.shouldAddLine = True
 			return location
 		betweenCenterDotNormalized.normalize()
@@ -545,7 +556,6 @@ class FilletPreferences:
 		self.bevel = preferences.Radio().getFromRadio( 'Bevel', filletRadio, True )
 		self.doNotFillet = preferences.Radio().getFromRadio( 'Do Not Fillet', filletRadio, False )
 		self.filletRadiusOverHalfExtrusionWidth = preferences.FloatPreference().getFromValue( 'Fillet Radius Over Half Extrusion Width (ratio):', 0.7 )
-		self.writeSVG = preferences.BooleanPreference().getFromValue( 'Write Scalable Vector Graphics:', True )
 		directoryRadio = []
 		self.directoryPreference = preferences.RadioLabel().getFromRadioLabel( 'Fillet All Unmodified Files in a Directory', 'File or Directory Choice:', directoryRadio, False )
 		self.filePreference = preferences.Radio().getFromRadio( 'Fillet File', directoryRadio, True )
@@ -558,13 +568,11 @@ class FilletPreferences:
 			self.bevel,
 			self.doNotFillet,
 			self.filletRadiusOverHalfExtrusionWidth,
-			self.writeSVG,
 			self.directoryPreference,
 			self.filePreference,
 			self.filenameInput ]
 		self.executeTitle = 'Fillet'
-#		self.filename = getPreferencesFilePath( 'fillet.csv' )
-		self.filenamePreferences = 'fillet.csv'
+		self.filenamePreferences = preferences.getPreferencesFilePath( 'fillet.csv' )
 		self.filenameHelp = 'fillet.html'
 		self.title = 'Fillet Preferences'
 

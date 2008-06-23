@@ -52,14 +52,25 @@ def getArchiveText( preferences ):
 		archiveWriter.write( preference.name + '\t' + preference.getValueString() + '\n' )
 	return archiveWriter.getvalue()
 
-def getPreferencesFilePath( filename, folderName ):
+def getPreferencesFilePath( filename, folderName = '' ):
 	"Get the preferences file path, which is the home directory joined with the folder name and filename."
-	homeDirectoryFolder = os.path.join( os.path.expanduser( '~' ), folderName )
-	return os.path.join( homeDirectoryFolder, filename )
+	directoryName = os.path.join( os.path.expanduser( '~' ), '.skeinforge' )
+#	if folderName != '':
+#		directoryName = os.path.join( directoryName, folderName )
+	try:
+		os.mkdir( directoryName )
+	except OSError:
+		pass
+	return os.path.join( directoryName, filename )
 
 def readPreferences( preferences ):
 	"Set an archive to the preferences read from a file."
 	preferencesText = gcodec.getFileText( preferences.filenamePreferences )
+	if preferencesText == '':
+		print( 'Since the preferences file:' )
+		print( preferences.filenamePreferences )
+		print( 'does not exist, the default preferences will be written to that file.' )
+		writePreferences( preferences )
 	lines = gcodec.getTextLines( preferencesText )
 	preferenceTable = {}
 	for preference in preferences.archive:
@@ -124,7 +135,8 @@ class Filename( BooleanPreference ):
 	def execute( self ):
 		try:
 			import tkFileDialog
-			filename = tkFileDialog.askopenfilename( filetypes = self.fileTypes, initialdir = os.path.dirname( self.value ), initialfile = self.value, title = self.name )
+			summarized = gcodec.getSummarizedFilename( self.value )
+			filename = tkFileDialog.askopenfilename( filetypes = self.getFilenameFirstTypes(), initialdir = os.path.dirname( summarized ), initialfile = summarized, title = self.name )
 			if ( str( filename ) == '()' ):
 				self.wasCancelled = True
 			else:
@@ -138,6 +150,21 @@ class Filename( BooleanPreference ):
 		self.fileTypes = fileTypes
 		self.wasCancelled = False
 		return self
+
+	def getFilenameFirstTypes( self ):
+		"Get the file types with the file type of the filename moved to the front of the list."
+		basename = os.path.basename( self.value )
+		splitFile = basename.split( '.' )
+		if len( splitFile ) < 1:
+			return self.fileTypes
+		baseExtension = splitFile[ - 1 ]
+		for fileType in self.fileTypes:
+			fileExtension = fileType[ 1 ].split( '.' )[ - 1 ]
+			if fileExtension == baseExtension:
+				filenameFirstTypes = self.fileTypes[ : ]
+				filenameFirstTypes.remove( fileType )
+				return [ fileType ] + filenameFirstTypes
+		return self.fileTypes
 
 	def setToDisplay( self ):
 		"Pass."

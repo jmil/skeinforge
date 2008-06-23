@@ -169,11 +169,12 @@ reprap.cartesian.free()</tt></p>
 <font color="#fffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
     
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="math.html">math</a><br>
-<a href="os.html">os</a><br>
-</td><td width="25%" valign=top><a href="reprap.html">reprap</a><br>
-<a href="serial.html">serial</a><br>
-</td><td width="25%" valign=top><a href="time.html">time</a><br>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="gcodec.html">gcodec</a><br>
+<a href="math.html">math</a><br>
+</td><td width="25%" valign=top><a href="os.html">os</a><br>
+<a href="reprap.html">reprap</a><br>
+</td><td width="25%" valign=top><a href="serial.html">serial</a><br>
+<a href="time.html">time</a><br>
 </td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ee77aa">
@@ -221,8 +222,6 @@ reprap.cartesian.free()</tt></p>
 
 <dl><dt><a name="displaySkein-setFeedrate"><strong>setFeedrate</strong></a>(self, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;feedrate&nbsp;to&nbsp;the&nbsp;gcode&nbsp;split&nbsp;line.</tt></dd></dl>
 
-<dl><dt><a name="displaySkein-setPointComponent"><strong>setPointComponent</strong></a>(self, point, splitLine)</dt><dd><tt>Set&nbsp;a&nbsp;point&nbsp;to&nbsp;the&nbsp;gcode&nbsp;split&nbsp;line.</tt></dd></dl>
-
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ffc8d8">
@@ -258,8 +257,6 @@ Methods inherited from <a href="extrude.html#displaySkein">displaySkein</a>:<br>
 
 <dl><dt><a name="extrudeSkein-setFeedrate"><strong>setFeedrate</strong></a>(self, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;feedrate&nbsp;to&nbsp;the&nbsp;gcode&nbsp;split&nbsp;line.</tt></dd></dl>
 
-<dl><dt><a name="extrudeSkein-setPointComponent"><strong>setPointComponent</strong></a>(self, point, splitLine)</dt><dd><tt>Set&nbsp;a&nbsp;point&nbsp;to&nbsp;the&nbsp;gcode&nbsp;split&nbsp;line.</tt></dd></dl>
-
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#eeaa77">
@@ -279,64 +276,8 @@ This&nbsp;function&nbsp;requires&nbsp;write&nbsp;access&nbsp;to&nbsp;the&nbsp;se
 This&nbsp;function&nbsp;requires&nbsp;write&nbsp;access&nbsp;to&nbsp;the&nbsp;serial&nbsp;device,&nbsp;running&nbsp;as&nbsp;root&nbsp;is&nbsp;one&nbsp;way&nbsp;to&nbsp;get&nbsp;that&nbsp;access.</tt></dd></dl>
  <dl><dt><a name="-extrudeText"><strong>extrudeText</strong></a>(gcodeText)</dt><dd><tt>Parse&nbsp;a&nbsp;gcode&nbsp;text&nbsp;and&nbsp;send&nbsp;the&nbsp;commands&nbsp;to&nbsp;the&nbsp;extruder.<br>
 This&nbsp;function&nbsp;requires&nbsp;write&nbsp;access&nbsp;to&nbsp;the&nbsp;serial&nbsp;device,&nbsp;running&nbsp;as&nbsp;root&nbsp;is&nbsp;one&nbsp;way&nbsp;to&nbsp;get&nbsp;that&nbsp;access.</tt></dd></dl>
- <dl><dt><a name="-getAngleAroundZAxisDifference"><strong>getAngleAroundZAxisDifference</strong></a>(subtractFromVector3, subtractVector3)</dt><dd><tt>Get&nbsp;the&nbsp;angle&nbsp;around&nbsp;the&nbsp;Z&nbsp;axis&nbsp;difference&nbsp;between&nbsp;a&nbsp;pair&nbsp;of&nbsp;vec3s.<br>
-&nbsp;<br>
-Keyword&nbsp;arguments:<br>
-subtractFromVector3&nbsp;--&nbsp;vec3&nbsp;whose&nbsp;angle&nbsp;will&nbsp;be&nbsp;subtracted&nbsp;from<br>
-subtractVector3&nbsp;--&nbsp;vec3&nbsp;whose&nbsp;angle&nbsp;will&nbsp;be&nbsp;subtracted</tt></dd></dl>
- <dl><dt><a name="-getDoubleAfterFirstLetter"><strong>getDoubleAfterFirstLetter</strong></a>(word)</dt><dd><tt>Get&nbsp;the&nbsp;double&nbsp;value&nbsp;of&nbsp;the&nbsp;word&nbsp;after&nbsp;the&nbsp;first&nbsp;letter.<br>
-&nbsp;<br>
-Keyword&nbsp;arguments:<br>
-word&nbsp;--&nbsp;string&nbsp;with&nbsp;value&nbsp;starting&nbsp;after&nbsp;the&nbsp;first&nbsp;letter</tt></dd></dl>
- <dl><dt><a name="-getDoubleForLetter"><strong>getDoubleForLetter</strong></a>(letter, splitLine)</dt><dd><tt>Get&nbsp;the&nbsp;double&nbsp;value&nbsp;of&nbsp;the&nbsp;word&nbsp;after&nbsp;the&nbsp;first&nbsp;occurence&nbsp;of&nbsp;the&nbsp;letter&nbsp;in&nbsp;the&nbsp;split&nbsp;line.</tt></dd></dl>
- <dl><dt><a name="-getFileText"><strong>getFileText</strong></a>(filename)</dt><dd><tt>Get&nbsp;the&nbsp;entire&nbsp;text&nbsp;of&nbsp;a&nbsp;file.<br>
-&nbsp;<br>
-Keyword&nbsp;arguments:<br>
-filename&nbsp;--&nbsp;name&nbsp;of&nbsp;the&nbsp;file</tt></dd></dl>
- <dl><dt><a name="-getFilesWithExtensionWithoutWords"><strong>getFilesWithExtensionWithoutWords</strong></a>(extension, words)</dt><dd><tt>Get&nbsp;files&nbsp;which&nbsp;have&nbsp;a&nbsp;given&nbsp;extension,&nbsp;but&nbsp;with&nbsp;do&nbsp;not&nbsp;contain&nbsp;a&nbsp;word&nbsp;in&nbsp;a&nbsp;list.<br>
-&nbsp;<br>
-Keyword&nbsp;arguments:<br>
-extension&nbsp;--&nbsp;extension&nbsp;required<br>
-words&nbsp;--&nbsp;list&nbsp;of&nbsp;words&nbsp;which&nbsp;the&nbsp;file&nbsp;must&nbsp;not&nbsp;have</tt></dd></dl>
- <dl><dt><a name="-getGCodeFilesWithAreNotLogFiles"><strong>getGCodeFilesWithAreNotLogFiles</strong></a>()</dt><dd><tt>Get&nbsp;gcode&nbsp;files&nbsp;which&nbsp;are&nbsp;not&nbsp;log&nbsp;files.</tt></dd></dl>
+ <dl><dt><a name="-getGCodeFilesWhichAreNotLogFiles"><strong>getGCodeFilesWhichAreNotLogFiles</strong></a>()</dt><dd><tt>Get&nbsp;gcode&nbsp;files&nbsp;which&nbsp;are&nbsp;not&nbsp;log&nbsp;files.</tt></dd></dl>
  <dl><dt><a name="-getIntegerString"><strong>getIntegerString</strong></a>(number)</dt><dd><tt>Get&nbsp;integer&nbsp;as&nbsp;string.</tt></dd></dl>
- <dl><dt><a name="-getPlaneDot"><strong>getPlaneDot</strong></a>(vector3First, vector3Second)</dt><dd><tt>Get&nbsp;the&nbsp;dot&nbsp;product&nbsp;of&nbsp;the&nbsp;x&nbsp;and&nbsp;y&nbsp;components&nbsp;of&nbsp;a&nbsp;pair&nbsp;of&nbsp;Vec3s.<br>
-&nbsp;<br>
-Keyword&nbsp;arguments:<br>
-vector3First&nbsp;--&nbsp;first&nbsp;Vec3<br>
-vector3Second&nbsp;--&nbsp;second&nbsp;Vec3</tt></dd></dl>
- <dl><dt><a name="-getPointPlusSegmentWithLength"><strong>getPointPlusSegmentWithLength</strong></a>(length, point, segment)</dt><dd><tt>Get&nbsp;point&nbsp;plus&nbsp;to&nbsp;a&nbsp;segment&nbsp;scaled&nbsp;to&nbsp;a&nbsp;given&nbsp;length.</tt></dd></dl>
- <dl><dt><a name="-getPolar"><strong>getPolar</strong></a>(angle, radius)</dt><dd><tt>Get&nbsp;polar&nbsp;complex&nbsp;from&nbsp;counterclockwise&nbsp;angle&nbsp;from&nbsp;1,&nbsp;0&nbsp;and&nbsp;radius.<br>
-&nbsp;<br>
-Keyword&nbsp;arguments:<br>
-angle&nbsp;--&nbsp;counterclockwise&nbsp;angle&nbsp;from&nbsp;1,&nbsp;0<br>
-radius&nbsp;--&nbsp;radius&nbsp;of&nbsp;complex</tt></dd></dl>
- <dl><dt><a name="-getRotatedWiddershinsQuarterAroundZAxis"><strong>getRotatedWiddershinsQuarterAroundZAxis</strong></a>(vector3)</dt><dd><tt>Get&nbsp;Vec3&nbsp;rotated&nbsp;a&nbsp;quarter&nbsp;widdershins&nbsp;turn&nbsp;around&nbsp;Z&nbsp;axis.<br>
-&nbsp;<br>
-Keyword&nbsp;arguments:<br>
-vector3&nbsp;--&nbsp;vec3&nbsp;whose&nbsp;rotation&nbsp;will&nbsp;be&nbsp;returned</tt></dd></dl>
- <dl><dt><a name="-getTextLines"><strong>getTextLines</strong></a>(text)</dt><dd><tt>Get&nbsp;the&nbsp;all&nbsp;the&nbsp;lines&nbsp;of&nbsp;text&nbsp;of&nbsp;a&nbsp;text.<br>
-&nbsp;<br>
-Keyword&nbsp;arguments:<br>
-text&nbsp;--&nbsp;text</tt></dd></dl>
- <dl><dt><a name="-getVectorRotatedByPlaneAngle"><strong>getVectorRotatedByPlaneAngle</strong></a>(planeAngle, vector3)</dt><dd><tt>Get&nbsp;vec3&nbsp;rotated&nbsp;by&nbsp;a&nbsp;plane&nbsp;angle.<br>
-&nbsp;<br>
-Keyword&nbsp;arguments:<br>
-planeAngle&nbsp;-&nbsp;plane&nbsp;angle&nbsp;of&nbsp;the&nbsp;rotation<br>
-vector3&nbsp;-&nbsp;vec3&nbsp;whose&nbsp;rotation&nbsp;will&nbsp;be&nbsp;returned</tt></dd></dl>
- <dl><dt><a name="-indexOfStartingWithSecond"><strong>indexOfStartingWithSecond</strong></a>(letter, splitLine)</dt><dd><tt>Get&nbsp;index&nbsp;of&nbsp;the&nbsp;first&nbsp;occurence&nbsp;of&nbsp;the&nbsp;given&nbsp;letter&nbsp;in&nbsp;the&nbsp;split&nbsp;line,&nbsp;starting&nbsp;with&nbsp;the&nbsp;second&nbsp;word.&nbsp;&nbsp;Return&nbsp;-&nbsp;1&nbsp;if&nbsp;letter&nbsp;is&nbsp;not&nbsp;found</tt></dd></dl>
- <dl><dt><a name="-isFileWithExtensionWithoutWords"><strong>isFileWithExtensionWithoutWords</strong></a>(extension, filename, words)</dt><dd><tt>Determine&nbsp;if&nbsp;file&nbsp;has&nbsp;a&nbsp;given&nbsp;extension,&nbsp;but&nbsp;with&nbsp;does&nbsp;not&nbsp;contain&nbsp;a&nbsp;word&nbsp;in&nbsp;a&nbsp;list.<br>
-&nbsp;<br>
-Keyword&nbsp;arguments:<br>
-extension&nbsp;--&nbsp;extension&nbsp;required<br>
-filename&nbsp;--&nbsp;name&nbsp;of&nbsp;the&nbsp;file<br>
-words&nbsp;--&nbsp;list&nbsp;of&nbsp;words&nbsp;which&nbsp;the&nbsp;filename&nbsp;must&nbsp;not&nbsp;have</tt></dd></dl>
- <dl><dt><a name="-writeFileMessageSuffix"><strong>writeFileMessageSuffix</strong></a>(filename, fileText, message, suffix)</dt><dd><tt>Write&nbsp;to&nbsp;a&nbsp;filename&nbsp;with&nbsp;a&nbsp;suffix&nbsp;and&nbsp;print&nbsp;a&nbsp;message.</tt></dd></dl>
- <dl><dt><a name="-writeFileText"><strong>writeFileText</strong></a>(filename, fileText)</dt><dd><tt>Write&nbsp;a&nbsp;text&nbsp;to&nbsp;a&nbsp;file.<br>
-&nbsp;<br>
-Keyword&nbsp;arguments:<br>
-filename&nbsp;--&nbsp;name&nbsp;of&nbsp;the&nbsp;file<br>
-fileText&nbsp;--&nbsp;text&nbsp;which&nbsp;will&nbsp;be&nbsp;written&nbsp;to&nbsp;the&nbsp;file</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">
@@ -345,6 +286,7 @@ fileText&nbsp;--&nbsp;text&nbsp;which&nbsp;will&nbsp;be&nbsp;written&nbsp;to&nbs
     
 <tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><strong>__author__</strong> = 'Enrique Perez (perez_enrique@yahoo.com)'<br>
+<strong>__credits__</strong> = 'greenarrow &lt;http://forums.reprap.org/profile.php?12,81&gt;'<br>
 <strong>__date__</strong> = '$Date: 2008/21/04 $'<br>
 <strong>__license__</strong> = 'GPL 3.0'</td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -353,5 +295,12 @@ fileText&nbsp;--&nbsp;text&nbsp;which&nbsp;will&nbsp;be&nbsp;written&nbsp;to&nbs
 <font color="#ffffff" face="helvetica, arial"><big><strong>Author</strong></big></font></td></tr>
     
 <tr><td bgcolor="#7799ee"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%">Enrique&nbsp;Perez&nbsp;(perez_enrique@yahoo.com)</td></tr></table>
+<td width="100%">Enrique&nbsp;Perez&nbsp;(perez_enrique@yahoo.com)</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#7799ee">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Credits</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#7799ee"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">greenarrow&nbsp;&lt;<a href="http://forums.reprap.org/profile.php?12,81">http://forums.reprap.org/profile.php?12,81</a>&gt;</td></tr></table>
 </body></html>

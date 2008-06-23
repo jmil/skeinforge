@@ -1,20 +1,15 @@
 
 <!doctype html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-<html><head><title>Python: module comb</title>
+<html><head><title>Python: module test</title>
 </head><body bgcolor="#f0f0f8">
 
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
 <tr bgcolor="#7799ee">
 <td valign=bottom>&nbsp;<br>
-<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>comb</strong></big></big> ($Date: 2008/21/04 $)</font></td
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>test</strong></big></big> ($Date: 2008/21/04 $)</font></td
 ><td align=right valign=bottom
-><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap_v0.1/comb.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap_v0.1/comb.py</a></font></td></tr></table>
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap_v0.1/test.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap_v0.1/test.py</a></font></td></tr></table>
     <p><tt>Comb&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;comb&nbsp;the&nbsp;extrusion&nbsp;hair&nbsp;of&nbsp;a&nbsp;gcode&nbsp;file.<br>
-&nbsp;<br>
-Comb&nbsp;bends&nbsp;the&nbsp;extruder&nbsp;travel&nbsp;paths&nbsp;around&nbsp;holes&nbsp;in&nbsp;the&nbsp;slice,&nbsp;to&nbsp;avoid&nbsp;stringers.&nbsp;&nbsp;The&nbsp;default&nbsp;'Comb&nbsp;Hair'&nbsp;checkbox&nbsp;is&nbsp;on.<br>
-When&nbsp;it's&nbsp;on&nbsp;the&nbsp;paths&nbsp;are&nbsp;bent.&nbsp;&nbsp;When&nbsp;it&nbsp;is&nbsp;off,&nbsp;this&nbsp;script&nbsp;does&nbsp;nothing,&nbsp;the&nbsp;gcode&nbsp;text&nbsp;is&nbsp;handed&nbsp;over&nbsp;the&nbsp;next&nbsp;tool&nbsp;in&nbsp;the<br>
-skeinforge&nbsp;chain.&nbsp;&nbsp;To&nbsp;run&nbsp;comb,&nbsp;in&nbsp;a&nbsp;shell&nbsp;type:<br>
-&gt;&nbsp;python&nbsp;comb.py<br>
 &nbsp;<br>
 To&nbsp;run&nbsp;comb,&nbsp;install&nbsp;python&nbsp;2.x&nbsp;on&nbsp;your&nbsp;machine,&nbsp;which&nbsp;is&nbsp;avaliable&nbsp;from&nbsp;<a href="http://www.python.org/download/">http://www.python.org/download/</a><br>
 &nbsp;<br>
@@ -123,8 +118,8 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
     
 <tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><dl>
-<dt><font face="helvetica, arial"><a href="comb.html#CombPreferences">CombPreferences</a>
-</font></dt><dt><font face="helvetica, arial"><a href="comb.html#CombSkein">CombSkein</a>
+<dt><font face="helvetica, arial"><a href="test.html#CombPreferences">CombPreferences</a>
+</font></dt><dt><font face="helvetica, arial"><a href="test.html#CombSkein">CombSkein</a>
 </font></dt></dl>
  <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -162,17 +157,19 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 
 <dl><dt><a name="CombSkein-addToLoop"><strong>addToLoop</strong></a>(self, location)</dt><dd><tt>Add&nbsp;a&nbsp;location&nbsp;to&nbsp;loop.</tt></dd></dl>
 
-<dl><dt><a name="CombSkein-getBetweens"><strong>getBetweens</strong></a>(self)</dt><dd><tt>Set&nbsp;betweens&nbsp;for&nbsp;the&nbsp;layer.</tt></dd></dl>
-
-<dl><dt><a name="CombSkein-getOutloopLocation"><strong>getOutloopLocation</strong></a>(self, point)</dt><dd><tt>Get&nbsp;location&nbsp;outside&nbsp;of&nbsp;loop.</tt></dd></dl>
+<dl><dt><a name="CombSkein-getOutloopLocation"><strong>getOutloopLocation</strong></a>(self, point)</dt><dd><tt>Add&nbsp;travel&nbsp;move&nbsp;around&nbsp;loops&nbsp;if&nbsp;this&nbsp;the&nbsp;extruder&nbsp;is&nbsp;off.</tt></dd></dl>
 
 <dl><dt><a name="CombSkein-insertPathsBetween"><strong>insertPathsBetween</strong></a>(self, nextBeginning, pathEnd)</dt><dd><tt>Insert&nbsp;paths&nbsp;between&nbsp;the&nbsp;perimeter&nbsp;and&nbsp;the&nbsp;fill.</tt></dd></dl>
+
+<dl><dt><a name="CombSkein-linearMove"><strong>linearMove</strong></a>(self, splitLine)</dt><dd><tt>Add&nbsp;a&nbsp;linear&nbsp;move&nbsp;to&nbsp;the&nbsp;loop.</tt></dd></dl>
 
 <dl><dt><a name="CombSkein-parseAddTravel"><strong>parseAddTravel</strong></a>(self, line)</dt><dd><tt>Parse&nbsp;a&nbsp;gcode&nbsp;line&nbsp;and&nbsp;add&nbsp;it&nbsp;to&nbsp;the&nbsp;comb&nbsp;skein.</tt></dd></dl>
 
 <dl><dt><a name="CombSkein-parseGcode"><strong>parseGcode</strong></a>(self, gcodeText)</dt><dd><tt>Parse&nbsp;gcode&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;comb&nbsp;gcode.</tt></dd></dl>
 
 <dl><dt><a name="CombSkein-parseLine"><strong>parseLine</strong></a>(self, line)</dt><dd><tt>Parse&nbsp;a&nbsp;gcode&nbsp;line.</tt></dd></dl>
+
+<dl><dt><a name="CombSkein-setBetweens"><strong>setBetweens</strong></a>(self)</dt><dd><tt>Set&nbsp;betweens&nbsp;for&nbsp;the&nbsp;layer.</tt></dd></dl>
 
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">

@@ -11,6 +11,22 @@
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap_v0.1/slice.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap_v0.1/slice.py</a></font></td></tr></table>
     <p><tt>Slice&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;slice&nbsp;a&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;file.<br>
 &nbsp;<br>
+Slice&nbsp;slices&nbsp;a&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;file&nbsp;into&nbsp;gcode&nbsp;extrusion&nbsp;layers.&nbsp;&nbsp;The&nbsp;'Extrusion&nbsp;Diameter'&nbsp;is&nbsp;the&nbsp;diameter&nbsp;of&nbsp;the&nbsp;extrusion&nbsp;at&nbsp;the<br>
+default&nbsp;extruder&nbsp;speed,&nbsp;this&nbsp;is&nbsp;the&nbsp;most&nbsp;important&nbsp;slice&nbsp;preference.&nbsp;&nbsp;The&nbsp;'Extrusion&nbsp;Density'&nbsp;is&nbsp;the&nbsp;density&nbsp;of&nbsp;the&nbsp;extruded&nbsp;shape&nbsp;over&nbsp;the<br>
+density&nbsp;of&nbsp;the&nbsp;filament.&nbsp;&nbsp;The&nbsp;'Extrusion&nbsp;Width&nbsp;Over&nbsp;Thickness'&nbsp;ratio&nbsp;is&nbsp;the&nbsp;ratio&nbsp;of&nbsp;the&nbsp;extrusion&nbsp;width&nbsp;over&nbsp;the&nbsp;layer&nbsp;thickness.&nbsp;&nbsp;A&nbsp;ratio&nbsp;of<br>
+one&nbsp;means&nbsp;the&nbsp;extrusion&nbsp;is&nbsp;a&nbsp;circle,&nbsp;a&nbsp;typical&nbsp;ratio&nbsp;of&nbsp;1.5&nbsp;means&nbsp;the&nbsp;extrusion&nbsp;is&nbsp;a&nbsp;wide&nbsp;oval.<br>
+&nbsp;<br>
+Rarely&nbsp;changed&nbsp;preferences&nbsp;are&nbsp;Import&nbsp;Coarseness,&nbsp;Mesh&nbsp;Type,&nbsp;Infill&nbsp;Bridge&nbsp;Width&nbsp;Over&nbsp;Thickness&nbsp;&amp;&nbsp;Infill&nbsp;in&nbsp;Direction<br>
+of&nbsp;Bridges.&nbsp;&nbsp;When&nbsp;the&nbsp;triangle&nbsp;mesh&nbsp;has&nbsp;holes&nbsp;in&nbsp;it,&nbsp;slice&nbsp;switches&nbsp;over&nbsp;to&nbsp;a&nbsp;slow&nbsp;algorithm&nbsp;that&nbsp;spans&nbsp;gaps&nbsp;in&nbsp;the&nbsp;mesh.&nbsp;&nbsp;The&nbsp;higher&nbsp;the<br>
+import&nbsp;coarseness,&nbsp;the&nbsp;wider&nbsp;the&nbsp;gaps&nbsp;in&nbsp;the&nbsp;mesh&nbsp;it&nbsp;will&nbsp;span.&nbsp;&nbsp;An&nbsp;import&nbsp;coarseness&nbsp;of&nbsp;one&nbsp;means&nbsp;it&nbsp;will&nbsp;span&nbsp;gaps&nbsp;the&nbsp;width&nbsp;of&nbsp;the<br>
+extrusion.&nbsp;&nbsp;When&nbsp;the&nbsp;Mesh&nbsp;Type&nbsp;preference&nbsp;is&nbsp;correct,&nbsp;the&nbsp;mesh&nbsp;will&nbsp;be&nbsp;accurately&nbsp;sliced,&nbsp;and&nbsp;if&nbsp;a&nbsp;hole&nbsp;is&nbsp;found,&nbsp;slice&nbsp;will&nbsp;switch&nbsp;over&nbsp;to<br>
+the&nbsp;algorithm&nbsp;that&nbsp;spans&nbsp;gaps.&nbsp;&nbsp;If&nbsp;the&nbsp;Mesh&nbsp;Type&nbsp;preference&nbsp;is&nbsp;Unproven,&nbsp;slice&nbsp;will&nbsp;use&nbsp;the&nbsp;gap&nbsp;spanning&nbsp;algorithm&nbsp;from&nbsp;the&nbsp;start.&nbsp;&nbsp;The<br>
+problem&nbsp;with&nbsp;the&nbsp;gap&nbsp;spanning&nbsp;algothm&nbsp;is&nbsp;that&nbsp;it&nbsp;will&nbsp;span&nbsp;gaps,&nbsp;even&nbsp;if&nbsp;there&nbsp;actually&nbsp;is&nbsp;a&nbsp;gap&nbsp;in&nbsp;the&nbsp;model.&nbsp;&nbsp;Infill&nbsp;bridge&nbsp;width<br>
+over&nbsp;thickness&nbsp;ratio&nbsp;is&nbsp;the&nbsp;ratio&nbsp;of&nbsp;the&nbsp;extrusion&nbsp;width&nbsp;over&nbsp;the&nbsp;layer&nbsp;thickness&nbsp;on&nbsp;a&nbsp;bridge&nbsp;layer.&nbsp;&nbsp;If&nbsp;the&nbsp;infill&nbsp;in&nbsp;direction&nbsp;of&nbsp;bridges<br>
+preference&nbsp;is&nbsp;chosen,&nbsp;the&nbsp;infill&nbsp;will&nbsp;be&nbsp;in&nbsp;the&nbsp;direction&nbsp;of&nbsp;bridges&nbsp;across&nbsp;gaps,&nbsp;so&nbsp;that&nbsp;the&nbsp;fill&nbsp;will&nbsp;be&nbsp;able&nbsp;to&nbsp;span&nbsp;a&nbsp;bridge&nbsp;easier.&nbsp;&nbsp;To&nbsp;run<br>
+slice,&nbsp;in&nbsp;a&nbsp;shell&nbsp;type:<br>
+&gt;&nbsp;python&nbsp;slice.py<br>
+&nbsp;<br>
 To&nbsp;run&nbsp;slice,&nbsp;install&nbsp;python&nbsp;2.x&nbsp;on&nbsp;your&nbsp;machine,&nbsp;which&nbsp;is&nbsp;avaliable&nbsp;from&nbsp;<a href="http://www.python.org/download/">http://www.python.org/download/</a><br>
 &nbsp;<br>
 To&nbsp;use&nbsp;the&nbsp;preferences&nbsp;dialog&nbsp;you'll&nbsp;also&nbsp;need&nbsp;Tkinter,&nbsp;which&nbsp;probably&nbsp;came&nbsp;with&nbsp;the&nbsp;python&nbsp;installation.&nbsp;&nbsp;If&nbsp;it&nbsp;did&nbsp;not,&nbsp;look&nbsp;for&nbsp;it&nbsp;at:<br>
@@ -88,15 +104,16 @@ many&nbsp;lines&nbsp;of&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;vertices,&n
     
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="cStringIO.html">cStringIO</a><br>
+<a href="cmath.html">cmath</a><br>
 <a href="euclidean.html">euclidean</a><br>
-<a href="gcodec.html">gcodec</a><br>
-</td><td width="25%" valign=top><a href="intercircle.html">intercircle</a><br>
+</td><td width="25%" valign=top><a href="gcodec.html">gcodec</a><br>
+<a href="intercircle.html">intercircle</a><br>
 <a href="math.html">math</a><br>
-<a href="os.html">os</a><br>
-</td><td width="25%" valign=top><a href="preferences.html">preferences</a><br>
+</td><td width="25%" valign=top><a href="os.html">os</a><br>
+<a href="preferences.html">preferences</a><br>
 <a href="time.html">time</a><br>
-<a href="vectorwrite.html">vectorwrite</a><br>
-</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+</td><td width="25%" valign=top><a href="vectorwrite.html">vectorwrite</a><br>
+</td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ee77aa">
 <td colspan=3 valign=bottom>&nbsp;<br>
@@ -187,6 +204,14 @@ many&nbsp;lines&nbsp;of&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;vertices,&n
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="SliceSkein-__init__"><strong>__init__</strong></a>(self)</dt></dl>
 
+<dl><dt><a name="SliceSkein-addFromFile"><strong>addFromFile</strong></a>(self, filename)</dt><dd><tt>Add&nbsp;lines&nbsp;of&nbsp;text&nbsp;from&nbsp;the&nbsp;filename.</tt></dd></dl>
+
+<dl><dt><a name="SliceSkein-addFromUpperLowerFile"><strong>addFromUpperLowerFile</strong></a>(self, filename)</dt><dd><tt>Add&nbsp;lines&nbsp;of&nbsp;text&nbsp;from&nbsp;the&nbsp;filename&nbsp;or&nbsp;the&nbsp;lowercase&nbsp;filename,&nbsp;if&nbsp;there&nbsp;is&nbsp;no&nbsp;file&nbsp;by&nbsp;the&nbsp;original&nbsp;filename&nbsp;in&nbsp;the&nbsp;directory.</tt></dd></dl>
+
+<dl><dt><a name="SliceSkein-addGcodeFromPerimeterPaths"><strong>addGcodeFromPerimeterPaths</strong></a>(self, loop, loopLists, radius)</dt><dd><tt>Add&nbsp;the&nbsp;perimeter&nbsp;paths&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
+
+<dl><dt><a name="SliceSkein-addGcodeFromRemainingLoop"><strong>addGcodeFromRemainingLoop</strong></a>(self, loop, loopLists, radius)</dt><dd><tt>Add&nbsp;the&nbsp;remainder&nbsp;of&nbsp;the&nbsp;loop&nbsp;which&nbsp;does&nbsp;not&nbsp;overlap&nbsp;the&nbsp;alreadyFilledArounds&nbsp;loops.</tt></dd></dl>
+
 <dl><dt><a name="SliceSkein-addGcodeFromThread"><strong>addGcodeFromThread</strong></a>(self, thread)</dt><dd><tt>Add&nbsp;a&nbsp;thread&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
 <dl><dt><a name="SliceSkein-addGcodeMovement"><strong>addGcodeMovement</strong></a>(self, point)</dt><dd><tt>Add&nbsp;a&nbsp;movement&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
@@ -197,19 +222,13 @@ many&nbsp;lines&nbsp;of&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;vertices,&n
 
 <dl><dt><a name="SliceSkein-addShutdownToOutput"><strong>addShutdownToOutput</strong></a>(self)</dt><dd><tt>Add&nbsp;shutdown&nbsp;gcode&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="SliceSkein-addSlicedLayerToOutput"><strong>addSlicedLayerToOutput</strong></a>(self, layerIndex, slicedLayer)</dt><dd><tt>Add&nbsp;a&nbsp;sliced&nbsp;layer&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
-
-<dl><dt><a name="SliceSkein-addToThread"><strong>addToThread</strong></a>(self, location)</dt><dd><tt>Add&nbsp;a&nbsp;location&nbsp;to&nbsp;thread.</tt></dd></dl>
-
 <dl><dt><a name="SliceSkein-addToZoneArray"><strong>addToZoneArray</strong></a>(self, point, zoneArray, z)</dt><dd><tt>Add&nbsp;a&nbsp;height&nbsp;to&nbsp;the&nbsp;zone&nbsp;array.</tt></dd></dl>
 
-<dl><dt><a name="SliceSkein-getExtruderPaths"><strong>getExtruderPaths</strong></a>(self, loops)</dt><dd><tt>Get&nbsp;extruder&nbsp;loops.</tt></dd></dl>
+<dl><dt><a name="SliceSkein-getBridgeDirection"><strong>getBridgeDirection</strong></a>(self, layerLoops)</dt><dd><tt>Get&nbsp;span&nbsp;direction&nbsp;for&nbsp;the&nbsp;majority&nbsp;of&nbsp;the&nbsp;overhanging&nbsp;extrusion&nbsp;perimeter,&nbsp;if&nbsp;any.</tt></dd></dl>
 
 <dl><dt><a name="SliceSkein-getLoopsFromMesh"><strong>getLoopsFromMesh</strong></a>(self, z)</dt><dd><tt>Get&nbsp;loops&nbsp;from&nbsp;a&nbsp;slice&nbsp;of&nbsp;a&nbsp;mesh.</tt></dd></dl>
 
-<dl><dt><a name="SliceSkein-getSlice"><strong>getSlice</strong></a>(self, layerIndex)</dt><dd><tt>Get&nbsp;loops&nbsp;from&nbsp;a&nbsp;slice&nbsp;of&nbsp;a&nbsp;mesh.</tt></dd></dl>
-
-<dl><dt><a name="SliceSkein-getZAround"><strong>getZAround</strong></a>(self, around, z)</dt><dd><tt>Get&nbsp;z&nbsp;values&nbsp;around&nbsp;an&nbsp;original&nbsp;z.</tt></dd></dl>
+<dl><dt><a name="SliceSkein-getZAddExtruderPaths"><strong>getZAddExtruderPaths</strong></a>(self, z)</dt><dd><tt>Get&nbsp;next&nbsp;z&nbsp;and&nbsp;add&nbsp;extruder&nbsp;loops.</tt></dd></dl>
 
 <dl><dt><a name="SliceSkein-parseGcode"><strong>parseGcode</strong></a>(self, slicePreferences, gnuTriangulatedSurfaceText)</dt><dd><tt>Parse&nbsp;gnu&nbsp;triangulated&nbsp;surface&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;sliced&nbsp;gcode.</tt></dd></dl>
 
@@ -236,21 +255,25 @@ many&nbsp;lines&nbsp;of&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;vertices,&n
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-addEdgePair"><strong>addEdgePair</strong></a>(edgePairTable, edges, faceEdgeIndex, remainingEdgeIndex, remainingEdgeTable)</dt><dd><tt>Add&nbsp;edge&nbsp;pair&nbsp;to&nbsp;the&nbsp;edge&nbsp;pair&nbsp;table.</tt></dd></dl>
+<td width="100%"><dl><dt><a name="-addAlreadyFilledArounds"><strong>addAlreadyFilledArounds</strong></a>(alreadyFilledArounds, loop, radius)</dt><dd><tt>Add&nbsp;already&nbsp;filled&nbsp;loops&nbsp;around&nbsp;loop&nbsp;to&nbsp;alreadyFilledArounds.</tt></dd></dl>
+ <dl><dt><a name="-addEdgePair"><strong>addEdgePair</strong></a>(edgePairTable, edges, faceEdgeIndex, remainingEdgeIndex, remainingEdgeTable)</dt><dd><tt>Add&nbsp;edge&nbsp;pair&nbsp;to&nbsp;the&nbsp;edge&nbsp;pair&nbsp;table.</tt></dd></dl>
  <dl><dt><a name="-getCommonVertexIndex"><strong>getCommonVertexIndex</strong></a>(edgeFirst, edgeSecond)</dt><dd><tt>Get&nbsp;the&nbsp;vertex&nbsp;index&nbsp;that&nbsp;both&nbsp;edges&nbsp;have&nbsp;in&nbsp;common.</tt></dd></dl>
- <dl><dt><a name="-getLeftPoint"><strong>getLeftPoint</strong></a>(path)</dt><dd><tt>Get&nbsp;the&nbsp;leftmost&nbsp;point&nbsp;in&nbsp;the&nbsp;path.</tt></dd></dl>
+ <dl><dt><a name="-getDoubledRoundZ"><strong>getDoubledRoundZ</strong></a>(overhangingSegment, segmentRoundZ)</dt><dd><tt>Get&nbsp;doubled&nbsp;plane&nbsp;angle&nbsp;around&nbsp;z&nbsp;of&nbsp;the&nbsp;overhanging&nbsp;segment.</tt></dd></dl>
  <dl><dt><a name="-getLoopsFromCorrectMesh"><strong>getLoopsFromCorrectMesh</strong></a>(edges, faces, vertices, z)</dt><dd><tt>Get&nbsp;loops&nbsp;from&nbsp;a&nbsp;slice&nbsp;of&nbsp;a&nbsp;correct&nbsp;mesh.</tt></dd></dl>
  <dl><dt><a name="-getLoopsFromUnprovenMesh"><strong>getLoopsFromUnprovenMesh</strong></a>(edges, extrusionWidth, faces, vertices, slicePreferences, z)</dt><dd><tt>Get&nbsp;loops&nbsp;from&nbsp;a&nbsp;slice&nbsp;of&nbsp;an&nbsp;unproven&nbsp;mesh.</tt></dd></dl>
  <dl><dt><a name="-getLowestZoneIndex"><strong>getLowestZoneIndex</strong></a>(zoneArray, z)</dt><dd><tt>Get&nbsp;the&nbsp;lowest&nbsp;zone&nbsp;index.</tt></dd></dl>
- <dl><dt><a name="-getMaximumSpan"><strong>getMaximumSpan</strong></a>(loop)</dt><dd><tt>Get&nbsp;the&nbsp;maximum&nbsp;span&nbsp;in&nbsp;the&nbsp;xy&nbsp;plane.</tt></dd></dl>
  <dl><dt><a name="-getNextEdgeIndexAroundZ"><strong>getNextEdgeIndexAroundZ</strong></a>(edge, faces, remainingEdgeTable)</dt><dd><tt>Get&nbsp;the&nbsp;next&nbsp;edge&nbsp;index&nbsp;in&nbsp;the&nbsp;mesh&nbsp;slice.</tt></dd></dl>
- <dl><dt><a name="-getNumberOfIntersectionsToLeft"><strong>getNumberOfIntersectionsToLeft</strong></a>(leftPoint, loop)</dt><dd><tt>Get&nbsp;the&nbsp;number&nbsp;of&nbsp;intersections&nbsp;through&nbsp;the&nbsp;loop&nbsp;for&nbsp;the&nbsp;line&nbsp;starting&nbsp;from&nbsp;the&nbsp;left&nbsp;point&nbsp;and&nbsp;going&nbsp;left.</tt></dd></dl>
+ <dl><dt><a name="-getOverhangDirection"><strong>getOverhangDirection</strong></a>(belowOutsetLoops, segmentBegin, segmentEnd)</dt><dd><tt>Add&nbsp;to&nbsp;span&nbsp;direction&nbsp;from&nbsp;the&nbsp;endpoint&nbsp;segments&nbsp;which&nbsp;overhang&nbsp;the&nbsp;layer&nbsp;below.</tt></dd></dl>
  <dl><dt><a name="-getPath"><strong>getPath</strong></a>(edges, pathIndexes, loop, z)</dt><dd><tt>Get&nbsp;the&nbsp;path&nbsp;from&nbsp;the&nbsp;edge&nbsp;intersections.</tt></dd></dl>
- <dl><dt><a name="-getPathIndexesAddPath"><strong>getPathIndexesAddPath</strong></a>(edges, faces, loops, remainingEdgeTable, loop, z)</dt><dd><tt>Get&nbsp;the&nbsp;path&nbsp;indexes&nbsp;around&nbsp;a&nbsp;triangle&nbsp;mesh&nbsp;slice&nbsp;and&nbsp;add&nbsp;the&nbsp;path&nbsp;to&nbsp;the&nbsp;loops.</tt></dd></dl>
+ <dl><dt><a name="-getPathIndexesAddPath"><strong>getPathIndexesAddPath</strong></a>(edges, faces, loops, remainingEdgeTable, vertices, z)</dt><dd><tt>Get&nbsp;the&nbsp;path&nbsp;indexes&nbsp;around&nbsp;a&nbsp;triangle&nbsp;mesh&nbsp;slice&nbsp;and&nbsp;add&nbsp;the&nbsp;path&nbsp;to&nbsp;the&nbsp;loops.</tt></dd></dl>
  <dl><dt><a name="-getRemainingEdgeTable"><strong>getRemainingEdgeTable</strong></a>(edges, vertices, z)</dt><dd><tt>Get&nbsp;the&nbsp;remaining&nbsp;edge&nbsp;hashtable.</tt></dd></dl>
+ <dl><dt><a name="-getSegmentsFromPoints"><strong>getSegmentsFromPoints</strong></a>(loopLists, pointBegin, pointEnd)</dt><dd><tt>Get&nbsp;enpoint&nbsp;segments&nbsp;from&nbsp;the&nbsp;beginning&nbsp;and&nbsp;end&nbsp;of&nbsp;a&nbsp;line&nbsp;segment.</tt></dd></dl>
  <dl><dt><a name="-getSharedFace"><strong>getSharedFace</strong></a>(firstEdge, faces, secondEdge)</dt><dd><tt>Get&nbsp;the&nbsp;face&nbsp;which&nbsp;is&nbsp;shared&nbsp;by&nbsp;two&nbsp;edges.</tt></dd></dl>
  <dl><dt><a name="-getSliceGcode"><strong>getSliceGcode</strong></a>(gnuTriangulatedSurfaceText, slicePreferences<font color="#909090">=None</font>)</dt><dd><tt>Slice&nbsp;a&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-getSliceIntersectionFromEdge"><strong>getSliceIntersectionFromEdge</strong></a>(edge, loop, z)</dt><dd><tt>Get&nbsp;the&nbsp;point&nbsp;where&nbsp;the&nbsp;slice&nbsp;intersects&nbsp;the&nbsp;edge.</tt></dd></dl>
+ <dl><dt><a name="-isCloseToLast"><strong>isCloseToLast</strong></a>(paths, point, radius)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;point&nbsp;is&nbsp;close&nbsp;to&nbsp;the&nbsp;last&nbsp;point&nbsp;of&nbsp;the&nbsp;last&nbsp;path.</tt></dd></dl>
+ <dl><dt><a name="-isIntersectingWithinList"><strong>isIntersectingWithinList</strong></a>(loop, loopList)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;loop&nbsp;is&nbsp;intersecting&nbsp;or&nbsp;is&nbsp;within&nbsp;the&nbsp;loop&nbsp;list.</tt></dd></dl>
+ <dl><dt><a name="-isIntersectingWithinLists"><strong>isIntersectingWithinLists</strong></a>(loop, loopLists)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;loop&nbsp;is&nbsp;intersecting&nbsp;or&nbsp;is&nbsp;within&nbsp;the&nbsp;loop&nbsp;lists.</tt></dd></dl>
  <dl><dt><a name="-isZInEdge"><strong>isZInEdge</strong></a>(edge, vertices, z)</dt><dd><tt>Determine&nbsp;if&nbsp;z&nbsp;is&nbsp;inside&nbsp;the&nbsp;edge.</tt></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>(hashtable<font color="#909090">=None</font>)</dt><dd><tt>Display&nbsp;the&nbsp;slice&nbsp;dialog.</tt></dd></dl>
  <dl><dt><a name="-sliceFile"><strong>sliceFile</strong></a>(filename<font color="#909090">=''</font>)</dt><dd><tt>Slice&nbsp;a&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;file.&nbsp;&nbsp;If&nbsp;no&nbsp;filename&nbsp;is&nbsp;specified,&nbsp;slice&nbsp;the&nbsp;first&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>

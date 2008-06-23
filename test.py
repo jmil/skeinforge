@@ -1,11 +1,6 @@
 """
 Comb is a script to comb the extrusion hair of a gcode file.
 
-Comb bends the extruder travel paths around holes in the slice, to avoid stringers.  The default 'Comb Hair' checkbox is on.
-When it's on the paths are bent.  When it is off, this script does nothing, the gcode text is handed over the next tool in the
-skeinforge chain.  To run comb, in a shell type:
-> python comb.py
-
 To run comb, install python 2.x on your machine, which is avaliable from http://www.python.org/download/
 
 To use the preferences dialog you'll also need Tkinter, which probably came with the python installation.  If it did not, look for it at:
@@ -108,7 +103,6 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
-#later cache betweens
 #later maybe use 2d everywhere in case there is movement across layers
 def combChainFile( filename = '' ):
 	"""Comb a gcode linear move file.  Chain comb the gcode if it is not already combed.
@@ -130,7 +124,8 @@ def combChainFile( filename = '' ):
 	suffixFilename = filename[ : filename.rfind( '.' ) ] + '_comb.gcode'
 	gcodec.writeFileText( suffixFilename, getCombChainGcode( gcodeText, combPreferences ) )
 	print( 'The combed file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
-	vectorwrite.writeSkeinforgeVectorFile( suffixFilename )
+	if combPreferences.writeSVG.value:
+		vectorwrite.writeVectorFile( suffixFilename )
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to comb the file.' )
 
 def combFile( filename = '' ):
@@ -154,7 +149,8 @@ def combFile( filename = '' ):
 	suffixFilename = filename[ : filename.rfind( '.' ) ] + '_comb.gcode'
 	gcodec.writeFileText( suffixFilename, getCombGcode( gcodeText, combPreferences ) )
 	print( 'The combed file is saved as ' + suffixFilename )
-	vectorwrite.writeSkeinforgeVectorFile( suffixFilename )
+	if combPreferences.writeSVG.value:
+		vectorwrite.writeVectorFile( suffixFilename )
 
 def getCombChainGcode( gcodeText, combPreferences = None ):
 	"Comb a gcode linear move text.  Chain comb the gcode if it is not already combed."
@@ -181,30 +177,27 @@ def isLoopNumberEqual( betweenX, betweenXIndex, loopNumber ):
 	"Determine if the loop number is equal."
 	if betweenXIndex >= len( betweenX ):
 		return False
-	return betweenX[ betweenXIndex ].index == loopNumber
+	return betweenX[ betweenXIndex ].imag == loopNumber
 
 class CombSkein:
 	"A class to comb a skein of extrusions."
 	def __init__( self ):
-		self.betweens = None
-		self.bridgeExtrusionWidthOverSolid = 1.0
+		self.betweens = []
 		self.extruderActive = False
-		self.fillInset = 0.18
-		self.layerFillInset = self.fillInset
+		self.halfExtrusionWidth = 0.2
+		self.fillInset = 1.9 * self.halfExtrusionWidth
+		self.isLoop = False
 		self.layer = None
 		self.layers = []
-		self.layerTable = {}
-		self.layerZ = None
 		self.lineIndex = 0
 		self.lines = None
 		self.loop = None
 		self.oldLocation = None
-		self.oldZ = None
 		self.output = cStringIO.StringIO()
 		self.pointTable = {}
 
 	def addGcodeMovement( self, point ):
-		"Add a movement to the output."#later add feedrate
+		"Add a movement to the output."
 		self.addLine( "G1 X" + euclidean.getRoundedToThreePlaces( point.x ) + " Y" + euclidean.getRoundedToThreePlaces( point.y ) + " Z" + euclidean.getRoundedToThreePlaces( point.z ) )
 
 	def addIfTravel( self, splitLine ):
@@ -220,8 +213,10 @@ class CombSkein:
 
 	def addPathBetween( self, betweenFirst, betweenSecond, loopFirst ):
 		"Add a path between the perimeter and the fill."
-		clockwisePath = [ betweenFirst ]
-		widdershinsPath = [ betweenFirst ]
+		clockwisePath = []
+		widdershinsPath = []
+		clockwisePath.append( betweenFirst )
+		widdershinsPath.append( betweenFirst )
 		nearestFirstDistanceIndex = euclidean.getNearestDistanceSquaredIndex( betweenFirst, loopFirst )
 		nearestSecondDistanceIndex = euclidean.getNearestDistanceSquaredIndex( betweenSecond, loopFirst )
 		firstBeginIndex = ( int( nearestFirstDistanceIndex.imag ) + 1 ) % len( loopFirst )
@@ -235,46 +230,31 @@ class CombSkein:
 		widdershinsPath.append( betweenSecond )
 		if euclidean.getPathLength( widdershinsPath ) > euclidean.getPathLength( clockwisePath ):
 			widdershinsPath = clockwisePath
-		widdershinsPath = euclidean.getAwayPath( widdershinsPath, 0.2 * self.layerFillInset )
 		for point in widdershinsPath:
 			self.addGcodeMovement( point )
 
 	def addToLoop( self, location ):
 		"Add a location to loop."
+		if self.oldLocation == None:
+			return
 		if self.layer == None:
-			if not self.oldZ in self.layerTable:
-				self.layerTable[ self.oldZ ] = []
-			self.layer = self.layerTable[ self.oldZ ]
-		if self.loop == None:
+			self.layer = []
+			self.layers.append( self.layer )
+		if self.loop == None and self.isLoop:
 			self.loop = [] #starting with an empty array because a closed loop does not have to restate its beginning
 			self.layer.append( self.loop )
+		self.isLoop = False
 		if self.loop != None:
 			self.loop.append( location )
 			self.pointTable[ str( location ) ] = True
 
-	def getBetweens( self ):
-		"Set betweens for the layer."
-		if self.betweens != None:
-			return self.betweens
-		halfFillInset = 0.5 * self.layerFillInset
-		self.betweens = []
-		for loop in self.layerTable[ self.layerZ ]:
-			circleNodes = intercircle.getCircleNodesFromLoop( loop, self.layerFillInset )
-			centers = intercircle.getCentersFromCircleNodes( circleNodes )
-			for center in centers:
-				inset = intercircle.getInsetFromClockwiseLoop( center, halfFillInset )
-				if euclidean.isLargeSameDirection( inset, center, self.layerFillInset ):
-					if euclidean.isPathInsideLoop( loop, inset ) != euclidean.isWiddershins( loop ):
-						self.betweens.append( inset )
-		return self.betweens
-
 	def getOutloopLocation( self, point ):
-		"Get location outside of loop."
+		"Add travel move around loops if this the extruder is off."
 		if str( point ) not in self.pointTable:
 			return point
 		closestBetween = None
 		closestDistanceSquaredIndex = complex( 999999999999999999.0, - 1 )
-		for between in self.getBetweens():
+		for between in self.betweens:
 			distanceSquaredIndex = euclidean.getNearestDistanceSquaredIndex( point, between )
 			if distanceSquaredIndex.real < closestDistanceSquaredIndex.real:
 				closestBetween = between
@@ -303,33 +283,41 @@ class CombSkein:
 		nextBeginningRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, nextBeginning )
 		y = pathEndRotated.y
 		z = pathEndRotated.z
-		for betweenIndex in range( len( self.getBetweens() ) ):
-			between = self.getBetweens()[ betweenIndex ]
+		for betweenIndex in range( len( self.betweens ) ):
+			between = self.betweens[ betweenIndex ]
 			betweenRotated = euclidean.getPathRoundZAxisByPlaneAngle( segmentYMirror, between )
 			euclidean.addXIntersections( betweenRotated, betweenIndex, switchX, y )
-		switchX.sort()
+		switchX.sort( euclidean.compareSolidXByX )
 		maximumX = max( pathEndRotated.x, nextBeginningRotated.x )
 		minimumX = min( pathEndRotated.x, nextBeginningRotated.x )
 		for xIntersection in switchX:
-			if xIntersection.x > minimumX and xIntersection.x < maximumX:
+			if xIntersection.real > minimumX and xIntersection.real < maximumX:
 				betweenX.append( xIntersection )
 		betweenXIndex = 0
 		while betweenXIndex < len( betweenX ) - 1:
 			betweenXFirst = betweenX[ betweenXIndex ]
 			betweenXSecond = betweenX[ betweenXIndex + 1 ]
-			if betweenXSecond.index == betweenXFirst.index:
+			if betweenXSecond.imag == betweenXFirst.imag:
 				betweenXIndex += 1
-				betweenFirst = euclidean.getRoundZAxisByPlaneAngle( segmentXY, Vec3( betweenXFirst.x, y, z ) )
-				betweenSecond = euclidean.getRoundZAxisByPlaneAngle( segmentXY, Vec3( betweenXSecond.x, y, z ) )
-				loopFirst = self.getBetweens()[ betweenXFirst.index ]
+				betweenFirst = euclidean.getRoundZAxisByPlaneAngle( segmentXY, Vec3( betweenXFirst.real, y, z ) )
+				betweenSecond = euclidean.getRoundZAxisByPlaneAngle( segmentXY, Vec3( betweenXSecond.real, y, z ) )
+				loopFirst = self.betweens[ int( betweenXFirst.imag ) ]
 				self.addPathBetween( betweenFirst, betweenSecond, loopFirst )
 			betweenXIndex += 1
+
+	def linearMove( self, splitLine ):
+		"Add a linear move to the loop."
+		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
+		if self.extruderActive:
+			self.addToLoop( location )
+		self.oldLocation = location
 
 	def parseGcode( self, gcodeText ):
 		"Parse gcode text and store the comb gcode."
 		self.lines = gcodec.getTextLines( gcodeText )
 		for line in self.lines:
 			self.parseLine( line )
+		self.layerIndex = - 1
 		self.oldLocation = None
 		for lineIndex in range( len( self.lines ) ):
 			line = self.lines[ lineIndex ]
@@ -337,23 +325,29 @@ class CombSkein:
 
 	def parseLine( self, line ):
 		"Parse a gcode line."
+		self.shouldAddLine = True
 		splitLine = line.split( ' ' )
 		if len( splitLine ) < 1:
 			return 0
 		firstWord = splitLine[ 0 ]
+		if firstWord == 'G1':
+			self.linearMove( splitLine )
+		if firstWord == 'M101':
+			self.extruderActive = True
 		if firstWord == 'M103':
+			self.extruderActive = False
 			self.loop = None
-		elif firstWord == '(<bridgeExtrusionWidthOverSolid>':
-			self.bridgeExtrusionWidthOverSolid = float( splitLine[ 1 ] )
-		elif firstWord == '(<boundaryPoint>':
-			location = gcodec.getLocationFromSplitLine( None, splitLine )
-			self.addToLoop( location )
-		elif firstWord == '(<layerStart>':
+		elif firstWord == 'M109':
+			self.halfExtrusionWidth = 0.5 * gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
+		elif firstWord == 'M115':
 			self.layer = None
 			self.loop = None
-			self.oldZ = float( splitLine[ 1 ] )
-		elif firstWord == '(<fillInset>':
-			self.fillInset = float( splitLine[ 1 ] )
+		elif firstWord == 'M117':
+			if len( splitLine ) > 1:
+				if splitLine[ 1 ][ 1 : ] == 'edge':
+					self.isLoop = True
+		elif firstWord == 'M118':
+			self.fillInset = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
 
 	def parseAddTravel( self, line ):
 		"Parse a gcode line and add it to the comb skein."
@@ -367,15 +361,24 @@ class CombSkein:
 			self.extruderActive = True
 		elif firstWord == 'M103':
 			self.extruderActive = False
-		elif firstWord == '(<extrusionStart>':
-			self.addLine( '(<procedureDone> comb )' )
-		elif firstWord == '(<layerStart>':
-			self.betweens = None
-			self.layerFillInset = self.fillInset
-			self.layerZ = float( splitLine[ 1 ] )
-		elif firstWord == '(<bridgeLayer>':
-			self.layerFillInset = self.fillInset * self.bridgeExtrusionWidthOverSolid
+		elif firstWord == 'M114':
+			self.addLine( 'M113 (comb)' )
+		elif firstWord == 'M115':
+			self.setBetweens()
 		self.addLine( line )
+
+	def setBetweens( self ):
+		"Set betweens for the layer."
+		halfFillInset = 0.5 * self.fillInset
+		self.layerIndex += 1
+		self.betweens = []
+		for loop in self.layers[ self.layerIndex ]:
+			centers = intercircle.getCentersfromLoopDirection( euclidean.isWiddershins( loop ), loop, self.fillInset )
+			for center in centers:
+				inset = intercircle.getInsetFromClockwiseLoop( center, halfFillInset )
+				if euclidean.isWiddershins( center ) == euclidean.isWiddershins( inset ):
+					if euclidean.getMaximumSpan( inset ) > self.fillInset:
+						self.betweens.append( inset )
 
 
 class CombPreferences:
@@ -384,14 +387,16 @@ class CombPreferences:
 		"Set the default preferences, execute title & preferences filename."
 		#Set the default preferences.
 		self.comb = preferences.BooleanPreference().getFromValue( 'Comb Hair:', True )
+		self.writeSVG = preferences.BooleanPreference().getFromValue( 'Write Scalable Vector Graphics:', True )
 		directoryRadio = []
 		self.directoryPreference = preferences.RadioLabel().getFromRadioLabel( 'Comb All Unmodified Files in a Directory', 'File or Directory Choice:', directoryRadio, False )
 		self.filePreference = preferences.Radio().getFromRadio( 'Comb File', directoryRadio, True )
 		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface text files', '*.gts' ), ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Combed', '' )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.archive = [ self.comb, self.directoryPreference, self.filePreference, self.filenameInput ]
+		self.archive = [ self.comb, self.writeSVG, self.directoryPreference, self.filePreference, self.filenameInput ]
 		self.executeTitle = 'Comb'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'comb.csv' )
+#		self.filename = getPreferencesFilePath( 'comb.csv' )
+		self.filenamePreferences = 'comb.csv'
 		self.filenameHelp = 'comb.html'
 		self.title = 'Comb Preferences'
 

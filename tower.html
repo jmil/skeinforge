@@ -1,0 +1,234 @@
+
+<!doctype html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module tower</title>
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>tower</strong></big></big> ($Date: 2008/21/04 $)</font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap_v0.1/tower.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap_v0.1/tower.py</a></font></td></tr></table>
+    <p><tt>Tower&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;tower&nbsp;islands&nbsp;in&nbsp;a&nbsp;gcode&nbsp;file.<br>
+&nbsp;<br>
+To&nbsp;run&nbsp;tower,&nbsp;install&nbsp;python&nbsp;2.x&nbsp;on&nbsp;your&nbsp;machine,&nbsp;which&nbsp;is&nbsp;avaliable&nbsp;from&nbsp;<a href="http://www.python.org/download/">http://www.python.org/download/</a><br>
+&nbsp;<br>
+To&nbsp;use&nbsp;the&nbsp;preferences&nbsp;dialog&nbsp;you'll&nbsp;also&nbsp;need&nbsp;Tkinter,&nbsp;which&nbsp;probably&nbsp;came&nbsp;with&nbsp;the&nbsp;python&nbsp;installation.&nbsp;&nbsp;If&nbsp;it&nbsp;did&nbsp;not,&nbsp;look&nbsp;for&nbsp;it&nbsp;at:<br>
+www.tcl.tk/software/tcltk/<br>
+&nbsp;<br>
+To&nbsp;export&nbsp;a&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;file&nbsp;from&nbsp;Art&nbsp;of&nbsp;Illusion,&nbsp;you&nbsp;can&nbsp;use&nbsp;the&nbsp;Export&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;script&nbsp;at:<br>
+<a href="http://members.axion.net/~enrique/Export%20GNU%20Triangulated%20Surface.bsh">http://members.axion.net/~enrique/Export%20GNU%20Triangulated%20Surface.bsh</a><br>
+&nbsp;<br>
+To&nbsp;bring&nbsp;it&nbsp;into&nbsp;Art&nbsp;of&nbsp;Illusion,&nbsp;drop&nbsp;it&nbsp;into&nbsp;the&nbsp;folder&nbsp;ArtOfIllusion/Scripts/Tools/.<br>
+&nbsp;<br>
+The&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;format&nbsp;is&nbsp;supported&nbsp;by&nbsp;Mesh&nbsp;Viewer,&nbsp;and&nbsp;it&nbsp;is&nbsp;described&nbsp;at:<br>
+<a href="http://gts.sourceforge.net/reference/gts-surfaces.html#GTS-SURFACE-WRITE">http://gts.sourceforge.net/reference/gts-surfaces.html#GTS-SURFACE-WRITE</a><br>
+&nbsp;<br>
+To&nbsp;turn&nbsp;an&nbsp;STL&nbsp;file&nbsp;into&nbsp;filled,&nbsp;towered&nbsp;gcode,&nbsp;first&nbsp;import&nbsp;the&nbsp;file&nbsp;using&nbsp;the&nbsp;STL&nbsp;import&nbsp;plugin&nbsp;in&nbsp;the&nbsp;import&nbsp;submenu&nbsp;of&nbsp;the&nbsp;file&nbsp;menu<br>
+of&nbsp;Art&nbsp;of&nbsp;Illusion.&nbsp;&nbsp;Then&nbsp;from&nbsp;the&nbsp;Scripts&nbsp;submenu&nbsp;in&nbsp;the&nbsp;Tools&nbsp;menu,&nbsp;choose&nbsp;Export&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;and&nbsp;select&nbsp;the<br>
+imported&nbsp;STL&nbsp;shape.&nbsp;&nbsp;Then&nbsp;type&nbsp;'python&nbsp;slice.py'&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;slice&nbsp;&amp;&nbsp;tower&nbsp;are&nbsp;in&nbsp;and&nbsp;when&nbsp;the&nbsp;dialog&nbsp;pops&nbsp;up,&nbsp;set<br>
+the&nbsp;parameters&nbsp;and&nbsp;click&nbsp;'Save&nbsp;Preferences'.&nbsp;&nbsp;Then&nbsp;type&nbsp;'python&nbsp;fill.py'&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;fill&nbsp;is&nbsp;in&nbsp;and&nbsp;when&nbsp;the&nbsp;dialog<br>
+pops&nbsp;up,&nbsp;set&nbsp;the&nbsp;parameters&nbsp;and&nbsp;click&nbsp;'Save&nbsp;Preferences'.&nbsp;&nbsp;Then&nbsp;click&nbsp;'Tower',&nbsp;choose&nbsp;the&nbsp;file&nbsp;which&nbsp;you&nbsp;exported&nbsp;in<br>
+Export&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;and&nbsp;the&nbsp;filled&nbsp;&amp;&nbsp;towered&nbsp;file&nbsp;will&nbsp;be&nbsp;saved&nbsp;with&nbsp;the&nbsp;suffix&nbsp;'_tower'.<br>
+&nbsp;<br>
+To&nbsp;write&nbsp;documentation&nbsp;for&nbsp;this&nbsp;program,&nbsp;open&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;tower.py&nbsp;directory,&nbsp;then&nbsp;type&nbsp;'pydoc&nbsp;-w&nbsp;tower',&nbsp;then&nbsp;open&nbsp;'tower.html'&nbsp;in<br>
+a&nbsp;browser&nbsp;or&nbsp;click&nbsp;on&nbsp;the&nbsp;'?'&nbsp;button&nbsp;in&nbsp;the&nbsp;dialog.&nbsp;&nbsp;To&nbsp;write&nbsp;documentation&nbsp;for&nbsp;all&nbsp;the&nbsp;python&nbsp;scripts&nbsp;in&nbsp;the&nbsp;directory,&nbsp;type&nbsp;'pydoc&nbsp;-w&nbsp;./'.<br>
+To&nbsp;use&nbsp;other&nbsp;functions&nbsp;of&nbsp;tower,&nbsp;type&nbsp;'python'&nbsp;in&nbsp;a&nbsp;shell&nbsp;to&nbsp;run&nbsp;the&nbsp;python&nbsp;interpreter,&nbsp;then&nbsp;type&nbsp;'import&nbsp;tower'&nbsp;to&nbsp;import&nbsp;this&nbsp;program.<br>
+&nbsp;<br>
+The&nbsp;computation&nbsp;intensive&nbsp;python&nbsp;modules&nbsp;will&nbsp;use&nbsp;psyco&nbsp;if&nbsp;it&nbsp;is&nbsp;available&nbsp;and&nbsp;run&nbsp;about&nbsp;twice&nbsp;as&nbsp;fast.&nbsp;&nbsp;Psyco&nbsp;is&nbsp;described&nbsp;at:<br>
+<a href="http://psyco.sourceforge.net/index.html">http://psyco.sourceforge.net/index.html</a><br>
+&nbsp;<br>
+The&nbsp;psyco&nbsp;download&nbsp;page&nbsp;is:<br>
+<a href="http://psyco.sourceforge.net/download.html">http://psyco.sourceforge.net/download.html</a><br>
+&nbsp;<br>
+The&nbsp;following&nbsp;examples&nbsp;tower&nbsp;the&nbsp;files&nbsp;Hollow&nbsp;Square.gcode&nbsp;&amp;&nbsp;Hollow&nbsp;Square.gts.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains<br>
+Hollow&nbsp;Square.gcode,&nbsp;Hollow&nbsp;Square.gts&nbsp;and&nbsp;tower.py.&nbsp;&nbsp;The&nbsp;tower&nbsp;function&nbsp;will&nbsp;tower&nbsp;if&nbsp;'Maximum&nbsp;Tower&nbsp;Layers'&nbsp;is&nbsp;greater&nbsp;than&nbsp;zero,&nbsp;which&nbsp;can&nbsp;be&nbsp;set&nbsp;in&nbsp;the&nbsp;dialog&nbsp;or&nbsp;by&nbsp;changing<br>
+the&nbsp;preferences&nbsp;file&nbsp;'tower.csv'&nbsp;with&nbsp;a&nbsp;text&nbsp;editor&nbsp;or&nbsp;a&nbsp;spreadsheet&nbsp;program&nbsp;set&nbsp;to&nbsp;separate&nbsp;tabs.&nbsp;&nbsp;The&nbsp;functions&nbsp;towerChainFile&nbsp;and<br>
+getTowerChainGcode&nbsp;check&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text&nbsp;has&nbsp;been&nbsp;towered,&nbsp;if&nbsp;not&nbsp;they&nbsp;call&nbsp;the&nbsp;getFillChainGcode&nbsp;in&nbsp;fill.py&nbsp;to&nbsp;fill&nbsp;the&nbsp;text;&nbsp;once&nbsp;they<br>
+have&nbsp;the&nbsp;filled&nbsp;text,&nbsp;then&nbsp;they&nbsp;tower.<br>
+&nbsp;<br>
+&nbsp;<br>
+&gt;&nbsp;pydoc&nbsp;-w&nbsp;tower<br>
+wrote&nbsp;tower.html<br>
+&nbsp;<br>
+&nbsp;<br>
+&gt;&nbsp;python&nbsp;tower.py<br>
+This&nbsp;brings&nbsp;up&nbsp;the&nbsp;dialog,&nbsp;after&nbsp;clicking&nbsp;'Tower',&nbsp;the&nbsp;following&nbsp;is&nbsp;printed:<br>
+File&nbsp;Hollow&nbsp;Square.gts&nbsp;is&nbsp;being&nbsp;chain&nbsp;towered.<br>
+The&nbsp;towered&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_tower.gcode<br>
+&nbsp;<br>
+&nbsp;<br>
+&gt;python<br>
+Python&nbsp;2.5.1&nbsp;(r251:54863,&nbsp;Sep&nbsp;22&nbsp;2007,&nbsp;01:43:31)<br>
+[GCC&nbsp;4.2.1&nbsp;(SUSE&nbsp;Linux)]&nbsp;on&nbsp;linux2<br>
+Type&nbsp;"help",&nbsp;"copyright",&nbsp;"credits"&nbsp;or&nbsp;"license"&nbsp;for&nbsp;more&nbsp;information.<br>
+&gt;&gt;&gt;&nbsp;import&nbsp;tower<br>
+&gt;&gt;&gt;&nbsp;tower.<a href="#-main">main</a>()<br>
+This&nbsp;brings&nbsp;up&nbsp;the&nbsp;tower&nbsp;dialog.<br>
+&nbsp;<br>
+&nbsp;<br>
+&gt;&gt;&gt;&nbsp;tower.<a href="#-towerChainFile">towerChainFile</a>()<br>
+Hollow&nbsp;Square.gts<br>
+File&nbsp;Hollow&nbsp;Square.gts&nbsp;is&nbsp;being&nbsp;chain&nbsp;towered.<br>
+The&nbsp;towered&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_tower.gcode<br>
+&nbsp;<br>
+&nbsp;<br>
+&gt;&gt;&gt;&nbsp;tower.<a href="#-towerFile">towerFile</a>()<br>
+File&nbsp;Hollow&nbsp;Square.gcode&nbsp;is&nbsp;being&nbsp;towered.<br>
+The&nbsp;towered&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_tower.gcode<br>
+&nbsp;<br>
+&nbsp;<br>
+&gt;&gt;&gt;&nbsp;tower.<a href="#-getTowerGcode">getTowerGcode</a>("<br>
+(&nbsp;GCode&nbsp;generated&nbsp;by&nbsp;May&nbsp;8,&nbsp;2008&nbsp;slice.py&nbsp;)<br>
+(&nbsp;Extruder&nbsp;Initialization&nbsp;)<br>
+..<br>
+many&nbsp;lines&nbsp;of&nbsp;gcode<br>
+..<br>
+")<br>
+&nbsp;<br>
+&nbsp;<br>
+&gt;&gt;&gt;&nbsp;tower.<a href="#-getTowerChainGcode">getTowerChainGcode</a>("<br>
+(&nbsp;GCode&nbsp;generated&nbsp;by&nbsp;May&nbsp;8,&nbsp;2008&nbsp;slice.py&nbsp;)<br>
+(&nbsp;Extruder&nbsp;Initialization&nbsp;)<br>
+..<br>
+many&nbsp;lines&nbsp;of&nbsp;gcode<br>
+..<br>
+")</tt></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#fffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="cStringIO.html">cStringIO</a><br>
+<a href="euclidean.html">euclidean</a><br>
+<a href="fill.html">fill</a><br>
+</td><td width="25%" valign=top><a href="gcodec.html">gcodec</a><br>
+<a href="intercircle.html">intercircle</a><br>
+<a href="math.html">math</a><br>
+</td><td width="25%" valign=top><a href="preferences.html">preferences</a><br>
+<a href="sys.html">sys</a><br>
+<a href="time.html">time</a><br>
+</td><td width="25%" valign=top><a href="vectorwrite.html">vectorwrite</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ee77aa">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Classes</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="tower.html#ThreadLayer">ThreadLayer</a>
+</font></dt><dt><font face="helvetica, arial"><a href="tower.html#TowerPreferences">TowerPreferences</a>
+</font></dt><dt><font face="helvetica, arial"><a href="tower.html#TowerSkein">TowerSkein</a>
+</font></dt></dl>
+ <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ThreadLayer">class <strong>ThreadLayer</strong></a></font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;layer&nbsp;of&nbsp;loops&nbsp;and&nbsp;paths.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="ThreadLayer-__init__"><strong>__init__</strong></a>(self)</dt><dd><tt>Thread&nbsp;layer&nbsp;constructor.</tt></dd></dl>
+
+<dl><dt><a name="ThreadLayer-__repr__"><strong>__repr__</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;string&nbsp;representation&nbsp;of&nbsp;this&nbsp;thread&nbsp;layer.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="TowerPreferences">class <strong>TowerPreferences</strong></a></font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;class&nbsp;to&nbsp;handle&nbsp;the&nbsp;tower&nbsp;preferences.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="TowerPreferences-__init__"><strong>__init__</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;default&nbsp;preferences,&nbsp;execute&nbsp;title&nbsp;&amp;&nbsp;preferences&nbsp;filename.</tt></dd></dl>
+
+<dl><dt><a name="TowerPreferences-execute"><strong>execute</strong></a>(self)</dt><dd><tt>Tower&nbsp;button&nbsp;has&nbsp;been&nbsp;clicked.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="TowerSkein">class <strong>TowerSkein</strong></a></font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;class&nbsp;to&nbsp;tower&nbsp;a&nbsp;skein&nbsp;of&nbsp;extrusions.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="TowerSkein-__init__"><strong>__init__</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="TowerSkein-addEntireLayer"><strong>addEntireLayer</strong></a>(self, layerIndex)</dt><dd><tt>Add&nbsp;entire&nbsp;thread&nbsp;layer.</tt></dd></dl>
+
+<dl><dt><a name="TowerSkein-addGcodeFromThread"><strong>addGcodeFromThread</strong></a>(self, thread)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;thread&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
+
+<dl><dt><a name="TowerSkein-addGcodeMovement"><strong>addGcodeMovement</strong></a>(self, point)</dt><dd><tt>Add&nbsp;a&nbsp;movement&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
+
+<dl><dt><a name="TowerSkein-addIfTravel"><strong>addIfTravel</strong></a>(self, splitLine)</dt><dd><tt>Add&nbsp;travel&nbsp;move&nbsp;around&nbsp;loops&nbsp;if&nbsp;this&nbsp;the&nbsp;extruder&nbsp;is&nbsp;off.</tt></dd></dl>
+
+<dl><dt><a name="TowerSkein-addIslandLayer"><strong>addIslandLayer</strong></a>(self, threadLayer)</dt><dd><tt>Add&nbsp;a&nbsp;layer&nbsp;of&nbsp;surrounding&nbsp;islands.</tt></dd></dl>
+
+<dl><dt><a name="TowerSkein-addLayerLinesIfDifferent"><strong>addLayerLinesIfDifferent</strong></a>(self, layerIndex)</dt><dd><tt>Add&nbsp;gcode&nbsp;lines&nbsp;for&nbsp;the&nbsp;layer&nbsp;if&nbsp;it&nbsp;is&nbsp;different&nbsp;than&nbsp;the&nbsp;old&nbsp;bottom&nbsp;layer&nbsp;index.</tt></dd></dl>
+
+<dl><dt><a name="TowerSkein-addLine"><strong>addLine</strong></a>(self, line)</dt><dd><tt>Add&nbsp;a&nbsp;line&nbsp;of&nbsp;text&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
+
+<dl><dt><a name="TowerSkein-addShutdownToOutput"><strong>addShutdownToOutput</strong></a>(self)</dt><dd><tt>Add&nbsp;shutdown&nbsp;gcode&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
+
+<dl><dt><a name="TowerSkein-addToExtrusion"><strong>addToExtrusion</strong></a>(self, location)</dt><dd><tt>Add&nbsp;a&nbsp;location&nbsp;to&nbsp;the&nbsp;thread.</tt></dd></dl>
+
+<dl><dt><a name="TowerSkein-addTowers"><strong>addTowers</strong></a>(self)</dt><dd><tt>Add&nbsp;towers.</tt></dd></dl>
+
+<dl><dt><a name="TowerSkein-climbTower"><strong>climbTower</strong></a>(self, removedIsland)</dt><dd><tt>Climb&nbsp;up&nbsp;the&nbsp;island&nbsp;to&nbsp;any&nbsp;islands&nbsp;directly&nbsp;above.</tt></dd></dl>
+
+<dl><dt><a name="TowerSkein-getBottomLayerIndex"><strong>getBottomLayerIndex</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;index&nbsp;of&nbsp;the&nbsp;first&nbsp;island&nbsp;layer&nbsp;which&nbsp;has&nbsp;islands.</tt></dd></dl>
+
+<dl><dt><a name="TowerSkein-isInsideRemovedOutsideCone"><strong>isInsideRemovedOutsideCone</strong></a>(self, island, removedBoundingLoop, untilLayerIndex)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;island&nbsp;is&nbsp;entirely&nbsp;inside&nbsp;the&nbsp;removed&nbsp;bounding&nbsp;loop&nbsp;and&nbsp;outside&nbsp;the&nbsp;collision&nbsp;cone&nbsp;of&nbsp;the&nbsp;remaining&nbsp;islands.</tt></dd></dl>
+
+<dl><dt><a name="TowerSkein-linearMove"><strong>linearMove</strong></a>(self, splitLine)</dt><dd><tt>Add&nbsp;a&nbsp;linear&nbsp;move&nbsp;to&nbsp;the&nbsp;loop.</tt></dd></dl>
+
+<dl><dt><a name="TowerSkein-parseGcode"><strong>parseGcode</strong></a>(self, gcodeText, towerPreferences)</dt><dd><tt>Parse&nbsp;gcode&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;tower&nbsp;gcode.</tt></dd></dl>
+
+<dl><dt><a name="TowerSkein-parseInitialization"><strong>parseInitialization</strong></a>(self)</dt><dd><tt>Parse&nbsp;gcode&nbsp;initialization&nbsp;and&nbsp;store&nbsp;the&nbsp;parameters.</tt></dd></dl>
+
+<dl><dt><a name="TowerSkein-parseLine"><strong>parseLine</strong></a>(self, lineIndex)</dt><dd><tt>Parse&nbsp;a&nbsp;gcode&nbsp;line.</tt></dd></dl>
+
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-getTowerChainGcode"><strong>getTowerChainGcode</strong></a>(gcodeText, towerPreferences<font color="#909090">=None</font>)</dt><dd><tt>Tower&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.&nbsp;&nbsp;Chain&nbsp;tower&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;towered.</tt></dd></dl>
+ <dl><dt><a name="-getTowerGcode"><strong>getTowerGcode</strong></a>(gcodeText, towerPreferences<font color="#909090">=None</font>)</dt><dd><tt>Tower&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
+ <dl><dt><a name="-main"><strong>main</strong></a>(hashtable<font color="#909090">=None</font>)</dt><dd><tt>Display&nbsp;the&nbsp;tower&nbsp;dialog.</tt></dd></dl>
+ <dl><dt><a name="-towerChainFile"><strong>towerChainFile</strong></a>(filename<font color="#909090">=''</font>)</dt><dd><tt>Tower&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;Chain&nbsp;tower&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;towered.<br>
+Depending&nbsp;on&nbsp;the&nbsp;preferences,&nbsp;either&nbsp;arcPoint,&nbsp;arcRadius,&nbsp;arcSegment,&nbsp;bevel&nbsp;or&nbsp;do&nbsp;nothing.<br>
+If&nbsp;no&nbsp;filename&nbsp;is&nbsp;specified,&nbsp;tower&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
+ <dl><dt><a name="-towerFile"><strong>towerFile</strong></a>(filename<font color="#909090">=''</font>)</dt><dd><tt>Tower&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;Depending&nbsp;on&nbsp;the&nbsp;preferences,&nbsp;either&nbsp;arcPoint,&nbsp;arcRadius,&nbsp;arcSegment,&nbsp;bevel&nbsp;or&nbsp;do&nbsp;nothing.<br>
+If&nbsp;no&nbsp;filename&nbsp;is&nbsp;specified,&nbsp;tower&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
+ <dl><dt><a name="-transferFillLoops"><strong>transferFillLoops</strong></a>(fillLoops, surroundingLoop)</dt><dd><tt>Transfer&nbsp;fill&nbsp;loops.</tt></dd></dl>
+ <dl><dt><a name="-transferFillLoopsToSurroundingLoops"><strong>transferFillLoopsToSurroundingLoops</strong></a>(fillLoops, surroundingLoops)</dt><dd><tt>Transfer&nbsp;fill&nbsp;loops&nbsp;to&nbsp;surrounding&nbsp;loops.</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>__author__</strong> = 'Enrique Perez (perez_enrique@yahoo.com)'<br>
+<strong>__date__</strong> = '$Date: 2008/21/04 $'<br>
+<strong>__license__</strong> = 'GPL 3.0'</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#7799ee">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Author</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#7799ee"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Enrique&nbsp;Perez&nbsp;(perez_enrique@yahoo.com)</td></tr></table>
+</body></html>

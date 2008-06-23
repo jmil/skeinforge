@@ -155,8 +155,8 @@ reprap.cartesian.free()
 """
 
 from euclidean import *
-from gcodec import *
 from vec3 import vec3
+import gcodec
 import math
 import os
 import reprap	# Import the reprap module.
@@ -172,15 +172,15 @@ __license__ = "GPL 3.0"
 def display( filename = '' ):
 	"Parse a gcode file and display the commands.  If no filename is specified, parse all the gcode files which are not log files in this folder."
 	if filename == '':
-		displayFiles( getGCodeFilesWithAreNotLogFiles() )
+		displayFiles( getGCodeFilesWhichAreNotLogFiles() )
 		return
 	displayFile( filename )
 
 def displayFile( filename ):
 	"Parse a gcode file and display the commands."
 	print( 'File ' + filename + ' is being displayed.' )
-	fileText = getFileText( filename )
-	writeFileMessageSuffix( filename, displayText( fileText ), 'The gcode log file is saved as ', '_log' )
+	fileText = gcodec.getFileText( filename )
+	gcodec.writeFileMessageSuffix( filename, displayText( fileText ), 'The gcode log file is saved as ', '_log' )
 
 def displayFiles( filenames ):
 	"Parse gcode files and display the commands."
@@ -197,7 +197,7 @@ def extrude( filename = '' ):
 	"""Parse a gcode file and send the commands to the extruder.  If no filename is specified, parse all the gcode files which are not log files in this folder.
 	This function requires write access to the serial device, running as root is one way to get that access."""
 	if filename == '':
-		extrudeFiles( getGCodeFilesWithAreNotLogFiles() )
+		extrudeFiles( getGCodeFilesWhichAreNotLogFiles() )
 		return
 	extrudeFile( filename )
 
@@ -205,8 +205,8 @@ def extrudeFile( filename ):
 	"""Parse a gcode file and send the commands to the extruder.
 	This function requires write access to the serial device, running as root is one way to get that access."""
 	print( 'File ' + filename + ' is being extruded.' )
-	fileText = getFileText( filename )
-	writeFileMessageSuffix( filename, extrudeText( fileText ), 'The gcode log file is saved as ', '_log' )
+	fileText = gcodec.getFileText( filename )
+	gcodec.writeFileMessageSuffix( filename, extrudeText( fileText ), 'The gcode log file is saved as ', '_log' )
 
 def extrudeFiles( filenames ):
 	"""Parse gcode files and send the commands to the extruder.
@@ -221,9 +221,9 @@ def extrudeText( gcodeText ):
 	skein.parseText( gcodeText )
 	return skein.output
 
-def getGCodeFilesWithAreNotLogFiles():
+def getGCodeFilesWhichAreNotLogFiles():
 	"Get gcode files which are not log files."
-	return getFilesWithExtensionWithoutWords( 'gcode', [ '_log' ] )
+	return gcodec.getFilesWithFileTypeWithoutWords( 'gcode', [ '_log' ] )
 
 def getIntegerString( number ):
 	"Get integer as string."
@@ -377,4 +377,4 @@ class extrudeSkein( displaySkein ):
 
 print( 'Extrude has been imported.' )
 print( 'The gcode files in this directory that are not log files are the following:' )
-print( getGCodeFilesWithAreNotLogFiles() )
+print( getGCodeFilesWhichAreNotLogFiles() )

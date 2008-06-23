@@ -1,5 +1,21 @@
 """
-Slice is a script to slice a GNU Triangulated Surface file.  Slice is the first script of the skeinforge tool chain.
+Slice is a script to slice a GNU Triangulated Surface file.
+
+Slice slices a GNU Triangulated Surface file into gcode extrusion layers.  The 'Extrusion Diameter' is the diameter of the extrusion at the
+default extruder speed, this is the most important slice preference.  The 'Extrusion Density' is the density of the extruded shape over the
+density of the filament.  The 'Extrusion Width Over Thickness' ratio is the ratio of the extrusion width over the layer thickness.  A ratio of
+one means the extrusion is a circle, a typical ratio of 1.5 means the extrusion is a wide oval.
+
+Rarely changed preferences are Import Coarseness, Mesh Type, Infill Bridge Width Over Thickness & Infill in Direction
+of Bridges.  When the triangle mesh has holes in it, slice switches over to a slow algorithm that spans gaps in the mesh.  The higher the
+import coarseness, the wider the gaps in the mesh it will span.  An import coarseness of one means it will span gaps the width of the
+extrusion.  When the Mesh Type preference is correct, the mesh will be accurately sliced, and if a hole is found, slice will switch over to
+the algorithm that spans gaps.  If the Mesh Type preference is Unproven, slice will use the gap spanning algorithm from the start.  The
+problem with the gap spanning algothm is that it will span gaps, even if there actually is a gap in the model.  Infill bridge width
+over thickness ratio is the ratio of the extrusion width over the layer thickness on a bridge layer.  If the infill in direction of bridges
+preference is chosen, the infill will be in the direction of bridges across gaps, so that the fill will be able to span a bridge easier.  To run
+slice, in a shell type:
+> python slice.py
 
 To run slice, install python 2.x on your machine, which is avaliable from http://www.python.org/download/
 
@@ -78,6 +94,7 @@ try:
 except:
 	pass
 from vec3 import Vec3
+import cmath
 import cStringIO
 import euclidean
 import gcodec
@@ -93,6 +110,19 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/02/05 $"
 __license__ = "GPL 3.0"
 
+
+def addAlreadyFilledArounds( alreadyFilledArounds, loop, radius ):
+	"Add already filled loops around loop to alreadyFilledArounds."
+	alreadyFilledLoop = []
+	slightlyGreaterThanRadius = 1.01 * radius
+	muchGreaterThanRadius = 2.5 * radius
+	alreadyFilledArounds.append( alreadyFilledLoop )
+	circleNodes = intercircle.getCircleNodesFromLoop( loop, slightlyGreaterThanRadius )
+	centers = intercircle.getCentersFromCircleNodes( circleNodes )
+	for center in centers:
+		alreadyFilledInset = intercircle.getInsetFromClockwiseLoop( center, radius )
+		if euclidean.getMaximumSpan( alreadyFilledInset ) > muchGreaterThanRadius or euclidean.isWiddershins( alreadyFilledInset ):
+			alreadyFilledLoop.append( alreadyFilledInset )
 
 def addEdgePair( edgePairTable, edges, faceEdgeIndex, remainingEdgeIndex, remainingEdgeTable ):
 	"Add edge pair to the edge pair table."
@@ -113,6 +143,18 @@ def getCommonVertexIndex( edgeFirst, edgeSecond ):
 	print( edgeFirst )
 	print( edgeSecond )
 	return 0
+
+def getDoubledRoundZ( overhangingSegment, segmentRoundZ ):
+	"Get doubled plane angle around z of the overhanging segment."
+	endpoint = overhangingSegment[ 0 ]
+	roundZ = endpoint.point.dropAxis( 2 ) - endpoint.otherEndpoint.point.dropAxis( 2 )
+	roundZ *= segmentRoundZ
+	if abs( roundZ ) == 0.0:
+		return complex()
+	if roundZ.real < 0.0:
+		roundZ *= - 1.0
+	roundZLength = abs( roundZ )
+	return roundZ * roundZ / roundZLength
 
 def getLoopsFromCorrectMesh( edges, faces, vertices, z ):
 	"Get loops from a slice of a correct mesh."
@@ -137,7 +179,28 @@ def getLoopsFromCorrectMesh( edges, faces, vertices, z ):
 	pathIndexes = getPathIndexesAddPath( edges, faces, loops, remainingEdgeTable, vertices, z )
 	while pathIndexes != None:
 		pathIndexes = getPathIndexesAddPath( edges, faces, loops, remainingEdgeTable, vertices, z )
-	return loops
+	boundingLoops = []
+	for loop in loops:
+		boundingLoop = intercircle.BoundingLoop().getFromLoop( loop )
+		boundingLoop.area = abs( euclidean.getPolygonArea( loop ) )
+		boundingLoops.append( boundingLoop )
+	boundingLoops.sort()
+	sortedLoops = []
+	for boundingLoop in boundingLoops:
+		sortedLoops.append( boundingLoop.loop )
+	return sortedLoops
+#	untouchables = []
+#	for boundingLoop in boundingLoops:
+#		if not boundingLoop.isIntersectingList( untouchables ):
+#			untouchables.append( boundingLoop )
+#	if len( untouchables ) < len( boundingLoops ):
+#		print( 'This should never happen, the slice layer intersects itself. Something will still be printed, but there is no guarantee that it will be the correct shape.' )
+#		print( 'Once the gcode is saved, you should check over the layer with a z of:' )
+#		print( z )
+#	remainingLoops = []
+#	for untouchable in untouchables:
+#		remainingLoops.append( untouchable.loop )
+#	return remainingLoops
 
 def getLoopsFromUnprovenMesh( edges, extrusionWidth, faces, vertices, slicePreferences, z ):
 	"Get loops from a slice of an unproven mesh."
@@ -163,11 +226,9 @@ def getLoopsFromUnprovenMesh( edges, extrusionWidth, faces, vertices, slicePrefe
 	for edgePairValue in edgePairTable.values():
 		edgePairValue.addPointsAtZ( points, importRadius, vertices, z )
 	path = euclidean.getAwayPath( points, importRadius )
-	allCircleNodes = intercircle.getCircleNodesFromPath( path, importRadius )
-	allCircleIntersections = intercircle.getCircleIntersectionsFromCircleNodes( allCircleNodes )
-	allCircleIntersectionLoops = intercircle.getCircleIntersectionLoops( allCircleIntersections )
-	centers = intercircle.getCentersFromIntersectionLoops( allCircleIntersectionLoops )
-	return intercircle.getLoopsfromLoopsDirection( slicePreferences.importTinyDetails.value, centers )
+	circleNodes = intercircle.getCircleNodesFromPath( path, importRadius )
+	centers = intercircle.getCentersFromCircleNodes( circleNodes )
+	return intercircle.getLoopsFromLoopsDirection( True, centers )
 
 def getLowestZoneIndex( zoneArray, z ):
 	"Get the lowest zone index."
@@ -200,6 +261,28 @@ def getNextEdgeIndexAroundZ( edge, faces, remainingEdgeTable ):
 			return secondFace.edgeIndexThird
 	return - 1
 
+def getOverhangDirection( belowOutsetLoops, segmentBegin, segmentEnd ):
+	"Add to span direction from the endpoint segments which overhang the layer below."
+	segment = segmentEnd.minus( segmentBegin )
+	normalizedSegment = complex( segment.x, segment.y )
+	normalizedSegment /= abs( normalizedSegment )
+	segmentYMirror = complex( normalizedSegment.real, - normalizedSegment.imag )
+	segmentBegin = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, segmentBegin )
+	segmentEnd = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, segmentEnd )
+	solidXIntersectionList = []
+	y = segmentBegin.y
+	solidXIntersectionList.append( euclidean.XIntersection().getFromIndexX( - 1.0, segmentBegin.x ) )
+	solidXIntersectionList.append( euclidean.XIntersection().getFromIndexX( - 1.0, segmentEnd.x ) )
+	for belowLoopIndex in range( len( belowOutsetLoops ) ):
+		belowLoop = belowOutsetLoops[ belowLoopIndex ]
+		rotatedOutset = euclidean.getPathRoundZAxisByPlaneAngle( segmentYMirror, belowLoop )
+		euclidean.addXIntersections( rotatedOutset, belowLoopIndex, solidXIntersectionList, y )
+	overhangingSegments = euclidean.getSegmentsFromIntersections( solidXIntersectionList, y, segmentBegin.z )
+	overhangDirection = complex()
+	for overhangingSegment in overhangingSegments:
+		overhangDirection += getDoubledRoundZ( overhangingSegment, normalizedSegment )
+	return overhangDirection
+
 def getPath( edges, pathIndexes, loop, z ):
 	"Get the path from the edge intersections."
 	path = []
@@ -210,7 +293,7 @@ def getPath( edges, pathIndexes, loop, z ):
 		path.append( pathPoint )
 	return path
 
-def getPathIndexesAddPath( edges, faces, loops, remainingEdgeTable, loop, z ):
+def getPathIndexesAddPath( edges, faces, loops, remainingEdgeTable, vertices, z ):
 	"Get the path indexes around a triangle mesh slice and add the path to the loops."
 	if len( remainingEdgeTable ) < 1:
 		return None
@@ -227,7 +310,7 @@ def getPathIndexesAddPath( edges, faces, loops, remainingEdgeTable, loop, z ):
 		print( "Dangling edges, will use intersecting circles to get import layer at height " + z.toString() )
 		del loops[ : ]
 		return None
-	loops.append( getPath( edges, pathIndexes, loop, z ) )
+	loops.append( getPath( edges, pathIndexes, vertices, z ) )
 	return pathIndexes
 
 def getRemainingEdgeTable( edges, vertices, z ):
@@ -238,6 +321,35 @@ def getRemainingEdgeTable( edges, vertices, z ):
 		if isZInEdge( edge, vertices, z ):
 			remainingEdgeTable[ edgeIndex ] = edge
 	return remainingEdgeTable
+
+def getSegmentsFromPoints( loopLists, pointBegin, pointEnd ):
+	"Get enpoint segments from the beginning and end of a line segment."
+	normalizedSegment = pointEnd.dropAxis( 2 ) - pointBegin.dropAxis( 2 )
+	normalizedSegmentLength = abs( normalizedSegment )
+	if normalizedSegmentLength == 0.0:
+		return
+	normalizedSegment /= normalizedSegmentLength
+	segmentYMirror = complex( normalizedSegment.real, - normalizedSegment.imag )
+	pointBeginRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, pointBegin )
+	pointEndRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, pointEnd )
+	rotatedLoopLists = []
+	for loopList in loopLists:
+		rotatedLoopList = []
+		rotatedLoopLists.append( rotatedLoopList )
+		for loop in loopList:
+			rotatedLoop = euclidean.getPathRoundZAxisByPlaneAngle( segmentYMirror, loop )
+			rotatedLoopList.append( rotatedLoop )
+	xIntersectionList = []
+	xIntersectionList.append( euclidean.XIntersection().getFromIndexX( - 1, pointBeginRotated.x ) )
+	xIntersectionList.append( euclidean.XIntersection().getFromIndexX( - 1, pointEndRotated.x ) )
+	euclidean.addXIntersectionsFromLoopLists( rotatedLoopLists, xIntersectionList, pointBeginRotated.y )
+	segments = euclidean.getSegmentsFromIntersections( xIntersectionList, pointBeginRotated.y, pointBegin.z )
+	for segment in segments:
+		endpointBegin = segment[ 0 ]
+		endpointBegin.point = euclidean.getRoundZAxisByPlaneAngle( normalizedSegment, endpointBegin.point )
+		endpointEnd = segment[ 1 ]
+		endpointEnd.point = euclidean.getRoundZAxisByPlaneAngle( normalizedSegment, endpointEnd.point )
+	return segments
 
 def getSharedFace( firstEdge, faces, secondEdge ):
 	"Get the face which is shared by two edges."
@@ -269,6 +381,30 @@ def getSliceIntersectionFromEdge( edge, loop, z ):
 	sliceIntersection.add( firstVertex )
 	return sliceIntersection
 
+def isCloseToLast( paths, point, radius ):
+	"Determine if the point is close to the last point of the last path."
+	if len( paths ) < 1:
+		return False
+	lastPath = paths[ - 1 ]
+	return lastPath[ - 1 ].distance( point ) < radius
+
+def isIntersectingWithinList( loop, loopList ):
+	"Determine if the loop is intersecting or is within the loop list."
+	if euclidean.isLoopIntersectingLoops( loop, loopList ):
+		return True
+	totalNumberOfIntersections = 0
+	for otherLoop in loopList:
+		leftPoint = euclidean.getLeftPoint( otherLoop )
+		totalNumberOfIntersections += euclidean.getNumberOfIntersectionsToLeft( leftPoint, loop )
+	return totalNumberOfIntersections % 2 == 1
+
+def isIntersectingWithinLists( loop, loopLists ):
+	"Determine if the loop is intersecting or is within the loop lists."
+	for loopList in loopLists:
+		if isIntersectingWithinList( loop, loopList ):
+			return True
+	return False
+
 def isZInEdge( edge, vertices, z ):
 	"Determine if z is inside the edge."
 	vertex1ZHigher = vertices[ edge.vertexIndexFirst ].z > z
@@ -293,8 +429,7 @@ def sliceFile( filename = '' ):
 	suffixFilename = filename[ : filename.rfind( '.' ) ] + '_slice.gcode'
 	gcodec.writeFileText( suffixFilename, getSliceGcode( gnuTriangulatedSurfaceText, slicePreferences ) )
 	print( 'The sliced file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
-	if slicePreferences.writeSVG.value:
-		vectorwrite.writeVectorFile( suffixFilename )
+	vectorwrite.writeSkeinforgeVectorFile( suffixFilename )
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to slice the file.' )
 
 
@@ -388,37 +523,64 @@ class Face:
 class SliceSkein:
 	"A class to slice a GNU Triangulated Surface."
 	def __init__( self ):
+		self.belowLoops = None
 		self.output = cStringIO.StringIO()
 
-	def addExtruderPaths( self, layerIndex ):
-		"Add extruder loops."
-		self.addLine( '( Extruder paths for layer ' + str( layerIndex ) + ' )' ) # GCode formatted comment
-		self.addLine( 'M113 (' + str( layerIndex ) ) # Indicate that a new layer is starting.
-		z = self.layerBottom + float( layerIndex ) * self.layerThickness
-		zoneArray = []
-		for point in self.triangleMesh.vertices:
-			self.addToZoneArray( point, zoneArray, z )
-		lowestZoneIndex = getLowestZoneIndex( zoneArray, z )
-		halfAround = int( math.ceil( float( lowestZoneIndex ) / 2.0 ) )
-		zAround = float( halfAround ) * self.zZoneInterval
-		if lowestZoneIndex % 2 == 1:
-			zAround = - zAround
-		loops = self.getLoopsFromMesh( z + zAround )
-		centers = []
-		doubleExtrusionWidth = 2.0 * self.extrusionWidth
-		extruderPaths = []
-		for loop in loops:
-			centersFromLoopDirection = intercircle.getCentersfromLoopDirection( not euclidean.isWiddershins( loop ), loop, self.extrusionWidth )
-			for centerFromDirection in centersFromLoopDirection:
-				if euclidean.getMaximumSpan( centerFromDirection ) > doubleExtrusionWidth:
-					centers.append( centerFromDirection )
-		for center in centers:
-			extrudateLoop = intercircle.getInsetFromClockwiseLoop( center, self.halfExtrusionWidth )
-			self.addGcodeFromThread( extrudateLoop + [ extrudateLoop[ 0 ] ] )
+	def addFromFile( self, filename ):
+		"Add lines of text from the filename."
+		fileLines = gcodec.getTextLines( gcodec.getFileText( filename ) )
+		for line in fileLines:
+			self.addLine( line )
+
+	def addFromUpperLowerFile( self, filename ):
+		"Add lines of text from the filename or the lowercase filename, if there is no file by the original filename in the directory."
+		directory = os.listdir( os.getcwd() )
+		if filename in directory:
+			self.addFromFile( filename )
+			return
+		filename = filename.lower()
+		if filename in directory:
+			self.addFromFile( filename )
 
 	def addGcodeMovement( self, point ):
 		"Add a movement to the output."
 		self.addLine( "G1 X%s Y%s Z%s" % ( euclidean.getRoundedToThreePlaces( point.x ), euclidean.getRoundedToThreePlaces( point.y ), euclidean.getRoundedToThreePlaces( point.z ) ) )
+
+	def addGcodeFromPerimeterPaths( self, loop, loopLists, radius ):
+		"Add the perimeter paths to the output."
+		segments = []
+		for pointIndex in range( len( loop ) ):
+			pointBegin = loop[ pointIndex ]
+			pointEnd = loop[ ( pointIndex + 1 ) % len( loop ) ]
+			segments += getSegmentsFromPoints( loopLists, pointBegin, pointEnd )
+		perimeterPaths = []
+		path = []
+		muchSmallerThanRadius = 0.1 * radius
+		for segment in segments:
+			pointBegin = segment[ 0 ].point
+			if not isCloseToLast( perimeterPaths, pointBegin, muchSmallerThanRadius ):
+				path = [ pointBegin ]
+				perimeterPaths.append( path )
+			path.append( segment[ 1 ].point )
+		if len( perimeterPaths ) > 1:
+			firstPath = perimeterPaths[ 0 ]
+			lastPath = perimeterPaths[ - 1 ]
+			if lastPath[ - 1 ].distance( firstPath[ 0 ] ) < 0.1 * muchSmallerThanRadius:
+				connectedBeginning = lastPath + firstPath
+				perimeterPaths[ 0 ] = connectedBeginning
+				perimeterPaths.remove( lastPath )
+		for perimeterPath in perimeterPaths:
+			self.addGcodeFromThread( perimeterPath )
+
+	def addGcodeFromRemainingLoop( self, loop, loopLists, radius ):
+		"Add the remainder of the loop which does not overlap the alreadyFilledArounds loops."
+		euclidean.addSurroundingLoopBeginning( loop, self )
+		if isIntersectingWithinLists( loop, loopLists ):
+			self.addGcodeFromPerimeterPaths( loop, loopLists, radius )
+		else:
+			self.addLine( '(<perimeter> )' ) # Indicate that a perimeter is beginning.
+			self.addGcodeFromThread( loop + [ loop[ 0 ] ] )
+		self.addLine( '(</surroundingLoop> )' )
 
 	def addGcodeFromThread( self, thread ):
 		"Add a thread to the output."
@@ -429,28 +591,36 @@ class SliceSkein:
 		if len( thread ) < 2:
 			return
 		self.addLine( "M101" ) # Turn extruder on.
-		if len( thread ) > 3:
-			self.addLine( 'M114' ) # Indicate that a loop is beginning.
 		for point in thread[ 1 : ]:
 			self.addGcodeMovement( point )
 		self.addLine( "M103" ) # Turn extruder off.
 
 	def addInitializationToOutput( self ):
 		"Add initialization gcode to the output."
-		self.addLine( '( GCode generated by May 8, 2008 slice.py )' ) # GCode formatted comment
-		self.addLine( '( Extruder Initialization )' ) # GCode formatted comment
-		self.addLine( "M100 P210" ); # Set extruder speed to 210.
-		self.addLine( "M103" ); # Turn extruder off.
-		self.addLine( "M105" ); # Custom code for temperature reading.
-		self.addLine( "M108 (" + euclidean.getRoundedToThreePlaces( self.extrusionDiameter ) ); # Set extrusion diameter.
-		self.addLine( "M109 (" + euclidean.getRoundedToThreePlaces( self.extrusionWidth ) ); # Set extrusion width.
-		self.addLine( "M110 (" + euclidean.getRoundedToThreePlaces( self.layerThickness ) ); # Set layer thickness.
-		self.addLine( "G21" ); # Set units to mm.
-		self.addLine( "G90" ); # Set positioning to absolute.
-		self.addLine( "G28" ); # Start at home.
-		self.addLine( "M111 (slice)" ); # The skein has been sliced.
-		self.addLine( "M112" ); # Initialization is finished, extrusion is starting.
-		self.addLine( "( Extruder Movement )" ); # GCode formatted comment
+		# From http://www.ahha.com/VarsAndMacros.doc
+		# If you wish to run macros using comments in parentheses, the comment character must be changed from a semi-colon to a left parenthesis.
+		# Note: the original closing single quotation mark was not ascii, so I replaced it with an apostrophe.
+		# To do this, the following line should be placed at the beginning of the G-Code file that calls the macro:
+#		self.addLine( "(*CMST '('*)" ) # Gcode to convert the comment character to '('.
+		self.addFromUpperLowerFile( 'Start.txt' ) # Add a start file if it exists.
+		self.addLine( '(<creator> skeinforge May 28, 2008 )' ) # GCode formatted comment
+		self.addLine( 'M110' ) # GCode for compatibility with Nophead's code.
+		self.addLine( '(<extruderInitialization> )' ) # GCode formatted comment
+		self.addLine( 'G21' ) # Set units to mm.
+		self.addLine( 'G90' ) # Set positioning to absolute.
+		self.addLine( 'G28' ) # Start at home.
+		self.addLine( 'M103' ) # Turn extruder off.
+		self.addLine( 'M104 S200' ) # Set temperature to 200.
+		self.addLine( 'M105' ) # Custom code for temperature reading.
+		self.addLine( 'M108 S210' ) # Set extruder speed to 210.
+		self.addFromUpperLowerFile( 'EndOfTheBeginning.txt' ) # Add a second start file if it exists.
+		self.addLine( '(<extrusionDiameter> ' + euclidean.getRoundedToThreePlaces( self.extrusionDiameter ) + ' )' ) # Set extrusion diameter.
+		self.addLine( '(<extrusionWidth> ' + euclidean.getRoundedToThreePlaces( self.extrusionWidth ) + ' )' ) # Set extrusion width.
+		self.addLine( '(<layerThickness> ' + euclidean.getRoundedToThreePlaces( self.layerThickness ) + ' )' ) # Set layer thickness.
+		# Set bridge extrusion width over solid extrusion width.
+		self.addLine( '(<bridgeExtrusionWidthOverSolid> ' + euclidean.getRoundedToThreePlaces( self.bridgeExtrusionWidth / self.extrusionWidth ) + ' )' )
+		self.addLine( '(<procedureDone> slice )' ) # The skein has been sliced.
+		self.addLine( '(<extrusionStart> )' ) # Initialization is finished, extrusion is starting.
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
@@ -458,8 +628,11 @@ class SliceSkein:
 
 	def addShutdownToOutput( self ):
 		"Add shutdown gcode to the output."
-		self.addLine( '( Extruder Shut Down )' ) # GCode formatted comment
-		self.addLine( "M103" ) # Turn extruder off.
+		self.addLine( '(<extruderShutDown> )' ) # GCode formatted comment
+		self.addLine( 'M103' ) # Turn extruder motor off.
+		self.addLine( 'M104 S0' ) # Turn extruder heater off.
+#		self.addLine( 'M30' ) # End gcode program.
+		self.addFromUpperLowerFile( 'End.txt' ) # Add an end file if it exists.
 
 	def addToZoneArray( self, point, zoneArray, z ):
 		"Add a height to the zone array."
@@ -470,13 +643,53 @@ class SliceSkein:
 		if zoneAround < len( zoneArray ):
 			zoneArray[ zoneAround ] += 1
 
+	def getBridgeDirection( self, layerLoops ):
+		"Get span direction for the majority of the overhanging extrusion perimeter, if any."
+		if not self.slicePreferences.infillDirectionBridge.value:
+			return None
+		if self.belowLoops == None:
+			return None
+		belowOutsetLoops = []
+		overhangInset = 1.25 * self.extrusionWidth
+		greaterThanOverhang = 1.1 * overhangInset
+		for loop in self.belowLoops:
+			centers = intercircle.getCentersFromLoopDirection( True, loop, greaterThanOverhang )
+			for center in centers:
+				outset = intercircle.getInsetFromClockwiseLoop( center, overhangInset )
+				if euclidean.isLargeSameDirection( outset, center, self.extrusionWidth ):
+					belowOutsetLoops.append( outset )
+		bridgeDirection = complex()
+		for loop in layerLoops:
+			for pointIndex in range( len( loop ) ):
+				previousIndex = ( pointIndex + len( loop ) - 1 ) % len( loop )
+				bridgeDirection += getOverhangDirection( belowOutsetLoops, loop[ previousIndex ], loop[ pointIndex ] )
+		if abs( bridgeDirection ) < self.halfExtrusionWidth:
+			return None
+		else:
+			bridgeDirection /= abs( bridgeDirection )
+			return cmath.sqrt( bridgeDirection )
+
+#	def getExtrudateLoops( self, halfWidth, loops ):
+#		"Get the inset extrudate loops from the loops."
+#		muchGreaterThanExtrusionWidth = 2.5 * self.extrusionWidth
+#		extrudateLoops = []
+#		for loop in loops:
+#			circleNodes = intercircle.getCircleNodesFromLoop( loop, self.extrusionWidth )
+#			centers = intercircle.getCentersFromCircleNodes( circleNodes )
+#			for center in centers:
+#				extrudateLoop = intercircle.getInsetFromClockwiseLoop( center, halfWidth )
+#				if euclidean.isLargeSameDirection( extrudateLoop, center, muchGreaterThanExtrusionWidth ):
+#					if euclidean.isPathInsideLoop( loop, extrudateLoop ) == euclidean.isWiddershins( loop ):
+#						extrudateLoops.append( extrudateLoop )
+#		return extrudateLoops
+#
 	def getLoopsFromMesh( self, z ):
 		"Get loops from a slice of a mesh."
 		loops = []
 		originalLoops = []
 		if self.slicePreferences.correct.value:
 			originalLoops = getLoopsFromCorrectMesh( self.triangleMesh.edges, self.triangleMesh.faces, self.triangleMesh.vertices, z )
-		if len( loops ) < 1:
+		if len( originalLoops ) < 1:
 			originalLoops = getLoopsFromUnprovenMesh( self.triangleMesh.edges, self.extrusionWidth, self.triangleMesh.faces, self.triangleMesh.vertices, self.slicePreferences, z )
 		for original in originalLoops:
 			loops.append( euclidean.getSimplifiedLoop( original, self.extrusionWidth ) )
@@ -492,15 +705,71 @@ class SliceSkein:
 				loop.reverse()
 		return loops
 
+	def getZAddExtruderPaths( self, z ):
+		"Get next z and add extruder loops."
+		alreadyFilledArounds = []
+		zoneArray = []
+		for point in self.triangleMesh.vertices:
+			self.addToZoneArray( point, zoneArray, z )
+		lowestZoneIndex = getLowestZoneIndex( zoneArray, z )
+		halfAround = int( math.ceil( float( lowestZoneIndex ) / 2.0 ) )
+		zAround = float( halfAround ) * self.zZoneInterval
+		if lowestZoneIndex % 2 == 1:
+			zAround = - zAround
+		loops = self.getLoopsFromMesh( z + zAround )
+		centers = []
+		extruderPaths = []
+		halfWidth = self.halfExtrusionWidth
+		muchGreaterThanExtrusionWidth = 2.5 * self.extrusionWidth
+		extrudateLoops = []
+		for loop in loops:
+			circleNodes = intercircle.getCircleNodesFromLoop( loop, self.extrusionWidth )
+			centers = intercircle.getCentersFromCircleNodes( circleNodes )
+			for center in centers:
+				extrudateLoop = intercircle.getInsetFromClockwiseLoop( center, halfWidth )
+				if euclidean.isLargeSameDirection( extrudateLoop, center, muchGreaterThanExtrusionWidth ):
+					if euclidean.isPathInsideLoop( loop, extrudateLoop ) == euclidean.isWiddershins( loop ):
+						extrudateLoops.append( extrudateLoop )
+#		return extrudateLoops
+#		extrudateLoops = self.getExtrudateLoops( halfWidth, loops )
+		bridgeDirection = self.getBridgeDirection( extrudateLoops )
+		self.addLine( '(<layerStart> ' + str( z ) + ' )' ) # Indicate that a new layer is starting.
+		halfBridgeMinusLayer = 0.0
+		if bridgeDirection != None:
+			halfWidth = 0.5 * self.bridgeExtrusionWidth
+			self.addLine( '(<bridgeDirection> ' + str( bridgeDirection ) + ' )' ) # Indicate the bridge direction.
+			halfBridgeMinusLayer = 0.5 * ( self.bridgeLayerThickness - self.layerThickness )
+		extrudateLoops = []
+		for loop in loops:
+			circleNodes = intercircle.getCircleNodesFromLoop( loop, self.extrusionWidth )
+			centers = intercircle.getCentersFromCircleNodes( circleNodes )
+			for center in centers:
+				extrudateLoop = intercircle.getInsetFromClockwiseLoop( center, halfWidth )
+				if euclidean.isLargeSameDirection( extrudateLoop, center, muchGreaterThanExtrusionWidth ):
+					if euclidean.isPathInsideLoop( loop, extrudateLoop ) == euclidean.isWiddershins( loop ):
+						for point in extrudateLoop:
+							point.z += halfBridgeMinusLayer
+						extrudateLoops.append( extrudateLoop )
+						self.addGcodeFromRemainingLoop( extrudateLoop, alreadyFilledArounds, halfWidth )
+						addAlreadyFilledArounds( alreadyFilledArounds, extrudateLoop, 2.0 * halfWidth )
+#		extrudateLoops = self.getExtrudateLoops( halfWidth, loops )
+		self.belowLoops = extrudateLoops
+		if bridgeDirection == None:
+			return z + self.layerThickness
+		return z + self.bridgeLayerThickness
+
 	def parseGcode( self, slicePreferences, gnuTriangulatedSurfaceText ):
 		"Parse gnu triangulated surface text and store the sliced gcode."
 		self.slicePreferences = slicePreferences
 		self.triangleMesh = TriangleMesh().getFromGNUTriangulatedSurfaceText( gnuTriangulatedSurfaceText )
 		self.extrusionDiameter = slicePreferences.extrusionDiameter.value
 		squareSectionWidth = self.extrusionDiameter * math.sqrt( math.pi / slicePreferences.extrusionFillDensity.value ) / 2.0
+		bridgeWidthOverThicknessSquareRoot = math.sqrt( slicePreferences.infillBridgeWidthOverThickness.value )
 		extrusionWidthOverThicknessSquareRoot = math.sqrt( slicePreferences.extrusionWidthOverThickness.value )
+		self.bridgeExtrusionWidth = squareSectionWidth * bridgeWidthOverThicknessSquareRoot
 		self.extrusionWidth = squareSectionWidth * extrusionWidthOverThicknessSquareRoot
 		self.halfExtrusionWidth = 0.5 * self.extrusionWidth
+		self.bridgeLayerThickness = squareSectionWidth / bridgeWidthOverThicknessSquareRoot
 		self.layerThickness = squareSectionWidth / extrusionWidthOverThicknessSquareRoot
 		self.halfThickness = 0.5 * self.layerThickness
 		self.zZoneLayers = 99
@@ -512,11 +781,10 @@ class SliceSkein:
 			self.top = max( self.top, point.z )
 		self.layerBottom = self.bottom + self.halfThickness
 		self.layerTop = self.top - self.halfThickness * 0.5
-		skeinHeight = self.layerTop - self.layerBottom
-		numberOfLayers = int( math.floor( skeinHeight / self.layerThickness ) + 1 )
 		self.addInitializationToOutput()
-		for layerIndex in range( numberOfLayers ):
-			self.addExtruderPaths( layerIndex )
+		z = self.layerBottom
+		while z < self.layerTop:
+			z = self.getZAddExtruderPaths( z )
 		self.addShutdownToOutput()
 
 
@@ -525,17 +793,16 @@ class SlicePreferences:
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences filename."
 		#Set the default preferences.
-		self.extrusionDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Diameter (mm):', 0.8 )
-		self.extrusionFillDensity = preferences.FloatPreference().getFromValue( 'Extrusion Density (ratio):', 0.9 )
-		self.extrusionWidthOverThickness = preferences.FloatPreference().getFromValue( 'Extrusion Width Over Thickness (ratio):', 1.0 )
+		self.extrusionDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Diameter (mm):', 0.6 )
+		self.extrusionFillDensity = preferences.FloatPreference().getFromValue( 'Extrusion Density (ratio):', 0.82 )
+		self.extrusionWidthOverThickness = preferences.FloatPreference().getFromValue( 'Extrusion Width Over Thickness (ratio):', 1.5 )
 		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface files', '*.gts' ) ], 'Open File to be Sliced', '' )
-		self.fillBeginRotation = preferences.FloatPreference().getFromValue( 'Fill Begin Rotation (degrees):', 45.0 )
 		self.importCoarseness = preferences.FloatPreference().getFromValue( 'Import Coarseness (ratio):', 1.0 )
 		importRadio = []
 		self.correct = preferences.RadioLabel().getFromRadioLabel( 'Correct Mesh', 'Mesh Type:', importRadio, True )
 		self.unproven = preferences.Radio().getFromRadio( 'Unproven Mesh', importRadio,False  )
-		self.importTinyDetails = preferences.BooleanPreference().getFromValue( 'Import Tiny Details:', True )
-		self.writeSVG = preferences.BooleanPreference().getFromValue( 'Write Scalable Vector Graphics:', True )
+		self.infillBridgeWidthOverThickness = preferences.FloatPreference().getFromValue( 'Infill Bridge Width Over Thickness (ratio):', 1.0 )
+		self.infillDirectionBridge = preferences.BooleanPreference().getFromValue( 'Infill in Direction of Bridges', True )
 		directoryRadio = []
 		self.directoryPreference = preferences.RadioLabel().getFromRadioLabel( 'Slice All GNU Triangulated Surface Files in a Directory', 'File or Directory:', directoryRadio, False )
 		self.filePreference = preferences.Radio().getFromRadio( 'Slice File', directoryRadio, True )
@@ -548,13 +815,12 @@ class SlicePreferences:
 			self.importCoarseness,
 			self.correct,
 			self.unproven,
-			self.importTinyDetails,
-			self.writeSVG,
+			self.infillBridgeWidthOverThickness,
+			self.infillDirectionBridge,
 			self.directoryPreference,
 			self.filePreference ]
 		self.executeTitle = 'Slice'
-#		self.filename = getPreferencesFilePath( 'slice.csv' )
-		self.filenamePreferences = 'slice.csv'
+		self.filenamePreferences = preferences.getPreferencesFilePath( 'slice.csv' )
 		self.filenameHelp = 'slice.html'
 		self.title = 'Slice Preferences'
 

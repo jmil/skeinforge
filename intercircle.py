@@ -32,17 +32,27 @@ __license__ = "GPL 3.0"
 def addCircleIntersectionLoop( circleIntersectionPath, circleIntersections ):
 	"Add a circle intersection loop."
 	firstCircleIntersection = circleIntersectionPath[ 0 ]
+	firstCircleIntersection.steppedOn = False
 	circleIntersectionAhead = firstCircleIntersection
-	for circleIntersectionIndex in range( len( circleIntersections ) ):
+	for circleIntersectionIndex in range( len( circleIntersections ) + 1 ):
 		circleIntersectionAhead = circleIntersectionAhead.getCircleIntersectionAhead()
 		if circleIntersectionAhead.index == firstCircleIntersection.index:
+			firstCircleIntersection.steppedOn = True
 			return
+		if circleIntersectionAhead.steppedOn == True:
+			print( 'circleIntersectionAhead.steppedOn == True' )
+			print( circleIntersectionAhead )
 		circleIntersectionAhead.addToList( circleIntersectionPath )
-	print( "getCircleIntersectionPath would have gone into an endless loop, this should never happen." )
-	print( circleIntersectionPath )
+	firstCircleIntersection.steppedOn = True
+	print( "addCircleIntersectionLoop would have gone into an endless loop, this should never happen." )
+	print( "circleIntersectionPath" )
+	for circleIntersection in circleIntersectionPath:
+		print( circleIntersection )
+		print( circleIntersection.circleNodeAhead )
+		print( circleIntersection.circleNodeBehind )
 	print( "firstCircleIntersection" )
 	print( firstCircleIntersection )
-	print( circleIntersections )
+	print( "circleIntersections" )
 	for circleIntersection in circleIntersections:
 		print( circleIntersection )
 
@@ -66,6 +76,12 @@ def addPointsFromSegment( points, radius, pointBegin, pointEnd ):
 		points.append( nextCircleCenter )
 		nextCircleCenter = nextCircleCenter.plus( segment )
 
+def getCentersFromCircleNodes( circleNodes ):
+	"Get the centers of the circle intersection loops from circle nodes."
+	circleIntersections = getCircleIntersectionsFromCircleNodes( circleNodes )
+	circleIntersectionLoops = getCircleIntersectionLoops( circleIntersections )
+	return getCentersFromIntersectionLoops( circleIntersectionLoops )
+
 def getCentersFromIntersectionLoop( circleIntersectionLoop ):
 	"Get the centers from the intersection loop."
 	loop = []
@@ -80,13 +96,23 @@ def getCentersFromIntersectionLoops( circleIntersectionLoops ):
 		centers.append( getCentersFromIntersectionLoop( circleIntersectionLoop ) )
 	return centers
 
-def getCentersfromLoopDirection( isWiddershins, loop, radius ):
+def getCentersFromLoopDirection( isWiddershins, loop, radius ):
 	"Get the centers of the circle intersection loops which go around in the given direction."
 	circleNodes = getCircleNodesFromLoop( loop, radius )
-	circleIntersections = getCircleIntersectionsFromCircleNodes( circleNodes )
-	circleIntersectionLoops = getCircleIntersectionLoops( circleIntersections )
-	centers = getCentersFromIntersectionLoops( circleIntersectionLoops )
-	return getLoopsfromLoopsDirection( isWiddershins, centers )
+	centers = getCentersFromCircleNodes( circleNodes )
+	return getLoopsFromLoopsDirection( isWiddershins, centers )
+
+def getCentersFromOutside( isOutside, loop, radius ):
+	"Get the centers of the circle intersection loops which are outside if isOutside is true, otherwise get the ones inside."
+	circleNodes = getCircleNodesFromLoop( loop, radius )
+	centers = getCentersFromCircleNodes( circleNodes )
+	outsideCenters = []
+	halfRadius = 0.5 * radius
+	for center in centers:
+		inset = getInsetFromClockwiseLoop( center, halfRadius )
+		if euclidean.isPathInsideLoop( loop, inset ) != isOutside:
+			outsideCenters.append( center )
+	return outsideCenters
 
 def getCircleIntersectionsFromCircleNodes( circleNodes ):
 	"Get all the circle intersections with exist between all the circle nodes."
@@ -178,13 +204,97 @@ def getIntersectionAtInset( ahead, behind, inset ):
 	aheadMinusBehind.add( behind )
 	return aheadMinusBehind
 
-def getLoopsfromLoopsDirection( isWiddershins, loops ):
+def getLoopsFromLoopsDirection( isWiddershins, loops ):
 	"Get the loops going round in a given direction."
 	directionalLoops = []
 	for loop in loops:
 		if euclidean.isWiddershins( loop ) == isWiddershins:
 			directionalLoops.append( loop )
 	return directionalLoops
+
+def isLoopIntersectingLoop( anotherLoop, loop ):
+	"Determine if the a loop is intersecting another loop."
+	for pointIndex in range( len( loop ) ):
+		pointFirst = loop[ pointIndex ]
+		pointSecond = loop[ ( pointIndex + 1 ) % len( loop ) ]
+		segment = pointFirst.minus( pointSecond )
+		normalizedSegment = segment.dropAxis( 2 )
+		normalizedSegment /= abs( normalizedSegment )
+		segmentYMirror = complex( normalizedSegment.real, - normalizedSegment.imag )
+		segmentFirstPoint = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, pointFirst )
+		segmentSecondPoint = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, pointSecond )
+		if euclidean.isLoopIntersectingInsideXSegment( anotherLoop, segmentFirstPoint.x, segmentSecondPoint.x, segmentYMirror, segmentFirstPoint.y ):
+			return True
+	return False
+
+
+class BoundingLoop:
+	"A class to hold a bounding loop composed of a minimum complex, a maximum complex and an outset loop."
+	def __cmp__( self, other ):
+		"Get comparison in order to sort bounding loops in descending order of area."
+		if self.area < other.area:
+			return 1
+		if self.area > other.area:
+			return - 1
+		return 0
+
+	def __repr__( self ):
+		"Get the string representation of this bounding loop."
+		return '%s, %s, %s' % ( self.minimum, self.maximum, self.loop )
+
+	def getFromLoop( self, loop ):
+		"Get the bounding loop from a path."
+		self.loop = loop
+		self.maximum = euclidean.getComplexMaximumFromVec3List( loop )
+		self.minimum = euclidean.getComplexMinimumFromVec3List( loop )
+		return self
+
+	def getOutsetBoundingLoop( self, outsetDistance ):
+		"Outset the bounding rectangle and loop by a distance."
+		outsetBoundingLoop = BoundingLoop()
+		outsetBoundingLoop.maximum = self.maximum + complex( outsetDistance, outsetDistance )
+		outsetBoundingLoop.minimum = self.minimum - complex( outsetDistance, outsetDistance )
+		greaterThanOutsetDistance = 1.1 * outsetDistance
+		centers = getCentersFromLoopDirection( True, self.loop, greaterThanOutsetDistance )
+		outsetBoundingLoop.loop = getInsetFromClockwiseLoop( centers[ 0 ], outsetDistance )
+		return outsetBoundingLoop
+
+	def isEntirelyInsideAnother( self, anotherBoundingLoop ):
+		"Determine if this bounding loop is entirely inside another bounding loop."
+		if self.minimum.imag < anotherBoundingLoop.minimum.imag or self.minimum.real < anotherBoundingLoop.minimum.real:
+			return False
+		if self.maximum.imag > anotherBoundingLoop.maximum.imag or self.maximum.real > anotherBoundingLoop.maximum.real:
+			return False
+		for point in self.loop:
+			if euclidean.getNumberOfIntersectionsToLeft( point, anotherBoundingLoop.loop ) % 2 == 0:
+				return False
+		return not isLoopIntersectingLoop( anotherBoundingLoop.loop, self.loop ) #later check for intersection on only acute angles
+
+#	def isIntersectingList( self, boundingLoops ):
+#		"Determine if this bounding loop is any of a list of bounding loops."
+#		for boundingLoop in boundingLoops:
+#			if not self.isRectangleMissingAnother( boundingLoop ):
+#				if isLoopIntersectingLoop( boundingLoop.loop, self.loop ):
+#					return True
+#		return False
+#
+	def isOverlappingAnother( self, anotherBoundingLoop ):
+		"Determine if this bounding loop is intersecting another bounding loop."
+		if self.isRectangleMissingAnother( anotherBoundingLoop ):
+			return False
+		for point in self.loop:
+			if euclidean.getNumberOfIntersectionsToLeft( point, anotherBoundingLoop.loop ) % 2 == 1:
+				return True
+		for point in anotherBoundingLoop.loop:
+			if euclidean.getNumberOfIntersectionsToLeft( point, self.loop ) % 2 == 1:
+				return True
+		return isLoopIntersectingLoop( anotherBoundingLoop.loop, self.loop ) #later check for intersection on only acute angles
+
+	def isRectangleMissingAnother( self, anotherBoundingLoop ):
+		"Determine if the rectangle of this bounding loop is missing the rectangle of another bounding loop."
+		if self.maximum.imag < anotherBoundingLoop.minimum.imag or self.maximum.real < anotherBoundingLoop.minimum.real:
+			return True
+		return self.minimum.imag > anotherBoundingLoop.maximum.imag or self.minimum.real > anotherBoundingLoop.maximum.real
 
 
 class CircleIntersection:
@@ -197,7 +307,7 @@ class CircleIntersection:
 
 	def __repr__( self ):
 		"Get the string representation of this CircleIntersection."
-		return "index " + str( self.index ) + " " + str( self.getAbsolutePosition() ) + " " + str( self.circleNodeBehind.index ) + ' ' + str( self.circleNodeAhead.index )
+		return str( self.index ) + " " + str( self.getAbsolutePosition() ) + " " + str( self.circleNodeBehind.index ) + ' ' + str( self.circleNodeAhead.index ) + " " + str( self.getCircleIntersectionAhead().index )
 
 	def addToList( self, circleIntersectionPath ):
 		self.steppedOn = True
@@ -212,12 +322,13 @@ class CircleIntersection:
 		smallestWiddershinsDot = 999999999.0
 		positionRelativeToAhead = self.getAbsolutePosition().minus( self.circleNodeAhead.circle )
 		for circleIntersection in circleIntersections:
-			circleIntersectionRelative = circleIntersection.getPositionRelativeToBehind()
-			circleIntersectionRelative.normalize()
-			widdershinsDot = euclidean.getWiddershinsDot( positionRelativeToAhead, circleIntersectionRelative )
-			if widdershinsDot < smallestWiddershinsDot:
-				smallestWiddershinsDot = widdershinsDot
-				circleIntersectionAhead = circleIntersection
+			if not circleIntersection.steppedOn:
+				circleIntersectionRelative = circleIntersection.getPositionRelativeToBehind()
+				circleIntersectionRelative.normalize()
+				widdershinsDot = euclidean.getWiddershinsDot( positionRelativeToAhead, circleIntersectionRelative )
+				if widdershinsDot < smallestWiddershinsDot:
+					smallestWiddershinsDot = widdershinsDot
+					circleIntersectionAhead = circleIntersection
 		return circleIntersectionAhead
 
 	def getFromCircleNodes( self, circleNodeAhead, index, circleNodeBehind ):

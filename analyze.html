@@ -17,71 +17,51 @@ Then&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;analyze&nbsp;is&nbsp;in,&nbsp;
 'from&nbsp;analyze&nbsp;import&nbsp;*'&nbsp;to&nbsp;import&nbsp;this&nbsp;program.<br>
 To&nbsp;get&nbsp;documentation&nbsp;for&nbsp;this&nbsp;program,&nbsp;open&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;fill.py&nbsp;directory,&nbsp;then&nbsp;type&nbsp;'pydoc&nbsp;fill.py'.<br>
 &nbsp;<br>
+An&nbsp;explanation&nbsp;of&nbsp;the&nbsp;gcodes&nbsp;is&nbsp;at:<br>
+<a href="http://reprap.org/bin/view/Main/Arduino_GCode_Interpreter">http://reprap.org/bin/view/Main/Arduino_GCode_Interpreter</a><br>
 &nbsp;<br>
-This&nbsp;example&nbsp;analyzes&nbsp;and&nbsp;comments&nbsp;the&nbsp;gcode&nbsp;file&nbsp;Hollow&nbsp;Square.gcode.&nbsp;&nbsp;This&nbsp;example&nbsp;is&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains&nbsp;Hollow&nbsp;Square.gcode&nbsp;and&nbsp;analyze.py.<br>
+A&nbsp;gode&nbsp;example&nbsp;is&nbsp;at:<br>
+<a href="http://forums.reprap.org/file.php?12,file=565">http://forums.reprap.org/file.php?12,file=565</a><br>
 &nbsp;<br>
-&gt;&gt;&gt;&nbsp;import&nbsp;fillet<br>
+This&nbsp;example&nbsp;analyzes&nbsp;and&nbsp;comments&nbsp;the&nbsp;gcode&nbsp;file&nbsp;Screw&nbsp;Holder_comb.gcode.&nbsp;&nbsp;This&nbsp;example&nbsp;is&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains&nbsp;Screw&nbsp;Holder_comb.gcode&nbsp;and&nbsp;analyze.py.<br>
+&nbsp;<br>
+&gt;&gt;&gt;&nbsp;import&nbsp;analyze<br>
 Fillet&nbsp;has&nbsp;been&nbsp;imported.<br>
-The&nbsp;gcode&nbsp;files&nbsp;in&nbsp;this&nbsp;directory&nbsp;that&nbsp;are&nbsp;not&nbsp;already&nbsp;beveled&nbsp;or&nbsp;filleted&nbsp;are&nbsp;the&nbsp;following:<br>
-['Hollow&nbsp;Square.gcode']<br>
+The&nbsp;gcode&nbsp;files&nbsp;in&nbsp;this&nbsp;directory&nbsp;that&nbsp;are&nbsp;not&nbsp;comment&nbsp;files&nbsp;are&nbsp;the&nbsp;following:<br>
+['Screw&nbsp;Holder_comb.gcode']<br>
 &nbsp;<br>
-&nbsp;<br>
-&gt;&gt;&gt;&nbsp;fillet.arcPoint()<br>
-File&nbsp;Hollow&nbsp;Square.gcode&nbsp;is&nbsp;being&nbsp;filleted&nbsp;into&nbsp;arc&nbsp;points.<br>
-(&nbsp;GCode&nbsp;generated&nbsp;by&nbsp;March&nbsp;29,2007&nbsp;Skeinforge&nbsp;)<br>
-(&nbsp;Extruder&nbsp;Initialization&nbsp;)<br>
+&gt;&gt;&gt;&nbsp;analyze.comment()<br>
+File&nbsp;Screw&nbsp;Holder_comb.gcode&nbsp;is&nbsp;being&nbsp;commented.<br>
 ..<br>
-many&nbsp;lines&nbsp;of&nbsp;gcode<br>
+many&nbsp;lines&nbsp;of&nbsp;commented&nbsp;gcode<br>
 ..<br>
-The&nbsp;arc&nbsp;point&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_arc_point.gcode<br>
+The&nbsp;commented&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder_comb_comment.gcode<br>
 &nbsp;<br>
 &nbsp;<br>
-&gt;&gt;&gt;&nbsp;fillet.arcPointFile("Hollow&nbsp;Square.gcode")<br>
-File&nbsp;Hollow&nbsp;Square.gcode&nbsp;is&nbsp;being&nbsp;filleted&nbsp;into&nbsp;arc&nbsp;points.<br>
-..<br>
-The&nbsp;arc&nbsp;point&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_arc_point.gcode<br>
+&gt;&gt;&gt;&nbsp;analyze.<a href="#-statisticFile">statisticFile</a>()<br>
+Statistics&nbsp;are&nbsp;being&nbsp;generated&nbsp;for&nbsp;the&nbsp;file&nbsp;Screw&nbsp;Holder_comb.gcode<br>
 &nbsp;<br>
+On&nbsp;the&nbsp;X&nbsp;axis,&nbsp;the&nbsp;extrusion&nbsp;starts&nbsp;at&nbsp;-30&nbsp;mm&nbsp;and&nbsp;ends&nbsp;at&nbsp;30&nbsp;mm,&nbsp;for&nbsp;a&nbsp;width&nbsp;of&nbsp;59&nbsp;mm<br>
+On&nbsp;the&nbsp;Y&nbsp;axis,&nbsp;the&nbsp;extrusion&nbsp;starts&nbsp;at&nbsp;-20&nbsp;mm&nbsp;and&nbsp;ends&nbsp;at&nbsp;20&nbsp;mm,&nbsp;for&nbsp;a&nbsp;depth&nbsp;of&nbsp;39&nbsp;mm<br>
+On&nbsp;the&nbsp;Z&nbsp;axis,&nbsp;the&nbsp;extrusion&nbsp;starts&nbsp;at&nbsp;-4&nbsp;mm&nbsp;and&nbsp;ends&nbsp;at&nbsp;11&nbsp;mm,&nbsp;for&nbsp;a&nbsp;height&nbsp;of&nbsp;14&nbsp;mm<br>
+The&nbsp;average&nbsp;feedrate&nbsp;is&nbsp;10&nbsp;mm/s,&nbsp;(600&nbsp;mm/min).<br>
+The&nbsp;extruder&nbsp;speed&nbsp;is&nbsp;210<br>
+The&nbsp;extruder&nbsp;was&nbsp;extruding&nbsp;86%&nbsp;of&nbsp;the&nbsp;time.<br>
+The&nbsp;extruder&nbsp;was&nbsp;toggled&nbsp;830&nbsp;times.<br>
+The&nbsp;extrusion&nbsp;diameter&nbsp;is&nbsp;0.8&nbsp;mm.<br>
+The&nbsp;extrusion&nbsp;width&nbsp;is&nbsp;0.747&nbsp;mm.<br>
+The&nbsp;following&nbsp;procedures&nbsp;have&nbsp;been&nbsp;performed&nbsp;on&nbsp;the&nbsp;skein:<br>
+slice)<br>
+fill)<br>
+comb)<br>
+The&nbsp;layer&nbsp;thickness&nbsp;is&nbsp;0.747&nbsp;mm.<br>
+The&nbsp;text&nbsp;has&nbsp;10163&nbsp;lines&nbsp;and&nbsp;a&nbsp;size&nbsp;of&nbsp;292.0&nbsp;KB.<br>
+The&nbsp;total&nbsp;build&nbsp;time&nbsp;is&nbsp;3090&nbsp;s.<br>
+The&nbsp;total&nbsp;distance&nbsp;extruded&nbsp;is&nbsp;26468&nbsp;mm.<br>
+The&nbsp;total&nbsp;distance&nbsp;traveled&nbsp;is&nbsp;30896&nbsp;mm.<br>
+The&nbsp;volume&nbsp;extruded&nbsp;is&nbsp;13&nbsp;cc.<br>
 &nbsp;<br>
-&gt;&gt;&gt;&nbsp;fillet.arcPointFiles(["Hollow&nbsp;Square.gcode"])<br>
-File&nbsp;Hollow&nbsp;Square.gcode&nbsp;is&nbsp;being&nbsp;filleted&nbsp;into&nbsp;arc&nbsp;points.<br>
-..<br>
-The&nbsp;arc&nbsp;point&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_arc_point.gcode<br>
-&nbsp;<br>
-&nbsp;<br>
-&gt;&gt;&gt;&nbsp;fillet.arcRadius()<br>
-File&nbsp;Hollow&nbsp;Square.gcode&nbsp;is&nbsp;being&nbsp;filleted&nbsp;into&nbsp;arc&nbsp;radiuses.<br>
-..<br>
-The&nbsp;arc&nbsp;radius&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_arc_radius.gcode<br>
-&nbsp;<br>
-&nbsp;<br>
-&gt;&gt;&gt;&nbsp;fillet.arcRadiusFile("Hollow&nbsp;Square.gcode")<br>
-File&nbsp;Hollow&nbsp;Square.gcode&nbsp;is&nbsp;being&nbsp;filleted&nbsp;into&nbsp;arc&nbsp;radiuses.<br>
-..<br>
-The&nbsp;arc&nbsp;radius&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_arc_radius.gcode<br>
-&nbsp;<br>
-&nbsp;<br>
-&gt;&gt;&gt;&nbsp;fillet.arcRadiusFiles(["Hollow&nbsp;Square.gcode"])<br>
-File&nbsp;Hollow&nbsp;Square.gcode&nbsp;is&nbsp;being&nbsp;filleted&nbsp;into&nbsp;arc&nbsp;radiuses.<br>
-..<br>
-The&nbsp;arc&nbsp;radius&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_arc_radius.gcode<br>
-&nbsp;<br>
-&nbsp;<br>
-&gt;&gt;&gt;&nbsp;fillet.arcSegment()<br>
-File&nbsp;Hollow&nbsp;Square.gcode&nbsp;is&nbsp;being&nbsp;arc&nbsp;segmented.<br>
-..<br>
-The&nbsp;arc&nbsp;segment&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_arc_segment.gcode<br>
-&nbsp;<br>
-&nbsp;<br>
-&gt;&gt;&gt;&nbsp;fillet.arcSegmentFile("Hollow&nbsp;Square.gcode")<br>
-File&nbsp;Hollow&nbsp;Square.gcode&nbsp;is&nbsp;being&nbsp;arc&nbsp;segmented.<br>
-..<br>
-The&nbsp;arc&nbsp;segment&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_arc_segment.gcode<br>
-&nbsp;<br>
-&nbsp;<br>
-&gt;&gt;&gt;&nbsp;fillet.arcSegmentFiles(["Hollow&nbsp;Square.gcode"])<br>
-File&nbsp;Hollow&nbsp;Square.gcode&nbsp;is&nbsp;being&nbsp;arc&nbsp;segmented.<br>
-..<br>
-The&nbsp;arc&nbsp;segment&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_arc_segment.gcode</tt></p>
+The&nbsp;statistics&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder_comb.txt</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -172,10 +152,10 @@ Methods inherited from <a href="analyze.html#commentSkein">commentSkein</a>:<br>
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-commentFile"><strong>commentFile</strong></a>(filename<font color="#909090">=''</font>)</dt><dd><tt>Comment&nbsp;a&nbsp;gcode&nbsp;file.&nbsp;&nbsp;If&nbsp;no&nbsp;filename&nbsp;is&nbsp;specified,&nbsp;comment&nbsp;the&nbsp;first&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder&nbsp;that&nbsp;is&nbsp;not&nbsp;a&nbsp;comment&nbsp;or&nbsp;log&nbsp;file.</tt></dd></dl>
+<td width="100%"><dl><dt><a name="-commentFile"><strong>commentFile</strong></a>(filename<font color="#909090">=''</font>)</dt><dd><tt>Comment&nbsp;a&nbsp;gcode&nbsp;file.&nbsp;&nbsp;If&nbsp;no&nbsp;filename&nbsp;is&nbsp;specified,&nbsp;comment&nbsp;the&nbsp;first&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder&nbsp;that&nbsp;is&nbsp;not&nbsp;a&nbsp;comment&nbsp;file.</tt></dd></dl>
  <dl><dt><a name="-getCommentGcode"><strong>getCommentGcode</strong></a>(gcodeText)</dt><dd><tt>Get&nbsp;gcode&nbsp;text&nbsp;with&nbsp;added&nbsp;comments.</tt></dd></dl>
  <dl><dt><a name="-getStatisticGcode"><strong>getStatisticGcode</strong></a>(gcodeText)</dt><dd><tt>Get&nbsp;statistics&nbsp;for&nbsp;a&nbsp;gcode&nbsp;text.</tt></dd></dl>
- <dl><dt><a name="-getUnmodifiedGCodeFiles"><strong>getUnmodifiedGCodeFiles</strong></a>()</dt><dd><tt>Get&nbsp;gcode&nbsp;files&nbsp;which&nbsp;are&nbsp;not&nbsp;generated&nbsp;by&nbsp;this&nbsp;script&nbsp;or&nbsp;extrude.</tt></dd></dl>
+ <dl><dt><a name="-getUncommentedGcodeFiles"><strong>getUncommentedGcodeFiles</strong></a>()</dt><dd><tt>Get&nbsp;gcode&nbsp;files&nbsp;which&nbsp;are&nbsp;not&nbsp;generated&nbsp;by&nbsp;this&nbsp;script.</tt></dd></dl>
  <dl><dt><a name="-statisticFile"><strong>statisticFile</strong></a>(filename<font color="#909090">=''</font>)</dt><dd><tt>Write&nbsp;statistics&nbsp;for&nbsp;a&nbsp;gcode&nbsp;file.&nbsp;&nbsp;If&nbsp;no&nbsp;filename&nbsp;is&nbsp;specified,&nbsp;write&nbsp;statistics&nbsp;for&nbsp;the&nbsp;first&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder&nbsp;that&nbsp;is&nbsp;not&nbsp;a&nbsp;comment&nbsp;or&nbsp;log&nbsp;file.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">

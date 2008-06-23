@@ -11,6 +11,11 @@
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap_v0.1/fillet.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap_v0.1/fillet.py</a></font></td></tr></table>
     <p><tt>Fillet&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;fillet&nbsp;or&nbsp;bevel&nbsp;the&nbsp;corners&nbsp;on&nbsp;a&nbsp;gcode&nbsp;file.<br>
 &nbsp;<br>
+Fillets&nbsp;rounds&nbsp;the&nbsp;corners&nbsp;slightly&nbsp;in&nbsp;a&nbsp;variety&nbsp;of&nbsp;ways.&nbsp;&nbsp;This&nbsp;is&nbsp;to&nbsp;reduce&nbsp;corner&nbsp;blobbing&nbsp;and&nbsp;sudden&nbsp;extruder&nbsp;acceleration.<br>
+The&nbsp;default&nbsp;radio&nbsp;button&nbsp;choice&nbsp;is&nbsp;'Bevel'.&nbsp;&nbsp;If&nbsp;the&nbsp;default&nbsp;choice&nbsp;is&nbsp;'Do&nbsp;Not&nbsp;Fillet',&nbsp;the&nbsp;gcode&nbsp;text&nbsp;is&nbsp;handed&nbsp;over&nbsp;the&nbsp;next&nbsp;tool&nbsp;in&nbsp;the<br>
+skeinforge&nbsp;chain.&nbsp;&nbsp;To&nbsp;run&nbsp;fillet,&nbsp;in&nbsp;a&nbsp;shell&nbsp;type:<br>
+&gt;&nbsp;python&nbsp;fillet.py<br>
+&nbsp;<br>
 To&nbsp;run&nbsp;fillet,&nbsp;install&nbsp;python&nbsp;2.x&nbsp;on&nbsp;your&nbsp;machine,&nbsp;which&nbsp;is&nbsp;avaliable&nbsp;from&nbsp;<a href="http://www.python.org/download/">http://www.python.org/download/</a><br>
 &nbsp;<br>
 To&nbsp;use&nbsp;the&nbsp;preferences&nbsp;dialog&nbsp;you'll&nbsp;also&nbsp;need&nbsp;Tkinter,&nbsp;which&nbsp;probably&nbsp;came&nbsp;with&nbsp;the&nbsp;python&nbsp;installation.&nbsp;&nbsp;If&nbsp;it&nbsp;did&nbsp;not,&nbsp;look&nbsp;for&nbsp;it&nbsp;at:<br>
@@ -28,14 +33,16 @@ To&nbsp;turn&nbsp;an&nbsp;STL&nbsp;file&nbsp;into&nbsp;filled,&nbsp;filleted&nbs
 of&nbsp;Art&nbsp;of&nbsp;Illusion.&nbsp;&nbsp;Then&nbsp;from&nbsp;the&nbsp;Scripts&nbsp;submenu&nbsp;in&nbsp;the&nbsp;Tools&nbsp;menu,&nbsp;choose&nbsp;Export&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;and&nbsp;select&nbsp;the<br>
 imported&nbsp;STL&nbsp;shape.&nbsp;&nbsp;Then&nbsp;type&nbsp;'python&nbsp;slice.py'&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;slice&nbsp;&amp;&nbsp;fillet&nbsp;are&nbsp;in&nbsp;and&nbsp;when&nbsp;the&nbsp;dialog&nbsp;pops&nbsp;up,&nbsp;set<br>
 the&nbsp;parameters&nbsp;and&nbsp;click&nbsp;'Save&nbsp;Preferences'.&nbsp;&nbsp;Then&nbsp;type&nbsp;'python&nbsp;fill.py'&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;fill&nbsp;is&nbsp;in&nbsp;and&nbsp;when&nbsp;the&nbsp;dialog<br>
-pops&nbsp;up,&nbsp;set&nbsp;the&nbsp;parameters&nbsp;and&nbsp;click&nbsp;'Save&nbsp;Preferences'.&nbsp;&nbsp;Then&nbsp;type&nbsp;'python&nbsp;comb.py'&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;fill&nbsp;is&nbsp;in&nbsp;and&nbsp;when&nbsp;the&nbsp;dialog<br>
-pops&nbsp;up,&nbsp;change&nbsp;the&nbsp;parameters&nbsp;if&nbsp;you&nbsp;wish&nbsp;but&nbsp;the&nbsp;default&nbsp;'Comb&nbsp;Hair'&nbsp;is&nbsp;fine.&nbsp;&nbsp;Then&nbsp;type&nbsp;'python&nbsp;fillet.py'&nbsp;in&nbsp;a&nbsp;shell&nbsp;and&nbsp;when&nbsp;the&nbsp;dialog&nbsp;pops&nbsp;up,<br>
-change&nbsp;the&nbsp;parameters&nbsp;if&nbsp;you&nbsp;wish&nbsp;but&nbsp;the&nbsp;default&nbsp;bevel&nbsp;is&nbsp;fine.&nbsp;&nbsp;Then&nbsp;click&nbsp;'Fillet',&nbsp;choose&nbsp;the&nbsp;file&nbsp;which&nbsp;you&nbsp;exported&nbsp;in<br>
-Export&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;and&nbsp;the&nbsp;filled&nbsp;&amp;&nbsp;filleted&nbsp;file&nbsp;will&nbsp;be&nbsp;saved&nbsp;with&nbsp;the&nbsp;suffix&nbsp;'_fillet'.<br>
+pops&nbsp;up,&nbsp;set&nbsp;the&nbsp;parameters&nbsp;and&nbsp;click&nbsp;'Save&nbsp;Preferences'.&nbsp;&nbsp;Then&nbsp;type&nbsp;'python&nbsp;comb.py'&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;fill&nbsp;is&nbsp;in&nbsp;and<br>
+when&nbsp;the&nbsp;dialog&nbsp;pops&nbsp;up,&nbsp;change&nbsp;the&nbsp;parameters&nbsp;if&nbsp;you&nbsp;wish&nbsp;but&nbsp;the&nbsp;default&nbsp;'Comb&nbsp;Hair'&nbsp;is&nbsp;fine.&nbsp;&nbsp;Then&nbsp;type&nbsp;'python&nbsp;stretch.py'&nbsp;in&nbsp;a<br>
+shell&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;fill&nbsp;is&nbsp;in&nbsp;and&nbsp;when&nbsp;the&nbsp;dialog&nbsp;pops&nbsp;up,&nbsp;change&nbsp;the&nbsp;parameters&nbsp;if&nbsp;you&nbsp;wish&nbsp;but&nbsp;the&nbsp;default&nbsp;stretch&nbsp;is<br>
+conservative.&nbsp;&nbsp;Then&nbsp;type&nbsp;'python&nbsp;fillet.py'&nbsp;in&nbsp;a&nbsp;shell&nbsp;and&nbsp;when&nbsp;the&nbsp;dialog&nbsp;pops&nbsp;up,&nbsp;change&nbsp;the&nbsp;parameters&nbsp;if&nbsp;you&nbsp;wish&nbsp;but&nbsp;the<br>
+default&nbsp;bevel&nbsp;is&nbsp;fine.&nbsp;&nbsp;Then&nbsp;click&nbsp;'Fillet',&nbsp;choose&nbsp;the&nbsp;file&nbsp;which&nbsp;you&nbsp;exported&nbsp;in&nbsp;Export&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;and&nbsp;the&nbsp;filled&nbsp;&amp;<br>
+filleted&nbsp;file&nbsp;will&nbsp;be&nbsp;saved&nbsp;with&nbsp;the&nbsp;suffix&nbsp;'_fillet'.<br>
 &nbsp;<br>
 To&nbsp;write&nbsp;documentation&nbsp;for&nbsp;this&nbsp;program,&nbsp;open&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;fillet.py&nbsp;directory,&nbsp;then&nbsp;type&nbsp;'pydoc&nbsp;-w&nbsp;fillet',&nbsp;then&nbsp;open&nbsp;'fillet.html'&nbsp;in<br>
-a&nbsp;browser&nbsp;or&nbsp;click&nbsp;on&nbsp;the&nbsp;'?'&nbsp;button&nbsp;in&nbsp;the&nbsp;dialog.&nbsp;&nbsp;To&nbsp;use&nbsp;other&nbsp;functions&nbsp;of&nbsp;fillet,&nbsp;type&nbsp;'python'&nbsp;in&nbsp;a&nbsp;shell&nbsp;to&nbsp;run&nbsp;the&nbsp;python&nbsp;interpreter,<br>
-then&nbsp;type&nbsp;'import&nbsp;fillet'&nbsp;to&nbsp;import&nbsp;this&nbsp;program.<br>
+a&nbsp;browser&nbsp;or&nbsp;click&nbsp;on&nbsp;the&nbsp;'?'&nbsp;button&nbsp;in&nbsp;the&nbsp;dialog.&nbsp;&nbsp;To&nbsp;use&nbsp;other&nbsp;functions&nbsp;of&nbsp;fillet,&nbsp;type&nbsp;'python'&nbsp;in&nbsp;a&nbsp;shell&nbsp;to&nbsp;run&nbsp;the&nbsp;python<br>
+interpreter,&nbsp;then&nbsp;type&nbsp;'import&nbsp;fillet'&nbsp;to&nbsp;import&nbsp;this&nbsp;program.<br>
 &nbsp;<br>
 The&nbsp;computation&nbsp;intensive&nbsp;python&nbsp;modules&nbsp;will&nbsp;use&nbsp;psyco&nbsp;if&nbsp;it&nbsp;is&nbsp;available&nbsp;and&nbsp;run&nbsp;about&nbsp;twice&nbsp;as&nbsp;fast.&nbsp;&nbsp;Psyco&nbsp;is&nbsp;described&nbsp;at:<br>
 <a href="http://psyco.sourceforge.net/index.html">http://psyco.sourceforge.net/index.html</a><br>
@@ -43,11 +50,11 @@ The&nbsp;computation&nbsp;intensive&nbsp;python&nbsp;modules&nbsp;will&nbsp;use&
 The&nbsp;psyco&nbsp;download&nbsp;page&nbsp;is:<br>
 <a href="http://psyco.sourceforge.net/download.html">http://psyco.sourceforge.net/download.html</a><br>
 &nbsp;<br>
-The&nbsp;following&nbsp;examples&nbsp;fillet&nbsp;the&nbsp;files&nbsp;Hollow&nbsp;Square.gcode&nbsp;&amp;&nbsp;Hollow&nbsp;Square.gts.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains<br>
-Hollow&nbsp;Square.gcode,&nbsp;Hollow&nbsp;Square.gts&nbsp;and&nbsp;fillet.py.&nbsp;&nbsp;The&nbsp;fillet&nbsp;function&nbsp;executes&nbsp;the&nbsp;preferred&nbsp;fillet&nbsp;type,&nbsp;which&nbsp;can&nbsp;be&nbsp;set&nbsp;in&nbsp;the&nbsp;dialog&nbsp;or&nbsp;by&nbsp;changing<br>
-the&nbsp;preferences&nbsp;file&nbsp;'fillet.csv'&nbsp;with&nbsp;a&nbsp;text&nbsp;editor&nbsp;or&nbsp;a&nbsp;spreadsheet&nbsp;program&nbsp;set&nbsp;to&nbsp;separate&nbsp;tabs.&nbsp;&nbsp;The&nbsp;functions&nbsp;filletChainFile&nbsp;and<br>
-getFilletChainGcode&nbsp;check&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text&nbsp;has&nbsp;been&nbsp;combed,&nbsp;if&nbsp;not&nbsp;they&nbsp;call&nbsp;the&nbsp;getCombChainGcode&nbsp;in&nbsp;comb.py&nbsp;to&nbsp;fill&nbsp;the&nbsp;text;&nbsp;once&nbsp;they<br>
-have&nbsp;the&nbsp;combed&nbsp;text,&nbsp;then&nbsp;they&nbsp;fillet.<br>
+The&nbsp;following&nbsp;examples&nbsp;fillet&nbsp;the&nbsp;files&nbsp;Hollow&nbsp;Square.gcode&nbsp;&amp;&nbsp;Hollow&nbsp;Square.gts.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder<br>
+which&nbsp;contains&nbsp;Hollow&nbsp;Square.gcode,&nbsp;Hollow&nbsp;Square.gts&nbsp;and&nbsp;fillet.py.&nbsp;&nbsp;The&nbsp;fillet&nbsp;function&nbsp;executes&nbsp;the&nbsp;preferred&nbsp;fillet&nbsp;type,&nbsp;which<br>
+can&nbsp;be&nbsp;set&nbsp;in&nbsp;the&nbsp;dialog&nbsp;or&nbsp;by&nbsp;changing&nbsp;the&nbsp;preferences&nbsp;file&nbsp;'fillet.csv'&nbsp;with&nbsp;a&nbsp;text&nbsp;editor&nbsp;or&nbsp;a&nbsp;spreadsheet&nbsp;program&nbsp;set&nbsp;to&nbsp;separate<br>
+tabs.&nbsp;&nbsp;The&nbsp;functions&nbsp;filletChainFile&nbsp;and&nbsp;getFilletChainGcode&nbsp;check&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text&nbsp;has&nbsp;been&nbsp;combed,&nbsp;if&nbsp;not&nbsp;they&nbsp;call&nbsp;the<br>
+getStretchChainGcode&nbsp;in&nbsp;stretch.py&nbsp;to&nbsp;fill&nbsp;the&nbsp;text;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;stretched&nbsp;text,&nbsp;then&nbsp;they&nbsp;fillet.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;pydoc&nbsp;-w&nbsp;fillet<br>
@@ -160,10 +167,10 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
     
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="cStringIO.html">cStringIO</a><br>
-<a href="comb.html">comb</a><br>
-</td><td width="25%" valign=top><a href="euclidean.html">euclidean</a><br>
-<a href="gcodec.html">gcodec</a><br>
-</td><td width="25%" valign=top><a href="preferences.html">preferences</a><br>
+<a href="euclidean.html">euclidean</a><br>
+</td><td width="25%" valign=top><a href="gcodec.html">gcodec</a><br>
+<a href="preferences.html">preferences</a><br>
+</td><td width="25%" valign=top><a href="stretch.html">stretch</a><br>
 <a href="time.html">time</a><br>
 </td><td width="25%" valign=top><a href="vectorwrite.html">vectorwrite</a><br>
 </td></tr></table></td></tr></table><p>
@@ -228,13 +235,13 @@ Methods inherited from <a href="fillet.html#BevelSkein">BevelSkein</a>:<br>
 
 <dl><dt><a name="ArcPointSkein-addPoint"><strong>addPoint</strong></a>(self, point)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;point&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="ArcPointSkein-getNextActive"><strong>getNextActive</strong></a>(self, location)</dt><dd><tt>Get&nbsp;the&nbsp;next&nbsp;linear&nbsp;move&nbsp;where&nbsp;the&nbsp;extruder&nbsp;is&nbsp;still&nbsp;active.&nbsp;&nbsp;Return&nbsp;none&nbsp;is&nbsp;none&nbsp;is&nbsp;found.</tt></dd></dl>
+<dl><dt><a name="ArcPointSkein-getNextActive"><strong>getNextActive</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;next&nbsp;linear&nbsp;move&nbsp;where&nbsp;the&nbsp;extruder&nbsp;is&nbsp;still&nbsp;active.&nbsp;&nbsp;Return&nbsp;none&nbsp;is&nbsp;none&nbsp;is&nbsp;found.</tt></dd></dl>
 
 <dl><dt><a name="ArcPointSkein-linearMove"><strong>linearMove</strong></a>(self, splitLine)</dt><dd><tt>Bevel&nbsp;a&nbsp;linear&nbsp;move.</tt></dd></dl>
 
-<dl><dt><a name="ArcPointSkein-parseGcode"><strong>parseGcode</strong></a>(self, gcodeText)</dt><dd><tt>Parse&nbsp;gcode&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;bevel&nbsp;gcode.</tt></dd></dl>
+<dl><dt><a name="ArcPointSkein-parseGcode"><strong>parseGcode</strong></a>(self, filletPreferences, gcodeText)</dt><dd><tt>Parse&nbsp;gcode&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;bevel&nbsp;gcode.</tt></dd></dl>
 
-<dl><dt><a name="ArcPointSkein-parseInitialization"><strong>parseInitialization</strong></a>(self)</dt><dd><tt>Parse&nbsp;gcode&nbsp;initialization&nbsp;and&nbsp;store&nbsp;the&nbsp;parameters.</tt></dd></dl>
+<dl><dt><a name="ArcPointSkein-parseInitialization"><strong>parseInitialization</strong></a>(self, filletPreferences)</dt><dd><tt>Parse&nbsp;gcode&nbsp;initialization&nbsp;and&nbsp;store&nbsp;the&nbsp;parameters.</tt></dd></dl>
 
 <dl><dt><a name="ArcPointSkein-parseLine"><strong>parseLine</strong></a>(self, line)</dt><dd><tt>Parse&nbsp;a&nbsp;gcode&nbsp;line&nbsp;and&nbsp;add&nbsp;it&nbsp;to&nbsp;the&nbsp;bevel&nbsp;gcode.</tt></dd></dl>
 
@@ -277,13 +284,13 @@ Methods inherited from <a href="fillet.html#BevelSkein">BevelSkein</a>:<br>
 
 <dl><dt><a name="ArcRadiusSkein-addPoint"><strong>addPoint</strong></a>(self, point)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;point&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="ArcRadiusSkein-getNextActive"><strong>getNextActive</strong></a>(self, location)</dt><dd><tt>Get&nbsp;the&nbsp;next&nbsp;linear&nbsp;move&nbsp;where&nbsp;the&nbsp;extruder&nbsp;is&nbsp;still&nbsp;active.&nbsp;&nbsp;Return&nbsp;none&nbsp;is&nbsp;none&nbsp;is&nbsp;found.</tt></dd></dl>
+<dl><dt><a name="ArcRadiusSkein-getNextActive"><strong>getNextActive</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;next&nbsp;linear&nbsp;move&nbsp;where&nbsp;the&nbsp;extruder&nbsp;is&nbsp;still&nbsp;active.&nbsp;&nbsp;Return&nbsp;none&nbsp;is&nbsp;none&nbsp;is&nbsp;found.</tt></dd></dl>
 
 <dl><dt><a name="ArcRadiusSkein-linearMove"><strong>linearMove</strong></a>(self, splitLine)</dt><dd><tt>Bevel&nbsp;a&nbsp;linear&nbsp;move.</tt></dd></dl>
 
-<dl><dt><a name="ArcRadiusSkein-parseGcode"><strong>parseGcode</strong></a>(self, gcodeText)</dt><dd><tt>Parse&nbsp;gcode&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;bevel&nbsp;gcode.</tt></dd></dl>
+<dl><dt><a name="ArcRadiusSkein-parseGcode"><strong>parseGcode</strong></a>(self, filletPreferences, gcodeText)</dt><dd><tt>Parse&nbsp;gcode&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;bevel&nbsp;gcode.</tt></dd></dl>
 
-<dl><dt><a name="ArcRadiusSkein-parseInitialization"><strong>parseInitialization</strong></a>(self)</dt><dd><tt>Parse&nbsp;gcode&nbsp;initialization&nbsp;and&nbsp;store&nbsp;the&nbsp;parameters.</tt></dd></dl>
+<dl><dt><a name="ArcRadiusSkein-parseInitialization"><strong>parseInitialization</strong></a>(self, filletPreferences)</dt><dd><tt>Parse&nbsp;gcode&nbsp;initialization&nbsp;and&nbsp;store&nbsp;the&nbsp;parameters.</tt></dd></dl>
 
 <dl><dt><a name="ArcRadiusSkein-parseLine"><strong>parseLine</strong></a>(self, line)</dt><dd><tt>Parse&nbsp;a&nbsp;gcode&nbsp;line&nbsp;and&nbsp;add&nbsp;it&nbsp;to&nbsp;the&nbsp;bevel&nbsp;gcode.</tt></dd></dl>
 
@@ -313,13 +320,13 @@ Methods inherited from <a href="fillet.html#BevelSkein">BevelSkein</a>:<br>
 
 <dl><dt><a name="ArcSegmentSkein-addPoint"><strong>addPoint</strong></a>(self, point)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;point&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="ArcSegmentSkein-getNextActive"><strong>getNextActive</strong></a>(self, location)</dt><dd><tt>Get&nbsp;the&nbsp;next&nbsp;linear&nbsp;move&nbsp;where&nbsp;the&nbsp;extruder&nbsp;is&nbsp;still&nbsp;active.&nbsp;&nbsp;Return&nbsp;none&nbsp;is&nbsp;none&nbsp;is&nbsp;found.</tt></dd></dl>
+<dl><dt><a name="ArcSegmentSkein-getNextActive"><strong>getNextActive</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;next&nbsp;linear&nbsp;move&nbsp;where&nbsp;the&nbsp;extruder&nbsp;is&nbsp;still&nbsp;active.&nbsp;&nbsp;Return&nbsp;none&nbsp;is&nbsp;none&nbsp;is&nbsp;found.</tt></dd></dl>
 
 <dl><dt><a name="ArcSegmentSkein-linearMove"><strong>linearMove</strong></a>(self, splitLine)</dt><dd><tt>Bevel&nbsp;a&nbsp;linear&nbsp;move.</tt></dd></dl>
 
-<dl><dt><a name="ArcSegmentSkein-parseGcode"><strong>parseGcode</strong></a>(self, gcodeText)</dt><dd><tt>Parse&nbsp;gcode&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;bevel&nbsp;gcode.</tt></dd></dl>
+<dl><dt><a name="ArcSegmentSkein-parseGcode"><strong>parseGcode</strong></a>(self, filletPreferences, gcodeText)</dt><dd><tt>Parse&nbsp;gcode&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;bevel&nbsp;gcode.</tt></dd></dl>
 
-<dl><dt><a name="ArcSegmentSkein-parseInitialization"><strong>parseInitialization</strong></a>(self)</dt><dd><tt>Parse&nbsp;gcode&nbsp;initialization&nbsp;and&nbsp;store&nbsp;the&nbsp;parameters.</tt></dd></dl>
+<dl><dt><a name="ArcSegmentSkein-parseInitialization"><strong>parseInitialization</strong></a>(self, filletPreferences)</dt><dd><tt>Parse&nbsp;gcode&nbsp;initialization&nbsp;and&nbsp;store&nbsp;the&nbsp;parameters.</tt></dd></dl>
 
 <dl><dt><a name="ArcSegmentSkein-parseLine"><strong>parseLine</strong></a>(self, line)</dt><dd><tt>Parse&nbsp;a&nbsp;gcode&nbsp;line&nbsp;and&nbsp;add&nbsp;it&nbsp;to&nbsp;the&nbsp;bevel&nbsp;gcode.</tt></dd></dl>
 
@@ -343,13 +350,13 @@ Methods inherited from <a href="fillet.html#BevelSkein">BevelSkein</a>:<br>
 
 <dl><dt><a name="BevelSkein-addPoint"><strong>addPoint</strong></a>(self, point)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;point&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="BevelSkein-getNextActive"><strong>getNextActive</strong></a>(self, location)</dt><dd><tt>Get&nbsp;the&nbsp;next&nbsp;linear&nbsp;move&nbsp;where&nbsp;the&nbsp;extruder&nbsp;is&nbsp;still&nbsp;active.&nbsp;&nbsp;Return&nbsp;none&nbsp;is&nbsp;none&nbsp;is&nbsp;found.</tt></dd></dl>
+<dl><dt><a name="BevelSkein-getNextActive"><strong>getNextActive</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;next&nbsp;linear&nbsp;move&nbsp;where&nbsp;the&nbsp;extruder&nbsp;is&nbsp;still&nbsp;active.&nbsp;&nbsp;Return&nbsp;none&nbsp;is&nbsp;none&nbsp;is&nbsp;found.</tt></dd></dl>
 
 <dl><dt><a name="BevelSkein-linearMove"><strong>linearMove</strong></a>(self, splitLine)</dt><dd><tt>Bevel&nbsp;a&nbsp;linear&nbsp;move.</tt></dd></dl>
 
-<dl><dt><a name="BevelSkein-parseGcode"><strong>parseGcode</strong></a>(self, gcodeText)</dt><dd><tt>Parse&nbsp;gcode&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;bevel&nbsp;gcode.</tt></dd></dl>
+<dl><dt><a name="BevelSkein-parseGcode"><strong>parseGcode</strong></a>(self, filletPreferences, gcodeText)</dt><dd><tt>Parse&nbsp;gcode&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;bevel&nbsp;gcode.</tt></dd></dl>
 
-<dl><dt><a name="BevelSkein-parseInitialization"><strong>parseInitialization</strong></a>(self)</dt><dd><tt>Parse&nbsp;gcode&nbsp;initialization&nbsp;and&nbsp;store&nbsp;the&nbsp;parameters.</tt></dd></dl>
+<dl><dt><a name="BevelSkein-parseInitialization"><strong>parseInitialization</strong></a>(self, filletPreferences)</dt><dd><tt>Parse&nbsp;gcode&nbsp;initialization&nbsp;and&nbsp;store&nbsp;the&nbsp;parameters.</tt></dd></dl>
 
 <dl><dt><a name="BevelSkein-parseLine"><strong>parseLine</strong></a>(self, line)</dt><dd><tt>Parse&nbsp;a&nbsp;gcode&nbsp;line&nbsp;and&nbsp;add&nbsp;it&nbsp;to&nbsp;the&nbsp;bevel&nbsp;gcode.</tt></dd></dl>
 
@@ -385,11 +392,11 @@ Depending&nbsp;on&nbsp;the&nbsp;preferences,&nbsp;either&nbsp;arcPoint,&nbsp;arc
 If&nbsp;no&nbsp;filename&nbsp;is&nbsp;specified,&nbsp;fillet&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
  <dl><dt><a name="-filletFile"><strong>filletFile</strong></a>(filename<font color="#909090">=''</font>)</dt><dd><tt>Fillet&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;Depending&nbsp;on&nbsp;the&nbsp;preferences,&nbsp;either&nbsp;arcPoint,&nbsp;arcRadius,&nbsp;arcSegment,&nbsp;bevel&nbsp;or&nbsp;do&nbsp;nothing.<br>
 If&nbsp;no&nbsp;filename&nbsp;is&nbsp;specified,&nbsp;fillet&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
- <dl><dt><a name="-getArcPointGcode"><strong>getArcPointGcode</strong></a>(gcodeText)</dt><dd><tt>Arc&nbsp;point&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text&nbsp;into&nbsp;a&nbsp;helical&nbsp;point&nbsp;move&nbsp;gcode&nbsp;text.</tt></dd></dl>
- <dl><dt><a name="-getArcRadiusGcode"><strong>getArcRadiusGcode</strong></a>(gcodeText)</dt><dd><tt>Arc&nbsp;radius&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text&nbsp;into&nbsp;a&nbsp;helical&nbsp;radius&nbsp;move&nbsp;gcode&nbsp;text.</tt></dd></dl>
- <dl><dt><a name="-getArcSegmentGcode"><strong>getArcSegmentGcode</strong></a>(gcodeText)</dt><dd><tt>Arc&nbsp;segment&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text&nbsp;into&nbsp;an&nbsp;arc&nbsp;segment&nbsp;linear&nbsp;move&nbsp;gcode&nbsp;text.</tt></dd></dl>
- <dl><dt><a name="-getBevelGcode"><strong>getBevelGcode</strong></a>(gcodeText)</dt><dd><tt>Bevel&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
- <dl><dt><a name="-getFilletChainGcode"><strong>getFilletChainGcode</strong></a>(gcodeText, filletPreferences<font color="#909090">=None</font>)</dt><dd><tt>Fillet&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.&nbsp;&nbsp;Chain&nbsp;comb&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;combed.</tt></dd></dl>
+ <dl><dt><a name="-getArcPointGcode"><strong>getArcPointGcode</strong></a>(filletPreferences, gcodeText)</dt><dd><tt>Arc&nbsp;point&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text&nbsp;into&nbsp;a&nbsp;helical&nbsp;point&nbsp;move&nbsp;gcode&nbsp;text.</tt></dd></dl>
+ <dl><dt><a name="-getArcRadiusGcode"><strong>getArcRadiusGcode</strong></a>(filletPreferences, gcodeText)</dt><dd><tt>Arc&nbsp;radius&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text&nbsp;into&nbsp;a&nbsp;helical&nbsp;radius&nbsp;move&nbsp;gcode&nbsp;text.</tt></dd></dl>
+ <dl><dt><a name="-getArcSegmentGcode"><strong>getArcSegmentGcode</strong></a>(filletPreferences, gcodeText)</dt><dd><tt>Arc&nbsp;segment&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text&nbsp;into&nbsp;an&nbsp;arc&nbsp;segment&nbsp;linear&nbsp;move&nbsp;gcode&nbsp;text.</tt></dd></dl>
+ <dl><dt><a name="-getBevelGcode"><strong>getBevelGcode</strong></a>(filletPreferences, gcodeText)</dt><dd><tt>Bevel&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
+ <dl><dt><a name="-getFilletChainGcode"><strong>getFilletChainGcode</strong></a>(gcodeText, filletPreferences<font color="#909090">=None</font>)</dt><dd><tt>Fillet&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.&nbsp;&nbsp;Chain&nbsp;stretch&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;stretched.</tt></dd></dl>
  <dl><dt><a name="-getFilletGcode"><strong>getFilletGcode</strong></a>(gcodeText, filletPreferences<font color="#909090">=None</font>)</dt><dd><tt>Fillet&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>(hashtable<font color="#909090">=None</font>)</dt><dd><tt>Display&nbsp;the&nbsp;fillet&nbsp;dialog.</tt></dd></dl>
 </td></tr></table><p>

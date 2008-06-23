@@ -45,7 +45,19 @@ class Vec3:
         self.y = y
         self.z = z
 
-    def __repr__(self):
+    def __eq__( self, another ):
+        "Determine whether this vector is identical to another one."
+        return self.equals( another )
+
+    def __hash__( self ):
+        "Determine whether this vector is identical to another one."
+        return self.__repr__().__hash__()
+
+    def __ne__( self, another ):
+        "Determine whether this vector is not identical to another one."
+        return not self.__eq__( another )
+
+    def __repr__( self ):
         "Get the string representation of this Vec3."
         return '%s, %s, %s' % (self.x, self.y, self.z)
 
@@ -90,6 +102,8 @@ class Vec3:
 
     def equals( self, another ):
         "Determine whether this vector is identical to another one."
+        if another == None:
+            return False
         if self.x != another.x:
             return False
         if self.y != another.y:
@@ -119,7 +133,7 @@ class Vec3:
 
         Keyword arguments:
         subtractVec3 -- Vec3 which will be subtracted from the original"""
-        return Vec3().getFromXYZ( self.x - subtractVec3.x, self.y - subtractVec3.y, self.z - subtractVec3.z )
+        return Vec3( self.x - subtractVec3.x, self.y - subtractVec3.y, self.z - subtractVec3.z )
 
     def multiply( self, another ):
         "Multiply each component of this vector by the corresponding component of another vector."
@@ -139,7 +153,7 @@ class Vec3:
 
         Keyword arguments:
         plusVec3 -- Vec3 which will be added to the original"""
-        return Vec3().getFromXYZ( self.x + plusVec3.x, self.y + plusVec3.y, self.z + plusVec3.z )
+        return Vec3( self.x + plusVec3.x, self.y + plusVec3.y, self.z + plusVec3.z )
 
     def scale( self, multiplier ):
         "Scale each component of this Vec3 by a multiplier."
@@ -169,134 +183,9 @@ class Vec3:
         "Get a new Vec3 by multiplying each component of this one by a multiplier."
         return Vec3().getFromXYZ( self.x * multiplier, self.y * multiplier, self.z * multiplier )
 
-#Class vec3 is deprecated, please use Vec3 instead.
-class vec3:
-    "A three dimensional vector class."
-    def __init__( self ):
-        self.x = 0.0
-        self.y = 0.0
-        self.z = 0.0
-
-    def __repr__(self):
-        "Get the string representation of this vec3."
-        return '%s, %s, %s' % (self.x, self.y, self.z)
-
-    def add( self, another ):
-        "Add another vec3 to this one."
-        self.x += another.x
-        self.y += another.y
-        self.z += another.z
-
-    def distance( self, another ):
-        """Get the Euclidean distance between this vector and another one.
-
-        Keyword arguments:
-        another -- vec3 whose distance to the original will be calculated"""
-        return math.sqrt( self.distance2( another ) )
-
-    def distance2( self, another ):
-        """Get the square of the Euclidean distance between this vector and another one.
-
-        Keyword arguments:
-        another -- vec3 whose squared distance to the original will be calculated"""
-        separationX = self.x - another.x
-        separationY = self.y - another.y
-        separationZ = self.z - another.z
-        return separationX * separationX + separationY * separationY + separationZ * separationZ
-
-    def dot( self, another ):
-        "Calculate the dot product of this vector with another one."
-        return self.x * another.x + self.y * another.y + self.z * another.z
-
-    def dropAxis( self, which ):
-        """Get a complex by removing one axis of this one.
-
-        Keyword arguments:
-        which -- the axis to drop (0=X, 1=Y, 2=Z)"""
-        if which == 0:
-            return complex( self.y, self.z )
-        if which == 1:
-            return complex( self.x, self.z )
-        if which == 2:
-            return complex( self.x, self.y )
-
-    def equals( self, another ):
-        "Determine whether this vector is identical to another one."
-        if self.x != another.x:
-            return False
-        if self.y != another.y:
-            return False
-        return self.z == another.z
-
-    def getFromVec3( self, another ):
-        """Get a new vec3 identical to another one."""
-        self.setToVec3( another )
-        return self
-
-    def getFromXYZ( self, x, y, z ):
-        """Get a new vec3 with the specified x, y, and z components."""
-        self.setToXYZ( x, y, z )
-        return self
-
-    def length( self ):
-        """Get the length of the vec3."""
-        return math.sqrt( self.length2() )
-
-    def length2( self ):
-        """Get the square of the length of the vec3."""
-        return self.x * self.x + self.y * self.y + self.z * self.z
-
-    def minus( self, subtractVec3 ):
-        """Get the difference between the vec3 and another one.
-
-        Keyword arguments:
-        subtractVec3 -- vec3 which will be subtracted from the original"""
-        return vec3().getFromXYZ( self.x - subtractVec3.x, self.y - subtractVec3.y, self.z - subtractVec3.z )
-
-    def multiply( self, another ):
-        "Multiply each component of this vector by the corresponding component of another vector."
-        self.x *= another.x
-        self.y *= another.y
-        self.z *= another.z
-
-    def normalize( self ):
-        "Scale each component of this vec3 so that it has a length of 1. If this vec3 has a length of 0, this method has no effect."
-        length = self.length()
-        if length == 0.0:
-            return
-        self.scale( 1.0 / length )
-
-    def plus( self, plusVec3 ):
-        """Get the sum of this vec3 and another one.
-
-        Keyword arguments:
-        plusVec3 -- vec3 which will be added to the original"""
-        return vec3().getFromXYZ( self.x + plusVec3.x, self.y + plusVec3.y, self.z + plusVec3.z )
-
-    def scale( self, multiplier ):
-        "Scale each component of this vec3 by a multiplier."
-        self.x *= multiplier
-        self.y *= multiplier
-        self.z *= multiplier
-
-    def setToVec3( self, another ):
-        "Set this vec3 to be identical to another one."
-        self.x = another.x
-        self.y = another.y
-        self.z = another.z
-
-    def setToXYZ( self, x, y, z ):
-        "Set the x, y, and z components of this vec3."
+class vec3( Vec3 ):
+    "A three dimensional vector class which completely inherits from Vec3 and is deprecated, please use Vec3 instead."
+    def __init__( self, x = 0.0, y = 0.0, z = 0.0 ):
         self.x = x
         self.y = y
         self.z = z
-
-    def subtract( self, another ):
-        "Subtract another vec3 from this one."
-        self.x -= another.x
-        self.y -= another.y
-        self.z -= another.z
-
-    def times( self, multiplier ):
-        "Get a new vec3 by multiplying each component of this one by a multiplier."
-        return vec3().getFromXYZ( self.x * multiplier, self.y * multiplier, self.z * multiplier )	

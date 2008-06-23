@@ -80,7 +80,6 @@ import cStringIO
 import euclidean
 import gcodec
 import math
-import os
 import preferences
 
 
@@ -102,6 +101,13 @@ def getVectorGcode( gcodeText, vectorwritePreferences = None ):
 	skein.parseGcode( gcodeText, vectorwritePreferences )
 	return skein.vectorWindow.getVectorFormattedText()
 
+def writeSkeinforgeVectorFile( filename ):
+	"Write scalable vector graphics for a skeinforge gcode file, if 'Write Scalable Vector Graphics for Skeinforge Chain' is selected."
+	vectorwritePreferences = VectorwritePreferences()
+	preferences.readPreferences( vectorwritePreferences )
+	if vectorwritePreferences.writeSkeinforgeSVG.value:
+		writeVectorFile( filename )
+
 def writeVectorFile( filename = '' ):
 	"Write scalable vector graphics for a gcode file.  If no filename is specified, write scalable vector graphics for the first gcode file in this folder."
 	if filename == '':
@@ -118,7 +124,6 @@ def writeVectorFile( filename = '' ):
 	suffixFilename = suffixFilename.replace( ' ', '_' )
 	gcodec.writeFileText( suffixFilename, getVectorGcode( fileText, vectorwritePreferences ) )
 	print( 'The scalable vector graphics file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
-
 
 class VectorWindow:
 	"A class to accumulate a scalable vector graphics text."
@@ -178,13 +183,32 @@ class VectorWindow:
 
 class VectorwriteSkein:
 	"A class to write a get a scalable vector graphics text for a gcode skein."
-	def addToPath( self, location ):
+	def __init__( self ):
+		self.extrusionNumber = 0
+		self.extrusionWidth = 0.4
+		self.fontSize = 24
+
+	def addToPath( self, location, nextLine ):
 		"Add a point to travel and maybe extrusion."
+		if self.oldLocation == None:
+			return
+		beginningComplex = self.oldLocation.dropAxis( 2 )
+		endComplex = location.dropAxis( 2 )
 		colorName = 'gray'
 		if self.extruderActive:
 			colorName = self.colorNames[ self.extrusionNumber % len( self.colorNames ) ]
-		if self.oldLocation != None:
-			self.vectorWindow.addColoredLine( self.scale * self.oldLocation.dropAxis( 2 ), self.scale * location.dropAxis( 2 ), colorName )
+		else:
+			splitLine = nextLine.split( ' ' )
+			firstWord = ''
+			if len( splitLine ) > 0:
+				firstWord = splitLine[ 0 ]
+			if firstWord != 'G1':
+				segment = endComplex - beginningComplex
+				segmentLength = abs( segment )
+				if segmentLength > 0.0:
+					truncation = 0.3 * min( segmentLength, self.extrusionWidth )
+					endComplex -= segment / segmentLength * truncation
+		self.vectorWindow.addColoredLine( self.scale * beginningComplex, self.scale * endComplex, colorName )
 
 	def initializeActiveLocation( self ):
 		"Set variables to default."
@@ -200,10 +224,10 @@ class VectorwriteSkein:
 			self.cornerLow = euclidean.getPointMinimum( self.cornerLow, location )
 		self.oldLocation = location
 
-	def linearMove( self, splitLine ):
+	def linearMove( self, splitLine, nextLine ):
 		"Get statistics for a linear move."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-		self.addToPath( location )
+		self.addToPath( location, nextLine )
 		self.oldLocation = location
 
 	def parseCorner( self, line ):
@@ -218,7 +242,7 @@ class VectorwriteSkein:
 			self.extruderActive = True
 		elif firstWord == 'M103':
 			self.extruderActive = False
-		elif firstWord == 'M109':
+		elif firstWord == '(<extrusionWidth>':
 			self.extrusionWidth = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
 
 	def parseGcode( self, gcodeText, vectorwritePreferences ):
@@ -226,38 +250,40 @@ class VectorwriteSkein:
 		self.initializeActiveLocation()
 		self.cornerHigh = Vec3( - 999999999.0, - 999999999.0, - 999999999.0 )
 		self.cornerLow = Vec3( 999999999.0, 999999999.0, 999999999.0 )
-		self.extrusionWidth = 0.4
-		self.fontSize = 24
 		lines = gcodec.getTextLines( gcodeText )
 		for line in lines:
 			self.parseCorner( line )
 		self.initializeActiveLocation()
-		self.extrusionNumber = 0
 		self.colorNames = [ 'brown', 'red', 'orange', 'yellow', 'green', 'blue', 'purple' ]
 		self.scale = vectorwritePreferences.pixelsWidthExtrusion.value / self.extrusionWidth
 		self.vectorWindow = VectorWindow()
 		self.vectorWindow.setPaneCorners( self.scale * self.cornerLow.dropAxis( 2 ), self.scale * self.cornerHigh.dropAxis( 2 ) )
-		for line in lines:
-			self.parseLine( line )
+		for lineIndex in range( len( lines ) ):
+			line = lines[ lineIndex ]
+			nextLine = ''
+			nextIndex = lineIndex + 1
+			if nextIndex < len( lines ):
+				nextLine = lines[ nextIndex ]
+			self.parseLine( line, nextLine )
 
-	def parseLine( self, line ):
+	def parseLine( self, line, nextLine ):
 		"Parse a gcode line and add it to the commented gcode."
 		splitLine = line.split( ' ' )
 		if len( splitLine ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':
-			self.linearMove( splitLine )
+			self.linearMove( splitLine, nextLine )
 		elif firstWord == 'M101':
 			self.extruderActive = True
 			self.extrusionNumber += 1
 		elif firstWord == 'M103':
 			self.extruderActive = False
-		elif firstWord == 'M113':
+		elif firstWord == '(<layerStart>':
 			self.extrusionNumber = 0
 			if self.layerIndex > 0:
 				self.vectorWindow.addFontHeight( self.fontSize )
-			self.vectorWindow.addText( self.fontSize, 'Layer Index: ' + str( self.layerIndex ) )
+			self.vectorWindow.addText( self.fontSize, 'Layer index ' + str( self.layerIndex ) + ', z ' + splitLine[ 1 ] )
 			self.layerIndex += 1
 			self.vectorWindow.addPane()
 
@@ -268,16 +294,17 @@ class VectorwritePreferences:
 		"Set the default preferences, execute title & preferences filename."
 		#Set the default preferences.
 		self.pixelsWidthExtrusion = preferences.FloatPreference().getFromValue( 'Pixels for the Width of the Extrusion (ratio):', 10.0 )
+		self.writeSkeinforgeSVG = preferences.BooleanPreference().getFromValue( 'Write Scalable Vector Graphics for Skeinforge Chain:', True )
 		directoryRadio = []
 		self.directoryPreference = preferences.RadioLabel().getFromRadioLabel( 'Write Vector Graphics for All Unmodified Files in a Directory', 'File or Directory Choice:', directoryRadio, False )
 		self.filePreference = preferences.Radio().getFromRadio( 'Write Vector Graphics File', directoryRadio, True )
 		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Write Vector Graphics for', '' )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.archive = [ self.pixelsWidthExtrusion, self.directoryPreference, self.filePreference, self.filenameInput ]
+		self.archive = [ self.pixelsWidthExtrusion, self.writeSkeinforgeSVG, self.directoryPreference, self.filePreference, self.filenameInput ]
 		self.executeTitle = 'Write Vector Graphics'
-		self.filenamePreferences = 'vectorwrite.csv'
+		self.filenamePreferences = preferences.getPreferencesFilePath( 'vectorwrite.csv' )
 		self.filenameHelp = 'vectorwrite.html'
-		self.title = 'Write Preferences'
+		self.title = 'Vectorwrite Preferences'
 
 	def execute( self ):
 		"Write button has been clicked."
