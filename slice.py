@@ -608,11 +608,14 @@ class SliceSkein:
 		self.addLine( '(<extruderInitialization> )' ) # GCode formatted comment
 		self.addLine( 'G21 (use mm)' ) # Set units to mm.
 		self.addLine( 'G90 (absolute positioning)' ) # Set positioning to absolute.
-		self.addLine( 'G28 (goto home)' ) # Start at home.
+                if self.slicePreferences.assumeHomeOnStart.value:
+                        self.addLine( 'G92 (set current as home)' )
+                else:
+                        self.addLine( 'G28 (goto home)' )
 		self.addLine( 'M103 (extruder off)' ) # Turn extruder off.
-		self.addLine( 'M104 S' + slicePreferences.extruderTemp.value + ' (set temp)' )
+		self.addLine( 'M104 S' + str(self.slicePreferences.extruderTemp.value) + ' (set temp)' )
 		self.addLine( 'M105 (read temp)' ) # Custom code for temperature reading.
-		self.addLine( 'M108 S' + slicePreferences.extruderSpeed.value + ' (set speed)' )
+		self.addLine( 'M108 S' + str(self.slicePreferences.extruderSpeed.value) + ' (set speed)' )
 		self.addFromUpperLowerFile( 'EndOfTheBeginning.txt' ) # Add a second start file if it exists.
 		self.addLine( '(<extrusionDiameter> ' + euclidean.getRoundedToThreePlaces( self.extrusionDiameter ) + ' )' ) # Set extrusion diameter.
 		self.addLine( '(<extrusionWidth> ' + euclidean.getRoundedToThreePlaces( self.extrusionWidth ) + ' )' ) # Set extrusion width.
@@ -808,6 +811,7 @@ class SlicePreferences:
 		self.filePreference = preferences.Radio().getFromRadio( 'Slice File', directoryRadio, True )
                 self.extruderTemp = preferences.IntPreference().getFromValue( 'Extrusion Temperature (C):', 180 )
                 self.extruderSpeed = preferences.IntPreference().getFromValue( 'Extrusion Speed (PWM):', 55 )
+		self.assumeHomeOnStart = preferences.BooleanPreference().getFromValue( 'Assume being home on startup', False )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.archive = [
 			self.extrusionDiameter,
@@ -822,7 +826,8 @@ class SlicePreferences:
 			self.directoryPreference,
 			self.filePreference,
 			self.extruderTemp,
-			self.extruderSpeed ]
+			self.extruderSpeed,
+                        self.assumeHomeOnStart ]
 		self.executeTitle = 'Slice'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'slice.csv' )
 		self.filenameHelp = 'slice.html'
