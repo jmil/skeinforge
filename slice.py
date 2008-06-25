@@ -606,13 +606,13 @@ class SliceSkein:
 		self.addLine( '(<creator> skeinforge May 28, 2008 )' ) # GCode formatted comment
 		self.addLine( 'M110' ) # GCode for compatibility with Nophead's code.
 		self.addLine( '(<extruderInitialization> )' ) # GCode formatted comment
-		self.addLine( 'G21' ) # Set units to mm.
-		self.addLine( 'G90' ) # Set positioning to absolute.
-		self.addLine( 'G28' ) # Start at home.
-		self.addLine( 'M103' ) # Turn extruder off.
-		self.addLine( 'M104 S200' ) # Set temperature to 200.
-		self.addLine( 'M105' ) # Custom code for temperature reading.
-		self.addLine( 'M108 S210' ) # Set extruder speed to 210.
+		self.addLine( 'G21 (use mm)' ) # Set units to mm.
+		self.addLine( 'G90 (absolute positioning)' ) # Set positioning to absolute.
+		self.addLine( 'G28 (goto home)' ) # Start at home.
+		self.addLine( 'M103 (extruder off)' ) # Turn extruder off.
+		self.addLine( 'M104 S' + slicePreferences.extruderTemp.value + ' (set temp)' )
+		self.addLine( 'M105 (read temp)' ) # Custom code for temperature reading.
+		self.addLine( 'M108 S' + slicePreferences.extruderSpeed.value + ' (set speed)' )
 		self.addFromUpperLowerFile( 'EndOfTheBeginning.txt' ) # Add a second start file if it exists.
 		self.addLine( '(<extrusionDiameter> ' + euclidean.getRoundedToThreePlaces( self.extrusionDiameter ) + ' )' ) # Set extrusion diameter.
 		self.addLine( '(<extrusionWidth> ' + euclidean.getRoundedToThreePlaces( self.extrusionWidth ) + ' )' ) # Set extrusion width.
@@ -806,6 +806,8 @@ class SlicePreferences:
 		directoryRadio = []
 		self.directoryPreference = preferences.RadioLabel().getFromRadioLabel( 'Slice All GNU Triangulated Surface Files in a Directory', 'File or Directory:', directoryRadio, False )
 		self.filePreference = preferences.Radio().getFromRadio( 'Slice File', directoryRadio, True )
+                self.extruderTemp = preferences.IntPreference().getFromValue( 'Extrusion Temperature (C):', 180 )
+                self.extruderSpeed = preferences.IntPreference().getFromValue( 'Extrusion Speed (PWM):', 55 )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.archive = [
 			self.extrusionDiameter,
@@ -818,7 +820,9 @@ class SlicePreferences:
 			self.infillBridgeWidthOverThickness,
 			self.infillDirectionBridge,
 			self.directoryPreference,
-			self.filePreference ]
+			self.filePreference,
+			self.extruderTemp,
+			self.extruderSpeed ]
 		self.executeTitle = 'Slice'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'slice.csv' )
 		self.filenameHelp = 'slice.html'
