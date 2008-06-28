@@ -822,6 +822,9 @@ class SlicePreferences:
 		infillRadio = []
 		self.perimeterInfillPreference = preferences.RadioLabel().getFromRadioLabel( 'Calculate Overlap from Perimeter and Infill', 'Infill Perimeter Overlap Method of Calculation:', infillRadio, True )
 		self.perimeterPreference = preferences.Radio().getFromRadio( 'Calculate Overlap from Perimeter Only', infillRadio, False )
+                self.extruderTemp = preferences.IntPreference().getFromValue( 'Extrusion Temperature (C):', 180 )
+                self.extruderSpeed = preferences.IntPreference().getFromValue( 'Extrusion Speed (PWM):', 55 )
+		self.assumeHomeOnStart = preferences.BooleanPreference().getFromValue( 'Assume being home on startup', False )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.archive = [
 			self.extrusionDiameter,
