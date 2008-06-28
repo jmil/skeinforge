@@ -160,7 +160,7 @@ import preferences
 import stretch
 import time
 import vectorwrite
-
+import sys
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/21/04 $"
@@ -584,8 +584,10 @@ class FilletPreferences:
 
 
 def main( hashtable = None ):
-	"Display the fillet dialog."
-	preferences.displayDialog( FilletPreferences() )
+        if len(sys.argv) > 0: filletChainFile(sys.argv[1])
+        else:
+                "Display the fillet dialog."
+                preferences.displayDialog( FilletPreferences() )
 
 if __name__ == "__main__":
 	main()
