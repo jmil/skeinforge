@@ -9,7 +9,26 @@
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>tower</strong></big></big> ($Date: 2008/21/04 $)</font></td
 ><td align=right valign=bottom
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap_v0.1/tower.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap_v0.1/tower.py</a></font></td></tr></table>
-    <p><tt>Tower&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;tower&nbsp;islands&nbsp;in&nbsp;a&nbsp;gcode&nbsp;file.<br>
+    <p><tt>Tower&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;extrude&nbsp;a&nbsp;few&nbsp;layers&nbsp;up,&nbsp;then&nbsp;go&nbsp;across&nbsp;to&nbsp;other&nbsp;regions.<br>
+&nbsp;<br>
+This&nbsp;script&nbsp;commands&nbsp;the&nbsp;fabricator&nbsp;to&nbsp;extrude&nbsp;a&nbsp;disconnected&nbsp;region&nbsp;for&nbsp;a&nbsp;few&nbsp;layers,&nbsp;then&nbsp;go&nbsp;to&nbsp;another&nbsp;disconnected&nbsp;region<br>
+and&nbsp;extrude&nbsp;there.&nbsp;&nbsp;Its&nbsp;purpose&nbsp;is&nbsp;to&nbsp;reduce&nbsp;the&nbsp;number&nbsp;of&nbsp;stringers&nbsp;between&nbsp;a&nbsp;shape&nbsp;and&nbsp;reduce&nbsp;extruder&nbsp;travel.&nbsp;&nbsp;The&nbsp;important<br>
+value&nbsp;for&nbsp;the&nbsp;tower&nbsp;preferences&nbsp;is&nbsp;"Maximum&nbsp;Tower&nbsp;Height&nbsp;(layers)"&nbsp;which&nbsp;is&nbsp;the&nbsp;maximum&nbsp;number&nbsp;of&nbsp;layers&nbsp;that&nbsp;the&nbsp;extruder<br>
+will&nbsp;extrude&nbsp;in&nbsp;one&nbsp;region&nbsp;before&nbsp;going&nbsp;to&nbsp;another.&nbsp;&nbsp;When&nbsp;the&nbsp;value&nbsp;is&nbsp;zero&nbsp;tower&nbsp;will&nbsp;do&nbsp;nothing.&nbsp;&nbsp;Because&nbsp;tower&nbsp;could&nbsp;result&nbsp;in<br>
+the&nbsp;extruder&nbsp;collidiing&nbsp;with&nbsp;an&nbsp;already&nbsp;extruded&nbsp;part&nbsp;of&nbsp;the&nbsp;shape&nbsp;and&nbsp;because&nbsp;extruding&nbsp;in&nbsp;one&nbsp;region&nbsp;for&nbsp;more&nbsp;than&nbsp;one&nbsp;layer<br>
+could&nbsp;result&nbsp;in&nbsp;the&nbsp;shape&nbsp;melting,&nbsp;the&nbsp;default&nbsp;is&nbsp;the&nbsp;safe&nbsp;value&nbsp;of&nbsp;zero.<br>
+&nbsp;<br>
+Tower&nbsp;works&nbsp;by&nbsp;looking&nbsp;for&nbsp;islands&nbsp;in&nbsp;each&nbsp;layer&nbsp;and&nbsp;if&nbsp;it&nbsp;finds&nbsp;another&nbsp;island&nbsp;in&nbsp;the&nbsp;layer&nbsp;above,&nbsp;it&nbsp;goes&nbsp;to&nbsp;the&nbsp;next&nbsp;layer&nbsp;above<br>
+instead&nbsp;of&nbsp;going&nbsp;across&nbsp;to&nbsp;other&nbsp;regions&nbsp;on&nbsp;the&nbsp;original&nbsp;layer.&nbsp;&nbsp;It&nbsp;checks&nbsp;for&nbsp;collision&nbsp;with&nbsp;shapes&nbsp;already&nbsp;extruded&nbsp;within&nbsp;a&nbsp;cone<br>
+from&nbsp;the&nbsp;nozzle&nbsp;tip.&nbsp;&nbsp;The&nbsp;"Extruder&nbsp;Possible&nbsp;Collision&nbsp;Cone&nbsp;Angle&nbsp;(degrees)"&nbsp;preference&nbsp;is&nbsp;the&nbsp;angle&nbsp;of&nbsp;that&nbsp;cone.&nbsp;&nbsp;Realistic<br>
+values&nbsp;for&nbsp;the&nbsp;cone&nbsp;angle&nbsp;range&nbsp;between&nbsp;zero&nbsp;and&nbsp;ninety.&nbsp;&nbsp;The&nbsp;higher&nbsp;the&nbsp;angle,&nbsp;the&nbsp;less&nbsp;likely&nbsp;a&nbsp;collision&nbsp;with&nbsp;the&nbsp;rest&nbsp;of&nbsp;the<br>
+shape&nbsp;is,&nbsp;generally&nbsp;the&nbsp;extruder&nbsp;will&nbsp;stay&nbsp;in&nbsp;the&nbsp;region&nbsp;for&nbsp;only&nbsp;a&nbsp;few&nbsp;layers&nbsp;before&nbsp;a&nbsp;collision&nbsp;is&nbsp;detected&nbsp;with&nbsp;the&nbsp;wide&nbsp;cone.<br>
+The&nbsp;default&nbsp;angle&nbsp;is&nbsp;sixty&nbsp;degrees.<br>
+&nbsp;<br>
+The&nbsp;"Tower&nbsp;Start&nbsp;Layer"&nbsp;is&nbsp;the&nbsp;layer&nbsp;which&nbsp;the&nbsp;script&nbsp;starts&nbsp;extruding&nbsp;towers.&nbsp;&nbsp;It&nbsp;is&nbsp;best&nbsp;to&nbsp;not&nbsp;tower&nbsp;at&nbsp;least&nbsp;the&nbsp;first&nbsp;layer<br>
+because&nbsp;the&nbsp;temperature&nbsp;of&nbsp;the&nbsp;first&nbsp;layer&nbsp;should&nbsp;sometimes&nbsp;be&nbsp;different&nbsp;than&nbsp;that&nbsp;of&nbsp;the&nbsp;other&nbsp;layers.&nbsp;&nbsp;The&nbsp;default&nbsp;preference&nbsp;is<br>
+three.&nbsp;&nbsp;To&nbsp;run&nbsp;tower,&nbsp;in&nbsp;a&nbsp;shell&nbsp;type:<br>
+&gt;&nbsp;python&nbsp;tower.py<br>
 &nbsp;<br>
 To&nbsp;run&nbsp;tower,&nbsp;install&nbsp;python&nbsp;2.x&nbsp;on&nbsp;your&nbsp;machine,&nbsp;which&nbsp;is&nbsp;avaliable&nbsp;from&nbsp;<a href="http://www.python.org/download/">http://www.python.org/download/</a><br>
 &nbsp;<br>
@@ -41,11 +60,11 @@ The&nbsp;computation&nbsp;intensive&nbsp;python&nbsp;modules&nbsp;will&nbsp;use&
 The&nbsp;psyco&nbsp;download&nbsp;page&nbsp;is:<br>
 <a href="http://psyco.sourceforge.net/download.html">http://psyco.sourceforge.net/download.html</a><br>
 &nbsp;<br>
-The&nbsp;following&nbsp;examples&nbsp;tower&nbsp;the&nbsp;files&nbsp;Hollow&nbsp;Square.gcode&nbsp;&amp;&nbsp;Hollow&nbsp;Square.gts.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains<br>
-Hollow&nbsp;Square.gcode,&nbsp;Hollow&nbsp;Square.gts&nbsp;and&nbsp;tower.py.&nbsp;&nbsp;The&nbsp;tower&nbsp;function&nbsp;will&nbsp;tower&nbsp;if&nbsp;'Maximum&nbsp;Tower&nbsp;Layers'&nbsp;is&nbsp;greater&nbsp;than&nbsp;zero,&nbsp;which&nbsp;can&nbsp;be&nbsp;set&nbsp;in&nbsp;the&nbsp;dialog&nbsp;or&nbsp;by&nbsp;changing<br>
-the&nbsp;preferences&nbsp;file&nbsp;'tower.csv'&nbsp;with&nbsp;a&nbsp;text&nbsp;editor&nbsp;or&nbsp;a&nbsp;spreadsheet&nbsp;program&nbsp;set&nbsp;to&nbsp;separate&nbsp;tabs.&nbsp;&nbsp;The&nbsp;functions&nbsp;towerChainFile&nbsp;and<br>
-getTowerChainGcode&nbsp;check&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text&nbsp;has&nbsp;been&nbsp;towered,&nbsp;if&nbsp;not&nbsp;they&nbsp;call&nbsp;the&nbsp;getFillChainGcode&nbsp;in&nbsp;fill.py&nbsp;to&nbsp;fill&nbsp;the&nbsp;text;&nbsp;once&nbsp;they<br>
-have&nbsp;the&nbsp;filled&nbsp;text,&nbsp;then&nbsp;they&nbsp;tower.<br>
+The&nbsp;following&nbsp;examples&nbsp;tower&nbsp;the&nbsp;files&nbsp;Hollow&nbsp;Square.gcode&nbsp;&amp;&nbsp;Hollow&nbsp;Square.gts.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder<br>
+which&nbsp;contains&nbsp;Hollow&nbsp;Square.gcode,&nbsp;Hollow&nbsp;Square.gts&nbsp;and&nbsp;tower.py.&nbsp;&nbsp;The&nbsp;tower&nbsp;function&nbsp;will&nbsp;tower&nbsp;if&nbsp;'Maximum&nbsp;Tower&nbsp;Layers'&nbsp;is<br>
+greater&nbsp;than&nbsp;zero,&nbsp;which&nbsp;can&nbsp;be&nbsp;set&nbsp;in&nbsp;the&nbsp;dialog&nbsp;or&nbsp;by&nbsp;changing&nbsp;the&nbsp;preferences&nbsp;file&nbsp;'tower.csv'&nbsp;with&nbsp;a&nbsp;text&nbsp;editor&nbsp;or&nbsp;a&nbsp;spreadsheet<br>
+program&nbsp;set&nbsp;to&nbsp;separate&nbsp;tabs.&nbsp;&nbsp;The&nbsp;functions&nbsp;towerChainFile&nbsp;and&nbsp;getTowerChainGcode&nbsp;check&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text&nbsp;has&nbsp;been&nbsp;towered,<br>
+if&nbsp;not&nbsp;they&nbsp;call&nbsp;the&nbsp;getFillChainGcode&nbsp;in&nbsp;fill.py&nbsp;to&nbsp;fill&nbsp;the&nbsp;text;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;filled&nbsp;text,&nbsp;then&nbsp;they&nbsp;tower.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;pydoc&nbsp;-w&nbsp;tower<br>
@@ -107,10 +126,11 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 </td><td width="25%" valign=top><a href="gcodec.html">gcodec</a><br>
 <a href="intercircle.html">intercircle</a><br>
 <a href="math.html">math</a><br>
-</td><td width="25%" valign=top><a href="preferences.html">preferences</a><br>
+</td><td width="25%" valign=top><a href="multifile.html">multifile</a><br>
+<a href="preferences.html">preferences</a><br>
 <a href="sys.html">sys</a><br>
-<a href="time.html">time</a><br>
-</td><td width="25%" valign=top><a href="vectorwrite.html">vectorwrite</a><br>
+</td><td width="25%" valign=top><a href="time.html">time</a><br>
+<a href="vectorwrite.html">vectorwrite</a><br>
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ee77aa">
@@ -208,9 +228,8 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
  <dl><dt><a name="-getTowerGcode"><strong>getTowerGcode</strong></a>(gcodeText, towerPreferences<font color="#909090">=None</font>)</dt><dd><tt>Tower&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>(hashtable<font color="#909090">=None</font>)</dt><dd><tt>Display&nbsp;the&nbsp;tower&nbsp;dialog.</tt></dd></dl>
  <dl><dt><a name="-towerChainFile"><strong>towerChainFile</strong></a>(filename<font color="#909090">=''</font>)</dt><dd><tt>Tower&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;Chain&nbsp;tower&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;towered.<br>
-Depending&nbsp;on&nbsp;the&nbsp;preferences,&nbsp;either&nbsp;arcPoint,&nbsp;arcRadius,&nbsp;arcSegment,&nbsp;bevel&nbsp;or&nbsp;do&nbsp;nothing.<br>
 If&nbsp;no&nbsp;filename&nbsp;is&nbsp;specified,&nbsp;tower&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
- <dl><dt><a name="-towerFile"><strong>towerFile</strong></a>(filename<font color="#909090">=''</font>)</dt><dd><tt>Tower&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;Depending&nbsp;on&nbsp;the&nbsp;preferences,&nbsp;either&nbsp;arcPoint,&nbsp;arcRadius,&nbsp;arcSegment,&nbsp;bevel&nbsp;or&nbsp;do&nbsp;nothing.<br>
+ <dl><dt><a name="-towerFile"><strong>towerFile</strong></a>(filename<font color="#909090">=''</font>)</dt><dd><tt>Tower&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;If&nbsp;the&nbsp;maximum&nbsp;tower&nbsp;height&nbsp;preference&nbsp;is&nbsp;less&nbsp;than&nbsp;one,&nbsp;do&nbsp;nothing.<br>
 If&nbsp;no&nbsp;filename&nbsp;is&nbsp;specified,&nbsp;tower&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
  <dl><dt><a name="-transferFillLoops"><strong>transferFillLoops</strong></a>(fillLoops, surroundingLoop)</dt><dd><tt>Transfer&nbsp;fill&nbsp;loops.</tt></dd></dl>
  <dl><dt><a name="-transferFillLoopsToSurroundingLoops"><strong>transferFillLoopsToSurroundingLoops</strong></a>(fillLoops, surroundingLoops)</dt><dd><tt>Transfer&nbsp;fill&nbsp;loops&nbsp;to&nbsp;surrounding&nbsp;loops.</tt></dd></dl>

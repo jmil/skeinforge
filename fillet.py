@@ -156,11 +156,12 @@ from vec3 import Vec3
 import cStringIO
 import euclidean
 import gcodec
+import multifile
 import preferences
 import stretch
 import time
 import vectorwrite
-import sys
+
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/21/04 $"
@@ -556,9 +557,6 @@ class FilletPreferences:
 		self.bevel = preferences.Radio().getFromRadio( 'Bevel', filletRadio, True )
 		self.doNotFillet = preferences.Radio().getFromRadio( 'Do Not Fillet', filletRadio, False )
 		self.filletRadiusOverHalfExtrusionWidth = preferences.FloatPreference().getFromValue( 'Fillet Radius Over Half Extrusion Width (ratio):', 0.7 )
-		directoryRadio = []
-		self.directoryPreference = preferences.RadioLabel().getFromRadioLabel( 'Fillet All Unmodified Files in a Directory', 'File or Directory Choice:', directoryRadio, False )
-		self.filePreference = preferences.Radio().getFromRadio( 'Fillet File', directoryRadio, True )
 		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface text files', '*.gts' ), ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Filleted', '' )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.archive = [
@@ -568,8 +566,6 @@ class FilletPreferences:
 			self.bevel,
 			self.doNotFillet,
 			self.filletRadiusOverHalfExtrusionWidth,
-			self.directoryPreference,
-			self.filePreference,
 			self.filenameInput ]
 		self.executeTitle = 'Fillet'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'fillet.csv' )
@@ -578,7 +574,7 @@ class FilletPreferences:
 
 	def execute( self ):
 		"Fillet button has been clicked."
-		filenames = gcodec.getGcodeDirectoryOrFile( self.directoryPreference.value, self.filenameInput.value, self.filenameInput.wasCancelled )
+		filenames = multifile.getFileOrGNUUnmodifiedGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
 		for filename in filenames:
 			filletChainFile( filename )
 

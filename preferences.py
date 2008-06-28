@@ -36,6 +36,7 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/23/04 $"
 __license__ = "GPL 3.0"
 
+globalSpreadsheetSeparator = '\t'
 
 def displayDialog( displayPreferences ):
 	"Display the preferences dialog."
@@ -49,7 +50,7 @@ def getArchiveText( preferences ):
 	archiveWriter = cStringIO.StringIO()
 	archiveWriter.write( 'Format is tab separated preferences.\n' )
 	for preference in preferences.archive:
-		archiveWriter.write( preference.name + '\t' + preference.getValueString() + '\n' )
+		preference.writeToArchiveWriter( archiveWriter )
 	return archiveWriter.getvalue()
 
 def getPreferencesFilePath( filename, folderName = '' ):
@@ -74,14 +75,14 @@ def readPreferences( preferences ):
 	lines = gcodec.getTextLines( preferencesText )
 	preferenceTable = {}
 	for preference in preferences.archive:
-		preferenceTable[ preference.name ] = preference
+		preference.addToPreferenceTable( preferenceTable )
 	for lineIndex in range( len( lines ) ):
 		setArchiveToLine( lineIndex, lines, preferenceTable )
 
 def setArchiveToLine( lineIndex, lines, preferenceTable ):
 	"Set an archive to a preference line."
 	line = lines[ lineIndex ]
-	splitLine = line.split( '\t' )
+	splitLine = line.split( globalSpreadsheetSeparator )
 	if len( splitLine ) < 2:
 		return
 	filePreferenceName = splitLine[ 0 ]
@@ -91,6 +92,53 @@ def setArchiveToLine( lineIndex, lines, preferenceTable ):
 def writePreferences( preferences ):
 	"Write the preferences to a file."
 	gcodec.writeFileText( preferences.filenamePreferences, getArchiveText( preferences ) )
+
+
+class AddListboxSelection:
+	"A class to add the selection of a listbox preference."
+	def addToDialog( self, preferencesDialog ):
+		"Add this to the dialog."
+		self.entry = Entry( preferencesDialog.master )
+		self.entry.bind( '<Return>', self.addSelectionWithEvent )
+		self.entry.grid( row = preferencesDialog.row, column = 1, columnspan = 2, sticky=W )
+		self.addButton = Button( preferencesDialog.master, text = 'Add Listbox Selection', command = self.addSelection )
+		self.addButton.grid( row = preferencesDialog.row, column = 0 )
+		preferencesDialog.row += 1
+
+	def addSelection( self ):
+		"Add the selection of a listbox preference."
+		entryText = self.entry.get()
+		if entryText == '':
+			print( 'To add to the selection, enter the material name.' )
+			return
+		self.entry.delete( 0, END )
+		self.listboxPreference.listPreference.value.append( entryText )
+		self.listboxPreference.listPreference.value.sort()
+		self.listboxPreference.listbox.delete( 0, END )
+		self.listboxPreference.value = entryText
+		self.listboxPreference.setListboxItems()
+		self.listboxPreference.setToDisplay()
+
+	def addSelectionWithEvent( self, event ):
+		"Add the selection of a listbox preference, given an event."
+		self.addSelection()
+
+	def addToPreferenceTable( self, preferenceTable ):
+		"Do nothing because the add listbox selection is not archivable."
+		pass
+
+	def getFromListboxPreference( self, listboxPreference ):
+		"Initialize."
+		self.listboxPreference = listboxPreference
+		return self
+
+	def setToDisplay( self ):
+		"Do nothing because the add listbox selection is not archivable."
+		pass
+
+	def writeToArchiveWriter( self, archiveWriter ):
+		"Do nothing because the add listbox selection is not archivable."
+		pass
 
 
 class BooleanPreference:
@@ -103,15 +151,15 @@ class BooleanPreference:
 		self.checkbutton.grid( row = preferencesDialog.row, columnspan = 4, sticky=W )
 		preferencesDialog.row += 1
 
+	def addToPreferenceTable( self, preferenceTable ):
+		"Add this to the preference table."
+		preferenceTable[ self.name ] = self
+
 	def getFromValue( self, name, value ):
 		"Initialize."
 		self.value = value
 		self.name = name
 		return self
-
-	def getValueString( self ):
-		"Get the boolean as a string."
-		return str( self.value )
 
 	def setToDisplay( self ):
 		"Set the boolean to the checkbox."
@@ -125,6 +173,30 @@ class BooleanPreference:
 		"Set the boolean to the string."
 		self.value = ( valueString.lower() == 'true' )
 
+	def writeToArchiveWriter( self, archiveWriter ):
+		"Write tab separated name and value to the archive writer."
+		archiveWriter.write( self.name + globalSpreadsheetSeparator + str( self.value ) + '\n' )
+
+
+class DeleteListboxSelection( AddListboxSelection ):
+	"A class to delete the selection of a listbox preference."
+	def addToDialog( self, preferencesDialog ):
+		"Add this to the dialog."
+		self.deleteButton = Button( preferencesDialog.master, text = "Delete Listbox Selection", command = self.deleteSelection )
+		self.deleteButton.grid( row = preferencesDialog.row, column = 0 )
+		preferencesDialog.row += 1
+
+	def deleteSelection( self ):
+		"Delete the selection of a listbox preference."
+		self.listboxPreference.setToDisplay()
+		if self.listboxPreference.value not in self.listboxPreference.listPreference.value:
+			return
+		self.listboxPreference.listPreference.value.remove( self.listboxPreference.value )
+		self.listboxPreference.listbox.delete( 0, END )
+		self.listboxPreference.setListboxItems()
+		self.listboxPreference.listbox.select_set( 0 )
+		self.listboxPreference.setToDisplay()
+
 
 class Filename( BooleanPreference ):
 	def addToDialog( self, preferencesDialog ):
@@ -136,7 +208,7 @@ class Filename( BooleanPreference ):
 		try:
 			import tkFileDialog
 			summarized = gcodec.getSummarizedFilename( self.value )
-			filename = tkFileDialog.askopenfilename( filetypes = self.getFilenameFirstTypes(), initialdir = os.path.dirname( summarized ) + os.sep, initialfile = os.path.basename( summarized ), title = self.name )
+			filename = tkFileDialog.askopenfilename( filetypes = self.getFilenameFirstTypes(), initialdir = os.path.dirname( summarized ), initialfile = summarized, title = self.name )
 			if ( str( filename ) == '()' ):
 				self.wasCancelled = True
 			else:
@@ -180,7 +252,7 @@ class FloatPreference( BooleanPreference ):
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
 		self.entry = Entry( preferencesDialog.master )
-		self.entry.insert( 0, self.getValueString() )
+		self.entry.insert( 0, str( self.value ) )
 		self.entry.grid( row = preferencesDialog.row, column = 2, columnspan = 2, sticky=W )
 		self.label = Label( preferencesDialog.master, text = self.name )
 		self.label.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky=W )
@@ -210,6 +282,70 @@ class IntPreference( FloatPreference ):
 			self.value = int( valueString )
 		except:
 			print( 'Oops, can not read integer ' + self.name + ' ' + valueString )
+
+
+class ListPreference( BooleanPreference ):
+	def addToDialog( self, preferencesDialog ):
+		"Do nothing because the list preference does not have a graphical interface."
+		pass
+
+	def setToDisplay( self ):
+		"Do nothing because the list preference does not have a graphical interface."
+		pass
+
+	def setValueToSplitLine( self, lineIndex, lines, splitLine ):
+		"Set the value to the second and later words of a split line."
+		self.value = splitLine[ 1 : ]
+
+	def setValueToString( self, valueString ):
+		"Do nothing because the list preference does not have a graphical interface."
+		pass
+
+	def writeToArchiveWriter( self, archiveWriter ):
+		"Write tab separated name and list to the archive writer."
+		archiveWriter.write( self.name + globalSpreadsheetSeparator )
+		for item in self.value:
+			archiveWriter.write( item )
+			if item != self.value[ - 1 ]:
+				archiveWriter.write( globalSpreadsheetSeparator )
+		archiveWriter.write( '\n' )
+
+
+class ListboxPreference( BooleanPreference ):
+	def addToDialog( self, preferencesDialog ):
+		"Add this to the dialog."
+#http://www.pythonware.com/library/tkinter/introduction/x5453-patterns.htm
+		frame = Frame( preferencesDialog.master )
+		scrollbar = Scrollbar( frame, orient = VERTICAL )
+		self.listbox = Listbox( frame, selectmode = SINGLE, yscrollcommand = scrollbar.set )
+		scrollbar.config( command = self.listbox.yview )
+		scrollbar.pack( side = RIGHT, fill = Y )
+		self.listbox.pack( side = LEFT, fill = BOTH, expand = 1 )
+		self.setListboxItems()
+		frame.grid( row = preferencesDialog.row, columnspan = 4, sticky=W )
+		preferencesDialog.row += 1
+
+	def getFromListPreference( self, listPreference, name, value ):
+		"Initialize."
+		self.getFromValue( name, value )
+		self.listPreference = listPreference
+		return self
+
+	def setListboxItems( self ):
+		"Set the listbox items to the list preference."
+		for item in self.listPreference.value:
+			self.listbox.insert( END, item )
+			if self.value == item:
+				self.listbox.select_set( END )
+
+	def setToDisplay( self ):
+		"Set the selection value to the listbox selection."
+		valueString = self.listbox.get( ACTIVE )
+		self.setValueToString( valueString )
+
+	def setValueToString( self, valueString ):
+		"Set the selection value to the string."
+		self.value = valueString
 
 
 class Radio( BooleanPreference ):
@@ -281,8 +417,9 @@ class PreferencesDialog:
 		self.row += 1
 		saveButton = Button( master, text = "Save Preferences", command = self.savePreferencesDestroy )
 		saveButton.grid( row = self.row, column = 0 )
-		executeButton = Button( master, text = displayPreferences.executeTitle, command = self.execute )
-		executeButton.grid( row = self.row, column = 1 )
+		if displayPreferences.executeTitle != None:
+			executeButton = Button( master, text = displayPreferences.executeTitle, command = self.execute )
+			executeButton.grid( row = self.row, column = 1 )
 		helpButton = Button( master, text = "       ?       ", command = self.openBrowser )
 		helpButton.grid( row = self.row, column = 2 )
 		cancelButton = Button( master, text = "Cancel", fg = "red", command = master.destroy )
@@ -296,7 +433,7 @@ class PreferencesDialog:
 		self.master.destroy()
 
 	def openBrowser( self ):
-		webbrowser.open(os.path.abspath(os.path.join("doc", self.displayPreferences.filenameHelp)))
+                webbrowser.open(os.path.abspath(os.path.join("doc", self.displayPreferences.filenameHelp)))
 #		os.system( webbrowser.get().name + ' ' + self.displayPreferences.filenameHelp )#used this instead of webbrowser.open() to workaround webbrowser open() bug
 
 	def savePreferences( self ):

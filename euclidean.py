@@ -398,6 +398,13 @@ def getRoundZAxisByPlaneAngle( planeAngle, vector3 ):
 	vector3 - Vec3 whose rotation will be returned"""
 	return Vec3( vector3.x * planeAngle.real - vector3.y * planeAngle.imag, vector3.x * planeAngle.imag + vector3.y * planeAngle.real, vector3.z )
 
+def getSegmentFromPoints( begin, end ):
+	"Get endpoint segment from a pair of points."
+	endpointFirst = Endpoint()
+	endpointSecond = Endpoint().getFromOtherPoint( endpointFirst, end )
+	endpointFirst.getFromOtherPoint( endpointSecond, begin )
+	return ( endpointFirst, endpointSecond )
+
 def getSegmentsFromIntersections( solidXIntersectionList, y, z ):
 	"Get endpoint segments from the intersections."
 	segments = []
@@ -418,11 +425,7 @@ def getSegmentsFromIntersections( solidXIntersectionList, y, z ):
 	for xIntersectionIndex in range( 0, len( xIntersectionList ), 2 ):
 		firstX = xIntersectionList[ xIntersectionIndex ]
 		secondX = xIntersectionList[ xIntersectionIndex + 1 ]
-		endpointFirst = Endpoint()
-		endpointSecond = Endpoint().getFromOtherPoint( endpointFirst, Vec3( secondX, y, z ) )
-		endpointFirst.getFromOtherPoint( endpointSecond, Vec3( firstX, y, z ) )
-		segment = ( endpointFirst, endpointSecond )
-		segments.append( segment )
+		segments.append( getSegmentFromPoints( Vec3( firstX, y, z ), Vec3( secondX, y, z ) ) )
 	return segments
 
 def getSimplifiedLoop( loop, radius ):
@@ -668,7 +671,7 @@ class Endpoint:
 	"The endpoint of a segment."
 	def __repr__( self ):
 		"Get the string representation of this Endpoint."
-		return 'Endpoint ' + str( self.touched ) + str( self.point ) + ' ' + str( self.otherEndpoint.point )
+		return 'Endpoint ' + str( self.point ) + ' ' + str( self.otherEndpoint.point )
 
 	def getFromOtherPoint( self, otherEndpoint, point ):
 		"Initialize from other endpoint."
@@ -781,8 +784,8 @@ class SurroundingLoop:
 			addToThreadsFromLoop( self.extrusionHalfWidthSquared, '(<perimeter> )', self.loop[ : ], oldOrderedLocation, skein )#later when comb is updated replace perimeter with loop
 		skein.addLine( '(</surroundingLoop> )' )
 		addToThreadsRemoveFromSurroundings( oldOrderedLocation, self.innerSurroundings[ : ], skein )
-		if self.lastFillLoops != None:
-			remainingFillLoops = self.lastFillLoops[ : ]
+		if len( self.extraLoops ) > 0:
+			remainingFillLoops = self.extraLoops[ : ]
 			while len( remainingFillLoops ) > 0:
 				transferClosestFillLoop( self.extrusionHalfWidthSquared, oldOrderedLocation, remainingFillLoops, skein )
 		transferClosestPaths( oldOrderedLocation, self.paths[ : ], skein )

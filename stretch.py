@@ -1,5 +1,22 @@
 """
-Stretch is a script to stretch the extrusion hair of a gcode file.
+Stretch is a script to stretch the threads to partially compensate for filament shrinkage when extruded.
+
+The important value for the stretch preferences is "Maximum Stretch Over Half Extrusion Width (ratio)" which is the ratio of the
+maximum amount the thread will be stretched compared to half of the extrusion width. The default is 0.3, if you do not want to
+use stretch, set the value to zero.  With a value of one or more, the script might stretch a couple of threads in opposite directions
+so much that they overlap.  In theory this would be because they'll contract back to the desired places, but in practice they might
+not.  The optimal value of stretch will be different for different materials, so the default value of 0.3 is chosen because it will
+counter the contraction a bit, but not enough to cause overlap trouble.
+
+In general, stretch will widen holes and push corners out.  The algorithm works by checking at each turning point on the
+extrusion path what the direction of the thread is at a distance of "Stretch from Distance over Extrusion Width (ratio)" times the
+extrusion width, on both sides, and moves the thread in the opposite direction.  The magnitude of the stretch increases with the
+amount that the direction of the two threads is similar and by the "Maximum Stretch Over Half Extrusion Width (ratio)".  The
+script then also stretches the thread at two locations on the path on close to the turning points.  In practice the filament
+contraction will be similar but different from the algorithm, so even once the optimal parameters are determined, the stretch
+script will not be able to eliminate the inaccuracies caused by contraction, but it should reduce them.  To run stretch, in a shell
+type:
+> python stretch.py
 
 To run stretch, install python 2.x on your machine, which is avaliable from http://www.python.org/download/
 
@@ -19,8 +36,10 @@ of Art of Illusion.  Then from the Scripts submenu in the Tools menu, choose Exp
 imported STL shape.  Then type 'python slice.py' in a shell in the folder which slice & stretch are in and when the dialog pops up, set
 the parameters and click 'Save Preferences'.  Then type 'python fill.py' in a shell in the folder which fill is in and when the dialog
 pops up, set the parameters and click 'Save Preferences'.  Then type 'python comb.py' in a shell and when the dialog pops up,
-change the parameters if you wish but the default 'Comb Hair' is fine.  Then click 'Comb', choose the file which you exported in
-Export GNU Triangulated Surface and the filled & stretched file will be saved with the suffix '_stretch'.
+change the parameters if you wish but the default 'Comb Hair' is fine.  Then type 'python stretch.py' in a shell and when the dialog pops up,
+change the parameters if you wish but the default is fine to start.  Then click 'Stretch', choose the file which you exported in
+Export GNU Triangulated Surface and the filled & stretched file will be saved with the suffix '_stretch'.  Once you've made a shape, then
+you can decide what the optimal value of "Maximum Stretch Over Half Extrusion Width (ratio)" is for that material.
 
 To write documentation for this program, open a shell in the stretch.py directory, then type 'pydoc -w stretch', then open 'stretch.html' in
 a browser or click on the '?' button in the dialog.  To write documentation for all the python scripts in the directory, type 'pydoc -w ./'.
@@ -94,6 +113,7 @@ import cStringIO
 import euclidean
 import gcodec
 import intercircle
+import multifile
 import preferences
 import time
 import vectorwrite
@@ -314,17 +334,12 @@ class StretchPreferences:
 		self.stretchFromDistanceOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Stretch From Distance Over Extrusion Width (ratio):', 2.0 )
 		self.stretchOverHalfExtrusionWidth = preferences.FloatPreference().getFromValue( 'Maximum Stretch Over Half Extrusion Width (ratio):', 0.3 )
 		self.travelOverExtrusionStretch = preferences.FloatPreference().getFromValue( 'Travel Stretch Over Extrusion Stretch (ratio):', 0.2 )
-		directoryRadio = []
-		self.directoryPreference = preferences.RadioLabel().getFromRadioLabel( 'Stretch All Unmodified Files in a Directory', 'File or Directory Choice:', directoryRadio, False )
-		self.filePreference = preferences.Radio().getFromRadio( 'Stretch File', directoryRadio, True )
 		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface text files', '*.gts' ), ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Stretched', '' )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.archive = [
 			self.stretchFromDistanceOverExtrusionWidth,
 			self.stretchOverHalfExtrusionWidth,
 			self.travelOverExtrusionStretch,
-			self.directoryPreference,
-			self.filePreference,
 			self.filenameInput ]
 		self.executeTitle = 'Stretch'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'stretch.csv' )
@@ -333,7 +348,7 @@ class StretchPreferences:
 
 	def execute( self ):
 		"Stretch button has been clicked."
-		filenames = gcodec.getGcodeDirectoryOrFile( self.directoryPreference.value, self.filenameInput.value, self.filenameInput.wasCancelled )
+		filenames = multifile.getFileOrGNUUnmodifiedGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
 		for filename in filenames:
 			stretchChainFile( filename )
 

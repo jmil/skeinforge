@@ -62,6 +62,12 @@ many&nbsp;lines&nbsp;of&nbsp;text<br>
     
 <tr><td bgcolor="#ee77aa"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><dl>
+<dt><font face="helvetica, arial"><a href="preferences.html#AddListboxSelection">AddListboxSelection</a>
+</font></dt><dd>
+<dl>
+<dt><font face="helvetica, arial"><a href="preferences.html#DeleteListboxSelection">DeleteListboxSelection</a>
+</font></dt></dl>
+</dd>
 <dt><font face="helvetica, arial"><a href="preferences.html#BooleanPreference">BooleanPreference</a>
 </font></dt><dd>
 <dl>
@@ -72,7 +78,9 @@ many&nbsp;lines&nbsp;of&nbsp;text<br>
 <dt><font face="helvetica, arial"><a href="preferences.html#IntPreference">IntPreference</a>
 </font></dt></dl>
 </dd>
-<dt><font face="helvetica, arial"><a href="preferences.html#Radio">Radio</a>
+<dt><font face="helvetica, arial"><a href="preferences.html#ListPreference">ListPreference</a>
+</font></dt><dt><font face="helvetica, arial"><a href="preferences.html#ListboxPreference">ListboxPreference</a>
+</font></dt><dt><font face="helvetica, arial"><a href="preferences.html#Radio">Radio</a>
 </font></dt><dd>
 <dl>
 <dt><font face="helvetica, arial"><a href="preferences.html#RadioLabel">RadioLabel</a>
@@ -86,6 +94,30 @@ many&nbsp;lines&nbsp;of&nbsp;text<br>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ffc8d8">
 <td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="AddListboxSelection">class <strong>AddListboxSelection</strong></a></font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;class&nbsp;to&nbsp;add&nbsp;the&nbsp;selection&nbsp;of&nbsp;a&nbsp;listbox&nbsp;preference.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="AddListboxSelection-addSelection"><strong>addSelection</strong></a>(self)</dt><dd><tt>Add&nbsp;the&nbsp;selection&nbsp;of&nbsp;a&nbsp;listbox&nbsp;preference.</tt></dd></dl>
+
+<dl><dt><a name="AddListboxSelection-addSelectionWithEvent"><strong>addSelectionWithEvent</strong></a>(self, event)</dt><dd><tt>Add&nbsp;the&nbsp;selection&nbsp;of&nbsp;a&nbsp;listbox&nbsp;preference,&nbsp;given&nbsp;an&nbsp;event.</tt></dd></dl>
+
+<dl><dt><a name="AddListboxSelection-addToDialog"><strong>addToDialog</strong></a>(self, preferencesDialog)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;dialog.</tt></dd></dl>
+
+<dl><dt><a name="AddListboxSelection-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;add&nbsp;listbox&nbsp;selection&nbsp;is&nbsp;not&nbsp;archivable.</tt></dd></dl>
+
+<dl><dt><a name="AddListboxSelection-getFromListboxPreference"><strong>getFromListboxPreference</strong></a>(self, listboxPreference)</dt><dd><tt>Initialize.</tt></dd></dl>
+
+<dl><dt><a name="AddListboxSelection-setToDisplay"><strong>setToDisplay</strong></a>(self)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;add&nbsp;listbox&nbsp;selection&nbsp;is&nbsp;not&nbsp;archivable.</tt></dd></dl>
+
+<dl><dt><a name="AddListboxSelection-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;add&nbsp;listbox&nbsp;selection&nbsp;is&nbsp;not&nbsp;archivable.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#000000" face="helvetica, arial"><a name="BooleanPreference">class <strong>BooleanPreference</strong></a></font></td></tr>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
@@ -94,15 +126,45 @@ many&nbsp;lines&nbsp;of&nbsp;text<br>
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="BooleanPreference-addToDialog"><strong>addToDialog</strong></a>(self, preferencesDialog)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;dialog.</tt></dd></dl>
 
-<dl><dt><a name="BooleanPreference-getFromValue"><strong>getFromValue</strong></a>(self, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
+<dl><dt><a name="BooleanPreference-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;preference&nbsp;table.</tt></dd></dl>
 
-<dl><dt><a name="BooleanPreference-getValueString"><strong>getValueString</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;boolean&nbsp;as&nbsp;a&nbsp;string.</tt></dd></dl>
+<dl><dt><a name="BooleanPreference-getFromValue"><strong>getFromValue</strong></a>(self, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
 
 <dl><dt><a name="BooleanPreference-setToDisplay"><strong>setToDisplay</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;boolean&nbsp;to&nbsp;the&nbsp;checkbox.</tt></dd></dl>
 
 <dl><dt><a name="BooleanPreference-setValueToSplitLine"><strong>setValueToSplitLine</strong></a>(self, lineIndex, lines, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;value&nbsp;to&nbsp;the&nbsp;second&nbsp;word&nbsp;of&nbsp;a&nbsp;split&nbsp;line.</tt></dd></dl>
 
 <dl><dt><a name="BooleanPreference-setValueToString"><strong>setValueToString</strong></a>(self, valueString)</dt><dd><tt>Set&nbsp;the&nbsp;boolean&nbsp;to&nbsp;the&nbsp;string.</tt></dd></dl>
+
+<dl><dt><a name="BooleanPreference-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Write&nbsp;tab&nbsp;separated&nbsp;name&nbsp;and&nbsp;value&nbsp;to&nbsp;the&nbsp;archive&nbsp;writer.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="DeleteListboxSelection">class <strong>DeleteListboxSelection</strong></a>(<a href="preferences.html#AddListboxSelection">AddListboxSelection</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;class&nbsp;to&nbsp;delete&nbsp;the&nbsp;selection&nbsp;of&nbsp;a&nbsp;listbox&nbsp;preference.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="DeleteListboxSelection-addToDialog"><strong>addToDialog</strong></a>(self, preferencesDialog)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;dialog.</tt></dd></dl>
+
+<dl><dt><a name="DeleteListboxSelection-deleteSelection"><strong>deleteSelection</strong></a>(self)</dt><dd><tt>Delete&nbsp;the&nbsp;selection&nbsp;of&nbsp;a&nbsp;listbox&nbsp;preference.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="preferences.html#AddListboxSelection">AddListboxSelection</a>:<br>
+<dl><dt><a name="DeleteListboxSelection-addSelection"><strong>addSelection</strong></a>(self)</dt><dd><tt>Add&nbsp;the&nbsp;selection&nbsp;of&nbsp;a&nbsp;listbox&nbsp;preference.</tt></dd></dl>
+
+<dl><dt><a name="DeleteListboxSelection-addSelectionWithEvent"><strong>addSelectionWithEvent</strong></a>(self, event)</dt><dd><tt>Add&nbsp;the&nbsp;selection&nbsp;of&nbsp;a&nbsp;listbox&nbsp;preference,&nbsp;given&nbsp;an&nbsp;event.</tt></dd></dl>
+
+<dl><dt><a name="DeleteListboxSelection-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;add&nbsp;listbox&nbsp;selection&nbsp;is&nbsp;not&nbsp;archivable.</tt></dd></dl>
+
+<dl><dt><a name="DeleteListboxSelection-getFromListboxPreference"><strong>getFromListboxPreference</strong></a>(self, listboxPreference)</dt><dd><tt>Initialize.</tt></dd></dl>
+
+<dl><dt><a name="DeleteListboxSelection-setToDisplay"><strong>setToDisplay</strong></a>(self)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;add&nbsp;listbox&nbsp;selection&nbsp;is&nbsp;not&nbsp;archivable.</tt></dd></dl>
+
+<dl><dt><a name="DeleteListboxSelection-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;add&nbsp;listbox&nbsp;selection&nbsp;is&nbsp;not&nbsp;archivable.</tt></dd></dl>
 
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -126,11 +188,13 @@ many&nbsp;lines&nbsp;of&nbsp;text<br>
 
 <hr>
 Methods inherited from <a href="preferences.html#BooleanPreference">BooleanPreference</a>:<br>
+<dl><dt><a name="Filename-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;preference&nbsp;table.</tt></dd></dl>
+
 <dl><dt><a name="Filename-getFromValue"><strong>getFromValue</strong></a>(self, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
 
-<dl><dt><a name="Filename-getValueString"><strong>getValueString</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;boolean&nbsp;as&nbsp;a&nbsp;string.</tt></dd></dl>
-
 <dl><dt><a name="Filename-setValueToSplitLine"><strong>setValueToSplitLine</strong></a>(self, lineIndex, lines, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;value&nbsp;to&nbsp;the&nbsp;second&nbsp;word&nbsp;of&nbsp;a&nbsp;split&nbsp;line.</tt></dd></dl>
+
+<dl><dt><a name="Filename-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Write&nbsp;tab&nbsp;separated&nbsp;name&nbsp;and&nbsp;value&nbsp;to&nbsp;the&nbsp;archive&nbsp;writer.</tt></dd></dl>
 
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -150,11 +214,13 @@ Methods inherited from <a href="preferences.html#BooleanPreference">BooleanPrefe
 
 <hr>
 Methods inherited from <a href="preferences.html#BooleanPreference">BooleanPreference</a>:<br>
+<dl><dt><a name="FloatPreference-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;preference&nbsp;table.</tt></dd></dl>
+
 <dl><dt><a name="FloatPreference-getFromValue"><strong>getFromValue</strong></a>(self, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
 
-<dl><dt><a name="FloatPreference-getValueString"><strong>getValueString</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;boolean&nbsp;as&nbsp;a&nbsp;string.</tt></dd></dl>
-
 <dl><dt><a name="FloatPreference-setValueToSplitLine"><strong>setValueToSplitLine</strong></a>(self, lineIndex, lines, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;value&nbsp;to&nbsp;the&nbsp;second&nbsp;word&nbsp;of&nbsp;a&nbsp;split&nbsp;line.</tt></dd></dl>
+
+<dl><dt><a name="FloatPreference-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Write&nbsp;tab&nbsp;separated&nbsp;name&nbsp;and&nbsp;value&nbsp;to&nbsp;the&nbsp;archive&nbsp;writer.</tt></dd></dl>
 
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -182,11 +248,65 @@ Methods inherited from <a href="preferences.html#FloatPreference">FloatPreferenc
 
 <hr>
 Methods inherited from <a href="preferences.html#BooleanPreference">BooleanPreference</a>:<br>
+<dl><dt><a name="IntPreference-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;preference&nbsp;table.</tt></dd></dl>
+
 <dl><dt><a name="IntPreference-getFromValue"><strong>getFromValue</strong></a>(self, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
 
-<dl><dt><a name="IntPreference-getValueString"><strong>getValueString</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;boolean&nbsp;as&nbsp;a&nbsp;string.</tt></dd></dl>
-
 <dl><dt><a name="IntPreference-setValueToSplitLine"><strong>setValueToSplitLine</strong></a>(self, lineIndex, lines, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;value&nbsp;to&nbsp;the&nbsp;second&nbsp;word&nbsp;of&nbsp;a&nbsp;split&nbsp;line.</tt></dd></dl>
+
+<dl><dt><a name="IntPreference-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Write&nbsp;tab&nbsp;separated&nbsp;name&nbsp;and&nbsp;value&nbsp;to&nbsp;the&nbsp;archive&nbsp;writer.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ListPreference">class <strong>ListPreference</strong></a>(<a href="preferences.html#BooleanPreference">BooleanPreference</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="ListPreference-addToDialog"><strong>addToDialog</strong></a>(self, preferencesDialog)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;list&nbsp;preference&nbsp;does&nbsp;not&nbsp;have&nbsp;a&nbsp;graphical&nbsp;interface.</tt></dd></dl>
+
+<dl><dt><a name="ListPreference-setToDisplay"><strong>setToDisplay</strong></a>(self)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;list&nbsp;preference&nbsp;does&nbsp;not&nbsp;have&nbsp;a&nbsp;graphical&nbsp;interface.</tt></dd></dl>
+
+<dl><dt><a name="ListPreference-setValueToSplitLine"><strong>setValueToSplitLine</strong></a>(self, lineIndex, lines, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;value&nbsp;to&nbsp;the&nbsp;second&nbsp;and&nbsp;later&nbsp;words&nbsp;of&nbsp;a&nbsp;split&nbsp;line.</tt></dd></dl>
+
+<dl><dt><a name="ListPreference-setValueToString"><strong>setValueToString</strong></a>(self, valueString)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;list&nbsp;preference&nbsp;does&nbsp;not&nbsp;have&nbsp;a&nbsp;graphical&nbsp;interface.</tt></dd></dl>
+
+<dl><dt><a name="ListPreference-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Write&nbsp;tab&nbsp;separated&nbsp;name&nbsp;and&nbsp;list&nbsp;to&nbsp;the&nbsp;archive&nbsp;writer.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="preferences.html#BooleanPreference">BooleanPreference</a>:<br>
+<dl><dt><a name="ListPreference-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;preference&nbsp;table.</tt></dd></dl>
+
+<dl><dt><a name="ListPreference-getFromValue"><strong>getFromValue</strong></a>(self, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ListboxPreference">class <strong>ListboxPreference</strong></a>(<a href="preferences.html#BooleanPreference">BooleanPreference</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="ListboxPreference-addToDialog"><strong>addToDialog</strong></a>(self, preferencesDialog)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;dialog.</tt></dd></dl>
+
+<dl><dt><a name="ListboxPreference-getFromListPreference"><strong>getFromListPreference</strong></a>(self, listPreference, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
+
+<dl><dt><a name="ListboxPreference-setListboxItems"><strong>setListboxItems</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;listbox&nbsp;items&nbsp;to&nbsp;the&nbsp;list&nbsp;preference.</tt></dd></dl>
+
+<dl><dt><a name="ListboxPreference-setToDisplay"><strong>setToDisplay</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;selection&nbsp;value&nbsp;to&nbsp;the&nbsp;listbox&nbsp;selection.</tt></dd></dl>
+
+<dl><dt><a name="ListboxPreference-setValueToString"><strong>setValueToString</strong></a>(self, valueString)</dt><dd><tt>Set&nbsp;the&nbsp;selection&nbsp;value&nbsp;to&nbsp;the&nbsp;string.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="preferences.html#BooleanPreference">BooleanPreference</a>:<br>
+<dl><dt><a name="ListboxPreference-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;preference&nbsp;table.</tt></dd></dl>
+
+<dl><dt><a name="ListboxPreference-getFromValue"><strong>getFromValue</strong></a>(self, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
+
+<dl><dt><a name="ListboxPreference-setValueToSplitLine"><strong>setValueToSplitLine</strong></a>(self, lineIndex, lines, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;value&nbsp;to&nbsp;the&nbsp;second&nbsp;word&nbsp;of&nbsp;a&nbsp;split&nbsp;line.</tt></dd></dl>
+
+<dl><dt><a name="ListboxPreference-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Write&nbsp;tab&nbsp;separated&nbsp;name&nbsp;and&nbsp;value&nbsp;to&nbsp;the&nbsp;archive&nbsp;writer.</tt></dd></dl>
 
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -226,13 +346,15 @@ Methods inherited from <a href="preferences.html#BooleanPreference">BooleanPrefe
 
 <hr>
 Methods inherited from <a href="preferences.html#BooleanPreference">BooleanPreference</a>:<br>
-<dl><dt><a name="Radio-getFromValue"><strong>getFromValue</strong></a>(self, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
+<dl><dt><a name="Radio-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;preference&nbsp;table.</tt></dd></dl>
 
-<dl><dt><a name="Radio-getValueString"><strong>getValueString</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;boolean&nbsp;as&nbsp;a&nbsp;string.</tt></dd></dl>
+<dl><dt><a name="Radio-getFromValue"><strong>getFromValue</strong></a>(self, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
 
 <dl><dt><a name="Radio-setValueToSplitLine"><strong>setValueToSplitLine</strong></a>(self, lineIndex, lines, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;value&nbsp;to&nbsp;the&nbsp;second&nbsp;word&nbsp;of&nbsp;a&nbsp;split&nbsp;line.</tt></dd></dl>
 
 <dl><dt><a name="Radio-setValueToString"><strong>setValueToString</strong></a>(self, valueString)</dt><dd><tt>Set&nbsp;the&nbsp;boolean&nbsp;to&nbsp;the&nbsp;string.</tt></dd></dl>
+
+<dl><dt><a name="Radio-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Write&nbsp;tab&nbsp;separated&nbsp;name&nbsp;and&nbsp;value&nbsp;to&nbsp;the&nbsp;archive&nbsp;writer.</tt></dd></dl>
 
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -264,13 +386,15 @@ Methods inherited from <a href="preferences.html#Radio">Radio</a>:<br>
 
 <hr>
 Methods inherited from <a href="preferences.html#BooleanPreference">BooleanPreference</a>:<br>
-<dl><dt><a name="RadioLabel-getFromValue"><strong>getFromValue</strong></a>(self, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
+<dl><dt><a name="RadioLabel-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;preference&nbsp;table.</tt></dd></dl>
 
-<dl><dt><a name="RadioLabel-getValueString"><strong>getValueString</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;boolean&nbsp;as&nbsp;a&nbsp;string.</tt></dd></dl>
+<dl><dt><a name="RadioLabel-getFromValue"><strong>getFromValue</strong></a>(self, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
 
 <dl><dt><a name="RadioLabel-setValueToSplitLine"><strong>setValueToSplitLine</strong></a>(self, lineIndex, lines, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;value&nbsp;to&nbsp;the&nbsp;second&nbsp;word&nbsp;of&nbsp;a&nbsp;split&nbsp;line.</tt></dd></dl>
 
 <dl><dt><a name="RadioLabel-setValueToString"><strong>setValueToString</strong></a>(self, valueString)</dt><dd><tt>Set&nbsp;the&nbsp;boolean&nbsp;to&nbsp;the&nbsp;string.</tt></dd></dl>
+
+<dl><dt><a name="RadioLabel-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Write&nbsp;tab&nbsp;separated&nbsp;name&nbsp;and&nbsp;value&nbsp;to&nbsp;the&nbsp;archive&nbsp;writer.</tt></dd></dl>
 
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -281,7 +405,7 @@ Methods inherited from <a href="preferences.html#BooleanPreference">BooleanPrefe
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><dl><dt><a name="-displayDialog"><strong>displayDialog</strong></a>(displayPreferences)</dt><dd><tt>Display&nbsp;the&nbsp;preferences&nbsp;dialog.</tt></dd></dl>
  <dl><dt><a name="-getArchiveText"><strong>getArchiveText</strong></a>(preferences)</dt><dd><tt>Get&nbsp;the&nbsp;text&nbsp;representation&nbsp;of&nbsp;the&nbsp;archive.</tt></dd></dl>
- <dl><dt><a name="-getPreferencesFilePath"><strong>getPreferencesFilePath</strong></a>(filename, folderName)</dt><dd><tt>Get&nbsp;the&nbsp;preferences&nbsp;file&nbsp;path,&nbsp;which&nbsp;is&nbsp;the&nbsp;home&nbsp;directory&nbsp;joined&nbsp;with&nbsp;the&nbsp;folder&nbsp;name&nbsp;and&nbsp;filename.</tt></dd></dl>
+ <dl><dt><a name="-getPreferencesFilePath"><strong>getPreferencesFilePath</strong></a>(filename, folderName<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;the&nbsp;preferences&nbsp;file&nbsp;path,&nbsp;which&nbsp;is&nbsp;the&nbsp;home&nbsp;directory&nbsp;joined&nbsp;with&nbsp;the&nbsp;folder&nbsp;name&nbsp;and&nbsp;filename.</tt></dd></dl>
  <dl><dt><a name="-readPreferences"><strong>readPreferences</strong></a>(preferences)</dt><dd><tt>Set&nbsp;an&nbsp;archive&nbsp;to&nbsp;the&nbsp;preferences&nbsp;read&nbsp;from&nbsp;a&nbsp;file.</tt></dd></dl>
  <dl><dt><a name="-setArchiveToLine"><strong>setArchiveToLine</strong></a>(lineIndex, lines, preferenceTable)</dt><dd><tt>Set&nbsp;an&nbsp;archive&nbsp;to&nbsp;a&nbsp;preference&nbsp;line.</tt></dd></dl>
  <dl><dt><a name="-writePreferences"><strong>writePreferences</strong></a>(preferences)</dt><dd><tt>Write&nbsp;the&nbsp;preferences&nbsp;to&nbsp;a&nbsp;file.</tt></dd></dl>
@@ -378,6 +502,7 @@ Methods inherited from <a href="preferences.html#BooleanPreference">BooleanPrefe
 <strong>__author__</strong> = 'Enrique Perez (perez_enrique@yahoo.com)'<br>
 <strong>__date__</strong> = '$Date: 2008/23/04 $'<br>
 <strong>__license__</strong> = 'GPL 3.0'<br>
+<strong>globalSpreadsheetSeparator</strong> = '<font color="#c040c0">\t</font>'<br>
 <strong>wantobjects</strong> = 1</td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#7799ee">

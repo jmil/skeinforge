@@ -169,7 +169,7 @@ class commentSkein:
 			self.addComment( "Set extrusion diameter to " + str( gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] ) ) + " mm." )
 		elif firstWord == '(<extrusionWidth>':
 			self.addComment( "Set extrusion width to " + str( gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] ) ) + " mm." )
-		elif firstWord == '(<layerThickness>':
+		elif firstWord == '(<extrusionHeight>':
 			self.addComment( "Set layer thickness to " + str( gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] ) ) + " mm." )
 		elif firstWord == '(<procedureDone>':
 			self.addComment( "The " + splitLine[ 1 ][ 1 : ] + " procedure has been performed." )
@@ -279,7 +279,7 @@ class statisticSkein( commentSkein ):
 		self.extrusionDiameter = 0.5
 		self.extrusionWidth = 0.4
 		self.feedrateMinute = 600.0
-		self.layerThickness = 0.4
+		self.extrusionHeight = 0.4
 		self.numberOfLines = 0
 		self.procedures = []
 		self.totalBuildTime = 0.0
@@ -300,7 +300,7 @@ class statisticSkein( commentSkein ):
 		roundedLow = euclidean.getRoundedPoint( self.cornerLow )
 		roundedExtent = euclidean.getRoundedPoint( extent )
 		axisString =  " axis, the extrusion starts at "
-		volumeExtruded = 0.0009 * self.extrusionWidth * self.layerThickness * self.totalDistanceExtruded # the 9 comes from a typical fill density of 0.9
+		volumeExtruded = 0.0009 * self.extrusionWidth * self.extrusionHeight * self.totalDistanceExtruded # the 9 comes from a typical fill density of 0.9
 		self.addLine( "On the X" + axisString + str( int ( roundedLow.x ) ) + " mm and ends at " + str( int ( roundedHigh.x ) ) + " mm, for a width of " + str( int ( extent.x ) ) + " mm" )
 		self.addLine( "On the Y" + axisString + str( int ( roundedLow.y ) ) + " mm and ends at " + str( int ( roundedHigh.y ) ) + " mm, for a depth of " + str( int ( extent.y ) ) + " mm" )
 		self.addLine( "On the Z" + axisString + str( int ( roundedLow.z ) ) + " mm and ends at " + str( int ( roundedHigh.z ) ) + " mm, for a height of " + str( int ( extent.z ) ) + " mm" )
@@ -313,7 +313,7 @@ class statisticSkein( commentSkein ):
 		self.addLine( "The following procedures have been performed on the skein:" )
 		for procedure in self.procedures:
 			self.addLine( procedure )
-		self.addLine( "The layer thickness is "  + str( self.layerThickness ) + " mm." )
+		self.addLine( "The layer thickness is "  + str( self.extrusionHeight ) + " mm." )
 		self.addLine( "The text has " + str( self.numberOfLines ) + " lines and a size of " + str( kilobytes ) + " KB." )
 		self.addLine( "The total build time is " + str( int( round( self.totalBuildTime ) ) ) + " s." )
 		self.addLine( "The total distance extruded is " + str( int( round( self.totalDistanceExtruded ) ) ) + " mm." )
@@ -347,8 +347,8 @@ class statisticSkein( commentSkein ):
 			self.extrusionDiameter = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
 		elif firstWord == '(<extrusionWidth>':
 			self.extrusionWidth = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
-		elif firstWord == '(<layerThickness>':
-			self.layerThickness = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
+		elif firstWord == '(<extrusionHeight>':
+			self.extrusionHeight = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
 		elif firstWord == '(<procedureDone>':
 			self.procedures.append( splitLine[ 1 ][ 1 : ] )
 

@@ -33,9 +33,11 @@ To&nbsp;turn&nbsp;an&nbsp;STL&nbsp;file&nbsp;into&nbsp;filled,&nbsp;combed&nbsp;
 of&nbsp;Art&nbsp;of&nbsp;Illusion.&nbsp;&nbsp;Then&nbsp;from&nbsp;the&nbsp;Scripts&nbsp;submenu&nbsp;in&nbsp;the&nbsp;Tools&nbsp;menu,&nbsp;choose&nbsp;Export&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;and&nbsp;select&nbsp;the<br>
 imported&nbsp;STL&nbsp;shape.&nbsp;&nbsp;Then&nbsp;type&nbsp;'python&nbsp;slice.py'&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;slice&nbsp;&amp;&nbsp;comb&nbsp;are&nbsp;in&nbsp;and&nbsp;when&nbsp;the&nbsp;dialog&nbsp;pops&nbsp;up,&nbsp;set<br>
 the&nbsp;parameters&nbsp;and&nbsp;click&nbsp;'Save&nbsp;Preferences'.&nbsp;&nbsp;Then&nbsp;type&nbsp;'python&nbsp;fill.py'&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;fill&nbsp;is&nbsp;in&nbsp;and&nbsp;when&nbsp;the&nbsp;dialog<br>
-pops&nbsp;up,&nbsp;set&nbsp;the&nbsp;parameters&nbsp;and&nbsp;click&nbsp;'Save&nbsp;Preferences'.&nbsp;&nbsp;Then&nbsp;type&nbsp;'python&nbsp;comb.py'&nbsp;in&nbsp;a&nbsp;shell&nbsp;and&nbsp;when&nbsp;the&nbsp;dialog&nbsp;pops&nbsp;up,<br>
-change&nbsp;the&nbsp;parameters&nbsp;if&nbsp;you&nbsp;wish&nbsp;but&nbsp;the&nbsp;default&nbsp;'Comb&nbsp;Hair'&nbsp;is&nbsp;fine.&nbsp;&nbsp;Then&nbsp;click&nbsp;'Comb',&nbsp;choose&nbsp;the&nbsp;file&nbsp;which&nbsp;you&nbsp;exported&nbsp;in<br>
-Export&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;and&nbsp;the&nbsp;filled&nbsp;&amp;&nbsp;combed&nbsp;file&nbsp;will&nbsp;be&nbsp;saved&nbsp;with&nbsp;the&nbsp;suffix&nbsp;'_comb'.<br>
+pops&nbsp;up,&nbsp;set&nbsp;the&nbsp;parameters&nbsp;and&nbsp;click&nbsp;'Save&nbsp;Preferences'.&nbsp;&nbsp;Then&nbsp;type&nbsp;'python&nbsp;tower.py'&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;fill&nbsp;is&nbsp;in&nbsp;and<br>
+when&nbsp;the&nbsp;dialog&nbsp;pops&nbsp;up,&nbsp;change&nbsp;the&nbsp;parameters&nbsp;if&nbsp;you&nbsp;wish&nbsp;but&nbsp;the&nbsp;default&nbsp;does&nbsp;nothing&nbsp;and&nbsp;is&nbsp;safe.&nbsp;&nbsp;Then&nbsp;type&nbsp;'python&nbsp;comb.py'<br>
+in&nbsp;a&nbsp;shell&nbsp;and&nbsp;when&nbsp;the&nbsp;dialog&nbsp;pops&nbsp;up,&nbsp;change&nbsp;the&nbsp;parameters&nbsp;if&nbsp;you&nbsp;wish&nbsp;but&nbsp;the&nbsp;default&nbsp;'Comb&nbsp;Hair'&nbsp;is&nbsp;fine.&nbsp;&nbsp;Then&nbsp;click&nbsp;'Comb',<br>
+choose&nbsp;the&nbsp;file&nbsp;which&nbsp;you&nbsp;exported&nbsp;in&nbsp;Export&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;and&nbsp;the&nbsp;filled&nbsp;&amp;&nbsp;combed&nbsp;file&nbsp;will&nbsp;be&nbsp;saved&nbsp;with&nbsp;the&nbsp;suffix<br>
+'_comb'.<br>
 &nbsp;<br>
 To&nbsp;write&nbsp;documentation&nbsp;for&nbsp;this&nbsp;program,&nbsp;open&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;comb.py&nbsp;directory,&nbsp;then&nbsp;type&nbsp;'pydoc&nbsp;-w&nbsp;comb',&nbsp;then&nbsp;open&nbsp;'comb.html'&nbsp;in<br>
 a&nbsp;browser&nbsp;or&nbsp;click&nbsp;on&nbsp;the&nbsp;'?'&nbsp;button&nbsp;in&nbsp;the&nbsp;dialog.&nbsp;&nbsp;To&nbsp;write&nbsp;documentation&nbsp;for&nbsp;all&nbsp;the&nbsp;python&nbsp;scripts&nbsp;in&nbsp;the&nbsp;directory,&nbsp;type&nbsp;'pydoc&nbsp;-w&nbsp;./'.<br>
@@ -47,11 +49,12 @@ The&nbsp;computation&nbsp;intensive&nbsp;python&nbsp;modules&nbsp;will&nbsp;use&
 The&nbsp;psyco&nbsp;download&nbsp;page&nbsp;is:<br>
 <a href="http://psyco.sourceforge.net/download.html">http://psyco.sourceforge.net/download.html</a><br>
 &nbsp;<br>
-The&nbsp;following&nbsp;examples&nbsp;comb&nbsp;the&nbsp;files&nbsp;Hollow&nbsp;Square.gcode&nbsp;&amp;&nbsp;Hollow&nbsp;Square.gts.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains<br>
-Hollow&nbsp;Square.gcode,&nbsp;Hollow&nbsp;Square.gts&nbsp;and&nbsp;comb.py.&nbsp;&nbsp;The&nbsp;comb&nbsp;function&nbsp;will&nbsp;comb&nbsp;if&nbsp;'Comb&nbsp;Hair'&nbsp;is&nbsp;true,&nbsp;which&nbsp;can&nbsp;be&nbsp;set&nbsp;in&nbsp;the&nbsp;dialog&nbsp;or&nbsp;by&nbsp;changing<br>
-the&nbsp;preferences&nbsp;file&nbsp;'comb.csv'&nbsp;with&nbsp;a&nbsp;text&nbsp;editor&nbsp;or&nbsp;a&nbsp;spreadsheet&nbsp;program&nbsp;set&nbsp;to&nbsp;separate&nbsp;tabs.&nbsp;&nbsp;The&nbsp;functions&nbsp;combChainFile&nbsp;and<br>
-getCombChainGcode&nbsp;check&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text&nbsp;has&nbsp;been&nbsp;combed,&nbsp;if&nbsp;not&nbsp;they&nbsp;call&nbsp;the&nbsp;getFillChainGcode&nbsp;in&nbsp;fill.py&nbsp;to&nbsp;fill&nbsp;the&nbsp;text;&nbsp;once&nbsp;they<br>
-have&nbsp;the&nbsp;filled&nbsp;text,&nbsp;then&nbsp;they&nbsp;comb.<br>
+The&nbsp;following&nbsp;examples&nbsp;comb&nbsp;the&nbsp;files&nbsp;Hollow&nbsp;Square.gcode&nbsp;&amp;&nbsp;Hollow&nbsp;Square.gts.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder<br>
+which&nbsp;contains&nbsp;Hollow&nbsp;Square.gcode,&nbsp;Hollow&nbsp;Square.gts&nbsp;and&nbsp;comb.py.&nbsp;&nbsp;The&nbsp;comb&nbsp;function&nbsp;will&nbsp;comb&nbsp;if&nbsp;'Comb&nbsp;Hair'&nbsp;is&nbsp;true,&nbsp;which<br>
+can&nbsp;be&nbsp;set&nbsp;in&nbsp;the&nbsp;dialog&nbsp;or&nbsp;by&nbsp;changing&nbsp;the&nbsp;preferences&nbsp;file&nbsp;'comb.csv'&nbsp;in&nbsp;the&nbsp;'.skeinforge'&nbsp;folder&nbsp;in&nbsp;your&nbsp;home&nbsp;directory&nbsp;with&nbsp;a&nbsp;text<br>
+editor&nbsp;or&nbsp;a&nbsp;spreadsheet&nbsp;program&nbsp;set&nbsp;to&nbsp;separate&nbsp;tabs.&nbsp;&nbsp;The&nbsp;functions&nbsp;combChainFile&nbsp;and&nbsp;getCombChainGcode&nbsp;check&nbsp;to&nbsp;see&nbsp;if&nbsp;the<br>
+text&nbsp;has&nbsp;been&nbsp;combed,&nbsp;if&nbsp;not&nbsp;they&nbsp;call&nbsp;getTowerChainGcode&nbsp;in&nbsp;tower.py&nbsp;to&nbsp;tower&nbsp;the&nbsp;text;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;towered&nbsp;text,&nbsp;then<br>
+they&nbsp;comb.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;pydoc&nbsp;-w&nbsp;comb<br>
@@ -109,13 +112,14 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="cStringIO.html">cStringIO</a><br>
 <a href="euclidean.html">euclidean</a><br>
-</td><td width="25%" valign=top><a href="fill.html">fill</a><br>
 <a href="gcodec.html">gcodec</a><br>
 </td><td width="25%" valign=top><a href="intercircle.html">intercircle</a><br>
+<a href="multifile.html">multifile</a><br>
 <a href="preferences.html">preferences</a><br>
 </td><td width="25%" valign=top><a href="time.html">time</a><br>
+<a href="tower.html">tower</a><br>
 <a href="vectorwrite.html">vectorwrite</a><br>
-</td></tr></table></td></tr></table><p>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ee77aa">
 <td colspan=3 valign=bottom>&nbsp;<br>

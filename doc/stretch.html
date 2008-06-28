@@ -9,7 +9,24 @@
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>stretch</strong></big></big> ($Date: 2008/21/04 $)</font></td
 ><td align=right valign=bottom
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap_v0.1/stretch.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap_v0.1/stretch.py</a></font></td></tr></table>
-    <p><tt>Stretch&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;stretch&nbsp;the&nbsp;extrusion&nbsp;hair&nbsp;of&nbsp;a&nbsp;gcode&nbsp;file.<br>
+    <p><tt>Stretch&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;stretch&nbsp;the&nbsp;threads&nbsp;to&nbsp;partially&nbsp;compensate&nbsp;for&nbsp;filament&nbsp;shrinkage&nbsp;when&nbsp;extruded.<br>
+&nbsp;<br>
+The&nbsp;important&nbsp;value&nbsp;for&nbsp;the&nbsp;stretch&nbsp;preferences&nbsp;is&nbsp;"Maximum&nbsp;Stretch&nbsp;Over&nbsp;Half&nbsp;Extrusion&nbsp;Width&nbsp;(ratio)"&nbsp;which&nbsp;is&nbsp;the&nbsp;ratio&nbsp;of&nbsp;the<br>
+maximum&nbsp;amount&nbsp;the&nbsp;thread&nbsp;will&nbsp;be&nbsp;stretched&nbsp;compared&nbsp;to&nbsp;half&nbsp;of&nbsp;the&nbsp;extrusion&nbsp;width.&nbsp;The&nbsp;default&nbsp;is&nbsp;0.3,&nbsp;if&nbsp;you&nbsp;do&nbsp;not&nbsp;want&nbsp;to<br>
+use&nbsp;stretch,&nbsp;set&nbsp;the&nbsp;value&nbsp;to&nbsp;zero.&nbsp;&nbsp;With&nbsp;a&nbsp;value&nbsp;of&nbsp;one&nbsp;or&nbsp;more,&nbsp;the&nbsp;script&nbsp;might&nbsp;stretch&nbsp;a&nbsp;couple&nbsp;of&nbsp;threads&nbsp;in&nbsp;opposite&nbsp;directions<br>
+so&nbsp;much&nbsp;that&nbsp;they&nbsp;overlap.&nbsp;&nbsp;In&nbsp;theory&nbsp;this&nbsp;would&nbsp;be&nbsp;because&nbsp;they'll&nbsp;contract&nbsp;back&nbsp;to&nbsp;the&nbsp;desired&nbsp;places,&nbsp;but&nbsp;in&nbsp;practice&nbsp;they&nbsp;might<br>
+not.&nbsp;&nbsp;The&nbsp;optimal&nbsp;value&nbsp;of&nbsp;stretch&nbsp;will&nbsp;be&nbsp;different&nbsp;for&nbsp;different&nbsp;materials,&nbsp;so&nbsp;the&nbsp;default&nbsp;value&nbsp;of&nbsp;0.3&nbsp;is&nbsp;chosen&nbsp;because&nbsp;it&nbsp;will<br>
+counter&nbsp;the&nbsp;contraction&nbsp;a&nbsp;bit,&nbsp;but&nbsp;not&nbsp;enough&nbsp;to&nbsp;cause&nbsp;overlap&nbsp;trouble.<br>
+&nbsp;<br>
+In&nbsp;general,&nbsp;stretch&nbsp;will&nbsp;widen&nbsp;holes&nbsp;and&nbsp;push&nbsp;corners&nbsp;out.&nbsp;&nbsp;The&nbsp;algorithm&nbsp;works&nbsp;by&nbsp;checking&nbsp;at&nbsp;each&nbsp;turning&nbsp;point&nbsp;on&nbsp;the<br>
+extrusion&nbsp;path&nbsp;what&nbsp;the&nbsp;direction&nbsp;of&nbsp;the&nbsp;thread&nbsp;is&nbsp;at&nbsp;a&nbsp;distance&nbsp;of&nbsp;"Stretch&nbsp;from&nbsp;Distance&nbsp;over&nbsp;Extrusion&nbsp;Width&nbsp;(ratio)"&nbsp;times&nbsp;the<br>
+extrusion&nbsp;width,&nbsp;on&nbsp;both&nbsp;sides,&nbsp;and&nbsp;moves&nbsp;the&nbsp;thread&nbsp;in&nbsp;the&nbsp;opposite&nbsp;direction.&nbsp;&nbsp;The&nbsp;magnitude&nbsp;of&nbsp;the&nbsp;stretch&nbsp;increases&nbsp;with&nbsp;the<br>
+amount&nbsp;that&nbsp;the&nbsp;direction&nbsp;of&nbsp;the&nbsp;two&nbsp;threads&nbsp;is&nbsp;similar&nbsp;and&nbsp;by&nbsp;the&nbsp;"Maximum&nbsp;Stretch&nbsp;Over&nbsp;Half&nbsp;Extrusion&nbsp;Width&nbsp;(ratio)".&nbsp;&nbsp;The<br>
+script&nbsp;then&nbsp;also&nbsp;stretches&nbsp;the&nbsp;thread&nbsp;at&nbsp;two&nbsp;locations&nbsp;on&nbsp;the&nbsp;path&nbsp;on&nbsp;close&nbsp;to&nbsp;the&nbsp;turning&nbsp;points.&nbsp;&nbsp;In&nbsp;practice&nbsp;the&nbsp;filament<br>
+contraction&nbsp;will&nbsp;be&nbsp;similar&nbsp;but&nbsp;different&nbsp;from&nbsp;the&nbsp;algorithm,&nbsp;so&nbsp;even&nbsp;once&nbsp;the&nbsp;optimal&nbsp;parameters&nbsp;are&nbsp;determined,&nbsp;the&nbsp;stretch<br>
+script&nbsp;will&nbsp;not&nbsp;be&nbsp;able&nbsp;to&nbsp;eliminate&nbsp;the&nbsp;inaccuracies&nbsp;caused&nbsp;by&nbsp;contraction,&nbsp;but&nbsp;it&nbsp;should&nbsp;reduce&nbsp;them.&nbsp;&nbsp;To&nbsp;run&nbsp;stretch,&nbsp;in&nbsp;a&nbsp;shell<br>
+type:<br>
+&gt;&nbsp;python&nbsp;stretch.py<br>
 &nbsp;<br>
 To&nbsp;run&nbsp;stretch,&nbsp;install&nbsp;python&nbsp;2.x&nbsp;on&nbsp;your&nbsp;machine,&nbsp;which&nbsp;is&nbsp;avaliable&nbsp;from&nbsp;<a href="http://www.python.org/download/">http://www.python.org/download/</a><br>
 &nbsp;<br>
@@ -29,8 +46,10 @@ of&nbsp;Art&nbsp;of&nbsp;Illusion.&nbsp;&nbsp;Then&nbsp;from&nbsp;the&nbsp;Scrip
 imported&nbsp;STL&nbsp;shape.&nbsp;&nbsp;Then&nbsp;type&nbsp;'python&nbsp;slice.py'&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;slice&nbsp;&amp;&nbsp;stretch&nbsp;are&nbsp;in&nbsp;and&nbsp;when&nbsp;the&nbsp;dialog&nbsp;pops&nbsp;up,&nbsp;set<br>
 the&nbsp;parameters&nbsp;and&nbsp;click&nbsp;'Save&nbsp;Preferences'.&nbsp;&nbsp;Then&nbsp;type&nbsp;'python&nbsp;fill.py'&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;fill&nbsp;is&nbsp;in&nbsp;and&nbsp;when&nbsp;the&nbsp;dialog<br>
 pops&nbsp;up,&nbsp;set&nbsp;the&nbsp;parameters&nbsp;and&nbsp;click&nbsp;'Save&nbsp;Preferences'.&nbsp;&nbsp;Then&nbsp;type&nbsp;'python&nbsp;comb.py'&nbsp;in&nbsp;a&nbsp;shell&nbsp;and&nbsp;when&nbsp;the&nbsp;dialog&nbsp;pops&nbsp;up,<br>
-change&nbsp;the&nbsp;parameters&nbsp;if&nbsp;you&nbsp;wish&nbsp;but&nbsp;the&nbsp;default&nbsp;'Comb&nbsp;Hair'&nbsp;is&nbsp;fine.&nbsp;&nbsp;Then&nbsp;click&nbsp;'Comb',&nbsp;choose&nbsp;the&nbsp;file&nbsp;which&nbsp;you&nbsp;exported&nbsp;in<br>
-Export&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;and&nbsp;the&nbsp;filled&nbsp;&amp;&nbsp;stretched&nbsp;file&nbsp;will&nbsp;be&nbsp;saved&nbsp;with&nbsp;the&nbsp;suffix&nbsp;'_stretch'.<br>
+change&nbsp;the&nbsp;parameters&nbsp;if&nbsp;you&nbsp;wish&nbsp;but&nbsp;the&nbsp;default&nbsp;'Comb&nbsp;Hair'&nbsp;is&nbsp;fine.&nbsp;&nbsp;Then&nbsp;type&nbsp;'python&nbsp;stretch.py'&nbsp;in&nbsp;a&nbsp;shell&nbsp;and&nbsp;when&nbsp;the&nbsp;dialog&nbsp;pops&nbsp;up,<br>
+change&nbsp;the&nbsp;parameters&nbsp;if&nbsp;you&nbsp;wish&nbsp;but&nbsp;the&nbsp;default&nbsp;is&nbsp;fine&nbsp;to&nbsp;start.&nbsp;&nbsp;Then&nbsp;click&nbsp;'Stretch',&nbsp;choose&nbsp;the&nbsp;file&nbsp;which&nbsp;you&nbsp;exported&nbsp;in<br>
+Export&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;and&nbsp;the&nbsp;filled&nbsp;&amp;&nbsp;stretched&nbsp;file&nbsp;will&nbsp;be&nbsp;saved&nbsp;with&nbsp;the&nbsp;suffix&nbsp;'_stretch'.&nbsp;&nbsp;Once&nbsp;you've&nbsp;made&nbsp;a&nbsp;shape,&nbsp;then<br>
+you&nbsp;can&nbsp;decide&nbsp;what&nbsp;the&nbsp;optimal&nbsp;value&nbsp;of&nbsp;"Maximum&nbsp;Stretch&nbsp;Over&nbsp;Half&nbsp;Extrusion&nbsp;Width&nbsp;(ratio)"&nbsp;is&nbsp;for&nbsp;that&nbsp;material.<br>
 &nbsp;<br>
 To&nbsp;write&nbsp;documentation&nbsp;for&nbsp;this&nbsp;program,&nbsp;open&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;stretch.py&nbsp;directory,&nbsp;then&nbsp;type&nbsp;'pydoc&nbsp;-w&nbsp;stretch',&nbsp;then&nbsp;open&nbsp;'stretch.html'&nbsp;in<br>
 a&nbsp;browser&nbsp;or&nbsp;click&nbsp;on&nbsp;the&nbsp;'?'&nbsp;button&nbsp;in&nbsp;the&nbsp;dialog.&nbsp;&nbsp;To&nbsp;write&nbsp;documentation&nbsp;for&nbsp;all&nbsp;the&nbsp;python&nbsp;scripts&nbsp;in&nbsp;the&nbsp;directory,&nbsp;type&nbsp;'pydoc&nbsp;-w&nbsp;./'.<br>
@@ -104,13 +123,14 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="cStringIO.html">cStringIO</a><br>
 <a href="comb.html">comb</a><br>
-</td><td width="25%" valign=top><a href="euclidean.html">euclidean</a><br>
-<a href="gcodec.html">gcodec</a><br>
-</td><td width="25%" valign=top><a href="intercircle.html">intercircle</a><br>
-<a href="preferences.html">preferences</a><br>
-</td><td width="25%" valign=top><a href="time.html">time</a><br>
+<a href="euclidean.html">euclidean</a><br>
+</td><td width="25%" valign=top><a href="gcodec.html">gcodec</a><br>
+<a href="intercircle.html">intercircle</a><br>
+<a href="multifile.html">multifile</a><br>
+</td><td width="25%" valign=top><a href="preferences.html">preferences</a><br>
+<a href="time.html">time</a><br>
 <a href="vectorwrite.html">vectorwrite</a><br>
-</td></tr></table></td></tr></table><p>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ee77aa">
 <td colspan=3 valign=bottom>&nbsp;<br>

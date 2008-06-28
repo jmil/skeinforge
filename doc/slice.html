@@ -109,10 +109,11 @@ many&nbsp;lines&nbsp;of&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;vertices,&n
 </td><td width="25%" valign=top><a href="gcodec.html">gcodec</a><br>
 <a href="intercircle.html">intercircle</a><br>
 <a href="math.html">math</a><br>
-</td><td width="25%" valign=top><a href="os.html">os</a><br>
+</td><td width="25%" valign=top><a href="multifile.html">multifile</a><br>
+<a href="os.html">os</a><br>
 <a href="preferences.html">preferences</a><br>
-<a href="time.html">time</a><br>
-</td><td width="25%" valign=top><a href="vectorwrite.html">vectorwrite</a><br>
+</td><td width="25%" valign=top><a href="time.html">time</a><br>
+<a href="vectorwrite.html">vectorwrite</a><br>
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ee77aa">
@@ -225,6 +226,8 @@ many&nbsp;lines&nbsp;of&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;vertices,&n
 <dl><dt><a name="SliceSkein-addToZoneArray"><strong>addToZoneArray</strong></a>(self, point, zoneArray, z)</dt><dd><tt>Add&nbsp;a&nbsp;height&nbsp;to&nbsp;the&nbsp;zone&nbsp;array.</tt></dd></dl>
 
 <dl><dt><a name="SliceSkein-getBridgeDirection"><strong>getBridgeDirection</strong></a>(self, layerLoops)</dt><dd><tt>Get&nbsp;span&nbsp;direction&nbsp;for&nbsp;the&nbsp;majority&nbsp;of&nbsp;the&nbsp;overhanging&nbsp;extrusion&nbsp;perimeter,&nbsp;if&nbsp;any.</tt></dd></dl>
+
+<dl><dt><a name="SliceSkein-getExtrudateLoops"><strong>getExtrudateLoops</strong></a>(self, halfWidth, loop)</dt><dd><tt>Get&nbsp;the&nbsp;inset&nbsp;extrudate&nbsp;loops&nbsp;from&nbsp;the&nbsp;loop.</tt></dd></dl>
 
 <dl><dt><a name="SliceSkein-getLoopsFromMesh"><strong>getLoopsFromMesh</strong></a>(self, z)</dt><dd><tt>Get&nbsp;loops&nbsp;from&nbsp;a&nbsp;slice&nbsp;of&nbsp;a&nbsp;mesh.</tt></dd></dl>
 

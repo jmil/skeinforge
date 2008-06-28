@@ -100,6 +100,7 @@ import euclidean
 import gcodec
 import intercircle
 import math
+import multifile
 import os
 import preferences
 import time
@@ -542,10 +543,6 @@ class SliceSkein:
 		if filename in directory:
 			self.addFromFile( filename )
 
-	def addGcodeMovement( self, point ):
-		"Add a movement to the output."
-		self.addLine( "G1 X%s Y%s Z%s" % ( euclidean.getRoundedToThreePlaces( point.x ), euclidean.getRoundedToThreePlaces( point.y ), euclidean.getRoundedToThreePlaces( point.z ) ) )
-
 	def addGcodeFromPerimeterPaths( self, loop, loopLists, radius ):
 		"Add the perimeter paths to the output."
 		segments = []
@@ -595,6 +592,10 @@ class SliceSkein:
 			self.addGcodeMovement( point )
 		self.addLine( "M103" ) # Turn extruder off.
 
+	def addGcodeMovement( self, point ):
+		"Add a movement to the output."
+		self.addLine( "G1 X%s Y%s Z%s" % ( euclidean.getRoundedToThreePlaces( point.x ), euclidean.getRoundedToThreePlaces( point.y ), euclidean.getRoundedToThreePlaces( point.z ) ) )
+
 	def addInitializationToOutput( self ):
 		"Add initialization gcode to the output."
 		# From http://www.ahha.com/VarsAndMacros.doc
@@ -606,24 +607,30 @@ class SliceSkein:
 		self.addLine( '(<creator> skeinforge May 28, 2008 )' ) # GCode formatted comment
 		self.addLine( 'M110' ) # GCode for compatibility with Nophead's code.
 		self.addLine( '(<extruderInitialization> )' ) # GCode formatted comment
-		self.addLine( 'G21 (use mm)' ) # Set units to mm.
-		self.addLine( 'G90 (absolute positioning)' ) # Set positioning to absolute.
+		self.addLine( 'G21' ) # Set units to mm.
+		self.addLine( 'G90' ) # Set positioning to absolute.
                 if self.slicePreferences.assumeHomeOnStart.value:
-                        self.addLine( 'G92 (set current as home)' )
+                        self.addLine( 'G92' ) # Set current as home
                 else:
-                        self.addLine( 'G28 (goto home)' )
-		self.addLine( 'M103 (extruder off)' ) # Turn extruder off.
-		self.addLine( 'M104 S' + str(self.slicePreferences.extruderTemp.value) + ' (set temp)' )
-		self.addLine( 'M105 (read temp)' ) # Custom code for temperature reading.
-		self.addLine( 'M108 S' + str(self.slicePreferences.extruderSpeed.value) + ' (set speed)' )
+                        self.addLine( 'G28' ) # Go to home
+		self.addLine( 'M103' ) # Turn extruder off.
+		self.addLine( 'M104 S' + 
+                              str(self.slicePreferences.extruderTemp.value) ) # Set temp
+		self.addLine( 'M105' ) # Custom code for temperature reading.
+		self.addLine( 'M108 S' + 
+                              str(self.slicePreferences.extruderSpeed.value) ) # Set speed
 		self.addFromUpperLowerFile( 'EndOfTheBeginning.txt' ) # Add a second start file if it exists.
 		self.addLine( '(<extrusionDiameter> ' + euclidean.getRoundedToThreePlaces( self.extrusionDiameter ) + ' )' ) # Set extrusion diameter.
 		self.addLine( '(<extrusionWidth> ' + euclidean.getRoundedToThreePlaces( self.extrusionWidth ) + ' )' ) # Set extrusion width.
-		self.addLine( '(<layerThickness> ' + euclidean.getRoundedToThreePlaces( self.layerThickness ) + ' )' ) # Set layer thickness.
+		self.addLine( '(<fillInset> ' + str( self.fillInset ) + ' )' ) # Set fill inset.
+		self.addLine( '(<extrusionHeight> ' + euclidean.getRoundedToThreePlaces( self.extrusionHeight ) + ' )' ) # Set layer thickness.
 		# Set bridge extrusion width over solid extrusion width.
 		self.addLine( '(<bridgeExtrusionWidthOverSolid> ' + euclidean.getRoundedToThreePlaces( self.bridgeExtrusionWidth / self.extrusionWidth ) + ' )' )
 		self.addLine( '(<procedureDone> slice )' ) # The skein has been sliced.
 		self.addLine( '(<extrusionStart> )' ) # Initialization is finished, extrusion is starting.
+		circleArea = self.extrusionDiameter * self.extrusionDiameter * math.pi / 4.0
+		print( 'The extrusion fill density ratio is ' + euclidean.getRoundedToThreePlaces( self.extrusionWidth * self.extrusionHeight / circleArea ) )
+
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
@@ -666,26 +673,26 @@ class SliceSkein:
 			for pointIndex in range( len( loop ) ):
 				previousIndex = ( pointIndex + len( loop ) - 1 ) % len( loop )
 				bridgeDirection += getOverhangDirection( belowOutsetLoops, loop[ previousIndex ], loop[ pointIndex ] )
-		if abs( bridgeDirection ) < self.halfExtrusionWidth:
+		if abs( bridgeDirection ) < self.halfExtrusionPerimeterWidth:
 			return None
 		else:
 			bridgeDirection /= abs( bridgeDirection )
 			return cmath.sqrt( bridgeDirection )
 
-#	def getExtrudateLoops( self, halfWidth, loops ):
-#		"Get the inset extrudate loops from the loops."
-#		muchGreaterThanExtrusionWidth = 2.5 * self.extrusionWidth
-#		extrudateLoops = []
-#		for loop in loops:
-#			circleNodes = intercircle.getCircleNodesFromLoop( loop, self.extrusionWidth )
-#			centers = intercircle.getCentersFromCircleNodes( circleNodes )
-#			for center in centers:
-#				extrudateLoop = intercircle.getInsetFromClockwiseLoop( center, halfWidth )
-#				if euclidean.isLargeSameDirection( extrudateLoop, center, muchGreaterThanExtrusionWidth ):
-#					if euclidean.isPathInsideLoop( loop, extrudateLoop ) == euclidean.isWiddershins( loop ):
-#						extrudateLoops.append( extrudateLoop )
-#		return extrudateLoops
-#
+	def getExtrudateLoops( self, halfWidth, loop ):
+		"Get the inset extrudate loops from the loop."
+		slightlyGreaterThanHalfWIdth = 1.1 * halfWidth
+		muchGreaterThanHalfWIdth = 2.5 * halfWidth
+		extrudateLoops = []
+		circleNodes = intercircle.getCircleNodesFromLoop( loop, slightlyGreaterThanHalfWIdth )
+		centers = intercircle.getCentersFromCircleNodes( circleNodes )
+		for center in centers:
+			extrudateLoop = intercircle.getInsetFromClockwiseLoop( center, halfWidth )
+			if euclidean.isLargeSameDirection( extrudateLoop, center, muchGreaterThanHalfWIdth ):
+				if euclidean.isPathInsideLoop( loop, extrudateLoop ) == euclidean.isWiddershins( loop ):
+					extrudateLoops.append( extrudateLoop )
+		return extrudateLoops
+
 	def getLoopsFromMesh( self, z ):
 		"Get loops from a slice of a mesh."
 		loops = []
@@ -722,61 +729,56 @@ class SliceSkein:
 		loops = self.getLoopsFromMesh( z + zAround )
 		centers = []
 		extruderPaths = []
-		halfWidth = self.halfExtrusionWidth
+		halfWidth = self.halfExtrusionPerimeterWidth
+		slightlyGreaterThanExtrusionWIdth = 1.1 * halfWidth
 		muchGreaterThanExtrusionWidth = 2.5 * self.extrusionWidth
-		extrudateLoops = []
+		allExtrudateLoops = []
 		for loop in loops:
-			circleNodes = intercircle.getCircleNodesFromLoop( loop, self.extrusionWidth )
-			centers = intercircle.getCentersFromCircleNodes( circleNodes )
-			for center in centers:
-				extrudateLoop = intercircle.getInsetFromClockwiseLoop( center, halfWidth )
-				if euclidean.isLargeSameDirection( extrudateLoop, center, muchGreaterThanExtrusionWidth ):
-					if euclidean.isPathInsideLoop( loop, extrudateLoop ) == euclidean.isWiddershins( loop ):
-						extrudateLoops.append( extrudateLoop )
-#		return extrudateLoops
-#		extrudateLoops = self.getExtrudateLoops( halfWidth, loops )
-		bridgeDirection = self.getBridgeDirection( extrudateLoops )
+			allExtrudateLoops += self.getExtrudateLoops( halfWidth, loop )
+		bridgeDirection = self.getBridgeDirection( allExtrudateLoops )
 		self.addLine( '(<layerStart> ' + str( z ) + ' )' ) # Indicate that a new layer is starting.
 		halfBridgeMinusLayer = 0.0
 		if bridgeDirection != None:
-			halfWidth = 0.5 * self.bridgeExtrusionWidth
+			halfWidth *= self.bridgeExtrusionWidth / self.extrusionWidth
+			slightlyGreaterThanExtrusionWIdth *= self.bridgeExtrusionWidth / self.extrusionWidth
 			self.addLine( '(<bridgeDirection> ' + str( bridgeDirection ) + ' )' ) # Indicate the bridge direction.
-			halfBridgeMinusLayer = 0.5 * ( self.bridgeLayerThickness - self.layerThickness )
-		extrudateLoops = []
+			halfBridgeMinusLayer = 0.5 * ( self.bridgeextrusionHeight - self.extrusionHeight )
+		allExtrudateLoops = []
 		for loop in loops:
-			circleNodes = intercircle.getCircleNodesFromLoop( loop, self.extrusionWidth )
-			centers = intercircle.getCentersFromCircleNodes( circleNodes )
-			for center in centers:
-				extrudateLoop = intercircle.getInsetFromClockwiseLoop( center, halfWidth )
-				if euclidean.isLargeSameDirection( extrudateLoop, center, muchGreaterThanExtrusionWidth ):
-					if euclidean.isPathInsideLoop( loop, extrudateLoop ) == euclidean.isWiddershins( loop ):
-						for point in extrudateLoop:
-							point.z += halfBridgeMinusLayer
-						extrudateLoops.append( extrudateLoop )
-						self.addGcodeFromRemainingLoop( extrudateLoop, alreadyFilledArounds, halfWidth )
-						addAlreadyFilledArounds( alreadyFilledArounds, extrudateLoop, 2.0 * halfWidth )
-#		extrudateLoops = self.getExtrudateLoops( halfWidth, loops )
-		self.belowLoops = extrudateLoops
+			extrudateLoops = self.getExtrudateLoops( halfWidth, loop )
+			for extrudateLoop in extrudateLoops:
+				for point in extrudateLoop:
+					point.z += halfBridgeMinusLayer
+				allExtrudateLoops.append( extrudateLoop )
+				self.addGcodeFromRemainingLoop( extrudateLoop, alreadyFilledArounds, halfWidth )
+				addAlreadyFilledArounds( alreadyFilledArounds, extrudateLoop, self.fillInset )
+		self.belowLoops = allExtrudateLoops
 		if bridgeDirection == None:
-			return z + self.layerThickness
-		return z + self.bridgeLayerThickness
+			return z + self.extrusionHeight
+		return z + self.bridgeextrusionHeight
 
 	def parseGcode( self, slicePreferences, gnuTriangulatedSurfaceText ):
 		"Parse gnu triangulated surface text and store the sliced gcode."
 		self.slicePreferences = slicePreferences
 		self.triangleMesh = TriangleMesh().getFromGNUTriangulatedSurfaceText( gnuTriangulatedSurfaceText )
 		self.extrusionDiameter = slicePreferences.extrusionDiameter.value
-		squareSectionWidth = self.extrusionDiameter * math.sqrt( math.pi / slicePreferences.extrusionFillDensity.value ) / 2.0
-		bridgeWidthOverThicknessSquareRoot = math.sqrt( slicePreferences.infillBridgeWidthOverThickness.value )
-		extrusionWidthOverThicknessSquareRoot = math.sqrt( slicePreferences.extrusionWidthOverThickness.value )
-		self.bridgeExtrusionWidth = squareSectionWidth * bridgeWidthOverThicknessSquareRoot
-		self.extrusionWidth = squareSectionWidth * extrusionWidthOverThicknessSquareRoot
-		self.halfExtrusionWidth = 0.5 * self.extrusionWidth
-		self.bridgeLayerThickness = squareSectionWidth / bridgeWidthOverThicknessSquareRoot
-		self.layerThickness = squareSectionWidth / extrusionWidthOverThicknessSquareRoot
-		self.halfThickness = 0.5 * self.layerThickness
+#		squareSectionWidth = self.extrusionDiameter * math.sqrt( math.pi / slicePreferences.extrusionFillDensity.value ) / 2.0
+#		bridgeWidthOverThicknessSquareRoot = math.sqrt( slicePreferences.infillBridgeWidthOverThickness.value )
+#		extrusionWidthOverThicknessSquareRoot = math.sqrt( slicePreferences.extrusionWidthOverThickness.value )
+		self.bridgeExtrusionWidth = slicePreferences.infillBridgeWidthOverDiameter.value * self.extrusionDiameter
+#		self.extrusionWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Width Over Diameter (ratio):', 1.2 )
+		self.extrusionHeight = slicePreferences.extrusionHeightOverDiameter.value * self.extrusionDiameter
+		self.extrusionPerimeterWidth = slicePreferences.extrusionPerimeterWidthOverDiameter.value * self.extrusionDiameter
+		self.extrusionWidth = slicePreferences.extrusionWidthOverDiameter.value * self.extrusionDiameter
+		self.halfExtrusionPerimeterWidth = 0.5 * self.extrusionPerimeterWidth
+		self.fillInset = self.halfExtrusionPerimeterWidth * ( 2.0 - slicePreferences.infillPerimeterOverlap.value )
+#		print( self.fillInset )
+		if slicePreferences.perimeterInfillPreference.value:
+			self.fillInset = self.halfExtrusionPerimeterWidth + 0.5 * self.extrusionWidth * ( 1.0 - slicePreferences.infillPerimeterOverlap.value )
+		self.bridgeextrusionHeight = self.extrusionHeight * slicePreferences.extrusionWidthOverDiameter.value / slicePreferences.infillBridgeWidthOverDiameter.value
+		self.halfThickness = 0.5 * self.extrusionHeight
 		self.zZoneLayers = 99
-		self.zZoneInterval = self.layerThickness / self.zZoneLayers / 100.0
+		self.zZoneInterval = self.extrusionHeight / self.zZoneLayers / 100.0
 		self.bottom = 999999999.0
 		self.top = - self.bottom
 		for point in self.triangleMesh.vertices:
@@ -791,40 +793,50 @@ class SliceSkein:
 		self.addShutdownToOutput()
 
 
+#extrusionWidthOverDiameter
+#extrusionHeightOverDiameter
+#(<extrusionDiameter> 0.5 )
+#(<extrusionWidth> 0.599 )
+#(<fillInset> 0.449484698309 )
+#(<extrusionHeight> 0.4 )
+
 class SlicePreferences:
 	"A class to handle the slice preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences filename."
 		#Set the default preferences.
 		self.extrusionDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Diameter (mm):', 0.6 )
-		self.extrusionFillDensity = preferences.FloatPreference().getFromValue( 'Extrusion Density (ratio):', 0.82 )
-		self.extrusionWidthOverThickness = preferences.FloatPreference().getFromValue( 'Extrusion Width Over Thickness (ratio):', 1.5 )
+#		self.extrusionFillDensity = preferences.FloatPreference().getFromValue( 'Extrusion Density (ratio):', 0.82 )
+		self.extrusionHeightOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Height Over Diameter (ratio):', 0.67 )
+		self.extrusionPerimeterWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Perimeter Width Over Diameter (ratio):', 1.2 )
+		self.extrusionWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Width Over Diameter (ratio):', 1.0 )
+#		self.extrusionWidthOverThickness = preferences.FloatPreference().getFromValue( 'Extrusion Width Over Thickness (ratio):', 1.5 )
 		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface files', '*.gts' ) ], 'Open File to be Sliced', '' )
 		self.importCoarseness = preferences.FloatPreference().getFromValue( 'Import Coarseness (ratio):', 1.0 )
 		importRadio = []
 		self.correct = preferences.RadioLabel().getFromRadioLabel( 'Correct Mesh', 'Mesh Type:', importRadio, True )
 		self.unproven = preferences.Radio().getFromRadio( 'Unproven Mesh', importRadio,False  )
-		self.infillBridgeWidthOverThickness = preferences.FloatPreference().getFromValue( 'Infill Bridge Width Over Thickness (ratio):', 1.0 )
+		self.infillBridgeWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Infill Bridge Width Over Thickness (ratio):', 1.0 )
 		self.infillDirectionBridge = preferences.BooleanPreference().getFromValue( 'Infill in Direction of Bridges', True )
-		directoryRadio = []
-		self.directoryPreference = preferences.RadioLabel().getFromRadioLabel( 'Slice All GNU Triangulated Surface Files in a Directory', 'File or Directory:', directoryRadio, False )
-		self.filePreference = preferences.Radio().getFromRadio( 'Slice File', directoryRadio, True )
-                self.extruderTemp = preferences.IntPreference().getFromValue( 'Extrusion Temperature (C):', 180 )
-                self.extruderSpeed = preferences.IntPreference().getFromValue( 'Extrusion Speed (PWM):', 55 )
-		self.assumeHomeOnStart = preferences.BooleanPreference().getFromValue( 'Assume being home on startup', False )
+		self.infillPerimeterOverlap = preferences.FloatPreference().getFromValue( 'Infill Perimeter Overlap (ratio):', 0.1 )
+		infillRadio = []
+		self.perimeterInfillPreference = preferences.RadioLabel().getFromRadioLabel( 'Calculate Overlap from Perimeter and Infill', 'Infill Perimeter Overlap Method of Calculation:', infillRadio, True )
+		self.perimeterPreference = preferences.Radio().getFromRadio( 'Calculate Overlap from Perimeter Only', infillRadio, False )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.archive = [
 			self.extrusionDiameter,
-			self.extrusionFillDensity,
-			self.extrusionWidthOverThickness,
+			self.extrusionPerimeterWidthOverDiameter,
+			self.extrusionHeightOverDiameter,
+			self.extrusionWidthOverDiameter,
 			self.filenameInput,
 			self.importCoarseness,
 			self.correct,
 			self.unproven,
-			self.infillBridgeWidthOverThickness,
+			self.infillBridgeWidthOverDiameter,
 			self.infillDirectionBridge,
-			self.directoryPreference,
-			self.filePreference,
+			self.infillPerimeterOverlap,
+			self.perimeterInfillPreference,
+			self.perimeterPreference,
 			self.extruderTemp,
 			self.extruderSpeed,
                         self.assumeHomeOnStart ]
@@ -835,7 +847,7 @@ class SlicePreferences:
 
 	def execute( self ):
 		"Slice button has been clicked."
-		filenames = gcodec.getGNUDirectoryOrFile( self.directoryPreference.value, self.filenameInput.value, self.filenameInput.wasCancelled )
+		filenames = multifile.getFileOrGNUUnmodifiedGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
 		for filename in filenames:
 			sliceFile( filename )
 

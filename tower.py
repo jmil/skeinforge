@@ -1,5 +1,24 @@
 """
-Tower is a script to tower islands in a gcode file.
+Tower is a script to extrude a few layers up, then go across to other regions.
+
+This script commands the fabricator to extrude a disconnected region for a few layers, then go to another disconnected region
+and extrude there.  Its purpose is to reduce the number of stringers between a shape and reduce extruder travel.  The important
+value for the tower preferences is "Maximum Tower Height (layers)" which is the maximum number of layers that the extruder
+will extrude in one region before going to another.  When the value is zero tower will do nothing.  Because tower could result in
+the extruder collidiing with an already extruded part of the shape and because extruding in one region for more than one layer
+could result in the shape melting, the default is the safe value of zero.
+
+Tower works by looking for islands in each layer and if it finds another island in the layer above, it goes to the next layer above
+instead of going across to other regions on the original layer.  It checks for collision with shapes already extruded within a cone
+from the nozzle tip.  The "Extruder Possible Collision Cone Angle (degrees)" preference is the angle of that cone.  Realistic
+values for the cone angle range between zero and ninety.  The higher the angle, the less likely a collision with the rest of the
+shape is, generally the extruder will stay in the region for only a few layers before a collision is detected with the wide cone.
+The default angle is sixty degrees.
+
+The "Tower Start Layer" is the layer which the script starts extruding towers.  It is best to not tower at least the first layer
+because the temperature of the first layer should sometimes be different than that of the other layers.  The default preference is
+three.  To run tower, in a shell type:
+> python tower.py
 
 To run tower, install python 2.x on your machine, which is avaliable from http://www.python.org/download/
 
@@ -31,11 +50,11 @@ http://psyco.sourceforge.net/index.html
 The psyco download page is:
 http://psyco.sourceforge.net/download.html
 
-The following examples tower the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder which contains
-Hollow Square.gcode, Hollow Square.gts and tower.py.  The tower function will tower if 'Maximum Tower Layers' is greater than zero, which can be set in the dialog or by changing
-the preferences file 'tower.csv' with a text editor or a spreadsheet program set to separate tabs.  The functions towerChainFile and
-getTowerChainGcode check to see if the text has been towered, if not they call the getFillChainGcode in fill.py to fill the text; once they
-have the filled text, then they tower.
+The following examples tower the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder
+which contains Hollow Square.gcode, Hollow Square.gts and tower.py.  The tower function will tower if 'Maximum Tower Layers' is
+greater than zero, which can be set in the dialog or by changing the preferences file 'tower.csv' with a text editor or a spreadsheet
+program set to separate tabs.  The functions towerChainFile and getTowerChainGcode check to see if the text has been towered,
+if not they call the getFillChainGcode in fill.py to fill the text; once they have the filled text, then they tower.
 
 
 > pydoc -w tower
@@ -94,6 +113,7 @@ import fill
 import gcodec
 import intercircle
 import math
+import multifile
 import preferences
 import sys
 import time
@@ -104,9 +124,6 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
-#update comb to handle tower layers
-#document slice variables
-#make fileordirectory, All the files in the directory will be forged into a skein, because directory is the preference in fileordirectory.
 def getTowerChainGcode( gcodeText, towerPreferences = None ):
 	"Tower a gcode linear move text.  Chain tower the gcode if it is not already towered."
 	if not gcodec.isProcedureDone( gcodeText, 'fill' ):
@@ -130,7 +147,6 @@ def getTowerGcode( gcodeText, towerPreferences = None ):
 
 def towerChainFile( filename = '' ):
 	"""Tower a gcode linear move file.  Chain tower the gcode if it is not already towered.
-	Depending on the preferences, either arcPoint, arcRadius, arcSegment, bevel or do nothing.
 	If no filename is specified, tower the first unmodified gcode file in this folder."""
 	if filename == '':
 		unmodified = gcodec.getGNUGcode()
@@ -152,7 +168,7 @@ def towerChainFile( filename = '' ):
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to tower the file.' )
 
 def towerFile( filename = '' ):
-	"""Tower a gcode linear move file.  Depending on the preferences, either arcPoint, arcRadius, arcSegment, bevel or do nothing.
+	"""Tower a gcode linear move file.  If the maximum tower height preference is less than one, do nothing.
 	If no filename is specified, tower the first unmodified gcode file in this folder."""
 	if filename == '':
 		unmodified = gcodec.getUnmodifiedGCodeFiles()
@@ -178,7 +194,7 @@ def transferFillLoops( fillLoops, surroundingLoop ):
 	"Transfer fill loops."
 	for innerSurrounding in surroundingLoop.innerSurroundings:
 		transferFillLoopsToSurroundingLoops( fillLoops, innerSurrounding.innerSurroundings )
-	surroundingLoop.fillLoops = euclidean.getTransferredPaths( fillLoops, surroundingLoop.loop )
+	surroundingLoop.extraLoops = euclidean.getTransferredPaths( fillLoops, surroundingLoop.boundary )
 
 def transferFillLoopsToSurroundingLoops( fillLoops, surroundingLoops ):
 	"Transfer fill loops to surrounding loops."
@@ -196,7 +212,6 @@ class TowerSkein:
 		self.islandLayers = []
 		self.isLoop = False
 		self.isPerimeter = False
-		self.lastBeforeExtrusionLines = None
 		self.layerIndex = 0
 		self.lineIndex = 0
 		self.lines = None
@@ -206,6 +221,7 @@ class TowerSkein:
 		self.oldZ = - 999999999.0
 		self.output = cStringIO.StringIO()
 		self.shutdownLineIndex = sys.maxint
+		self.surroundingLoop = None
 		self.thread = None
 		self.threadLayer = None
 		self.threadLayers = []
@@ -229,6 +245,7 @@ class TowerSkein:
 			print( "zero length vertex positions array which was skipped over, this should never happen" )
 		if len( thread ) < 2:
 			return
+		self.addLine( 'M101' )
 		for point in thread[ 1 : ]:
 			self.addGcodeMovement( point )
 		self.addLine( "M103" ) # Turn extruder off.
@@ -248,9 +265,9 @@ class TowerSkein:
 
 	def addIslandLayer( self, threadLayer ):
 		"Add a layer of surrounding islands."
-		surroundingLoops = euclidean.getSurroundingLoops( self.extrusionWidth, threadLayer.edges[ : ] )
+		surroundingLoops = euclidean.getOrderedSurroundingLoops( self.extrusionWidth, threadLayer.surroundingLoops )
 		for surroundingLoop in surroundingLoops:
-			surroundingLoop.boundingLoop = intercircle.BoundingLoop().getFromLoop( surroundingLoop.loop )
+			surroundingLoop.boundingLoop = intercircle.BoundingLoop().getFromLoop( surroundingLoop.boundary )
 		euclidean.transferPathsToSurroundingLoops( threadLayer.paths[ : ], surroundingLoops )
 		transferFillLoopsToSurroundingLoops( threadLayer.loops[ : ], surroundingLoops )
 		self.islandLayers.append( surroundingLoops )
@@ -275,24 +292,22 @@ class TowerSkein:
 		"Add a location to the thread."
 		if self.oldLocation == None:
 			return
-		if self.threadLayer == None:
-			self.threadLayer = ThreadLayer()
-			if self.lastBeforeExtrusionLines != None:
-				self.threadLayer.beforeExtrusionLines = self.lastBeforeExtrusionLines
-				self.lastBeforeExtrusionLines = None
-			self.threadLayers.append( self.threadLayer )
+		if self.surroundingLoop != None:
+			if self.isPerimeter:
+				if self.surroundingLoop.loop == None:
+					self.surroundingLoop.loop = []
+				self.surroundingLoop.loop.append( location )
+				return
+			elif self.thread == None:
+				self.thread = [ self.oldLocation ]
+				self.surroundingLoop.perimeterPaths.append( self.thread )
 		if self.thread == None:
 			self.thread = []
 			if self.isLoop: #do not add to loops because a closed loop does not have to restate its beginning
-				if self.isPerimeter:
-					self.threadLayer.edges.append( self.thread )
-				else:
-					self.threadLayer.loops.append( self.thread )
+				self.threadLayer.loops.append( self.thread )
 			else:
 				self.thread.append( self.oldLocation )
 				self.threadLayer.paths.append( self.thread )
-		self.isPerimeter = False
-		self.isLoop = False
 		self.thread.append( location )
 
 	def addTowers( self ):
@@ -397,13 +412,18 @@ class TowerSkein:
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':
 			self.linearMove( splitLine )
-			self.lastBeforeExtrusionLines = self.beforeExtrusionLines
-			self.beforeExtrusionLines = None
 		if firstWord == 'M101':
 			self.extruderActive = True
 		elif firstWord == 'M103':
 			self.extruderActive = False
 			self.thread = None
+			self.isLoop = False
+			self.isPerimeter = False
+		elif firstWord == '(<boundaryPoint>':
+			location = gcodec.getLocationFromSplitLine( None, splitLine )
+			self.surroundingLoop.boundary.append( location )
+		elif firstWord == '(<extruderShutDown>':
+			self.shutdownLineIndex = lineIndex
 		elif firstWord == '(<extrusionWidth>':
 			self.extrusionWidth = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
 		elif firstWord == '(<layerStart>':
@@ -413,10 +433,19 @@ class TowerSkein:
 		elif firstWord == '(<loop>':
 			self.isLoop = True
 		elif firstWord == '(<perimeter>':
-			self.isLoop = True
 			self.isPerimeter = True
-		elif firstWord == '(<extruderShutDown>':
-			self.shutdownLineIndex = lineIndex
+		elif firstWord == '(<surroundingLoop>':
+			self.surroundingLoop = euclidean.SurroundingLoop()
+			if self.threadLayer == None:
+				self.threadLayer = ThreadLayer()
+				if self.beforeExtrusionLines != None:
+					self.threadLayer.beforeExtrusionLines = self.beforeExtrusionLines
+					self.beforeExtrusionLines = None
+				self.threadLayers.append( self.threadLayer )
+			self.threadLayer.surroundingLoops.append( self.surroundingLoop )
+			self.threadLayer.boundaries.append( self.surroundingLoop.boundary )
+		elif firstWord == '(</surroundingLoop>':
+			self.surroundingLoop = None
 		if self.beforeExtrusionLines != None:
 			self.beforeExtrusionLines.append( line )
 
@@ -425,13 +454,14 @@ class ThreadLayer:
 	"A layer of loops and paths."
 	def __init__( self ):
 		"Thread layer constructor."
-		self.edges = []
+		self.boundaries = []
 		self.loops = []
 		self.paths = []
+		self.surroundingLoops = []
 
 	def __repr__( self ):
 		"Get the string representation of this thread layer."
-		return str( self.edges ) + ' ' + str( self.loops ) + ' ' + str( self.paths )
+		return '%s, %s, %s' % ( self.rotation, self.surroundingLoops, self.boundaries )
 
 
 class TowerPreferences:
@@ -442,12 +472,9 @@ class TowerPreferences:
 		self.extruderPossibleCollisionConeAngle = preferences.FloatPreference().getFromValue( 'Extruder Possible Collision Cone Angle (degrees):', 60.0 )
 		self.maximumTowerHeight = preferences.IntPreference().getFromValue( 'Maximum Tower Height (layers):', 0 )
 		self.towerStartLayer = preferences.IntPreference().getFromValue( 'Tower Start Layer (integer):', 3 )
-		directoryRadio = []
-		self.directoryPreference = preferences.RadioLabel().getFromRadioLabel( 'Tower All Unmodified Files in a Directory', 'File or Directory Choice:', directoryRadio, False )
-		self.filePreference = preferences.Radio().getFromRadio( 'Tower File', directoryRadio, True )
 		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface text files', '*.gts' ), ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Towered', '' )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.archive = [ self.extruderPossibleCollisionConeAngle, self.maximumTowerHeight, self.towerStartLayer, self.directoryPreference, self.filePreference, self.filenameInput ]
+		self.archive = [ self.extruderPossibleCollisionConeAngle, self.maximumTowerHeight, self.towerStartLayer, self.filenameInput ]
 		self.executeTitle = 'Tower'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'tower.csv' )
 		self.filenameHelp = 'tower.html'
@@ -455,7 +482,7 @@ class TowerPreferences:
 
 	def execute( self ):
 		"Tower button has been clicked."
-		filenames = gcodec.getGcodeDirectoryOrFile( self.directoryPreference.value, self.filenameInput.value, self.filenameInput.wasCancelled )
+		filenames = multifile.getFileOrGNUUnmodifiedGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
 		for filename in filenames:
 			towerChainFile( filename )
 

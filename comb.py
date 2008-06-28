@@ -23,9 +23,11 @@ To turn an STL file into filled, combed gcode, first import the file using the S
 of Art of Illusion.  Then from the Scripts submenu in the Tools menu, choose Export GNU Triangulated Surface and select the
 imported STL shape.  Then type 'python slice.py' in a shell in the folder which slice & comb are in and when the dialog pops up, set
 the parameters and click 'Save Preferences'.  Then type 'python fill.py' in a shell in the folder which fill is in and when the dialog
-pops up, set the parameters and click 'Save Preferences'.  Then type 'python comb.py' in a shell and when the dialog pops up,
-change the parameters if you wish but the default 'Comb Hair' is fine.  Then click 'Comb', choose the file which you exported in
-Export GNU Triangulated Surface and the filled & combed file will be saved with the suffix '_comb'.
+pops up, set the parameters and click 'Save Preferences'.  Then type 'python tower.py' in a shell in the folder which fill is in and
+when the dialog pops up, change the parameters if you wish but the default does nothing and is safe.  Then type 'python comb.py'
+in a shell and when the dialog pops up, change the parameters if you wish but the default 'Comb Hair' is fine.  Then click 'Comb',
+choose the file which you exported in Export GNU Triangulated Surface and the filled & combed file will be saved with the suffix
+'_comb'.
 
 To write documentation for this program, open a shell in the comb.py directory, then type 'pydoc -w comb', then open 'comb.html' in
 a browser or click on the '?' button in the dialog.  To write documentation for all the python scripts in the directory, type 'pydoc -w ./'.
@@ -37,11 +39,12 @@ http://psyco.sourceforge.net/index.html
 The psyco download page is:
 http://psyco.sourceforge.net/download.html
 
-The following examples comb the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder which contains
-Hollow Square.gcode, Hollow Square.gts and comb.py.  The comb function will comb if 'Comb Hair' is true, which can be set in the dialog or by changing
-the preferences file 'comb.csv' with a text editor or a spreadsheet program set to separate tabs.  The functions combChainFile and
-getCombChainGcode check to see if the text has been combed, if not they call the getFillChainGcode in fill.py to fill the text; once they
-have the filled text, then they comb.
+The following examples comb the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder
+which contains Hollow Square.gcode, Hollow Square.gts and comb.py.  The comb function will comb if 'Comb Hair' is true, which
+can be set in the dialog or by changing the preferences file 'comb.csv' in the '.skeinforge' folder in your home directory with a text
+editor or a spreadsheet program set to separate tabs.  The functions combChainFile and getCombChainGcode check to see if the
+text has been combed, if not they call getTowerChainGcode in tower.py to tower the text; once they have the towered text, then
+they comb.
 
 
 > pydoc -w comb
@@ -96,11 +99,12 @@ many lines of gcode
 from vec3 import Vec3
 import cStringIO
 import euclidean
-import fill
 import gcodec
 import intercircle
+import multifile
 import preferences
 import time
+import tower
 import vectorwrite
 
 
@@ -108,8 +112,7 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
-#later cache betweens
-#later maybe use 2d everywhere in case there is movement across layers
+#maybe use 2d everywhere in case there is movement across layers
 def combChainFile( filename = '' ):
 	"""Comb a gcode linear move file.  Chain comb the gcode if it is not already combed.
 	Depending on the preferences, either arcPoint, arcRadius, arcSegment, bevel or do nothing.
@@ -158,8 +161,8 @@ def combFile( filename = '' ):
 
 def getCombChainGcode( gcodeText, combPreferences = None ):
 	"Comb a gcode linear move text.  Chain comb the gcode if it is not already combed."
-	if not gcodec.isProcedureDone( gcodeText, 'fill' ):
-		gcodeText = fill.getFillChainGcode( gcodeText )
+	if not gcodec.isProcedureDone( gcodeText, 'tower' ):
+		gcodeText = tower.getTowerChainGcode( gcodeText )
 	return getCombGcode( gcodeText, combPreferences )
 
 def getCombGcode( gcodeText, combPreferences = None ):
@@ -186,7 +189,7 @@ def isLoopNumberEqual( betweenX, betweenXIndex, loopNumber ):
 class CombSkein:
 	"A class to comb a skein of extrusions."
 	def __init__( self ):
-		self.betweens = None
+		self.betweenTable = {}
 		self.bridgeExtrusionWidthOverSolid = 1.0
 		self.extruderActive = False
 		self.fillInset = 0.18
@@ -254,10 +257,10 @@ class CombSkein:
 
 	def getBetweens( self ):
 		"Set betweens for the layer."
-		if self.betweens != None:
-			return self.betweens
+		if self.layerZ in self.betweenTable:
+			return self.betweenTable[ self.layerZ ]
 		halfFillInset = 0.5 * self.layerFillInset
-		self.betweens = []
+		betweens = []
 		for loop in self.layerTable[ self.layerZ ]:
 			circleNodes = intercircle.getCircleNodesFromLoop( loop, self.layerFillInset )
 			centers = intercircle.getCentersFromCircleNodes( circleNodes )
@@ -265,8 +268,9 @@ class CombSkein:
 				inset = intercircle.getInsetFromClockwiseLoop( center, halfFillInset )
 				if euclidean.isLargeSameDirection( inset, center, self.layerFillInset ):
 					if euclidean.isPathInsideLoop( loop, inset ) != euclidean.isWiddershins( loop ):
-						self.betweens.append( inset )
-		return self.betweens
+						betweens.append( inset )
+		self.betweenTable[ self.layerZ ] = betweens
+		return betweens
 
 	def getOutloopLocation( self, point ):
 		"Get location outside of loop."
@@ -370,7 +374,6 @@ class CombSkein:
 		elif firstWord == '(<extrusionStart>':
 			self.addLine( '(<procedureDone> comb )' )
 		elif firstWord == '(<layerStart>':
-			self.betweens = None
 			self.layerFillInset = self.fillInset
 			self.layerZ = float( splitLine[ 1 ] )
 		elif firstWord == '(<bridgeLayer>':
@@ -384,12 +387,9 @@ class CombPreferences:
 		"Set the default preferences, execute title & preferences filename."
 		#Set the default preferences.
 		self.comb = preferences.BooleanPreference().getFromValue( 'Comb Hair:', True )
-		directoryRadio = []
-		self.directoryPreference = preferences.RadioLabel().getFromRadioLabel( 'Comb All Unmodified Files in a Directory', 'File or Directory Choice:', directoryRadio, False )
-		self.filePreference = preferences.Radio().getFromRadio( 'Comb File', directoryRadio, True )
 		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface text files', '*.gts' ), ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Combed', '' )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.archive = [ self.comb, self.directoryPreference, self.filePreference, self.filenameInput ]
+		self.archive = [ self.comb, self.filenameInput ]
 		self.executeTitle = 'Comb'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'comb.csv' )
 		self.filenameHelp = 'comb.html'
@@ -397,7 +397,7 @@ class CombPreferences:
 
 	def execute( self ):
 		"Comb button has been clicked."
-		filenames = gcodec.getGcodeDirectoryOrFile( self.directoryPreference.value, self.filenameInput.value, self.filenameInput.wasCancelled )
+		filenames = multifile.getFileOrGNUUnmodifiedGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
 		for filename in filenames:
 			combChainFile( filename )
 

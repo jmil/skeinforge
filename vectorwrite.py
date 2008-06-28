@@ -80,6 +80,7 @@ import cStringIO
 import euclidean
 import gcodec
 import math
+import multifile
 import preferences
 
 
@@ -118,7 +119,7 @@ def writeVectorFile( filename = '' ):
 		filename = unmodified[ 0 ]
 	vectorwritePreferences = VectorwritePreferences()
 	preferences.readPreferences( vectorwritePreferences )
-	print( 'Scalable vector graphics are being generated for the file ' + gcodec.getSummarizedFilename( filename ) )
+#	print( 'Scalable vector graphics are being generated for the file ' + gcodec.getSummarizedFilename( filename ) )
 	fileText = gcodec.getFileText( filename )
 	suffixFilename = filename[ : filename.rfind( '.' ) ] + '.svg'
 	suffixFilename = suffixFilename.replace( ' ', '_' )
@@ -295,12 +296,9 @@ class VectorwritePreferences:
 		#Set the default preferences.
 		self.pixelsWidthExtrusion = preferences.FloatPreference().getFromValue( 'Pixels for the Width of the Extrusion (ratio):', 10.0 )
 		self.writeSkeinforgeSVG = preferences.BooleanPreference().getFromValue( 'Write Scalable Vector Graphics for Skeinforge Chain:', True )
-		directoryRadio = []
-		self.directoryPreference = preferences.RadioLabel().getFromRadioLabel( 'Write Vector Graphics for All Unmodified Files in a Directory', 'File or Directory Choice:', directoryRadio, False )
-		self.filePreference = preferences.Radio().getFromRadio( 'Write Vector Graphics File', directoryRadio, True )
 		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Write Vector Graphics for', '' )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.archive = [ self.pixelsWidthExtrusion, self.writeSkeinforgeSVG, self.directoryPreference, self.filePreference, self.filenameInput ]
+		self.archive = [ self.pixelsWidthExtrusion, self.writeSkeinforgeSVG, self.filenameInput ]
 		self.executeTitle = 'Write Vector Graphics'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'vectorwrite.csv' )
 		self.filenameHelp = 'vectorwrite.html'
@@ -308,7 +306,7 @@ class VectorwritePreferences:
 
 	def execute( self ):
 		"Write button has been clicked."
-		filenames = gcodec.getGcodeDirectoryOrFile( self.directoryPreference.value, self.filenameInput.value, self.filenameInput.wasCancelled )
+		filenames = multifile.getFileOrGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
 		for filename in filenames:
 			writeVectorFile( filename )
 

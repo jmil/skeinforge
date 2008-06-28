@@ -98,6 +98,7 @@ import euclidean
 import gcodec
 import intercircle
 import math
+import multifile
 import preferences
 import slice
 import sys
@@ -109,15 +110,18 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-#bring into tower
-#raft
+#raft, raft supports overhangs
 #export
+#place
 #infill first
-#one direction for while, split to weave, hex fill, loop inside sparse fill or run along sparse infill
+#one direction for while, one direction narrow then wide, split to weave, hex fill, loop inside sparse fill or run along sparse infill, fill in one direction for a number of layers
+#hop
+#cool
 #transform, variable precision
-#fillet should have just amount a choice is unneeded, stack, raft, export plugin
+#fillet should have just amount a choice is unneeded, stack
 #custom inclined plane, inclined plane from model, screw, fillet travel as well maybe
 #later maybe addAroundClosest around arounds and check for closeness to other infills
+#check loops for inetrsections with their own arounds
 #much afterwards make congajure multistep view
 #maybe bridge supports although staggered spans are probably better
 #maybe update slice to add perimeter path intersection information to the large loop also
@@ -415,6 +419,7 @@ class FillSkein:
 	"A class to fill a skein of extrusions."
 	def __init__( self ):
 		self.extruderActive = False
+		self.fillInset = 0.18
 		self.isPerimeter = False
 		self.lastExtraShells = - 1
 		self.lineIndex = 0
@@ -659,14 +664,14 @@ class FillSkein:
 				firstWord = splitLine[ 0 ]
 			if firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
-				self.fillInset = 0.5 * self.extrusionWidth * ( 2.0 - self.fillPreferences.infillPerimeterOverlap.value )
-				self.addLine( '(<fillInset> ' + str( self.fillInset ) + ' )' ) # Set fill inset.
 			elif firstWord == '(<bridgeExtrusionWidthOverSolid>':
 				self.bridgeExtrusionWidthOverSolid = float( splitLine[ 1 ] )
 			elif firstWord == '(<extrusionStart>':
 				self.addLine( '(<procedureDone> fill )' )
 				self.addLine( line )
 				return
+			elif firstWord == '(<fillInset>':
+				self.fillInset = float( splitLine[ 1 ] )
 			self.addLine( line )
 
 	def parseLine( self, lineIndex ):
@@ -683,12 +688,12 @@ class FillSkein:
 			self.extruderActive = False
 			self.thread = None
 			self.isPerimeter = False
-		elif firstWord == '(<bridgeDirection>':
-			secondWordWithoutBrackets = splitLine[ 1 ].replace( '(', '' ).replace( ')', '' )
-			self.getRotatedLayer().rotation = complex( secondWordWithoutBrackets )
 		elif firstWord == '(<boundaryPoint>':
 			location = gcodec.getLocationFromSplitLine( None, splitLine )
 			self.surroundingLoop.boundary.append( location )
+		elif firstWord == '(<bridgeDirection>':
+			secondWordWithoutBrackets = splitLine[ 1 ].replace( '(', '' ).replace( ')', '' )
+			self.getRotatedLayer().rotation = complex( secondWordWithoutBrackets )
 		elif firstWord == '(<extruderShutDown>':
 			self.shutdownLineIndex = lineIndex
 		elif firstWord == '(<layerStart>':
@@ -719,11 +724,7 @@ class FillPreferences:
 		self.infillBeginRotation = preferences.FloatPreference().getFromValue( 'Infill Begin Rotation (degrees):', 45.0 )
 		self.infillDensity = preferences.FloatPreference().getFromValue( 'Infill Density (ratio):', 0.25 )
 		self.infillOddLayerExtraRotation = preferences.FloatPreference().getFromValue( 'Infill Odd Layer Extra Rotation (degrees):', 90.0 )
-		self.infillPerimeterOverlap = preferences.FloatPreference().getFromValue( 'Infill Perimeter Overlap (ratio):', 0.5 )
 		self.solidSurfaceThickness = preferences.IntPreference().getFromValue( 'Solid Surface Thickness (layers):', 3 )
-		directoryRadio = []
-		self.directoryPreference = preferences.RadioLabel().getFromRadioLabel( 'Fill All Unmodified Files in a Directory', 'File or Directory Choice:', directoryRadio, False )
-		self.filePreference = preferences.Radio().getFromRadio( 'Fill File', directoryRadio, True )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.archive = [
 			self.diaphragmPeriod,
@@ -736,10 +737,7 @@ class FillPreferences:
 			self.infillBeginRotation,
 			self.infillDensity,
 			self.infillOddLayerExtraRotation,
-			self.infillPerimeterOverlap,
-			self.solidSurfaceThickness,
-			self.directoryPreference,
-			self.filePreference ]
+			self.solidSurfaceThickness ]
 		self.executeTitle = 'Fill'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'fill.csv' )
 		self.filenameHelp = 'fill.html'
@@ -747,7 +745,7 @@ class FillPreferences:
 
 	def execute( self ):
 		"Fill button has been clicked."
-		filenames = gcodec.getGcodeDirectoryOrFile( self.directoryPreference.value, self.filenameInput.value, self.filenameInput.wasCancelled )
+		filenames = multifile.getFileOrGNUUnmodifiedGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
 		for filename in filenames:
 			fillChainFile( filename )
 

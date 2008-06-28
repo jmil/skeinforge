@@ -58,7 +58,7 @@ def addCircleIntersectionLoop( circleIntersectionPath, circleIntersections ):
 
 def addPointsFromSegment( points, radius, pointBegin, pointEnd ):
 	"Add points between the endpoints of a segment."
-	thresholdRadius = radius * 0.6 # a higher number would be faster but would leave bigger dangling loops
+	thresholdRadius = radius * 0.9 # a higher number would be faster but would leave bigger dangling loops
 	thresholdDiameter = thresholdRadius * 2.0
 	segment = pointEnd.minus( pointBegin )
 	segmentLength = segment.length()
@@ -171,7 +171,7 @@ def getInsetFromClockwiseLoop( loop, radius ):
 		center = loop[ pointIndex ]
 		aheadAbsolute = loop[ ( pointIndex + 1 ) % len( loop ) ]
 		insetLoop.append( getInsetFromClockwiseTriple( aheadAbsolute, behindAbsolute, center, radius ) )
-	return euclidean.getSimplifiedLoop( insetLoop, radius )
+	return getWithoutIntersections( euclidean.getSimplifiedLoop( insetLoop, radius ) )
 
 def getInsetFromClockwiseTriple( aheadAbsolute, behindAbsolute, center, radius ):
 	"Get loop inset from clockwise triple, out from widdershins loop."
@@ -212,6 +212,16 @@ def getLoopsFromLoopsDirection( isWiddershins, loops ):
 			directionalLoops.append( loop )
 	return directionalLoops
 
+def getWithoutIntersections( loop ):
+	"Get loop without intersections."
+	lastLoopLength = len( loop )
+	while lastLoopLength > 3:
+		removeIntersection( loop )
+		if len( loop ) == lastLoopLength:
+			return loop
+		lastLoopLength = len( loop )
+	return loop
+
 def isLoopIntersectingLoop( anotherLoop, loop ):
 	"Determine if the a loop is intersecting another loop."
 	for pointIndex in range( len( loop ) ):
@@ -226,6 +236,37 @@ def isLoopIntersectingLoop( anotherLoop, loop ):
 		if euclidean.isLoopIntersectingInsideXSegment( anotherLoop, segmentFirstPoint.x, segmentSecondPoint.x, segmentYMirror, segmentFirstPoint.y ):
 			return True
 	return False
+
+def removeIntersection( loop ):
+	"Get loop without the first intersection."
+	withoutIntersection = []
+	for pointIndex in range( len( loop ) ):
+		behind = loop[ ( pointIndex + len( loop ) - 1 ) % len( loop ) ]
+		behindEnd = loop[ ( pointIndex + len( loop ) - 2 ) % len( loop ) ]
+		behindMidpoint = ( behind.plus( behindEnd ) ).times( 0.5 )
+		ahead = loop[ pointIndex ]
+		aheadEnd = loop[ ( pointIndex + 1 ) % len( loop ) ]
+		aheadMidpoint = ( ahead.plus( aheadEnd ) ).times( 0.5 )
+		normalizedSegment = behind.dropAxis( 2 ) - behindMidpoint.dropAxis( 2 )
+		normalizedSegmentLength = abs( normalizedSegment )
+		if normalizedSegmentLength > 0.0:
+			normalizedSegment /= normalizedSegmentLength
+			segmentYMirror = complex( normalizedSegment.real, - normalizedSegment.imag )
+			behindRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, behind )
+			behindMidpointRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, behindMidpoint )
+			aheadRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, ahead )
+			aheadMidpointRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, aheadMidpoint )
+			y = behindRotated.y
+			isYAboveFirst = y > aheadRotated.y
+			isYAboveSecond = y > aheadMidpointRotated.y
+			if isYAboveFirst != isYAboveSecond:
+				xIntersection = euclidean.getXIntersection( aheadRotated, aheadMidpointRotated, y )
+				if xIntersection > min( behindMidpointRotated.x, behindRotated.x ) and xIntersection < max( behindMidpointRotated.x, behindRotated.x ):
+					intersectionPointRotated = Vec3( xIntersection, y, behindRotated.z )
+					intersectionPoint = euclidean.getRoundZAxisByPlaneAngle( normalizedSegment, intersectionPointRotated )
+					loop[ ( pointIndex + len( loop ) - 1 ) % len( loop ) ] = intersectionPoint
+					del loop[ pointIndex ]
+					return
 
 
 class BoundingLoop:

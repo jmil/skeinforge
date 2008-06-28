@@ -80,14 +80,6 @@ def getGNUGcode( fileInDirectory = '' ):
 	"Get GNU Triangulated Surface files and gcode files which are not modified."
 	return getGNUTriangulatedSurfaceFiles( fileInDirectory ) + getUnmodifiedGCodeFiles( fileInDirectory )
 
-def getGcodeDirectoryOrFile( isDirectory, filename, wasCancelled ):
-	"Get the gcode files in the directory the file is in if isDirectory is true.  Otherwise, return the file in a list."
-	if str( filename ) == '()' or wasCancelled:
-		return []
-	if isDirectory:
-		return getGNUGcode( filename )
-	return [ filename ]
-
 def getGNUDirectoryOrFile( isDirectory, filename, wasCancelled ):
 	"Get the GNU Triangulated Surface files in the directory the file is in if isDirectory is true.  Otherwise, return the file in a list."
 	if str( filename ) == '()' or wasCancelled:
@@ -130,7 +122,7 @@ def getTextLines( text ):
 
 def getUnmodifiedGCodeFiles( fileInDirectory = '' ):
 	"Get gcode files which are not modified."
-	return getFilesWithFileTypeWithoutWords( 'gcode', [ '_comb', '_comment', '_fill', '_fillet', '_hop', '_raft', '_transform', '_slice', '_wipe' ], fileInDirectory )
+	return getFilesWithFileTypeWithoutWords( 'gcode', [ '_comb', '_comment', '_cool', '_fill', '_fillet', '_hop', '_raft', '_slice', '_stretch', '_tower', '_transform', '_wipe' ], fileInDirectory )
 
 def indexOfStartingWithSecond( letter, splitLine ):
 	"Get index of the first occurence of the given letter in the split line, starting with the second word.  Return - 1 if letter is not found"
@@ -176,13 +168,14 @@ def replaceWords( filenames, wordReplacements ):
 	"Replace in files the first word of a tuple with the second word of the tuple, from a list of tuples."
 	for filename in filenames:
 		fileText = getFileText( filename )
-		print( 'In the file ' + filename )
-		print( 'The following replacements are being made:' )
-		for wordReplacement in wordReplacements:
-			fileText = fileText.replace( wordReplacement[ 0 ], wordReplacement[ 1 ] )
-		writeFileText( filename, fileText )
-		for wordReplacement in wordReplacements:
-			print( wordReplacement[ 0 ] + ' with ' + wordReplacement[ 1 ] )
+		if fileText != '':
+			print( 'In the file ' + filename )
+			print( 'The following replacements are being made:' )
+			for wordReplacement in wordReplacements:
+				fileText = fileText.replace( wordReplacement[ 0 ], wordReplacement[ 1 ] )
+			writeFileText( filename, fileText )
+			for wordReplacement in wordReplacements:
+				print( wordReplacement[ 0 ] + ' with ' + wordReplacement[ 1 ] )
 
 def writeFileMessageEnd( end, filename, fileText, message ):
 	"Write to a filename with a suffix and print a message."
