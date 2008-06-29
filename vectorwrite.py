@@ -244,7 +244,7 @@ class VectorwriteSkein:
 		elif firstWord == 'M103':
 			self.extruderActive = False
 		elif firstWord == '(<extrusionWidth>':
-			self.extrusionWidth = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
+			self.extrusionWidth = float( splitLine[ 1 ] )
 
 	def parseGcode( self, gcodeText, vectorwritePreferences ):
 		"Parse gcode text and store the commented gcode."

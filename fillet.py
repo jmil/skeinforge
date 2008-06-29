@@ -161,7 +161,7 @@ import preferences
 import stretch
 import time
 import vectorwrite
-
+import sys
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/21/04 $"
