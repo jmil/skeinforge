@@ -216,7 +216,7 @@ class Filename( BooleanPreference ):
 		try:
 			import tkFileDialog
 			summarized = gcodec.getSummarizedFilename( self.value )
-			filename = tkFileDialog.askopenfilename( filetypes = self.getFilenameFirstTypes(), initialdir = os.path.dirname( summarized ), initialfile = summarized, title = self.name )
+                        filename = tkFileDialog.askopenfilename( filetypes = self.getFilenameFirstTypes(), initialdir = os.path.dirname( summarized ) + os.sep, initialfile = os.path.basename( summarized ), title = self.name )
 			if ( str( filename ) == '()' ):
 				self.wasCancelled = True
 			else:
