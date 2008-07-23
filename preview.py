@@ -53,7 +53,7 @@ if not sys.argv[1:]:
     print "Syntax: python pilview.py gcodefile"
 #    sys.exit(1)
 
-#filename = sys.argv[1]
-#layers = []
-#gRead(filename, layers)
-#Preview(layers)
+filename = sys.argv[1]
+layers = []
+gRead(filename, layers)
+Preview(layers)
