@@ -50,8 +50,8 @@ class Preview:
 import sys
 
 if not sys.argv[1:]:
-    print "Syntax: python pilview.py gcodefile"
-#    sys.exit(1)
+    print "Syntax: python preview.py gcodefile"
+    sys.exit(1)
 
 filename = sys.argv[1]
 layers = []

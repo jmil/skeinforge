@@ -1,4 +1,4 @@
-from vec3 import *
+from skeinforge_utilities.vec3 import *
 import Image, ImageDraw
 
 def bounding_cube(layers):
@@ -23,7 +23,7 @@ def bounding_cube(layers):
                     min_y = point.y
                 if point.z < min_z:
                     min_z = point.z
-    return vec3().getFromXYZ(min_x, min_y, min_z), vec3().getFromXYZ(max_x, max_y, max_z)
+    return Vec3().getFromXYZ(min_x, min_y, min_z), Vec3().getFromXYZ(max_x, max_y, max_z)
 
 def make_images(layers):
     palette = []
@@ -62,11 +62,11 @@ def make_images(layers):
             if last_pos != None:
                 draw.line(((( last_pos.x - x0) * scale, height - ( last_pos.y - y0) * scale),
                            ((thread[0].x - x0) * scale, height - (thread[0].y - y0) * scale)), fill = 128)
-            last_pos = vec3().getFromvec3(thread[0])
+            last_pos = Vec3().getFromVec3(thread[0])
             for point in thread[1:]:
                 draw.line((((last_pos.x - x0) * scale, height - (last_pos.y - y0) * scale),
                           ( (point.x    - x0) * scale, height - (point.y    - y0) * scale)), fill = segment % 8)
-                last_pos.getFromvec3(point)
+                last_pos.getFromVec3(point)
             segment = segment + 1
         images.append(image)
     return images

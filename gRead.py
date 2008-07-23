@@ -1,4 +1,4 @@
-from vec3 import *
+from skeinforge_utilities.vec3 import *
 
 # Get the entire text of a file.
 # @param  filename name of the file
@@ -35,7 +35,7 @@ class gRead:
     def __init__(self,filename, layers):
         fileText = getFileText( filename )
         textLines = getTextLines( fileText )
-        self.last_pos = vec3()
+        self.last_pos = Vec3()
         self.layers = layers
         self.layer = None
         self.thread = None
@@ -86,7 +86,7 @@ class gRead:
 
     def linearMove( self, splitLine ):
         if self.thread != None:
-            pos = vec3().getFromvec3(self.last_pos)
+            pos = Vec3().getFromVec3(self.last_pos)
             self.setPointComponent( pos, splitLine )
             if pos.z > self.max_z:
                 self.newLayer()
