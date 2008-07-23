@@ -16,3 +16,4 @@ mkdir -p $newdir/skeinforge-prefs
 cp $1 $newdir
 cp ~/.skeinforge/*.csv $newdir/skeinforge-prefs
 python export.py $newdir/$file.gts
+echo $PWD/$newdir/${file}_export.gcode
