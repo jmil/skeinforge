@@ -143,6 +143,7 @@ many lines of gcode
 
 """
 
+import sys
 from skeinforge_utilities.vec3 import Vec3
 import comb
 import cStringIO
@@ -246,7 +247,8 @@ class RaftSkein:
 		self.lineIndex = 0
 		self.lines = None
 		self.oldLocation = None
-		self.operatingJump = None
+                self.extrusionTop = 0.0
+		self.operatingJump = 0.0
 		self.output = cStringIO.StringIO()
 
 	def addBaseLayer( self, baseExtrusionWidth, baseStep, stepBegin, stepEnd ):
@@ -361,8 +363,7 @@ class RaftSkein:
 						largestLength = loopLength
 						largestLoop = outset
 		lastZ = self.oldLocation.z
-		if self.operatingJump != None:
-			lastZ += self.operatingJump
+                lastZ += self.operatingJump
 		for point in largestLoop:
 			point.z = lastZ
 		self.addOrbits( largestLoop, self.raftPreferences.temperatureChangeTimeNextLayers.value )
@@ -454,7 +455,10 @@ class RaftSkein:
 		if raftPreferences.addRaft.value:
 			self.addRaft()
 		self.addTemperature( raftPreferences.temperatureShapeFirstLayer.value )
-		print( self.operatingJump )
+                # Turn extruder on early. 
+                # FIXME: This should be configurable. kintel 20080723
+		self.addLine( "M101" )
+		if self.operatingJump: print( self.operatingJump )
 		for line in self.lines[ self.lineIndex : ]:
 			self.parseLine( line )
 
@@ -595,8 +599,10 @@ class RaftPreferences:
 
 
 def main( hashtable = None ):
-	"Display the raft dialog."
-	preferences.displayDialog( RaftPreferences() )
+        if len(sys.argv) > 1: raftChainFile(sys.argv[1])
+        else:
+            "Display the raft dialog."
+            preferences.displayDialog( RaftPreferences() )
 
 if __name__ == "__main__":
 	main()
