@@ -48,8 +48,8 @@ class MaterialPreferences:
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences filename."
 		#Set the default preferences.
-		self.materialList = preferences.ListPreference().getFromValue( 'Material List:', [ 'abs', 'hdpe', 'pcl' ] )
-		self.materialListbox = preferences.ListboxPreference().getFromListPreference( self.materialList, 'Material Selection:', 'abs' )
+		self.materialList = preferences.ListPreference().getFromValue( 'Material List:', [ 'ABS', 'HDPE', 'PCL', 'PLA' ] )
+		self.materialListbox = preferences.ListboxPreference().getFromListPreference( self.materialList, 'Material Selection:', 'ABS' )
 		self.addListboxSelection = preferences.AddListboxSelection().getFromListboxPreference( self.materialListbox )
 		self.deleteListboxSelection = preferences.DeleteListboxSelection().getFromListboxPreference( self.materialListbox )
 		#Create the archive, title of the dialog & preferences filename.

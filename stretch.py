@@ -36,7 +36,8 @@ of Art of Illusion.  Then from the Scripts submenu in the Tools menu, choose Exp
 imported STL shape.  Then type 'python slice.py' in a shell in the folder which slice & stretch are in and when the dialog pops up, set
 the parameters and click 'Save Preferences'.  Then type 'python fill.py' in a shell in the folder which fill is in and when the dialog
 pops up, set the parameters and click 'Save Preferences'.  Then type 'python comb.py' in a shell and when the dialog pops up,
-change the parameters if you wish but the default 'Comb Hair' is fine.  Then type 'python stretch.py' in a shell and when the dialog pops up,
+change the parameters if you wish but the default 'Comb Hair' is fine.  Then type 'python raft.py' in a shell and when the dialog pops up,
+change the parameters if you wish but the default raft is fine.  Then type 'python stretch.py' in a shell and when the dialog pops up,
 change the parameters if you wish but the default is fine to start.  Then click 'Stretch', choose the file which you exported in
 Export GNU Triangulated Surface and the filled & stretched file will be saved with the suffix '_stretch'.  Once you've made a shape, then
 you can decide what the optimal value of "Maximum Stretch Over Half Extrusion Width (ratio)" is for that material.
@@ -51,11 +52,12 @@ http://psyco.sourceforge.net/index.html
 The psyco download page is:
 http://psyco.sourceforge.net/download.html
 
-The following examples stretch the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder which contains
-Hollow Square.gcode, Hollow Square.gts and stretch.py.  The stretch function will stretch if 'Comb Hair' is true, which can be set in the dialog or by changing
-the preferences file 'stretch.csv' with a text editor or a spreadsheet program set to separate tabs.  The functions stretchChainFile and
-getStretchChainGcode check to see if the text has been stretched, if not they call the getFillChainGcode in fill.py to fill the text; once they
-have the filled text, then they stretch.
+The following examples stretch the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the
+folder which contains Hollow Square.gcode, Hollow Square.gts and stretch.py.  The stretch function will stretch if 'Maximum
+Stretch Over Half Extrusion Width' is greater than zero, which can be set in the dialog or by changing the preferences file
+'stretch.csv' with a text editor or a spreadsheet program set to separate tabs.  The functions stretchChainFile and
+getStretchChainGcode check to see if the text has been stretched, if not they call the getRaftChainGcode in raft.py to raft the
+text; once they have the rafted text, then they stretch.
 
 
 > pydoc -w stretch
@@ -108,13 +110,13 @@ many lines of gcode
 """
 
 from vec3 import Vec3
-import comb
 import cStringIO
 import euclidean
 import gcodec
 import intercircle
 import multifile
 import preferences
+import raft
 import time
 import vectorwrite
 
@@ -126,8 +128,8 @@ __license__ = "GPL 3.0"
 
 def getStretchChainGcode( gcodeText, stretchPreferences = None ):
 	"Stretch a gcode linear move text.  Chain stretch the gcode if it is not already stretched."
-	if not gcodec.isProcedureDone( gcodeText, 'comb' ):
-		gcodeText = comb.getCombChainGcode( gcodeText )
+	if not gcodec.isProcedureDone( gcodeText, 'raft' ):
+		gcodeText = raft.getRaftChainGcode( gcodeText )
 	return getStretchGcode( gcodeText, stretchPreferences )
 
 def getStretchGcode( gcodeText, stretchPreferences = None ):

@@ -66,13 +66,21 @@ def getPreferencesFilePath( filename, folderName = '' ):
 
 def readPreferences( preferences ):
 	"Set an archive to the preferences read from a file."
-	preferencesText = gcodec.getFileText( preferences.filenamePreferences )
-	if preferencesText == '':
+	text = gcodec.getFileText( preferences.filenamePreferences )
+	if text == '':
 		print( 'Since the preferences file:' )
 		print( preferences.filenamePreferences )
 		print( 'does not exist, the default preferences will be written to that file.' )
+		text = gcodec.getFileText( os.path.basename( preferences.filenamePreferences ) )
+		if text != '':
+			readPreferencesFromText( preferences, text )
 		writePreferences( preferences )
-	lines = gcodec.getTextLines( preferencesText )
+		return
+	readPreferencesFromText( preferences, text )
+
+def readPreferencesFromText( preferences, text ):
+	"Set an archive to the preferences read from a text."
+	lines = gcodec.getTextLines( text )
 	preferenceTable = {}
 	for preference in preferences.archive:
 		preference.addToPreferenceTable( preferenceTable )
@@ -284,6 +292,32 @@ class IntPreference( FloatPreference ):
 			print( 'Oops, can not read integer ' + self.name + ' ' + valueString )
 
 
+class LabelDisplay:
+	"A class to add a label."
+	def addToDialog( self, preferencesDialog ):
+		"Add this to the dialog."
+		self.label = Label( preferencesDialog.master, text = self.name )
+		self.label.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky=W )
+		preferencesDialog.row += 1
+
+	def addToPreferenceTable( self, preferenceTable ):
+		"Do nothing because the label display is not archivable."
+		pass
+
+	def getFromName( self, name ):
+		"Initialize."
+		self.name = name
+		return self
+
+	def setToDisplay( self ):
+		"Do nothing because the label display is not archivable."
+		pass
+
+	def writeToArchiveWriter( self, archiveWriter ):
+		"Do nothing because the label display is not archivable."
+		pass
+
+
 class ListPreference( BooleanPreference ):
 	def addToDialog( self, preferencesDialog ):
 		"Do nothing because the list preference does not have a graphical interface."
@@ -433,8 +467,7 @@ class PreferencesDialog:
 		self.master.destroy()
 
 	def openBrowser( self ):
-                webbrowser.open(os.path.abspath(os.path.join("doc", self.displayPreferences.filenameHelp)))
-#		os.system( webbrowser.get().name + ' ' + self.displayPreferences.filenameHelp )#used this instead of webbrowser.open() to workaround webbrowser open() bug
+		os.system( webbrowser.get().name + ' ' + self.displayPreferences.filenameHelp )#used this instead of webbrowser.open() to workaround webbrowser open() bug
 
 	def savePreferences( self ):
 		for preference in self.displayPreferences.archive:

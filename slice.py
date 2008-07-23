@@ -609,28 +609,21 @@ class SliceSkein:
 		self.addLine( '(<extruderInitialization> )' ) # GCode formatted comment
 		self.addLine( 'G21' ) # Set units to mm.
 		self.addLine( 'G90' ) # Set positioning to absolute.
-                if self.slicePreferences.assumeHomeOnStart.value:
-                        self.addLine( 'G92' ) # Set current as home
-                else:
-                        self.addLine( 'G28' ) # Go to home
+		self.addLine( 'G28' ) # Start at home.
 		self.addLine( 'M103' ) # Turn extruder off.
-		self.addLine( 'M104 S' + 
-                              str(self.slicePreferences.extruderTemp.value) ) # Set temp
 		self.addLine( 'M105' ) # Custom code for temperature reading.
-		self.addLine( 'M108 S' + 
-                              str(self.slicePreferences.extruderSpeed.value) ) # Set speed
 		self.addFromUpperLowerFile( 'EndOfTheBeginning.txt' ) # Add a second start file if it exists.
 		self.addLine( '(<extrusionDiameter> ' + euclidean.getRoundedToThreePlaces( self.extrusionDiameter ) + ' )' ) # Set extrusion diameter.
+		self.addLine( '(<extrusionHeight> ' + euclidean.getRoundedToThreePlaces( self.extrusionHeight ) + ' )' ) # Set layer thickness.
+		self.addLine( '(<extrusionPerimeterWidth> ' + euclidean.getRoundedToThreePlaces( self.extrusionPerimeterWidth ) + ' )' ) # Set extrusion perimeter width.
 		self.addLine( '(<extrusionWidth> ' + euclidean.getRoundedToThreePlaces( self.extrusionWidth ) + ' )' ) # Set extrusion width.
 		self.addLine( '(<fillInset> ' + str( self.fillInset ) + ' )' ) # Set fill inset.
-		self.addLine( '(<extrusionHeight> ' + euclidean.getRoundedToThreePlaces( self.extrusionHeight ) + ' )' ) # Set layer thickness.
 		# Set bridge extrusion width over solid extrusion width.
 		self.addLine( '(<bridgeExtrusionWidthOverSolid> ' + euclidean.getRoundedToThreePlaces( self.bridgeExtrusionWidth / self.extrusionWidth ) + ' )' )
 		self.addLine( '(<procedureDone> slice )' ) # The skein has been sliced.
 		self.addLine( '(<extrusionStart> )' ) # Initialization is finished, extrusion is starting.
 		circleArea = self.extrusionDiameter * self.extrusionDiameter * math.pi / 4.0
 		print( 'The extrusion fill density ratio is ' + euclidean.getRoundedToThreePlaces( self.extrusionWidth * self.extrusionHeight / circleArea ) )
-
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
@@ -822,9 +815,6 @@ class SlicePreferences:
 		infillRadio = []
 		self.perimeterInfillPreference = preferences.RadioLabel().getFromRadioLabel( 'Calculate Overlap from Perimeter and Infill', 'Infill Perimeter Overlap Method of Calculation:', infillRadio, True )
 		self.perimeterPreference = preferences.Radio().getFromRadio( 'Calculate Overlap from Perimeter Only', infillRadio, False )
-                self.extruderTemp = preferences.IntPreference().getFromValue( 'Extrusion Temperature (C):', 180 )
-                self.extruderSpeed = preferences.IntPreference().getFromValue( 'Extrusion Speed (PWM):', 55 )
-		self.assumeHomeOnStart = preferences.BooleanPreference().getFromValue( 'Assume being home on startup', False )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.archive = [
 			self.extrusionDiameter,
@@ -839,10 +829,7 @@ class SlicePreferences:
 			self.infillDirectionBridge,
 			self.infillPerimeterOverlap,
 			self.perimeterInfillPreference,
-			self.perimeterPreference,
-			self.extruderTemp,
-			self.extruderSpeed,
-                        self.assumeHomeOnStart ]
+			self.perimeterPreference ]
 		self.executeTitle = 'Slice'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'slice.csv' )
 		self.filenameHelp = 'slice.html'

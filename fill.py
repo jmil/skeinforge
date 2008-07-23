@@ -577,9 +577,7 @@ class FillSkein:
 
 	def addGcodeMovement( self, point ):
 		"Add a movement to the output."
-		self.lastOutputPoint = point
-		self.output.write( "G1 X" + euclidean.getRoundedToThreePlaces( point.x ) + " Y" + euclidean.getRoundedToThreePlaces( point.y ) )
-		self.addLine( " Z" + euclidean.getRoundedToThreePlaces( point.z ) + " F" + euclidean.getRoundedToThreePlaces( self.feedratePerMinute ) )
+		self.addLine( "G1 X" + euclidean.getRoundedToThreePlaces( point.x ) + " Y" + euclidean.getRoundedToThreePlaces( point.y ) + " Z" + euclidean.getRoundedToThreePlaces( point.z ) )
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
@@ -642,7 +640,6 @@ class FillSkein:
 		self.fillPreferences = fillPreferences
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.parseInitialization()
-		self.feedratePerMinute = 60.0 * fillPreferences.feedratePerSecond.value
 		self.infillDensity = fillPreferences.infillDensity.value
 		self.infillBeginRotation = math.radians( fillPreferences.infillBeginRotation.value )
 		self.infillOddLayerExtraRotation = math.radians( fillPreferences.infillOddLayerExtraRotation.value )
@@ -719,7 +716,6 @@ class FillPreferences:
 		self.extraShellsAlternatingSolidLayer = preferences.IntPreference().getFromValue( 'Extra Shells on Alternating Solid Layer (layers):', 1 )
 		self.extraShellsBase = preferences.IntPreference().getFromValue( 'Extra Shells on Base (layers):', 0 )
 		self.extraShellsSparseLayer = preferences.IntPreference().getFromValue( 'Extra Shells on Sparse Layer (layers):', 1 )
-		self.feedratePerSecond = preferences.FloatPreference().getFromValue( 'Feedrate (mm/s):', 16.0 )
 		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface text files', '*.gts' ), ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Filled', '' )
 		self.infillBeginRotation = preferences.FloatPreference().getFromValue( 'Infill Begin Rotation (degrees):', 45.0 )
 		self.infillDensity = preferences.FloatPreference().getFromValue( 'Infill Density (ratio):', 0.25 )
@@ -732,7 +728,6 @@ class FillPreferences:
 			self.extraShellsAlternatingSolidLayer,
 			self.extraShellsBase,
 			self.extraShellsSparseLayer,
-			self.feedratePerSecond,
 			self.filenameInput,
 			self.infillBeginRotation,
 			self.infillDensity,

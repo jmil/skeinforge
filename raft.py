@@ -1,24 +1,56 @@
 """
-Raft is a script to raft the threads to partially compensate for filament shrinkage when extruded.
+Raft is a script to create a reusable raft, elevate the nozzle and set the feedrate, flowrate and temperature.
 
-The important value for the raft preferences is "Maximum Raft Over Half Extrusion Width (ratio)" which is the ratio of the
-maximum amount the thread will be rafted compared to half of the extrusion width. The default is 0.3, if you do not want to
-use raft, set the value to zero.  With a value of one or more, the script might raft a couple of threads in opposite directions
-so much that they overlap.  In theory this would be because they'll contract back to the desired places, but in practice they might
-not.  The optimal value of raft will be different for different materials, so the default value of 0.3 is chosen because it will
-counter the contraction a bit, but not enough to cause overlap trouble.
+Raft is based on the Nophead's reusable raft, which has a base layer running one way, and a couple of perpendicular layers
+above.  Each set of layers can be set to a different temperature.  There is the option of having the extruder orbit the raft for a
+while, so the heater barrel has time to reach a different temperature, without ooze accumulating around the nozzle.  To run
+raft, in a shell type:
+> python raft.py
 
-In general, raft will widen holes and push corners out.  The algorithm works by checking at each turning point on the
-extrusion path what the direction of the thread is at a distance of "Raft from Distance over Extrusion Width (ratio)" times the
-extrusion width, on both sides, and moves the thread in the opposite direction.  The magnitude of the raft increases with the
-amount that the direction of the two threads is similar and by the "Maximum Raft Over Half Extrusion Width (ratio)".  The
-script then also raftes the thread at two locations on the path on close to the turning points.  In practice the filament
-contraction will be similar but different from the algorithm, so even once the optimal parameters are determined, the raft
-script will not be able to eliminate the inaccuracies caused by contraction, but it should reduce them.  To run raft, in a shell
-type:
-> python strectch.py
+The important values for the raft preferences are the temperatures of the raft, the first layer and the next layers.  These will be
+different for each material.  The default preferences for ABS, HDPE, PCL & PLA are from Nophead's experiments.  To change
+the material, in a shell type:
+> python material.py
 
-To run raft, install python 2.x on your machine, which is avaliable from http://www.python.org/download/
+This brings up the material preferences dialog.  In that dialog you can add or delete a material on the listbox and you change
+the selected material.  After you change the selected material, run raft again.  If there are preferences for the new material,
+those will be in the raft dialog.  If there are no preferences for the new material, the preferences will be set to defaults and you
+will have to set new preferences for the new material.
+
+The raft script sets the feedrate, flowrate and temperature.  If the "Add Raft, Elevate Nozzle, Orbit and Set Altitude" checkbox
+is checked, the script will also create a raft, elevate the nozzle, orbit and set the altitude of the bottom of the raft.
+
+The "Base Infill Density" preference is the infill density ratio of the base of the raft, the default ratio is half.  The
+"Base Layer Height over Extrusion Height" preference is the ratio of the height & width of the base layer compared to the
+height and width of the shape infill, the default is two.  The "Base Layers" preference is the number of base layers, the default
+is one.  The "Base Nozzle Lift over Half Base Extrusion Height" is the amount the nozzle is above the center of the
+extrusion divided by half the base extrusion height.
+
+The interface of the raft has equivalent preferences called "Interface Infill Density",
+"Interface Layer Height over Extrusion Height", "Interface Layers" and "Interface Nozzle Lift over Half Base Extrusion Height".  The
+shape has the equivalent preference of called "Operating Nozzle Lift over Half Extrusion Height".
+
+The altitude that the bottom of the raft will be set to the "Bottom Altitude" preference.  The feedrate for the shape will be set
+to the 'Feedrate" preference.  The feedrate will be slower for raft layers which have thicker extrusions than the shape infill.
+
+In the "Flowrate Choice" radio button group, if "Do Not Add Flowrate'" is selected then raft will not add a flowrate to the gcode
+output.  If "Metric" is selected, the flowrate in cubic millimeters per second will be added to the output.  If "PWM Setting" is
+selected, the value in the "Flowrate PWM Setting" field will be added to the output.
+
+The raft fills a rectangle whose size is the rectangle around the bottom layer of the shape expanded on each side by the
+"Raft Outset Radius over Extrusion Width" preference times the extrusion width, minus the "Infill Overhang" ratio times the
+width of the extrusion of the raft.
+
+The extruder will orbit for at least "Temperature Change Time of Raft" seconds before extruding the raft.  It will orbit for at least
+"Temperature Change Time of First Layer" seconds before extruding the first layer of the shape.  It will orbit for at least
+"Temperature Change Time of Next Layers" seconds before extruding the next layers of the shape.  If a time is zero, it will not
+orbit.
+
+The "Temperature of Raft" preference sets the temperature of the raft.  The "Temperature of Shape First Layer" preference sets
+the temperature of the first layer of the shape.  The "Temperature of Shape Next Layers" preference sets the temperature of the
+next layers of the shape.
+
+For raft to run, install python 2.x on your machine, which is avaliable from http://www.python.org/download/
 
 To use the preferences dialog you'll also need Tkinter, which probably came with the python installation.  If it did not, look for it at:
 www.tcl.tk/software/tcltk/
@@ -33,13 +65,17 @@ http://gts.sourceforge.net/reference/gts-surfaces.html#GTS-SURFACE-WRITE
 
 To turn an STL file into filled, rafted gcode, first import the file using the STL import plugin in the import submenu of the file menu
 of Art of Illusion.  Then from the Scripts submenu in the Tools menu, choose Export GNU Triangulated Surface and select the
-imported STL shape.  Then type 'python slice.py' in a shell in the folder which slice & raft are in and when the dialog pops up, set
-the parameters and click 'Save Preferences'.  Then type 'python fill.py' in a shell in the folder which fill is in and when the dialog
-pops up, set the parameters and click 'Save Preferences'.  Then type 'python comb.py' in a shell and when the dialog pops up,
-change the parameters if you wish but the default 'Comb Hair' is fine.  Then type 'python raft.py' in a shell and when the dialog pops up,
-change the parameters if you wish but the default is fine to start.  Then click 'Raft', choose the file which you exported in
-Export GNU Triangulated Surface and the filled & rafted file will be saved with the suffix '_raft'.  Once you've made a shape, then
-you can decide what the optimal value of "Maximum Raft Over Half Extrusion Width (ratio)" is for that material.
+imported STL shape.  Then type 'python slice.py' in a shell in the folder which slice, raft and the rest of the skeinforge tool chain
+are in and when the dialog pops up, set the parameters and click 'Save Preferences'.  Then type 'python fill.py' in the shell
+and when the dialog pops up, set the parameters and click 'Save Preferences'.  Then type 'python tower.py' in the shell
+and when the dialog pops up, change the parameters if you wish but the do nothing default is fine.  Then type 'python comb.py'
+in the shell and when the dialog pops up, change the parameters if you wish but the default 'Comb Hair' is fine.  Then type
+'python raft.py' in a shell and when the dialog pops up, change the parameters if you wish but the default is fine to start.
+Then click 'Raft', choose the file which you exported in Export GNU Triangulated Surface and the filled & rafted file will be
+saved with the suffix '_raft'.  To change the material, type 'python material.py' in a shell and when the dialog pops up, you can
+change the material, so the next time you bring up raft the preferences will be for that material.  If you add a material which is not
+on the list, the preferences for the new material will be set to defaults and you'll have to enter the preferences for that material in
+raft.
 
 To write documentation for this program, open a shell in the raft.py directory, then type 'pydoc -w raft', then open 'raft.html' in
 a browser or click on the '?' button in the dialog.  To write documentation for all the python scripts in the directory, type 'pydoc -w ./'.
@@ -51,11 +87,11 @@ http://psyco.sourceforge.net/index.html
 The psyco download page is:
 http://psyco.sourceforge.net/download.html
 
-The following examples raft the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder which contains
-Hollow Square.gcode, Hollow Square.gts and raft.py.  The raft function will raft if 'Comb Hair' is true, which can be set in the dialog or by changing
-the preferences file 'raft.csv' with a text editor or a spreadsheet program set to separate tabs.  The functions raftChainFile and
-getRaftChainGcode check to see if the text has been rafted, if not they call the getFillChainGcode in fill.py to fill the text; once they
-have the filled text, then they raft.
+The following examples raft the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder
+which contains Hollow Square.gcode, Hollow Square.gts and raft.py.  The raft function will raft if 'Add Raft' is true, which can be
+set in the dialog or by changing the preferences file 'raft.csv' with a text editor or a spreadsheet program set to separate tabs.
+The functions raftChainFile and getRaftChainGcode check to see if the text has been rafted, if not they call getCombChainGcode
+in comb.py to get combed gcode; once they have the combed text, then they raft.
 
 
 > pydoc -w raft
@@ -104,22 +140,6 @@ many lines of gcode
 many lines of gcode
 ..
 ")
-HDPE.raft_temp = 200
-HDPE.first_layer_temp = 240
-HDPE.layer_temp = 220
-
-PCL.raft_temp = 0 // no raft
-PCL.first_layer_temp = 130
-PCL.layer_temp = 120
-
-ABS.raft_temp = 200
-ABS.first_layer_temp = 215
-ABS.layer_temp = 230
-
-PLA.raft_temp = 0
-PLA.first_layer_temp = 180
-PLA.layer_temp = 160
-
 
 """
 
@@ -142,11 +162,7 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-#initial orbit
 #maybe cool for a minute
-#interface pattern
-#operating temperature
-#interface orbit
 def getRaftChainGcode( gcodeText, raftPreferences = None ):
 	"Raft a gcode linear move text.  Chain raft the gcode if it is not already rafted."
 	if not gcodec.isProcedureDone( gcodeText, 'comb' ):
@@ -176,7 +192,6 @@ def getSquareLoop( begin, end ):
 
 def raftChainFile( filename = '' ):
 	"""Raft a gcode linear move file.  Chain raft the gcode if it is not already rafted.
-	Depending on the preferences, either arcPoint, arcRadius, arcSegment, bevel or do nothing.
 	If no filename is specified, raft the first unmodified gcode file in this folder."""
 	if filename == '':
 		unmodified = gcodec.getGNUGcode()
@@ -198,8 +213,7 @@ def raftChainFile( filename = '' ):
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to raft the file.' )
 
 def raftFile( filename = '' ):
-	"""Raft a gcode linear move file.  Depending on the preferences, either arcPoint, arcRadius, arcSegment, bevel or do nothing.
-	If no filename is specified, raft the first unmodified gcode file in this folder."""
+	"Raft a gcode linear move file.  If no filename is specified, raft the first unmodified gcode file in this folder."
 	if filename == '':
 		unmodified = gcodec.getUnmodifiedGCodeFiles()
 		if len( unmodified ) == 0:
@@ -220,13 +234,14 @@ def raftFile( filename = '' ):
 class RaftSkein:
 	"A class to raft a skein of extrusions."
 	def __init__( self ):
+		self.boundaryLoop = None
+		self.boundaryLoops = []
 		self.cornerHigh = Vec3( - 999999999.0, - 999999999.0, - 999999999.0 )
 		self.cornerLow = Vec3( 999999999.0, 999999999.0, 999999999.0 )
 		self.extrusionDiameter = 0.6
 		self.extrusionWidth = 0.6
 		self.feedratePerSecond = 16.0
-		self.layer = None
-		self.layers = []
+		self.layerIndex = - 1
 		self.extrusionHeight = 0.4
 		self.lineIndex = 0
 		self.lines = None
@@ -240,7 +255,6 @@ class RaftSkein:
 		halfBaseExtrusionHeight = 0.5 * baseExtrusionHeight
 		halfBaseExtrusionWidth = 0.5 * baseExtrusionWidth
 		stepsUntilEnd = self.getStepsUntilEnd( stepBegin.imag + halfBaseExtrusionWidth, stepEnd.imag, baseStep )
-		print( 'addBaseLayer' )
 		baseOverhang = self.raftPreferences.infillOverhang.value * halfBaseExtrusionWidth - halfBaseExtrusionWidth
 		beginX = stepBegin.real - baseOverhang
 		endX = stepEnd.real + baseOverhang
@@ -254,24 +268,19 @@ class RaftSkein:
 		if len( segments ) < 1:
 			print( 'This should never happen, the base layer has a size of zero.' )
 			return
-		firstSegment = segments[ 0 ]
-		nearestPoint = firstSegment[ 1 ].point
-		path = [ firstSegment[ 0 ].point, nearestPoint ]
-		for segment in segments[ 1 : ]:
-			segmentBegin = segment[ 0 ]
-			segmentEnd = segment[ 1 ]
-			nextEndpoint = segmentBegin
-			if nearestPoint.distance2( segmentBegin.point ) > nearestPoint.distance2( segmentEnd.point ):
-				nextEndpoint = segmentEnd
-			path.append( nextEndpoint.point )
-			nextEndpoint = nextEndpoint.otherEndpoint
-			nearestPoint = nextEndpoint.point
-			path.append( nearestPoint )
-		feedrateMinute = 60.0 * self.feedratePerSecond / self.baseLayerHeightOverExtrusionHeight / self.baseLayerHeightOverExtrusionHeight
-		print( path )
-		self.addLine( '(<layerStart> ' + euclidean.getRoundedToThreePlaces( zCenter ) + ' )' ) # Indicate that a new layer is starting.
-		self.addGcodeFromFeedrateThread( feedrateMinute, path )
-		self.extrusionTop += baseExtrusionHeight
+		self.addLayerFromSegments( self.feedratePerSecond / self.baseLayerHeightOverExtrusionHeight / self.baseLayerHeightOverExtrusionHeight, baseExtrusionHeight, segments, zCenter )
+
+	def addFlowrate( self ):
+		"Add flowrate line."
+		roundedFlowrate = euclidean.getRoundedToThreePlaces( math.pi * self.extrusionDiameter * self.extrusionDiameter / 4.0 * self.feedratePerSecond )
+#		print( 'The operating flowrate is %s mm3/s.' % roundedFlowrate )
+		self.addLine( '(<flowrateCubicMillimetersPerSecond> ' + roundedFlowrate + ' )' )
+		if self.raftPreferences.flowrateDoNotAddFlowratePreference.value:
+			return
+		if self.raftPreferences.flowrateMetricPreference.value:
+			self.addLine( 'M108 S' + roundedFlowrate )
+			return
+		self.addLine( 'M108 S' + euclidean.getRoundedToThreePlaces( self.raftPreferences.flowratePWMSetting.value ) )
 
 	def addGcodeFromFeedrateThread( self, feedrateMinute, thread ):
 		"Add a thread to the output."
@@ -292,15 +301,73 @@ class RaftSkein:
 		yRounded = euclidean.getRoundedToThreePlaces( point.y )
 		self.addLine( "G1 X%s Y%s Z%s F%s" % ( xRounded, yRounded, euclidean.getRoundedToThreePlaces( point.z ), euclidean.getRoundedToThreePlaces( feedrateMinute ) ) )
 
+	def addInterfaceLayer( self, interfaceExtrusionWidth, interfaceStep, stepBegin, stepEnd ):
+		"Add an interface layer."
+		interfaceExtrusionHeight = self.extrusionHeight * self.interfaceLayerHeightOverExtrusionHeight
+		halfInterfaceExtrusionHeight = 0.5 * interfaceExtrusionHeight
+		halfInterfaceExtrusionWidth = 0.5 * interfaceExtrusionWidth
+		stepsUntilEnd = self.getStepsUntilEnd( stepBegin.real + halfInterfaceExtrusionWidth, stepEnd.real, interfaceStep )
+		interfaceOverhang = self.raftPreferences.infillOverhang.value * halfInterfaceExtrusionWidth - halfInterfaceExtrusionWidth
+		beginY = stepBegin.real - interfaceOverhang
+		endY = stepEnd.real + interfaceOverhang
+		segments = []
+		zCenter = self.extrusionTop + halfInterfaceExtrusionHeight
+		z = zCenter + halfInterfaceExtrusionHeight * self.raftPreferences.interfaceNozzleLiftOverHalfInterfaceExtrusionHeight.value
+		for x in stepsUntilEnd:
+			begin = Vec3( x, beginY, z )
+			end = Vec3( x, endY, z )
+			segments.append( euclidean.getSegmentFromPoints( begin, end ) )
+		if len( segments ) < 1:
+			print( 'This should never happen, the interface layer has a size of zero.' )
+			return
+		self.addLayerFromSegments( self.feedratePerSecond / self.interfaceLayerHeightOverExtrusionHeight / self.interfaceLayerHeightOverExtrusionHeight, interfaceExtrusionHeight, segments, zCenter )
+
+	def addLayerFromSegments( self, feedrateSecond, layerExtrusionHeight, segments, zCenter ):
+		"Add a layer from segments and raise the extrusion top."
+		firstSegment = segments[ 0 ]
+		nearestPoint = firstSegment[ 1 ].point
+		path = [ firstSegment[ 0 ].point, nearestPoint ]
+		for segment in segments[ 1 : ]:
+			segmentBegin = segment[ 0 ]
+			segmentEnd = segment[ 1 ]
+			nextEndpoint = segmentBegin
+			if nearestPoint.distance2( segmentBegin.point ) > nearestPoint.distance2( segmentEnd.point ):
+				nextEndpoint = segmentEnd
+			path.append( nextEndpoint.point )
+			nextEndpoint = nextEndpoint.otherEndpoint
+			nearestPoint = nextEndpoint.point
+			path.append( nearestPoint )
+		self.addLine( '(<layerStart> ' + euclidean.getRoundedToThreePlaces( zCenter ) + ' )' ) # Indicate that a new layer is starting.
+		self.addGcodeFromFeedrateThread( 60.0 * feedrateSecond, path )
+		self.extrusionTop += layerExtrusionHeight
+
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
 		self.output.write( line + "\n" )
 
-	def addOrbits( self, loop ):
+	def addOperatingOrbits( self ):
+		"Add the orbits before the operating layers."
+		if len( self.boundaryLoops ) < 1:
+			print( 'This should never happen, there are no boundary loops on the first layer.' )
+		largestLength = - 999999999.0
+		largestLoop = None
+		perimeterOutset = 0.4 * self.extrusionPerimeterWidth
+		greaterThanPerimeterOutset = 1.1 * perimeterOutset
+		for boundaryLoop in self.boundaryLoops:
+			centers = intercircle.getCentersFromLoopDirection( True, boundaryLoop, greaterThanPerimeterOutset )
+			for center in centers:
+				outset = intercircle.getInsetFromClockwiseLoop( center, perimeterOutset )
+				if euclidean.isLargeSameDirection( outset, center, perimeterOutset ):
+					loopLength = euclidean.getPolygonLength( outset )
+					if loopLength > largestLength:
+						largestLength = loopLength
+						largestLoop = outset
+		self.addOrbits( largestLoop, self.raftPreferences.temperatureChangeTimeNextLayers.value )
+
+	def addOrbits( self, loop, temperatureChangeTime ):
 		"Add orbits with the extruder off."
 		if len( loop ) < 1:
 			print( 'Zero length loop which was skipped over, this should never happen.' )
-		temperatureChangeTime = self.raftPreferences.temperatureChangeTime.value
 		if temperatureChangeTime < 0.1:
 			return
 		timeInOrbit = 0.0
@@ -316,7 +383,8 @@ class RaftSkein:
 		self.baseLayerHeightOverExtrusionHeight = self.raftPreferences.baseLayerHeightOverExtrusionHeight.value
 		baseExtrusionWidth = self.extrusionWidth * self.baseLayerHeightOverExtrusionHeight
 		baseStep = baseExtrusionWidth / self.raftPreferences.baseInfillDensity.value
-		interfaceExtrusionWidth = self.extrusionWidth * self.raftPreferences.interfaceLayerHeightOverExtrusionHeight.value
+		self.interfaceLayerHeightOverExtrusionHeight = self.raftPreferences.interfaceLayerHeightOverExtrusionHeight.value
+		interfaceExtrusionWidth = self.extrusionWidth * self.interfaceLayerHeightOverExtrusionHeight
 		interfaceStep = interfaceExtrusionWidth / self.raftPreferences.interfaceInfillDensity.value
 		self.setCornersZ()
 		halfExtrusionHeight = 0.5 * self.extrusionHeight
@@ -326,27 +394,27 @@ class RaftSkein:
 		extentStepX = interfaceExtrusionWidth + 2.0 * interfaceStep * math.ceil( 0.5 * ( extent.real - interfaceStep ) / interfaceStep )
 		extentStepY = baseExtrusionWidth + 2.0 * baseStep * math.ceil( 0.5 * ( extent.imag - baseStep ) / baseStep )
 		center = 0.5 * ( self.complexHigh + self.complexLow )
-		print( self.complexLow )
-		print( self.complexHigh )
-		print( 'center' )
-		print( center )
 		extentStep = complex( extentStepX, extentStepY )
-		print( extentStep )
 		stepBegin = center - 0.5 * extentStep
 		stepEnd = stepBegin + extentStep
-		print( stepBegin )
-		print( stepBegin )
 		zBegin = self.extrusionTop + self.extrusionHeight
 		beginLoop = getSquareLoop( Vec3( self.cornerLow.x, self.cornerLow.y, zBegin ), Vec3( self.cornerHigh.x, self.cornerHigh.y, zBegin ) )
-		self.addTemperature( self.raftPreferences.temperatureRaft.value )
+		extrudeRaft = self.raftPreferences.baseLayers.value > 0 or self.raftPreferences.interfaceLayers.value > 0
+		if extrudeRaft:
+			self.addTemperature( self.raftPreferences.temperatureRaft.value )
+		else:
+			self.addTemperature( self.raftPreferences.temperatureShapeFirstLayer.value )
 		self.addLine( '(<layerStart> ' + euclidean.getRoundedToThreePlaces( self.extrusionTop ) + ' )' ) # Indicate that a new layer is starting.
-		self.addOrbits( beginLoop )
+		self.addOrbits( beginLoop, self.raftPreferences.temperatureChangeTimeRaft.value )
 		for baseLayerIndex in range( self.raftPreferences.baseLayers.value ):
 			self.addBaseLayer( baseExtrusionWidth, baseStep, stepBegin, stepEnd )
-		self.addTemperature( self.raftPreferences.temperatureShapeFirstLayer.value )
-		squareLoop = getSquareLoop( Vec3( stepBegin.real, stepBegin.imag, self.extrusionTop ), Vec3( stepEnd.real, stepEnd.imag, self.extrusionTop ) )
-		self.addOrbits( squareLoop )
+		for interfaceLayerIndex in range( self.raftPreferences.interfaceLayers.value ):
+			self.addInterfaceLayer( interfaceExtrusionWidth, interfaceStep, stepBegin, stepEnd )
 		self.operatingJump = self.extrusionTop - self.cornerLow.z + halfExtrusionHeight + halfExtrusionHeight * self.raftPreferences.operatingNozzleLiftOverHalfExtrusionHeight.value
+		if extrudeRaft:
+			self.addTemperature( self.raftPreferences.temperatureShapeFirstLayer.value )
+			squareLoop = getSquareLoop( Vec3( stepBegin.real, stepBegin.imag, self.extrusionTop ), Vec3( stepEnd.real, stepEnd.imag, self.extrusionTop ) )
+			self.addOrbits( squareLoop, self.raftPreferences.temperatureChangeTimeFirstLayer.value )
 
 	def addTemperature( self, temperature ):
 		"Add a line of temperature."
@@ -386,13 +454,9 @@ class RaftSkein:
 		self.parseInitialization()
 		if raftPreferences.addRaft.value:
 			self.addRaft()
-		print( raftPreferences )
-		if not raftPreferences.addRaft.value:
-			print( 'raftPreferences.self.addRaft.value' )
 		self.addTemperature( raftPreferences.temperatureShapeFirstLayer.value )
 		for line in self.lines[ self.lineIndex : ]:
 			self.parseLine( line )
-#		print( self.output.getvalue() )
 
 	def parseInitialization( self ):
 		"Parse gcode initialization and store the parameters."
@@ -404,11 +468,11 @@ class RaftSkein:
 				firstWord = splitLine[ 0 ]
 			if firstWord == '(<extrusionDiameter>':
 				self.extrusionDiameter = float( splitLine[ 1 ] )
-				roundedFlowrate = euclidean.getRoundedToThreePlaces( math.pi * self.extrusionDiameter * self.extrusionDiameter / 4.0 * self.feedratePerSecond )
-				print( 'The operating flowrate is %s mm3/s.' % roundedFlowrate )
-				self.addLine( 'M108 S' + euclidean.getRoundedToThreePlaces( self.raftPreferences.extruderSpeed.value ) + ' S' + roundedFlowrate )
+				self.addFlowrate()
 			elif firstWord == '(<extrusionHeight>':
 				self.extrusionHeight = float( splitLine[ 1 ] )
+			elif firstWord == '(<extrusionPerimeterWidth>':
+				self.extrusionPerimeterWidth = float( splitLine[ 1 ] )
 			elif firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
 			elif firstWord == '(<extrusionStart>':
@@ -426,9 +490,19 @@ class RaftSkein:
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':
 			line = self.getRaftedLine( splitLine )
+		elif firstWord == '(<boundaryPoint>':
+			self.boundaryLoop.append( gcodec.getLocationFromSplitLine( None, splitLine ) )
 		elif firstWord == '(<layerStart>':
+			self.layerIndex += 1
 			if self.operatingJump != None:
 				line = '(<layerStart> ' + euclidean.getRoundedToThreePlaces( self.extrusionTop + float( splitLine[ 1 ] ) ) + ' )'
+			if self.layerIndex == 1:
+				self.addOperatingOrbits()
+			self.boundaryLoop = None
+			self.boundaryLoops = []
+		elif firstWord == '(<surroundingLoop>':
+			self.boundaryLoop = []
+			self.boundaryLoops.append( self.boundaryLoop )
 		self.addLine( line )
 
 	def setCornersZ( self ):
@@ -454,6 +528,7 @@ class RaftPreferences:
 	"A class to handle the raft preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences filename."
+		materialName = material.getSelectedMaterial()
 		#Set the default preferences.
 		self.addRaft = preferences.BooleanPreference().getFromValue( 'Add Raft, Elevate Nozzle, Orbit and Set Altitude:', True )
 		self.baseInfillDensity = preferences.FloatPreference().getFromValue( 'Base Infill Density (ratio):', 0.5 )
@@ -461,16 +536,23 @@ class RaftPreferences:
 		self.baseLayers = preferences.IntPreference().getFromValue( 'Base Layers (integer):', 1 )
 		self.baseNozzleLiftOverHalfBaseExtrusionHeight = preferences.FloatPreference().getFromValue( 'Base Nozzle Lift over Half Base Extrusion Height (ratio):', 0.75 )
 		self.bottomAltitude = preferences.FloatPreference().getFromValue( 'Bottom Altitude:', 0.0 )
-		self.extruderSpeed = preferences.FloatPreference().getFromValue( 'Extruder Speed:', 210.0 )
-		self.feedratePerSecond = preferences.FloatPreference().getFromValue( 'Operating Feedrate (mm/s):', 16.0 )
-		self.infillOverhang = preferences.FloatPreference().getFromValue( 'infill Overhang (ratio):', 0.1 )
+		self.feedratePerSecond = preferences.FloatPreference().getFromValue( 'Feedrate (mm/s):', 16.0 )
+		flowrateRadio = []
+		self.flowrateDoNotAddFlowratePreference = preferences.RadioLabel().getFromRadioLabel( 'Do Not Add Flowrate', 'Flowrate Choice:', flowrateRadio, False )
+		self.flowrateMetricPreference = preferences.Radio().getFromRadio( 'Metric', flowrateRadio, False )
+		self.flowratePWMPreference = preferences.Radio().getFromRadio( 'PWM Setting', flowrateRadio, True )
+		self.flowratePWMSetting = preferences.FloatPreference().getFromValue( 'Flowrate PWM Setting (if PWM Setting is Chosen):', 210.0 )
+		self.infillOverhang = preferences.FloatPreference().getFromValue( 'Infill Overhang (ratio):', 0.1 )
 		self.interfaceInfillDensity = preferences.FloatPreference().getFromValue( 'Interface Infill Density (ratio):', 0.5 )
 		self.interfaceLayerHeightOverExtrusionHeight = preferences.FloatPreference().getFromValue( 'Interface Layer Height over Extrusion Height:', 1.0 )
 		self.interfaceLayers = preferences.IntPreference().getFromValue( 'Interface Layers (integer):', 2 )
-		self.interfaceNozzleLiftOverHalfBaseExtrusionHeight = preferences.FloatPreference().getFromValue( 'Interface Nozzle Lift over Half Base Extrusion Height (ratio):', 1.0 )
+		self.interfaceNozzleLiftOverHalfInterfaceExtrusionHeight = preferences.FloatPreference().getFromValue( 'Interface Nozzle Lift over Half Interface Extrusion Height (ratio):', 1.0 )
+		self.material = preferences.LabelDisplay().getFromName( 'Material: ' + materialName )
 		self.operatingNozzleLiftOverHalfExtrusionHeight = preferences.FloatPreference().getFromValue( 'Operating Nozzle Lift over Half Extrusion Height (ratio):', 1.0 )
 		self.raftOutsetRadiusOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Raft Outset Radius over Extrusion Width (ratio):', 15.0 )
-		self.temperatureChangeTime = preferences.FloatPreference().getFromValue( 'Temperature Change Time (seconds):', 120.0 )
+		self.temperatureChangeTimeRaft = preferences.FloatPreference().getFromValue( 'Temperature Change Time of Raft (seconds):', 120.0 )
+		self.temperatureChangeTimeFirstLayer = preferences.FloatPreference().getFromValue( 'Temperature Change Time of First Layer (seconds):', 120.0 )
+		self.temperatureChangeTimeNextLayers = preferences.FloatPreference().getFromValue( 'Temperature Change Time of Next Layers (seconds):', 120.0 )
 		self.temperatureRaft = preferences.FloatPreference().getFromValue( 'Temperature of Raft (Celcius):', 200.0 )
 		self.temperatureShapeFirstLayer = preferences.FloatPreference().getFromValue( 'Temperature of Shape First Layer (Celcius):', 215.0 )
 		self.temperatureShapeNextLayers = preferences.FloatPreference().getFromValue( 'Temperature of Shape Next Layers (Celcius):', 230.0 )
@@ -482,20 +564,25 @@ class RaftPreferences:
 			self.baseLayerHeightOverExtrusionHeight,
 			self.baseLayers,
 			self.bottomAltitude,
-			self.extruderSpeed,
 			self.feedratePerSecond,
-			self.interfaceNozzleLiftOverHalfBaseExtrusionHeight,
+			self.flowrateDoNotAddFlowratePreference,
+			self.flowrateMetricPreference,
+			self.flowratePWMPreference,
+			self.flowratePWMSetting,
+			self.interfaceNozzleLiftOverHalfInterfaceExtrusionHeight,
 			self.interfaceLayerHeightOverExtrusionHeight,
 			self.interfaceLayers,
+			self.material,
 			self.operatingNozzleLiftOverHalfExtrusionHeight,
 			self.raftOutsetRadiusOverExtrusionWidth,
-			self.temperatureChangeTime,
+			self.temperatureChangeTimeRaft,
+			self.temperatureChangeTimeFirstLayer,
+			self.temperatureChangeTimeNextLayers,
 			self.temperatureRaft,
 			self.temperatureShapeFirstLayer,
 			self.temperatureShapeNextLayers,
 			self.filenameInput ]
 		self.executeTitle = 'Raft'
-		materialName = material.getSelectedMaterial()
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'raft_' + materialName + '.csv' )
 		self.filenameHelp = 'raft.html'
 		self.title = 'Raft Preferences'

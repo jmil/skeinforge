@@ -207,8 +207,6 @@ class TowerSkein:
 		self.beforeExtrusionLines = None
 		self.extruderActive = False
 		self.extrusionWidth = 0.4
-		self.feedrateMinute = 960.0
-		self.feedrateTable = {}
 		self.islandLayers = []
 		self.isLoop = False
 		self.isPerimeter = False
@@ -252,11 +250,7 @@ class TowerSkein:
 
 	def addGcodeMovement( self, point ):
 		"Add a movement to the output."
-		self.lastOutputPoint = point
-		if point in self.feedrateTable:
-			self.feedrateMinute = self.feedrateTable[ point ]
-		self.output.write( "G1 X" + euclidean.getRoundedToThreePlaces( point.x ) + " Y" + euclidean.getRoundedToThreePlaces( point.y ) )
-		self.addLine( " Z" + euclidean.getRoundedToThreePlaces( point.z ) + " F" + euclidean.getRoundedToThreePlaces( self.feedrateMinute ) )
+		self.addLine( "G1 X" + euclidean.getRoundedToThreePlaces( point.x ) + " Y" + euclidean.getRoundedToThreePlaces( point.y ) + " Z" + euclidean.getRoundedToThreePlaces( point.z ) )
 
 	def addIfTravel( self, splitLine ):
 		"Add travel move around loops if this the extruder is off."
@@ -368,8 +362,6 @@ class TowerSkein:
 	def linearMove( self, splitLine ):
 		"Add a linear move to the loop."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-		self.feedrateMinute  = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
-		self.feedrateTable[ location ] = self.feedrateMinute
 		if self.extruderActive:
 			self.addToExtrusion( location )
 		self.oldLocation = location
