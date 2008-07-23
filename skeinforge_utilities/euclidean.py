@@ -43,7 +43,7 @@ def addSurroundingLoopBeginning( loop, skein ):
 	"Add surrounding loop beginning to gcode output."
 	skein.addLine( '(<surroundingLoop> )' )
 	for point in loop:
-		skein.addLine( '(<boundaryPoint> X%s Y%s Z%s' % ( getRoundedToThreePlaces( point.x ), getRoundedToThreePlaces( point.y ), getRoundedToThreePlaces( point.z ) ) )
+		skein.addLine( '(<boundaryPoint> X%s Y%s Z%s )' % ( getRoundedToThreePlaces( point.x ), getRoundedToThreePlaces( point.y ), getRoundedToThreePlaces( point.z ) ) )
 
 def addToThreadsFromLoop( extrusionHalfWidthSquared, gcodeType, loop, oldOrderedLocation, skein ):
 	"Add to threads from the last location from loop."

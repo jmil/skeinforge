@@ -71,7 +71,7 @@ def readPreferences( preferences ):
 		print( 'Since the preferences file:' )
 		print( preferences.filenamePreferences )
 		print( 'does not exist, the default preferences will be written to that file.' )
-		text = gcodec.getFileText( os.path.basename( preferences.filenamePreferences ) )
+		text = gcodec.getFileText( os.path.join( 'defaults', os.path.basename( preferences.filenamePreferences ) ) )
 		if text != '':
 			readPreferencesFromText( preferences, text )
 		writePreferences( preferences )
@@ -272,7 +272,7 @@ class FloatPreference( BooleanPreference ):
 		self.setValueToString( valueString )
 
 	def setValueToString( self, valueString ):
-		"Set the boolean to the string."
+		"Set the float to the string."
 		try:
 			self.value = float( valueString )
 		except:
@@ -282,7 +282,7 @@ class FloatPreference( BooleanPreference ):
 class IntPreference( FloatPreference ):
 	"A class to display, read & write an int."
 	def setValueToString( self, valueString ):
-		"Set the boolean to the string."
+		"Set the integer to the string."
 		dotIndex = valueString.find( '.' )
 		if dotIndex > - 1:
 			valueString = valueString[ : dotIndex ]
@@ -409,6 +409,22 @@ class Radio( BooleanPreference ):
 		self.value = ( self.getIntVar().get() == self.radiobutton[ 'value' ] )
 
 
+class RadioCapitalized( Radio ):
+	"A class to display, read & write a boolean with associated radio button."
+	def addToDialog( self, preferencesDialog ):
+		"Add this to the dialog."
+		withSpaces = self.name.lower().replace( '_', ' ' )
+		words = withSpaces.split( ' ' )
+		capitalizedStrings = []
+		for word in words:
+			capitalizedStrings.append( word.capitalize() )
+		capitalizedName = ' '.join( capitalizedStrings )
+		self.radiobutton = Radiobutton( preferencesDialog.master, text = capitalizedName, value = preferencesDialog.row, variable = self.getIntVar() )
+		self.radiobutton.grid( row = preferencesDialog.row, columnspan = 4, sticky=W )
+		if self.value:
+			self.getIntVar().set( preferencesDialog.row )
+		preferencesDialog.row += 1
+
 class RadioLabel( Radio ):
 	"A class to display, read & write a boolean with associated radio button."
 	def addToDialog( self, preferencesDialog ):
@@ -435,6 +451,27 @@ class RadioLabel( Radio ):
 	def setToDisplay( self ):
 		"Set the boolean to the checkbox."
 		self.value = ( self.getIntVar().get() == self.radiobutton[ 'value' ] )
+
+
+class StringPreference( BooleanPreference ):
+	"A class to display, read & write a string."
+	def addToDialog( self, preferencesDialog ):
+		"Add this to the dialog."
+		self.entry = Entry( preferencesDialog.master )
+		self.entry.insert( 0, self.value )
+		self.entry.grid( row = preferencesDialog.row, column = 2, columnspan = 2, sticky=W )
+		self.label = Label( preferencesDialog.master, text = self.name )
+		self.label.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky=W )
+		preferencesDialog.row += 1
+
+	def setToDisplay( self ):
+		"Set the string to the entry field."
+		valueString = self.entry.get()
+		self.setValueToString( valueString )
+
+	def setValueToString( self, valueString ):
+		"Set the string to the value string."
+		self.value = valueString
 
 
 class PreferencesDialog:

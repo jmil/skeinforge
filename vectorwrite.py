@@ -75,13 +75,13 @@ The arc segment file is saved as Hollow Square_arc_segment.gcode
 
 """
 
-from vec3 import Vec3
+from skeinforge_utilities.vec3 import vec3
 import cStringIO
-import euclidean
-import gcodec
+from skeinforge_utilities import euclidean
+from skeinforge_utilities import gcodec
 import math
 import multifile
-import preferences
+from skeinforge_utilities import preferences
 
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
@@ -102,12 +102,14 @@ def getVectorGcode( gcodeText, vectorwritePreferences = None ):
 	skein.parseGcode( gcodeText, vectorwritePreferences )
 	return skein.vectorWindow.getVectorFormattedText()
 
-def writeSkeinforgeVectorFile( filename ):
+def writeSkeinforgeVectorFile( filename, gcodeText = '' ):
 	"Write scalable vector graphics for a skeinforge gcode file, if 'Write Scalable Vector Graphics for Skeinforge Chain' is selected."
 	vectorwritePreferences = VectorwritePreferences()
 	preferences.readPreferences( vectorwritePreferences )
+	if gcodeText == '':
+		gcodeText = gcodec.getFileText( filename )
 	if vectorwritePreferences.writeSkeinforgeSVG.value:
-		writeVectorFile( filename )
+		writeVectorFileGivenText( filename, gcodeText, vectorwritePreferences )
 
 def writeVectorFile( filename = '' ):
 	"Write scalable vector graphics for a gcode file.  If no filename is specified, write scalable vector graphics for the first gcode file in this folder."
@@ -119,11 +121,14 @@ def writeVectorFile( filename = '' ):
 		filename = unmodified[ 0 ]
 	vectorwritePreferences = VectorwritePreferences()
 	preferences.readPreferences( vectorwritePreferences )
-#	print( 'Scalable vector graphics are being generated for the file ' + gcodec.getSummarizedFilename( filename ) )
-	fileText = gcodec.getFileText( filename )
+	gcodeText = gcodec.getFileText( filename )
+	writeVectorFileGivenText( filename, gcodeText, vectorwritePreferences )
+
+def writeVectorFileGivenText( filename, gcodeText, vectorwritePreferences ):
+	"Write scalable vector graphics for a gcode file.  If no filename is specified, write scalable vector graphics for the first gcode file in this folder."
 	suffixFilename = filename[ : filename.rfind( '.' ) ] + '.svg'
 	suffixFilename = suffixFilename.replace( ' ', '_' )
-	gcodec.writeFileText( suffixFilename, getVectorGcode( fileText, vectorwritePreferences ) )
+	gcodec.writeFileText( suffixFilename, getVectorGcode( gcodeText, vectorwritePreferences ) )
 	print( 'The scalable vector graphics file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
 
 class VectorWindow:
@@ -249,8 +254,8 @@ class VectorwriteSkein:
 	def parseGcode( self, gcodeText, vectorwritePreferences ):
 		"Parse gcode text and store the commented gcode."
 		self.initializeActiveLocation()
-		self.cornerHigh = Vec3( - 999999999.0, - 999999999.0, - 999999999.0 )
-		self.cornerLow = Vec3( 999999999.0, 999999999.0, 999999999.0 )
+		self.cornerHigh = vec3( - 999999999.0, - 999999999.0, - 999999999.0 )
+		self.cornerLow = vec3( 999999999.0, 999999999.0, 999999999.0 )
 		lines = gcodec.getTextLines( gcodeText )
 		for line in lines:
 			self.parseCorner( line )

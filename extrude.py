@@ -155,8 +155,8 @@ reprap.cartesian.free()
 """
 
 from euclidean import *
-from vec3 import vec3
-import gcodec
+from skeinforge_utilities.vec3 import vec3
+from skeinforge_utilities import gcodec
 import math
 import os
 import reprap	# Import the reprap module.
@@ -251,11 +251,11 @@ class displaySkein:
 		"Parse a helical move gcode line and send the commands to the extruder."
 		if self.oldLocation == None:
 			return
-		location = vec3().getFromVec3( self.oldLocation )
+		location = vec3().getFromvec3( self.oldLocation )
 		self.setFeedrate( splitLine )
 		setPointToSplitLine( location, splitLine )
 		location = location.plus( self.oldLocation )
-		center = vec3().getFromVec3( self.oldLocation )
+		center = vec3().getFromvec3( self.oldLocation )
 		indexOfR = indexOfStartingWithSecond( "R", splitLine )
 		if indexOfR > 0:
 			radius = getDoubleAfterFirstLetter( splitLine[ indexOfR ] )
@@ -267,9 +267,9 @@ class displaySkein:
 			centerMinusMidpoint.normalize()
 			centerMinusMidpoint.scale( centerMidpointDistance )
 			if isCounterclockwise:
-				center.getFromVec3( halfLocationMinusOld.plus( centerMinusMidpoint ) )
+				center.getFromvec3( halfLocationMinusOld.plus( centerMinusMidpoint ) )
 			else:
-				center.getFromVec3( halfLocationMinusOld.minus( centerMinusMidpoint ) )
+				center.getFromvec3( halfLocationMinusOld.minus( centerMinusMidpoint ) )
 		else:
 			center.x = getDoubleForLetter( "I", splitLine )
 			center.y = getDoubleForLetter( "J", splitLine )

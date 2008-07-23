@@ -109,13 +109,13 @@ many lines of gcode
 
 """
 
-from vec3 import Vec3
+from skeinforge_utilities.vec3 import vec3
 import cStringIO
-import euclidean
-import gcodec
-import intercircle
+from skeinforge_utilities import euclidean
+from skeinforge_utilities import gcodec
+from skeinforge_utilities import intercircle
 import multifile
-import preferences
+from skeinforge_utilities import preferences
 import raft
 import time
 import vectorwrite
@@ -285,7 +285,7 @@ class StretchSkein:
 		if relativeStretchLength > 1.0:
 			relativeStretch /= relativeStretchLength
 		absoluteStretch = relativeStretch * self.maximumAbsoluteStretch
-		stretchedLocation = location.plus( Vec3( absoluteStretch.real, absoluteStretch.imag, 0.0 ) )
+		stretchedLocation = location.plus( vec3( absoluteStretch.real, absoluteStretch.imag, 0.0 ) )
 		stretchedLine = "G1 X" + euclidean.getRoundedToThreePlaces( stretchedLocation.x ) + " Y" + euclidean.getRoundedToThreePlaces( stretchedLocation.y )
 		return stretchedLine + " Z" + euclidean.getRoundedToThreePlaces( stretchedLocation.z ) + ' F' + euclidean.getRoundedToThreePlaces( self.feedrateMinute )
 

@@ -93,16 +93,16 @@ try:
 	psyco.full()
 except:
 	pass
-from vec3 import Vec3
+from skeinforge_utilities.vec3 import vec3
 import cmath
 import cStringIO
-import euclidean
-import gcodec
-import intercircle
+from skeinforge_utilities import euclidean
+from skeinforge_utilities import gcodec
+from skeinforge_utilities import intercircle
 import math
 import multifile
 import os
-import preferences
+from skeinforge_utilities import preferences
 import time
 import vectorwrite
 
@@ -880,7 +880,7 @@ class TriangleMesh:
 		for vertexIndex in range( numberOfVertices ):
 			line = linesWithoutComments[ vertexIndex + 1 ]
 			splitLine = line.split( " " )
-			vertex = Vec3().getFromXYZ( float( splitLine[ 0 ] ), float( splitLine[ 1 ] ), float( splitLine[ 2 ] ) )
+			vertex = vec3().getFromXYZ( float( splitLine[ 0 ] ), float( splitLine[ 1 ] ), float( splitLine[ 2 ] ) )
 			self.vertices.append( vertex )
 		edgeStart = numberOfVertices + 1
 		for edgeIndex in range( numberOfEdges ):

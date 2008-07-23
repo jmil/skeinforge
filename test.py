@@ -88,13 +88,13 @@ many lines of gcode
 
 """
 
-from vec3 import Vec3
+from skeinforge_utilities.vec3 import vec3
 import cStringIO
-import euclidean
+from skeinforge_utilities import euclidean
 import fill
-import gcodec
-import intercircle
-import preferences
+from skeinforge_utilities import gcodec
+from skeinforge_utilities import intercircle
+from skeinforge_utilities import preferences
 import time
 import vectorwrite
 
@@ -299,8 +299,8 @@ class CombSkein:
 			betweenXSecond = betweenX[ betweenXIndex + 1 ]
 			if betweenXSecond.imag == betweenXFirst.imag:
 				betweenXIndex += 1
-				betweenFirst = euclidean.getRoundZAxisByPlaneAngle( segmentXY, Vec3( betweenXFirst.real, y, z ) )
-				betweenSecond = euclidean.getRoundZAxisByPlaneAngle( segmentXY, Vec3( betweenXSecond.real, y, z ) )
+				betweenFirst = euclidean.getRoundZAxisByPlaneAngle( segmentXY, vec3( betweenXFirst.real, y, z ) )
+				betweenSecond = euclidean.getRoundZAxisByPlaneAngle( segmentXY, vec3( betweenXSecond.real, y, z ) )
 				loopFirst = self.betweens[ int( betweenXFirst.imag ) ]
 				self.addPathBetween( betweenFirst, betweenSecond, loopFirst )
 			betweenXIndex += 1

@@ -86,7 +86,7 @@ class gRead:
 
     def linearMove( self, splitLine ):
         if self.thread != None:
-            pos = vec3().getFromVec3(self.last_pos)
+            pos = vec3().getFromvec3(self.last_pos)
             self.setPointComponent( pos, splitLine )
             if pos.z > self.max_z:
                 self.newLayer()

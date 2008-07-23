@@ -92,14 +92,14 @@ try:
 	psyco.full()
 except:
 	pass
-from vec3 import Vec3
+from skeinforge_utilities.vec3 import vec3
 import cStringIO
-import euclidean
-import gcodec
-import intercircle
+from skeinforge_utilities import euclidean
+from skeinforge_utilities import gcodec
+from skeinforge_utilities import intercircle
 import math
 import multifile
-import preferences
+from skeinforge_utilities import preferences
 import slice
 import sys
 import time
@@ -110,19 +110,24 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-#raft, raft supports overhangs
 #export
-#place
-#infill first
+#variable precision
 #one direction for while, one direction narrow then wide, split to weave, hex fill, loop inside sparse fill or run along sparse infill, fill in one direction for a number of layers
-#hop
 #cool
-#transform, variable precision
-#fillet should have just amount a choice is unneeded, stack
+#import
+#skeinforge
+#place
+#oozebane
+#raft supports overhangs
+#transform
+#stack
+#maybe hop
+#infill first
+#check loops for intersections with their own arounds
 #custom inclined plane, inclined plane from model, screw, fillet travel as well maybe
+#maybe fillet should have just amount a choice is unneeded
 #later maybe addAroundClosest around arounds and check for closeness to other infills
-#check loops for inetrsections with their own arounds
-#much afterwards make congajure multistep view
+#maybe much afterwards make congajure multistep view
 #maybe bridge supports although staggered spans are probably better
 #maybe update slice to add perimeter path intersection information to the large loop also
 def addAroundClosest( arounds, layerExtrusionWidth, paths, removedEndpoint ):
@@ -424,7 +429,7 @@ class FillSkein:
 		self.lastExtraShells = - 1
 		self.lineIndex = 0
 		self.oldLocation = None
-		self.oldOrderedLocation = Vec3()
+		self.oldOrderedLocation = vec3()
 		self.output = cStringIO.StringIO()
 		self.rotatedLayer = None
 		self.rotatedLayers = []

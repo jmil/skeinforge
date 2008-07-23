@@ -19,11 +19,17 @@ many lines of text
 from vec3 import Vec3
 import os
 
+gInitFilename = '__init__.py'
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
+
+def createInitFile():
+	"Create the __init__.py file."
+	fileText = '__all__ = ' + str( getPythonFilenameExceptInit() )
+	writeFileText( gInitFilename, fileText )
 
 def getDoubleAfterFirstLetter( word ):
 	"""Get the double value of the word after the first letter.
@@ -35,6 +41,13 @@ def getDoubleAfterFirstLetter( word ):
 def getDoubleForLetter( letter, splitLine ):
 	"Get the double value of the word after the first occurence of the letter in the split line."
 	return getDoubleAfterFirstLetter( splitLine[ indexOfStartingWithSecond( letter, splitLine ) ] )
+
+def getDoubleFromCharacterSplitLineValue( character, splitLine, value ):
+	"Get the double value of the string after the first occurence of the character in the split line."
+	indexOfCharacter = indexOfStartingWithSecond( character, splitLine )
+	if indexOfCharacter < 0:
+		return value
+	return float( splitLine[ indexOfCharacter ][ 1 : ] )
 
 def getFeedrateMinute( feedrateMinute, splitLine ):
 	"Get the feedrate per minute if the split line has a feedrate."
@@ -58,7 +71,7 @@ def getFilesWithFileTypeWithoutWords( fileType, words = [], fileInDirectory = ''
 		joinedFilename = filename
 		if fileInDirectory != '':
 			joinedFilename = os.path.join( directoryName, filename )
-		if isFileWithFileTypeWithoutWords( fileType, joinedFilename, words ) == 1:
+		if isFileWithFileTypeWithoutWords( fileType, joinedFilename, words ):
 			filesWithFileType.append( joinedFilename )
 	return filesWithFileType
 
@@ -93,19 +106,18 @@ def getGNUTriangulatedSurfaceFiles( fileInDirectory = '' ):
 	return getFilesWithFileTypeWithoutWords( 'gts', [], fileInDirectory )
 
 def getLocationFromSplitLine( oldLocation, splitLine ):
-	location = Vec3()
-	if oldLocation != None:
-		location.setToVec3( oldLocation )
-	indexOfX = indexOfStartingWithSecond( "X", splitLine )
-	if indexOfX > 0:
-		location.x = getDoubleAfterFirstLetter( splitLine[ indexOfX ] )
-	indexOfY = indexOfStartingWithSecond( "Y", splitLine )
-	if indexOfY > 0:
-		location.y = getDoubleAfterFirstLetter( splitLine[ indexOfY ] )
-	indexOfZ = indexOfStartingWithSecond( "Z", splitLine )
-	if indexOfZ > 0:
-		location.z = getDoubleAfterFirstLetter( splitLine[ indexOfZ ] )
-	return location
+	if oldLocation == None:
+		oldLocation = Vec3()
+	return Vec3(
+		getDoubleFromCharacterSplitLineValue( 'X', splitLine, oldLocation.x ),
+		getDoubleFromCharacterSplitLineValue( 'Y', splitLine, oldLocation.y ),
+		getDoubleFromCharacterSplitLineValue( 'Z', splitLine, oldLocation.z ) )
+
+def getPythonFilenameExceptInit( fileInDirectory = '' ):
+	"Get the python filenames of the current directory, except for the __init__.py file."
+	pythonFilenamesExceptInit = getFilesWithFileTypeWithoutWords( 'py', [ gInitFilename ], fileInDirectory )
+	pythonFilenamesExceptInit.sort()
+	return pythonFilenamesExceptInit
 
 def getSummarizedFilename( filename ):
 	"Get the filename basename if the file is in the current working directory, otherwise return the original full name."
@@ -114,10 +126,7 @@ def getSummarizedFilename( filename ):
 	return filename
 
 def getTextLines( text ):
-	"""Get the all the lines of text of a text.
-
-	Keyword arguments:
-	text -- text"""
+	"Get the all the lines of text of a text."
 	return text.replace( '\r', '\n' ).split( '\n' )
 
 def getUnmodifiedGCodeFiles( fileInDirectory = '' ):
@@ -143,11 +152,11 @@ def isFileWithFileTypeWithoutWords( fileType, filename, words ):
 	filename = os.path.basename( filename )
 	splitFile = filename.split( '.' )
 	if splitFile[ - 1 ] != fileType:
-		return 0
+		return False
 	for word in words:
 		if filename.find( word ) >= 0:
-			return 0
-	return 1
+			return False
+	return True
 
 def isProcedureDone( gcodeText, procedure ):
 	"Determine if the procedure has been done on the gcode text."
@@ -184,11 +193,7 @@ def writeFileMessageEnd( end, filename, fileText, message ):
 	print( message + getSummarizedFilename( suffixFilename ) )
 
 def writeFileText( filename, fileText ):
-	"""Write a text to a file.
-
-	Keyword arguments:
-	filename -- name of the file
-	fileText -- text which will be written to the file"""
+	"Write a text to a file."
 	try:
 		file = open( filename, 'w+' )
 		file.write( fileText )

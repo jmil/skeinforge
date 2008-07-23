@@ -55,10 +55,10 @@ The statistics file is saved as Screw Holder_comb.txt
 
 """
 
-from vec3 import Vec3
+from skeinforge_utilities.vec3 import vec3
 import cStringIO
-import euclidean
-import gcodec
+from skeinforge_utilities import euclidean
+from skeinforge_utilities import gcodec
 import math
 import os
 
@@ -229,7 +229,7 @@ class statisticSkein( commentSkein ):
 			return
 		location = self.getLocationSetFeedrateToSplitLine( splitLine )
 		location.add( self.oldLocation )
-		center = Vec3().getFromVec3( self.oldLocation )
+		center = vec3().getFromvec3( self.oldLocation )
 		indexOfR = gcodec.indexOfStartingWithSecond( "R", splitLine )
 		if indexOfR > 0:
 			radius = gcodec.getDoubleAfterFirstLetter( splitLine[ indexOfR ] )
@@ -241,9 +241,9 @@ class statisticSkein( commentSkein ):
 			centerMinusMidpoint.normalize()
 			centerMinusMidpoint.scale( centerMidpointDistance )
 			if isCounterclockwise:
-				center.setToVec3( halfLocationMinusOld.plus( centerMinusMidpoint ) )
+				center.setTovec3( halfLocationMinusOld.plus( centerMinusMidpoint ) )
 			else:
-				center.setToVec3( halfLocationMinusOld.minus( centerMinusMidpoint ) )
+				center.setTovec3( halfLocationMinusOld.minus( centerMinusMidpoint ) )
 		else:
 			center.x = gcodec.getDoubleForLetter( "I", splitLine )
 			center.y = gcodec.getDoubleForLetter( "J", splitLine )
@@ -271,8 +271,8 @@ class statisticSkein( commentSkein ):
 	def parseGcode( self, gcodeText ):
 		"Parse gcode text and store the commented gcode."
 		self.characters = 0
-		self.cornerHigh = Vec3( - 999999999.0, - 999999999.0, - 999999999.0 )
-		self.cornerLow = Vec3( 999999999.0, 999999999.0, 999999999.0 )
+		self.cornerHigh = vec3( - 999999999.0, - 999999999.0, - 999999999.0 )
+		self.cornerLow = vec3( 999999999.0, 999999999.0, 999999999.0 )
 		self.extruderActive = False
 		self.extruderSpeed = 0.0
 		self.extruderToggled = 0
@@ -292,7 +292,7 @@ class statisticSkein( commentSkein ):
 		self.characters += self.numberOfLines
 		kilobytes = round( self.characters / 1024.0 )
 		halfExtrusionWidth = 0.5 * self.extrusionWidth
-		halfExtrusionCorner = Vec3( halfExtrusionWidth, halfExtrusionWidth, halfExtrusionWidth )
+		halfExtrusionCorner = vec3( halfExtrusionWidth, halfExtrusionWidth, halfExtrusionWidth )
 		self.cornerHigh.add( halfExtrusionCorner )
 		self.cornerLow.subtract( halfExtrusionCorner )
 		extent = self.cornerHigh.minus( self.cornerLow )

@@ -106,15 +106,15 @@ many lines of gcode
 
 """
 
-from vec3 import Vec3
+from skeinforge_utilities.vec3 import vec3
 import cStringIO
-import euclidean
+from skeinforge_utilities import euclidean
 import fill
-import gcodec
-import intercircle
+from skeinforge_utilities import gcodec
+from skeinforge_utilities import intercircle
 import math
 import multifile
-import preferences
+from skeinforge_utilities import preferences
 import sys
 import time
 import vectorwrite
@@ -215,7 +215,7 @@ class TowerSkein:
 		self.lines = None
 		self.oldLayerIndex = None
 		self.oldLocation = None
-		self.oldOrderedLocation = Vec3()
+		self.oldOrderedLocation = vec3()
 		self.oldZ = - 999999999.0
 		self.output = cStringIO.StringIO()
 		self.shutdownLineIndex = sys.maxint
@@ -236,7 +236,7 @@ class TowerSkein:
 		if len( thread ) > 0:
 			firstPoint = thread[ 0 ]
 			if firstPoint.z < self.oldZ:
-				self.addGcodeMovement( Vec3( firstPoint.x, firstPoint.y, self.oldZ ) )
+				self.addGcodeMovement( vec3( firstPoint.x, firstPoint.y, self.oldZ ) )
 			self.addGcodeMovement( firstPoint )
 			self.oldZ = firstPoint.z
 		else:

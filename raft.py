@@ -13,7 +13,7 @@ the material, in a shell type:
 > python material.py
 
 This brings up the material preferences dialog.  In that dialog you can add or delete a material on the listbox and you change
-the selected material.  After you change the selected material, run raft again.  If there are preferences for the new material,
+the selected material.  After you can change the selected material, run raft again.  If there are preferences for the new material,
 those will be in the raft dialog.  If there are no preferences for the new material, the preferences will be set to defaults and you
 will have to set new preferences for the new material.
 
@@ -33,7 +33,7 @@ shape has the equivalent preference of called "Operating Nozzle Lift over Half E
 The altitude that the bottom of the raft will be set to the "Bottom Altitude" preference.  The feedrate for the shape will be set
 to the 'Feedrate" preference.  The feedrate will be slower for raft layers which have thicker extrusions than the shape infill.
 
-In the "Flowrate Choice" radio button group, if "Do Not Add Flowrate'" is selected then raft will not add a flowrate to the gcode
+In the "Flowrate Choice" radio button group, if "Do Not Add Flowrate" is selected then raft will not add a flowrate to the gcode
 output.  If "Metric" is selected, the flowrate in cubic millimeters per second will be added to the output.  If "PWM Setting" is
 selected, the value in the "Flowrate PWM Setting" field will be added to the output.
 
@@ -143,16 +143,16 @@ many lines of gcode
 
 """
 
-from vec3 import Vec3
+from skeinforge_utilities.vec3 import Vec3
 import comb
 import cStringIO
-import euclidean
-import gcodec
-import intercircle
+from skeinforge_utilities import euclidean
+from skeinforge_utilities import gcodec
+from skeinforge_utilities import intercircle
 import material
 import math
 import multifile
-import preferences
+from skeinforge_utilities import preferences
 import time
 import vectorwrite
 
@@ -297,9 +297,7 @@ class RaftSkein:
 
 	def addGcodeFromFeedrateMovement( self, feedrateMinute, point ):
 		"Add a movement to the output."
-		xRounded = euclidean.getRoundedToThreePlaces( point.x )
-		yRounded = euclidean.getRoundedToThreePlaces( point.y )
-		self.addLine( "G1 X%s Y%s Z%s F%s" % ( xRounded, yRounded, euclidean.getRoundedToThreePlaces( point.z ), euclidean.getRoundedToThreePlaces( feedrateMinute ) ) )
+		self.addLine( self.getGcodeFromFeedrateMovement( feedrateMinute, point ) )
 
 	def addInterfaceLayer( self, interfaceExtrusionWidth, interfaceStep, stepBegin, stepEnd ):
 		"Add an interface layer."
@@ -362,6 +360,11 @@ class RaftSkein:
 					if loopLength > largestLength:
 						largestLength = loopLength
 						largestLoop = outset
+		lastZ = self.oldLocation.z
+		if self.operatingJump != None:
+			lastZ += self.operatingJump
+		for point in largestLoop:
+			point.z = lastZ
 		self.addOrbits( largestLoop, self.raftPreferences.temperatureChangeTimeNextLayers.value )
 
 	def addOrbits( self, loop, temperatureChangeTime ):
@@ -420,22 +423,18 @@ class RaftSkein:
 		"Add a line of temperature."
 		self.addLine( 'M104 S' + euclidean.getRoundedToThreePlaces( temperature ) ) # Set temperature.
 
+	def getGcodeFromFeedrateMovement( self, feedrateMinute, point ):
+		"Get a gcode movement."
+		xRounded = euclidean.getRoundedToThreePlaces( point.x )
+		yRounded = euclidean.getRoundedToThreePlaces( point.y )
+		return "G1 X%s Y%s Z%s F%s" % ( xRounded, yRounded, euclidean.getRoundedToThreePlaces( point.z ), euclidean.getRoundedToThreePlaces( feedrateMinute ) )
+
 	def getRaftedLine( self, splitLine ):
 		"Get elevated gcode line with operating feedrate."
-		line = 'G1'
-		indexOfX = gcodec.indexOfStartingWithSecond( 'X', splitLine )
-		if indexOfX > 0:
-			line += ' X' + euclidean.getRoundedToThreePlaces( gcodec.getDoubleAfterFirstLetter( splitLine[ indexOfX ] ) )
-		indexOfY = gcodec.indexOfStartingWithSecond( 'Y', splitLine )
-		if indexOfY > 0:
-			line += ' Y' + euclidean.getRoundedToThreePlaces( gcodec.getDoubleAfterFirstLetter( splitLine[ indexOfY ] ) )
-		indexOfZ = gcodec.indexOfStartingWithSecond( 'Z', splitLine )
-		if indexOfZ > 0:
-			z = gcodec.getDoubleAfterFirstLetter( splitLine[ indexOfZ ] )
-			if self.operatingJump != None:
-				z += self.operatingJump
-			line += ' Z' + euclidean.getRoundedToThreePlaces( z )
-		return line + ' F' + euclidean.getRoundedToThreePlaces( 60.0 * self.feedratePerSecond )
+		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
+		self.oldLocation = Vec3().getFromVec3( location )
+		location.z += self.operatingJump
+		return self.getGcodeFromFeedrateMovement( 60.0 * self.feedratePerSecond, location )
 
 	def getStepsUntilEnd( self, begin, end, stepSize ):
 		"Get steps from the beginning until the end."
@@ -455,6 +454,7 @@ class RaftSkein:
 		if raftPreferences.addRaft.value:
 			self.addRaft()
 		self.addTemperature( raftPreferences.temperatureShapeFirstLayer.value )
+		print( self.operatingJump )
 		for line in self.lines[ self.lineIndex : ]:
 			self.parseLine( line )
 
@@ -565,6 +565,7 @@ class RaftPreferences:
 			self.baseLayers,
 			self.bottomAltitude,
 			self.feedratePerSecond,
+			self.filenameInput,
 			self.flowrateDoNotAddFlowratePreference,
 			self.flowrateMetricPreference,
 			self.flowratePWMPreference,
@@ -580,8 +581,7 @@ class RaftPreferences:
 			self.temperatureChangeTimeNextLayers,
 			self.temperatureRaft,
 			self.temperatureShapeFirstLayer,
-			self.temperatureShapeNextLayers,
-			self.filenameInput ]
+			self.temperatureShapeNextLayers ]
 		self.executeTitle = 'Raft'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'raft_' + materialName + '.csv' )
 		self.filenameHelp = 'raft.html'

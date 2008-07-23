@@ -152,12 +152,12 @@ many lines of gcode
 
 """
 
-from vec3 import Vec3
+from skeinforge_utilities.vec3 import vec3
 import cStringIO
-import euclidean
-import gcodec
+from skeinforge_utilities import euclidean
+from skeinforge_utilities import gcodec
 import multifile
-import preferences
+from skeinforge_utilities import preferences
 import stretch
 import time
 import vectorwrite
@@ -438,12 +438,12 @@ class BevelSkein:
 		"Bevel a point and return the end of the bevel."
 		bevelLength = 0.5 * self.layerHalfExtrusionWidth
 		beforeSegment = oldActiveLocation.minus( location )
-		beforeSegmentLength = beforeSegment.length()
+		beforeSegmentLength = 0.5 * beforeSegment.length()
 		if beforeSegmentLength == 0.0:
 			self.shouldAddLine = True
 			return location
 		afterSegment = nextActive.minus( location )
-		afterSegmentExtension = 0.5 * afterSegment.length()
+		afterSegmentExtension = 0.333 * afterSegment.length()
 		if afterSegmentExtension == 0.0:
 			self.shouldAddLine = True
 			return location
@@ -453,6 +453,10 @@ class BevelSkein:
 		else:
 			beforePoint = euclidean.getPointPlusSegmentWithLength( bevelLength, location, beforeSegment )
 			self.addLinearMovePoint( beforePoint )
+#		print( "location, nextActive.." )
+#		print( location )
+#		print( nextActive )
+#		print( oldActiveLocation )
 		afterPoint = euclidean.getPointPlusSegmentWithLength( bevelLength, location, afterSegment )
 		self.addLinearMovePoint( afterPoint )
 		return afterPoint

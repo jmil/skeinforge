@@ -43,8 +43,8 @@ This returns true if 'Execute All Unmodified Files in a Directory' is chosen and
 
 """
 
-import gcodec
-import preferences
+from skeinforge_utilities import gcodec
+from skeinforge_utilities import preferences
 
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"

@@ -96,13 +96,13 @@ many lines of gcode
 
 """
 
-from vec3 import Vec3
+from skeinforge_utilities.vec3 import vec3
 import cStringIO
-import euclidean
-import gcodec
-import intercircle
+from skeinforge_utilities import euclidean
+from skeinforge_utilities import gcodec
+from skeinforge_utilities import intercircle
 import multifile
-import preferences
+from skeinforge_utilities import preferences
 import time
 import tower
 import vectorwrite
@@ -207,7 +207,7 @@ class CombSkein:
 		self.pointTable = {}
 
 	def addGcodeMovement( self, point ):
-		"Add a movement to the output."#later add feedrate
+		"Add a movement to the output."
 		self.addLine( "G1 X" + euclidean.getRoundedToThreePlaces( point.x ) + " Y" + euclidean.getRoundedToThreePlaces( point.y ) + " Z" + euclidean.getRoundedToThreePlaces( point.z ) )
 
 	def addIfTravel( self, splitLine ):
@@ -323,8 +323,8 @@ class CombSkein:
 			betweenXSecond = betweenX[ betweenXIndex + 1 ]
 			if betweenXSecond.index == betweenXFirst.index:
 				betweenXIndex += 1
-				betweenFirst = euclidean.getRoundZAxisByPlaneAngle( segmentXY, Vec3( betweenXFirst.x, y, z ) )
-				betweenSecond = euclidean.getRoundZAxisByPlaneAngle( segmentXY, Vec3( betweenXSecond.x, y, z ) )
+				betweenFirst = euclidean.getRoundZAxisByPlaneAngle( segmentXY, vec3( betweenXFirst.x, y, z ) )
+				betweenSecond = euclidean.getRoundZAxisByPlaneAngle( segmentXY, vec3( betweenXSecond.x, y, z ) )
 				loopFirst = self.getBetweens()[ betweenXFirst.index ]
 				self.addPathBetween( betweenFirst, betweenSecond, loopFirst )
 			betweenXIndex += 1
