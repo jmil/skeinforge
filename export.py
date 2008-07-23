@@ -226,15 +226,18 @@ class ExportPreferences:
 		self.title = 'Export Preferences'
 
 	def execute( self ):
-		"Export button has been clicked."
-		filenames = multifile.getFileOrGNUUnmodifiedGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
-		for filename in filenames:
-			exportChainFile( filename )
+                "Export button has been clicked."
+                filenames = multifile.getFileOrGNUUnmodifiedGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
+                for filename in filenames:
+                        exportChainFile( filename )
 
 
 def main( hashtable = None ):
-	"Display the export dialog."
-	preferences.displayDialog( ExportPreferences() )
+        if len(sys.argv) > 1:
+                exportChainFile(sys.argv[1])
+        else:
+                "Display the export dialog."
+                preferences.displayDialog( ExportPreferences() )
 
 if __name__ == "__main__":
 	main()
