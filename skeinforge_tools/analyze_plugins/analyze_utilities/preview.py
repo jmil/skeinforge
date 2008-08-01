@@ -13,11 +13,11 @@ except:
 
 class Preview:
     def __init__(self, layers):
-        self.images = make_images(layers)
+        self.images = make_images(layers) 
         self.index = 0
         size = self.images[0].size
         self.root = Tkinter.Tk()
-        self.root.title("HydraRaptor")
+        self.root.title("gifscene")
         frame = Tkinter.Frame(self.root)
         frame.pack()
         self.canvas = Tkinter.Canvas(frame, width = size[0], height = size[1])
@@ -33,6 +33,8 @@ class Preview:
         self.root.mainloop()
 
     def update(self):
+        # FIXME: Somehow this fails if this is launched using the Preferences,
+        # but works from the command-line.
         self.image = ImageTk.PhotoImage(self.images[self.index])
         self.canvas.create_image(0,0, anchor= Tkinter.NW, image = self.image)
         if self.index < len(self.images) - 1:
@@ -60,14 +62,3 @@ def viewGif( filename, gcodeText = '' ):
         Preview(layers)
     except Exception, ex:
         print( 'Preview failed: ' + str(ex))
-
-#
-# script interface
-
-#import sys
-
-#if not sys.argv[1:]:
-#    print "Syntax: python preview.py gcodefile"
-#    sys.exit(1)
-
-#viewGif( sys.argv[1] )

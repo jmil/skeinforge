@@ -154,7 +154,6 @@ class GifscenePreferences:
 		"Write button has been clicked."
 		filenames = polyfile.getFileOrGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
 		for filename in filenames:
-                        print filename
 			gifsceneFile( filename )
 
 
