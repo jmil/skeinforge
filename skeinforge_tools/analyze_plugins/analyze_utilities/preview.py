@@ -1,5 +1,5 @@
 try:
-    from Tkinter import *
+    import Tkinter
 except:
     print( 'You do not have Tkinter, which is needed for the graphical interface.' )
     print( 'Information on how to download Tkinter is at:\nwww.tcl.tk/software/tcltk/' )
@@ -58,9 +58,8 @@ def viewGif( filename, gcodeText = '' ):
     try:
         gRead(filename, layers, gcodeText)
         Preview(layers)
-    except:
-        print( 'You do not have the Python Imaging Library, which is needed by preview and gifview to view the gcode.' )
-        print( 'The Python Imaging Library can be downloaded from:\nwww.pythonware.com/products/pil/' )
+    except Exception, ex:
+        print( 'Preview failed: ' + str(ex))
 
 #
 # script interface

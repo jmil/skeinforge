@@ -35,7 +35,7 @@ The vector file is saved as Screw Holder_vectorwrite.svg
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities.vec3 import vec3
+from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
@@ -208,13 +208,13 @@ class VectorwriteSkein:
 		elif firstWord == 'M103':
 			self.extruderActive = False
 		elif firstWord == '(<extrusionWidth>':
-			self.extrusionWidth = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
+			self.extrusionWidth = float( splitLine[ 1 ] )
 
 	def parseGcode( self, gcodeText, vectorwritePreferences ):
 		"Parse gcode text and store the vector output."
 		self.initializeActiveLocation()
-		self.cornerHigh = vec3( - 999999999.0, - 999999999.0, - 999999999.0 )
-		self.cornerLow = vec3( 999999999.0, 999999999.0, 999999999.0 )
+		self.cornerHigh = Vec3( - 999999999.0, - 999999999.0, - 999999999.0 )
+		self.cornerLow = Vec3( 999999999.0, 999999999.0, 999999999.0 )
 		lines = gcodec.getTextLines( gcodeText )
 		for line in lines:
 			self.parseCorner( line )

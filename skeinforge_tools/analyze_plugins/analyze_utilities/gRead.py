@@ -1,7 +1,7 @@
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities.vec3 import vec3
+from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
 
 # Get the entire text of a file.
 # @param  filename name of the file
@@ -39,7 +39,7 @@ class gRead:
         if gcodeText == '':
             gcodeText = getFileText( filename )
         textLines = getTextLines( gcodeText )
-        self.last_pos = vec3()
+        self.last_pos = Vec3()
         self.layers = layers
         self.layer = None
         self.thread = None
@@ -90,7 +90,7 @@ class gRead:
 
     def linearMove( self, splitLine ):
         if self.thread != None:
-            pos = vec3().getFromvec3(self.last_pos)
+            pos = Vec3().getFromVec3(self.last_pos)
             self.setPointComponent( pos, splitLine )
             if pos.z > self.max_z:
                 self.newLayer()

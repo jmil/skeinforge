@@ -50,7 +50,7 @@ from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import polyfile
 import cStringIO
-
+import sys
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/21/04 $"
@@ -154,12 +154,16 @@ class GifscenePreferences:
 		"Write button has been clicked."
 		filenames = polyfile.getFileOrGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
 		for filename in filenames:
+                        print filename
 			gifsceneFile( filename )
 
 
 def main( hashtable = None ):
-	"Display the gifscene dialog."
-	preferences.displayDialog( GifscenePreferences() )
+        if len(sys.argv) > 1:
+                gifsceneFile(sys.argv[1])
+        else:
+                "Display the gifscene dialog."
+                preferences.displayDialog( GifscenePreferences() )
 
 if __name__ == "__main__":
 	main()

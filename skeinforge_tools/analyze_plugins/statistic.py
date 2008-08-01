@@ -130,7 +130,7 @@ class StatisticSkein:
 			return
 		location = self.getLocationSetFeedrateToSplitLine( splitLine )
 		location.add( self.oldLocation )
-		center = vec3().getFromvec3( self.oldLocation )
+		center = vec3().getFromVec3( self.oldLocation )
 		indexOfR = gcodec.indexOfStartingWithSecond( "R", splitLine )
 		if indexOfR > 0:
 			radius = gcodec.getDoubleAfterFirstLetter( splitLine[ indexOfR ] )
