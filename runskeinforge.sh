@@ -16,4 +16,4 @@ mkdir -p $newdir/skeinforge-prefs
 cp $1 $newdir
 cp ~/.skeinforge/*.csv $newdir/skeinforge-prefs
 python skeinforge.py $newdir/$file.gts
-echo $PWD/$newdir/${file}_skeinforge.gcode
+echo $PWD/$newdir/${file}_export.gcode
