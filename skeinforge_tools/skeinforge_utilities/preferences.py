@@ -264,8 +264,12 @@ class Filename( BooleanPreference ):
 	def execute( self ):
 		try:
 			import tkFileDialog
-			summarized = gcodec.getSummarizedFilename( self.value )
-			filename = tkFileDialog.askopenfilename( filetypes = self.getFilenameFirstTypes(), initialdir = os.path.dirname( summarized ), initialfile = summarized, title = self.name )
+                        summarized = gcodec.getSummarizedFilename( self.value )
+                        initialdir = os.path.dirname( summarized )
+                        if len(initialdir) > 0: initialdir += os.sep
+                        else: initialdir = "."
+                        initialfile = os.path.basename( summarized )
+                        filename = tkFileDialog.askopenfilename( filetypes = self.getFilenameFirstTypes(), initialdir = initialdir, initialfile = initialfile, title = self.name )
 			if ( str( filename ) == '()' ):
 				self.wasCancelled = True
 			else:

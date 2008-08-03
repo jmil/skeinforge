@@ -51,6 +51,9 @@ class gRead:
         self.newLayer()
 
     def parseLine(self, line):
+        if line.startswith("("):
+            if line.startswith("(<layerStart>"): self.newLayer()
+            return
         splitLine = line.split( ' ' )
         if len( splitLine ) < 1:
             return 0
@@ -94,7 +97,7 @@ class gRead:
             pos = Vec3().getFromVec3(self.last_pos)
             self.setPointComponent( pos, splitLine )
             if pos.z > self.max_z:
-                self.newLayer()
+#                self.newLayer()
                 self.max_z = pos.z
             if pos.z < self.last_pos.z:
                 self.newThread()
