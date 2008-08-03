@@ -9,6 +9,7 @@ The getOuput function of this script takes a gcode text and returns that text wi
 script takes a gcode text and writes that text without comments to a file.
 """
 
+from __future__ import absolute_import
 import cStringIO
 import os
 

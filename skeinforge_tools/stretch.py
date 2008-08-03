@@ -70,6 +70,7 @@ many lines of gcode
 
 """
 
+from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
@@ -78,10 +79,10 @@ from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
-import analyze
+from skeinforge_tools import analyze
+from skeinforge_tools import polyfile
+from skeinforge_tools import raft
 import cStringIO
-import polyfile
-import raft
 import time
 
 
@@ -112,9 +113,7 @@ def getStretchGcode( gcodeText, stretchPreferences = None ):
 	return skein.output.getvalue()
 
 def writeOutput( filename = '' ):
-	"""Stretch a gcode linear move file.  Chain stretch the gcode if it is not already stretched.
-	Depending on the preferences, either arcPoint, arcRadius, arcSegment, bevel or do nothing.
-	If no filename is specified, stretch the first unmodified gcode file in this folder."""
+	"Stretch a gcode linear move file.  Chain stretch the gcode if it is not already stretched.  If no filename is specified, stretch the first unmodified gcode file in this folder."
 	if filename == '':
 		unmodified = gcodec.getGNUGcode()
 		if len( unmodified ) == 0:
@@ -166,7 +165,7 @@ class StretchSkein:
 		"Get stretched gcode line."
 		distanceToOld = location.distance( self.oldLocation )
 		if distanceToOld == 0.0:
-			print( 'This should never happen, there are two identical points in a row.' )
+			print( 'This should never happen, stretch should never see two identical points in a row.' )
 			print( location )
 			return
 		alongRatio = self.stretchFromDistance / distanceToOld
@@ -243,7 +242,6 @@ class StretchSkein:
 	def parseGcode( self, gcodeText, stretchPreferences ):
 		"Parse gcode text and store the stretch gcode."
 		self.lines = gcodec.getTextLines( gcodeText )
-		self.layerIndex = - 1
 		self.stretchPreferences = stretchPreferences
 		for self.lineIndex in range( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
@@ -252,7 +250,7 @@ class StretchSkein:
 	def parseStretch( self, line ):
 		"Parse a gcode line and add it to the stretch skein."
 		splitLine = line.split( ' ' )
-		if len( splitLine ) < 1:
+		if len( splitLine ) < 1 or len( line ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':

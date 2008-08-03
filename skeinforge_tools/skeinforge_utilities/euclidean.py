@@ -25,12 +25,16 @@ Below are examples of euclidean use.
 0.5
 """
 
+from __future__ import absolute_import
 try:
 	import psyco
 	psyco.full()
 except:
 	pass
-from vec3 import Vec3
+#Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
+import __init__
+
+from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
 import math
 
 
@@ -43,7 +47,7 @@ def addSurroundingLoopBeginning( loop, skein ):
 	"Add surrounding loop beginning to gcode output."
 	skein.addLine( '(<surroundingLoop> )' )
 	for point in loop:
-		skein.addLine( '(<boundaryPoint> X%s Y%s Z%s )' % ( getRoundedToThreePlaces( point.x ), getRoundedToThreePlaces( point.y ), getRoundedToThreePlaces( point.z ) ) )
+		skein.addLine( '(<boundaryPoint> X%s Y%s Z%s )' % ( skein.getRounded( point.x ), skein.getRounded( point.y ), skein.getRounded( point.z ) ) )
 
 def addToThreadsFromLoop( extrusionHalfWidthSquared, gcodeType, loop, oldOrderedLocation, skein ):
 	"Add to threads from the last location from loop."

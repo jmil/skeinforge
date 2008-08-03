@@ -12,7 +12,7 @@ The following examples fillet the files Hollow Square.gcode & Hollow Square.gts.
 which contains Hollow Square.gcode, Hollow Square.gts and fillet.py.  The fillet function executes the preferred fillet type, which
 can be set in the dialog or by changing the preferences file 'fillet.csv' with a text editor or a spreadsheet program set to separate
 tabs.  The functions writeOutput and getFilletChainGcode check to see if the text has been combed, if not they call the
-getStretchChainGcode in stretch.py to fill the text; once they have the stretched text, then they fillet.
+getHopChainGcode in hop.py to fill the text; once they have the hopped text, then they fillet.
 
 
 > python fillet.py
@@ -111,6 +111,7 @@ The filleted file is saved as Hollow Square_fillet.gcode
 
 """
 
+from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
@@ -118,11 +119,11 @@ from skeinforge_tools.skeinforge_utilities.vec3 import vec3
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
-import analyze
+from skeinforge_tools import analyze
+from skeinforge_tools import hop
+from skeinforge_tools import polyfile
 import cStringIO
 import math
-import polyfile
-import stretch
 import time
 
 
@@ -220,9 +221,9 @@ def getBevelGcode( filletPreferences, gcodeText ):
 	return skein.output.getvalue()
 
 def getFilletChainGcode( gcodeText, filletPreferences = None ):
-	"Fillet a gcode linear move text.  Chain stretch the gcode if it is not already stretched."
-	if not gcodec.isProcedureDone( gcodeText, 'stretch' ):
-		gcodeText = stretch.getStretchChainGcode( gcodeText )
+	"Fillet a gcode linear move text.  Chain hop the gcode if it is not already hopped."
+	if not gcodec.isProcedureDone( gcodeText, 'hop' ):
+		gcodeText = hop.getHopChainGcode( gcodeText )
 	return getFilletGcode( gcodeText, filletPreferences )
 
 def getFilletGcode( gcodeText, filletPreferences = None ):
@@ -368,8 +369,8 @@ class BevelSkein:
 		"Parse a gcode line and add it to the bevel gcode."
 		self.shouldAddLine = True
 		splitLine = line.split( ' ' )
-		if len( splitLine ) < 1:
-			return 0
+		if len( splitLine ) < 1 or len( line ) < 1:
+			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':
 			self.linearMove( splitLine )

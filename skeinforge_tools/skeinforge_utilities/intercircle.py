@@ -3,13 +3,17 @@ Intercircle is a collection of utilities for intersecting circles, used to get s
 
 """
 
+from __future__ import absolute_import
 try:
 	import psyco
 	psyco.full()
 except:
 	pass
-from vec3 import Vec3
-import euclidean
+#Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
+import __init__
+
+from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
+from skeinforge_tools.skeinforge_utilities import euclidean
 import math
 
 

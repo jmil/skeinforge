@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 import Image, ImageDraw, ImageChops
 from GifImagePlugin import getheader, getdata
 

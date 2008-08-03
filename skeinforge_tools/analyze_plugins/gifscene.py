@@ -43,6 +43,7 @@ A gif for each layer of a gcode file is displayed.
 
 """
 
+from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
@@ -113,7 +114,7 @@ class GifsceneSkein:
 	def parseLine( self, line ):
 		"Parse a gcode line and add it to the gifsceneed gcode."
 		splitLine = line.split( ' ' )
-		if len( splitLine ) < 1:
+		if len( splitLine ) < 1 or len( line ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':

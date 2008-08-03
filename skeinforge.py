@@ -3,11 +3,13 @@ Introduction
 
 Skeinforge is a tool chain to forge a gcode skein for a model.
 
-The tool chain starts with slice, which slices the model into layers, then the layers are modified by other tools in turn like fill,
-comb, tower, raft, stretch, fillet & export.  Each tool automatically gets the gcode from the previous tool.  So if you want a sliced &
-filled gcode, call the fill tool and it will call slice, then it will fill and output the gcode.  If you want to use all the tools, call export
-and it will call in turn all the other tools down the chain to produce the gcode file.  Skeinforge itself simply calls export, since that
-is the end of the chain.
+The tool chain starts with slice_shape, which slices the model into layers, then the layers are modified by other tools in turn like
+fill, comb, tower, raft, stretch, hop, fillet & export.  Each tool automatically gets the gcode from the previous tool.  So if you want
+a sliced & filled gcode, call the fill tool and it will call slice, then it will fill and output the gcode.  If you want to use all the tools,
+call export and it will call in turn all the other tools down the chain to produce the gcode file.
+
+The skeinforge module provides a single place to call up all the preference dialogs.  When the 'Skeinforge' button is clicked,
+skeinforge calls export, since that is the end of the chain.
 
 To run skeinforge, type in a shell in the same folder as skeinforge:
 > python skeinforge.py
@@ -20,8 +22,11 @@ is off, the tool will just hand off the gcode to the next tool without modifying
 
 There are also tools which handle preferences for the chain, like material & polyfile.
 
-The analyze tool calls plugins in the analyze_plugins folder, which will analyze the gcode in some way if their Activate checkbox
-is selected.
+The analyze tool calls plugins in the analyze_plugins folder, which will analyze the gcode in some way when it is generated if
+their Activate checkbox is selected.
+
+The default preferences are similar to those on Nophead's machine.  A preference which is often different is the
+'Extrusion Diameter' in slice.
 
 
 
@@ -108,7 +113,7 @@ http://www.mozilla.com/firefox/
 
 Examples
 
-The following examples slice the GNU Triangulated Surface file Screw Holder.gts.  The examples are run in a terminal in the
+The following examples slice and dice the GNU Triangulated Surface file Screw Holder.gts.  The examples are run in a terminal in the
 folder which contains Screw Holder.gts and skeinforge.py.
 
 > python
@@ -125,6 +130,7 @@ The exported file is saved as Screw Holder_export.gcode
 
 """
 
+from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
@@ -132,6 +138,7 @@ from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import polyfile
 import cStringIO
+import sys
 
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
@@ -154,18 +161,10 @@ def getSkeinforgeToolFilenames():
 	"Get skeinforge plugin filenames."
 	return gcodec.getPluginFilenames( 'skeinforge_tools', __file__ )
 
-def writeOutput( filename = '', gcodeText = '' ):
+def writeOutput( filename = '' ):
 	"Skeinforge a gcode file.  If no filename is specified, comment the first gcode file in this folder that is not modified."
-	if filename == '':
-		unmodified = getUncommentedGcodeFiles()
-		if len( unmodified ) == 0:
-			print( "There is no gcode file in this folder that is not a comment file." )
-			return
-		filename = unmodified[ 0 ]
-	if gcodeText == '':
-		gcodeText = gcodec.getFileText( filename )
 	skeinforgePluginFilenames = getSkeinforgeToolFilenames()
-	toolNames = 'export,fillet,stretch,raft,comb,tower,fill,slice'.split( ',' )
+	toolNames = 'export fillet stretch raft comb tower fill slice_shape'.split()
 	for toolName in toolNames:
 		for skeinforgePluginFilename in skeinforgePluginFilenames:
 			if skeinforgePluginFilename == toolName:
@@ -205,8 +204,11 @@ class SkeinforgePreferences:
 
 
 def main( hashtable = None ):
-	"Display the skeinforge dialog."
-	preferences.displayDialog( SkeinforgePreferences() )
+        if len(sys.argv) > 1:
+                writeOutput(sys.argv[1])
+        else:
+                "Display the skeinforge dialog."
+                preferences.displayDialog( SkeinforgePreferences() )
 
 if __name__ == "__main__":
 	main()

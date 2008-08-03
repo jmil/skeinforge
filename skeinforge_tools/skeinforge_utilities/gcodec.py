@@ -16,8 +16,13 @@ many lines of text
 
 """
 
-from vec3 import Vec3
+from __future__ import absolute_import
+#Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
+import __init__
+
+from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
 import os
+import sys
 
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
@@ -74,13 +79,10 @@ def getFilesWithFileTypeWithoutWords( fileType, words = [], fileInDirectory = ''
 			filesWithFileType.append( joinedFilename )
 	return filesWithFileType
 
-def getFileText( filename ):
-	"""Get the entire text of a file.
-
-	Keyword arguments:
-	filename -- name of the file"""
+def getFileText( filename, readMode = 'r' ):
+	"Get the entire text of a file."
 	try:
-		file = open( filename, 'r' )
+		file = open( filename, readMode )
 		fileText = file.read()
 		file.close()
 		return fileText
@@ -115,9 +117,41 @@ def getLocationFromSplitLine( oldLocation, splitLine ):
 
 def getModule( filename, folderName, moduleFilename ):
 	"Get the module from the filename and folder name."
-	pluginsFolderName = os.path.join( os.path.dirname( os.path.abspath( moduleFilename ) ), folderName )
-	folderPluginsModule = __import__( pluginsFolderName, globals(), locals(), [ filename ], - 1 )
-	return folderPluginsModule.__dict__[ filename ]
+	splitFolderName = folderName.split( '.' )
+	pluginsFolderName = ''
+	for word in splitFolderName:
+		pluginsFolderName = os.path.join( pluginsFolderName, word )
+	pluginsFolderName = os.path.join( pluginsFolderName, filename )
+#	pluginsFolderName = os.path.join( os.path.dirname( os.path.abspath( moduleFilename ) ), folderName )
+	folderPluginsModule = None
+	try:
+		folderPluginsModule = __import__( pluginsFolderName )
+		return folderPluginsModule
+	except Exception, why:
+		print( why )
+		print( 'That error means; could not import a module with the filename ' + filename )
+		print( 'folder name ' + folderName )
+#		print( 'and module filename ' + moduleFilename )
+		print( 'giving a plugins folder name of ' + pluginsFolderName )
+		print( 'The system path is:' )
+		print( sys.path )
+		print( '' )
+		print( 'Will now try to import with alternate method developed by Marius.' )
+	absoluteDirectory = os.path.join( os.path.dirname( os.path.abspath( moduleFilename ) ), splitFolderName[ - 1 ] )
+	originalSystemPath = sys.path[ : ]
+	try:
+		sys.path.append( absoluteDirectory )
+		folderPluginsModule = __import__( filename )
+		sys.path = originalSystemPath
+		return folderPluginsModule
+	except Exception, why:
+		print( why )
+		print( 'That error means; could not import a module with the filename ' + filename )
+		print( 'folder name ' + folderName )
+#		print( 'and module filename ' + moduleFilename )
+		print( 'giving an absolute directory name of ' + absoluteDirectory )
+		print( sys.path )
+	return None
 
 def getPluginFilenames( folderName, moduleFilename ):
 	"Get the filenames of the python plugins in the export_plugins folder."

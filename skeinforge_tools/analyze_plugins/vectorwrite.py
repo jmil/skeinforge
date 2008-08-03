@@ -32,6 +32,7 @@ The vector file is saved as Screw Holder_vectorwrite.svg
 """
 
 
+from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
@@ -208,7 +209,7 @@ class VectorwriteSkein:
 		elif firstWord == 'M103':
 			self.extruderActive = False
 		elif firstWord == '(<extrusionWidth>':
-			self.extrusionWidth = float( splitLine[ 1 ] )
+                        self.extrusionWidth = float( splitLine[ 1 ] )
 
 	def parseGcode( self, gcodeText, vectorwritePreferences ):
 		"Parse gcode text and store the vector output."
@@ -234,7 +235,7 @@ class VectorwriteSkein:
 	def parseLine( self, line, nextLine ):
 		"Parse a gcode line and add it to the vector output."
 		splitLine = line.split( ' ' )
-		if len( splitLine ) < 1:
+		if len( splitLine ) < 1 or len( line ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':

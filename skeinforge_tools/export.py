@@ -46,6 +46,7 @@ The exported file is saved as Hollow Square_export.gcode
 
 """
 
+from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
@@ -54,10 +55,10 @@ from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities.vec3 import vec3
-import analyze
+from skeinforge_tools import analyze
+from skeinforge_tools import fillet
+from skeinforge_tools import polyfile
 import cStringIO
-import fillet
-import polyfile
 import os
 import sys
 import time
@@ -114,7 +115,7 @@ def writeOutput( filename = '' ):
 	pluginModule = None
 	selectedPlugin = getSelectedPlugin( exportPreferences )
 	if selectedPlugin != None:
-		pluginModule = gcodec.getModule( selectedPlugin.name, 'export_plugins', __file__ )
+		pluginModule = gcodec.getModule( selectedPlugin.name, 'skeinforge_tools.export_plugins', __file__ )
 		exportChainGcode = pluginModule.getOutput( exportChainGcode )
 	if exportPreferences.alsoSendOutputTo.value != '':
 		exec( 'print >> ' + exportPreferences.alsoSendOutputTo.value + ', exportChainGcode' )
@@ -160,7 +161,7 @@ class ExportSkein:
 	def parseLine( self, line, removeM110GcodeLine ):
 		"Parse a gcode line."
 		splitLine = line.split( ' ' )
-		if len( splitLine ) < 1:
+		if len( splitLine ) < 1 or len( line ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'M110' and removeM110GcodeLine:
@@ -209,7 +210,6 @@ class ExportPreferences:
 		self.exportOperations = [ self.doNotChangeOutput ]
 		self.exportOperations += self.exportPlugins
 		self.exportOperations.sort( key = preferences.RadioCapitalized.getLowerName )
-#		self.exportOperations.sort( compareRadio ) first.name.lower()
 		self.archive += self.exportOperations
 		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface text files', '*.gts' ), ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Exported', '' )
 		self.archive.append( self.filenameInput )
@@ -228,10 +228,8 @@ class ExportPreferences:
 
 
 def main( hashtable = None ):
-        if len(sys.argv) > 1:
-                writeOutput(sys.argv[1])
-        else:
-                preferences.displayDialog( ExportPreferences() )
+	"Display the export dialog."
+	preferences.displayDialog( ExportPreferences() )
 
 if __name__ == "__main__":
 	main()

@@ -98,6 +98,7 @@ many lines of gcode
 
 """
 
+from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
@@ -106,14 +107,13 @@ from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
-import analyze
-import comb
+from skeinforge_tools import analyze
+from skeinforge_tools import comb
+from skeinforge_tools import material
+from skeinforge_tools import polyfile
 import cStringIO
-import material
 import math
-import polyfile
 import time
-import sys
 
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
@@ -190,7 +190,7 @@ class RaftSkein:
 		self.lines = None
 		self.oldLocation = None
 		self.operatingJump = None
-		self.extrusionTop = 0.0
+                self.extrusionTop = 0.0
 		self.output = cStringIO.StringIO()
 
 	def addBaseLayer( self, baseExtrusionWidth, baseStep, stepBegin, stepEnd ):
@@ -374,7 +374,7 @@ class RaftSkein:
 		"Get elevated gcode line with operating feedrate."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		self.oldLocation = Vec3().getFromVec3( location )
-                self.operatingJump != None: location.z += self.operatingJump
+		if self.operatingJump != None: location.z += self.operatingJump
 		return self.getGcodeFromFeedrateMovement( 60.0 * self.feedratePerSecond, location )
 
 	def getRounded( self, number ):
@@ -434,7 +434,7 @@ class RaftSkein:
 	def parseLine( self, line ):
 		"Parse a gcode line and add it to the raft skein."
 		splitLine = line.split( ' ' )
-		if len( splitLine ) < 1:
+		if len( splitLine ) < 1 or len( line ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':

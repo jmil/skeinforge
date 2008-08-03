@@ -14,6 +14,7 @@ developers making new plugins do not have to learn about gcodec, the code here i
 
 """
 
+from __future__ import absolute_import
 import cStringIO
 import os
 

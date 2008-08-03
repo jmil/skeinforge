@@ -35,10 +35,11 @@ The statistics file is saved as Screw Holder_comb_statistic.gcode
 
 """
 
+from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities.vec3 import vec3
+from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
@@ -130,7 +131,7 @@ class StatisticSkein:
 			return
 		location = self.getLocationSetFeedrateToSplitLine( splitLine )
 		location.add( self.oldLocation )
-		center = vec3().getFromVec3( self.oldLocation )
+		center = Vec3().getFromVec3( self.oldLocation )
 		indexOfR = gcodec.indexOfStartingWithSecond( "R", splitLine )
 		if indexOfR > 0:
 			radius = gcodec.getDoubleAfterFirstLetter( splitLine[ indexOfR ] )
@@ -142,9 +143,9 @@ class StatisticSkein:
 			centerMinusMidpoint.normalize()
 			centerMinusMidpoint.scale( centerMidpointDistance )
 			if isCounterclockwise:
-				center.setTovec3( halfLocationMinusOld.plus( centerMinusMidpoint ) )
+				center.setToVec3( halfLocationMinusOld.plus( centerMinusMidpoint ) )
 			else:
-				center.setTovec3( halfLocationMinusOld.minus( centerMinusMidpoint ) )
+				center.setToVec3( halfLocationMinusOld.minus( centerMinusMidpoint ) )
 		else:
 			center.x = gcodec.getDoubleForLetter( "I", splitLine )
 			center.y = gcodec.getDoubleForLetter( "J", splitLine )
@@ -172,8 +173,8 @@ class StatisticSkein:
 	def parseGcode( self, gcodeText ):
 		"Parse gcode text and store the statistics."
 		self.characters = 0
-		self.cornerHigh = vec3( - 999999999.0, - 999999999.0, - 999999999.0 )
-		self.cornerLow = vec3( 999999999.0, 999999999.0, 999999999.0 )
+		self.cornerHigh = Vec3( - 999999999.0, - 999999999.0, - 999999999.0 )
+		self.cornerLow = Vec3( 999999999.0, 999999999.0, 999999999.0 )
 		self.extruderActive = False
 		self.extruderSpeed = 0.0
 		self.extruderToggled = 0
@@ -193,7 +194,7 @@ class StatisticSkein:
 		self.characters += self.numberOfLines
 		kilobytes = round( self.characters / 1024.0 )
 		halfExtrusionWidth = 0.5 * self.extrusionWidth
-		halfExtrusionCorner = vec3( halfExtrusionWidth, halfExtrusionWidth, halfExtrusionWidth )
+		halfExtrusionCorner = Vec3( halfExtrusionWidth, halfExtrusionWidth, halfExtrusionWidth )
 		self.cornerHigh.add( halfExtrusionCorner )
 		self.cornerLow.subtract( halfExtrusionCorner )
 		extent = self.cornerHigh.minus( self.cornerLow )
@@ -226,7 +227,7 @@ class StatisticSkein:
 		self.characters += len( line )
 		self.numberOfLines += 1
 		splitLine = line.split( ' ' )
-		if len( splitLine ) < 1:
+		if len( splitLine ) < 1 or len( line ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':

@@ -9,13 +9,14 @@ http://forums.reprap.org/file.php?12,file=565
 
 """
 
+from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
+from skeinforge_tools import polyfile
 import cStringIO
-import polyfile
 import os
 
 
@@ -40,7 +41,7 @@ def writeOutput( filename = '', gcodeText = '' ):
 		gcodeText = gcodec.getFileText( filename )
 	analyzePluginFilenames = getAnalyzePluginFilenames()
 	for analyzePluginFilename in analyzePluginFilenames:
-		pluginModule = gcodec.getModule( analyzePluginFilename, 'analyze_plugins', __file__ )
+		pluginModule = gcodec.getModule( analyzePluginFilename, 'skeinforge_tools.analyze_plugins', __file__ )
 		pluginModule.writeOutput( filename, gcodeText )
 
 

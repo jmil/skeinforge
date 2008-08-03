@@ -54,6 +54,7 @@ many lines of gcode
 
 """
 
+from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
@@ -62,11 +63,11 @@ from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
-import analyze
+from skeinforge_tools import analyze
+from skeinforge_tools import polyfile
+from skeinforge_tools import tower
 import cStringIO
-import polyfile
 import time
-import tower
 
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
@@ -285,9 +286,9 @@ class CombSkein:
 
 	def parseLine( self, line ):
 		"Parse a gcode line."
-		splitLine = line.split( ' ' )
+		splitLine = line.split()
 		if len( splitLine ) < 1:
-			return 0
+			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'M103':
 			self.loop = None
@@ -307,7 +308,7 @@ class CombSkein:
 
 	def parseAddTravel( self, line ):
 		"Parse a gcode line and add it to the comb skein."
-		splitLine = line.split( ' ' )
+		splitLine = line.split()
 		if len( splitLine ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
@@ -346,9 +347,6 @@ class CombPreferences:
 
 	def execute( self ):
 		"Comb button has been clicked."
-		print( 'self.filenameInput.value' )
-		print( self.filenameInput.value )
-		print( self.filenameInput.wasCancelled )
 		filenames = polyfile.getFileOrGNUUnmodifiedGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
 		for filename in filenames:
 			writeOutput( filename )

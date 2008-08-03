@@ -3,8 +3,12 @@ Preferences is a collection of utilities to display, read & write preferences.
 
 """
 
+from __future__ import absolute_import
+#Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
+import __init__
+
 import cStringIO
-import gcodec
+from skeinforge_tools.skeinforge_utilities import gcodec
 import os
 import webbrowser
 try:
@@ -261,7 +265,7 @@ class Filename( BooleanPreference ):
 		try:
 			import tkFileDialog
 			summarized = gcodec.getSummarizedFilename( self.value )
-                        filename = tkFileDialog.askopenfilename( filetypes = self.getFilenameFirstTypes(), initialdir = os.path.dirname( summarized ) + os.sep, initialfile = os.path.basename( summarized ), title = self.name )
+			filename = tkFileDialog.askopenfilename( filetypes = self.getFilenameFirstTypes(), initialdir = os.path.dirname( summarized ), initialfile = summarized, title = self.name )
 			if ( str( filename ) == '()' ):
 				self.wasCancelled = True
 			else:
