@@ -187,9 +187,9 @@ class Vec3:
         "Get a new Vec3 by multiplying each component of this one by a multiplier."
         return Vec3().getFromXYZ( self.x * multiplier, self.y * multiplier, self.z * multiplier )
 
-class vec3( Vec3 ):
-    "A three dimensional vector class which completely inherits from Vec3 and is deprecated, please use Vec3 instead."
-    def __init__( self, x = 0.0, y = 0.0, z = 0.0 ):
-        self.x = x
-        self.y = y
-        self.z = z
+#class vec3( Vec3 ):
+#    "A three dimensional vector class which completely inherits from Vec3 and is deprecated, please use Vec3 instead."
+#    def __init__( self, x = 0.0, y = 0.0, z = 0.0 ):
+#        self.x = x
+#        self.y = y
+#        self.z = z

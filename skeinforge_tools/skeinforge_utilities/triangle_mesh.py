@@ -41,6 +41,7 @@ import __init__
 
 from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
 from skeinforge_tools.skeinforge_utilities import gcodec
+import cStringIO
 
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
@@ -94,6 +95,10 @@ class Edge:
 		self.vertexIndexes.sort()
 		return self
 
+	def getGNUTriangulatedSurfaceLine( self ):
+		"Get the GNU Triangulated Surface (.gts) line of text."
+		return '%s %s' % ( self.vertexIndexes[ 0 ] + 1, self.vertexIndexes[ 1 ] + 1 )
+
 
 class EdgePair:
 	def __init__( self ):
@@ -112,7 +117,6 @@ class EdgePair:
 		for edgeIndex in self.edgeIndexes:
 			self.edges.append( edges[ edgeIndex ] )
 		return self
-
 
 class Face:
 	"A face of a triangle mesh."
@@ -137,6 +141,10 @@ class Face:
 			indexSecond = ( 4 - triangleIndex ) % 3
 			self.vertexIndexes.append( getCommonVertexIndex( edges[ edgeIndexes[ indexFirst ] ], edges[ edgeIndexes[ indexSecond ] ] ) )
 		return self
+
+	def getGNUTriangulatedSurfaceLine( self ):
+		"Get the GNU Triangulated Surface (.gts) line of text."
+		return '%s %s %s' % ( self.edgeIndexes[ 0 ] + 1, self.edgeIndexes[ 1 ] + 1, self.edgeIndexes[ 2 ] + 1 )
 
 	def setEdgeIndexesToVertexIndexes( self, edges, edgeTable ):
 		"Set the edge indexes to the vertex indexes."
@@ -180,8 +188,23 @@ class TriangleMesh:
 		"Get the string representation of this TriangleMesh."
 		return str( self.vertices ) + '\n' + str( self.edges ) + '\n' + str( self.faces )
 
+	def getGNUTriangulatedSurfaceText( self ):
+		"Get this mesh in the GNU Triangulated Surface (.gts) format."
+		output = cStringIO.StringIO()
+		output.write( '%s %s %s Number of Vertices,Number of Edges,Number of Faces\n' % ( len( self.vertices ), len( self.edges ), len( self.faces ) ) )
+		output.write( '%s %s %s Vertex Coordinates XYZ\n' % ( self.vertices[ 0 ].x, self.vertices[ 0 ].y, self.vertices[ 0 ].z ) )
+		for vertex in self.vertices[ 1 : ]:
+			output.write( '%s %s %s\n' % ( vertex.x, vertex.y, vertex.z ) )
+		output.write( '%s Edge Vertex Indices Starting from 1\n' % self.edges[ 0 ].getGNUTriangulatedSurfaceLine() )
+		for edge in self.edges[ 1 : ]:
+			output.write( '%s\n' % edge.getGNUTriangulatedSurfaceLine() )
+		output.write( '%s Face Edge Indices Starting from 1\n' % self.faces[ 0 ].getGNUTriangulatedSurfaceLine() )
+		for face in self.faces[ 1 : ]:
+			output.write( '%s\n' % face.getGNUTriangulatedSurfaceLine() )
+		return output.getvalue()
+
 	def getFromGNUTriangulatedSurfaceText( self, gnuTriangulatedSurfaceText ):
-		"Initialize from gnuTriangulatedSurfaceText."
+		"Initialize from a GNU Triangulated Surface Text."
 		lines = gcodec.getTextLines( gnuTriangulatedSurfaceText )
 		linesWithoutComments = []
 		for line in lines:

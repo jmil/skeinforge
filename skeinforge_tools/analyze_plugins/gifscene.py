@@ -53,6 +53,7 @@ from skeinforge_tools import polyfile
 import cStringIO
 import sys
 
+
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
@@ -158,13 +159,12 @@ class GifscenePreferences:
 			gifsceneFile( filename )
 
 
-def main( hashtable = None ):
-        if len(sys.argv) > 1:
-                gifsceneFile(sys.argv[1])
-        else:
-                "Display the gifscene dialog."
-                preferences.displayDialog( GifscenePreferences() )
+def main():
+	"Display the gifscene dialog."
+	if len( sys.argv ) > 1:
+		gifsceneFile( sys.argv[ 1 ] )
+	else:
+		preferences.displayDialog( GifscenePreferences() )
 
 if __name__ == "__main__":
 	main()
-

@@ -77,6 +77,7 @@ def getFilesWithFileTypeWithoutWords( fileType, words = [], fileInDirectory = ''
 			joinedFilename = os.path.join( directoryName, filename )
 		if isFileWithFileTypeWithoutWords( fileType, joinedFilename, words ):
 			filesWithFileType.append( joinedFilename )
+	filesWithFileType.sort()
 	return filesWithFileType
 
 def getFileText( filename, readMode = 'r' ):
@@ -117,40 +118,52 @@ def getLocationFromSplitLine( oldLocation, splitLine ):
 
 def getModule( filename, folderName, moduleFilename ):
 	"Get the module from the filename and folder name."
-	splitFolderName = folderName.split( '.' )
-	pluginsFolderName = ''
-	for word in splitFolderName:
-		pluginsFolderName = os.path.join( pluginsFolderName, word )
-	pluginsFolderName = os.path.join( pluginsFolderName, filename )
+	absoluteDirectory = os.path.join( os.path.dirname( os.path.abspath( moduleFilename ) ), folderName )
+#	splitFolderName = folderName.split( '.' )
+#	pluginsFolderName = ''
+#	for word in splitFolderName:
+#		pluginsFolderName = os.path.join( pluginsFolderName, word )
+	pluginsFilename = os.path.join( absoluteDirectory, filename )
 #	pluginsFolderName = os.path.join( os.path.dirname( os.path.abspath( moduleFilename ) ), folderName )
 	folderPluginsModule = None
 	try:
-		folderPluginsModule = __import__( pluginsFolderName )
+		folderPluginsModule = __import__( pluginsFilename )
 		return folderPluginsModule
 	except Exception, why:
 		print( why )
+		print( '' )
 		print( 'That error means; could not import a module with the filename ' + filename )
 		print( 'folder name ' + folderName )
 #		print( 'and module filename ' + moduleFilename )
-		print( 'giving a plugins folder name of ' + pluginsFolderName )
+		print( 'giving an absolute directory name of ' + absoluteDirectory )
+		print( 'giving a plugins filename of ' + pluginsFilename )
 		print( 'The system path is:' )
 		print( sys.path )
 		print( '' )
 		print( 'Will now try to import with alternate method developed by Marius.' )
-	absoluteDirectory = os.path.join( os.path.dirname( os.path.abspath( moduleFilename ) ), splitFolderName[ - 1 ] )
+	absoluteDirectory = os.path.join( os.path.dirname( os.path.abspath( moduleFilename ) ), folderName )
 	originalSystemPath = sys.path[ : ]
 	try:
 		sys.path.append( absoluteDirectory )
 		folderPluginsModule = __import__( filename )
 		sys.path = originalSystemPath
+		print( 'Alternate import method worked.' )
 		return folderPluginsModule
 	except Exception, why:
 		print( why )
+		print( '' )
 		print( 'That error means; could not import a module with the filename ' + filename )
 		print( 'folder name ' + folderName )
 #		print( 'and module filename ' + moduleFilename )
 		print( 'giving an absolute directory name of ' + absoluteDirectory )
+		sys.path = originalSystemPath
 		print( sys.path )
+#	try:
+#		print( 'Will now executing the file to at least get a more informative error.' )
+#		namespace = {}
+#		execfile( pluginsFilename + '.py', namespace)
+#	except Exception, why:
+#		print( why )
 	return None
 
 def getPluginFilenames( folderName, moduleFilename ):
@@ -274,10 +287,10 @@ def writeFileMessageEnd( end, filename, fileText, message ):
 	writeFileText( suffixFilename, fileText )
 	print( message + getSummarizedFilename( suffixFilename ) )
 
-def writeFileText( filename, fileText ):
+def writeFileText( filename, fileText, writeMode = 'w+' ):
 	"Write a text to a file."
 	try:
-		file = open( filename, 'w+' )
+		file = open( filename, writeMode )
 		file.write( fileText )
 		file.close()
 	except IOError:

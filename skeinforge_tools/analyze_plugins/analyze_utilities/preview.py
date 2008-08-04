@@ -18,7 +18,7 @@ class Preview:
         self.index = 0
         size = self.images[0].size
         self.root = Tkinter.Tk()
-        self.root.title("gifscene")
+        self.root.title("Gifscene from HydraRaptor")
         frame = Tkinter.Frame(self.root)
         frame.pack()
         self.canvas = Tkinter.Canvas(frame, width = size[0], height = size[1])
@@ -61,5 +61,5 @@ def viewGif( filename, gcodeText = '' ):
     try:
         gRead(filename, layers, gcodeText)
         Preview(layers)
-    except Exception, ex:
-        print( 'Preview failed: ' + str(ex))
+    except Exception, why:
+        print( 'Preview failed: ' + str( why ) )

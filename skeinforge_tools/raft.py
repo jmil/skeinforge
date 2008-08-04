@@ -113,6 +113,7 @@ from skeinforge_tools import material
 from skeinforge_tools import polyfile
 import cStringIO
 import math
+import sys
 import time
 
 
@@ -182,6 +183,7 @@ class RaftSkein:
 		self.cornerLow = Vec3( 999999999.0, 999999999.0, 999999999.0 )
 		self.decimalPlacesCarried = 3
 		self.extrusionDiameter = 0.6
+		self.extrusionTop = 0.0
 		self.extrusionWidth = 0.6
 		self.feedratePerSecond = 16.0
 		self.layerIndex = - 1
@@ -190,7 +192,6 @@ class RaftSkein:
 		self.lines = None
 		self.oldLocation = None
 		self.operatingJump = None
-                self.extrusionTop = 0.0
 		self.output = cStringIO.StringIO()
 
 	def addBaseLayer( self, baseExtrusionWidth, baseStep, stepBegin, stepEnd ):
@@ -374,7 +375,8 @@ class RaftSkein:
 		"Get elevated gcode line with operating feedrate."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		self.oldLocation = Vec3().getFromVec3( location )
-		if self.operatingJump != None: location.z += self.operatingJump
+		if self.operatingJump != None:
+			location.z += self.operatingJump
 		return self.getGcodeFromFeedrateMovement( 60.0 * self.feedratePerSecond, location )
 
 	def getRounded( self, number ):
@@ -399,9 +401,8 @@ class RaftSkein:
 		if raftPreferences.activateRaft.value:
 			self.addRaft()
 		self.addTemperature( raftPreferences.temperatureShapeFirstLayer.value )
-                # Turn extruder on early.
-                # FIXME: This should be configurable. kintel 20080723
-                self.addLine( "M101" )
+		if raftPreferences.turnExtruderOnEarly.value:
+			self.addLine( 'M101' )
 		for line in self.lines[ self.lineIndex : ]:
 			self.parseLine( line )
 
@@ -505,6 +506,7 @@ class RaftPreferences:
 		self.temperatureRaft = preferences.FloatPreference().getFromValue( 'Temperature of Raft (Celcius):', 200.0 )
 		self.temperatureShapeFirstLayer = preferences.FloatPreference().getFromValue( 'Temperature of Shape First Layer (Celcius):', 215.0 )
 		self.temperatureShapeNextLayers = preferences.FloatPreference().getFromValue( 'Temperature of Shape Next Layers (Celcius):', 230.0 )
+		self.turnExtruderOnEarly = preferences.BooleanPreference().getFromValue( 'Turn Extruder On Early:', True )
 		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface text files', '*.gts' ), ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Rafted', '' )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.archive = [
@@ -530,7 +532,8 @@ class RaftPreferences:
 			self.temperatureChangeTimeNextLayers,
 			self.temperatureRaft,
 			self.temperatureShapeFirstLayer,
-			self.temperatureShapeNextLayers ]
+			self.temperatureShapeNextLayers,
+			self.turnExtruderOnEarly ]
 		self.executeTitle = 'Raft'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'raft_' + materialName + '.csv' )
 		self.filenameHelp = 'skeinforge_tools.raft.html'
@@ -544,9 +547,12 @@ class RaftPreferences:
 			writeOutput( filename )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the raft dialog."
-	preferences.displayDialog( RaftPreferences() )
+	if len( sys.argv ) > 1:
+		writeOutput( sys.argv[ 1 ] )
+	else:
+		preferences.displayDialog( RaftPreferences() )
 
 if __name__ == "__main__":
 	main()

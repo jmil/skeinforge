@@ -233,6 +233,12 @@ class DisplayToolButton:
 	def displayTool( self ):
 		"Display the tool preferences dialog."
 		pluginModule = gcodec.getModule( self.name, self.folderName, self.moduleFilename )
+		if pluginModule == None:
+			print( '' )
+			print( 'The plugin could not be imported.  So to run ' + self.name + ',' )
+			print( 'in a shell in the folder ' + self.name + ' is in, type:' )
+			print( '> python ' + self.name + '.py' )
+			return
 		pluginModule.main()
 
 	def getFromFolderName( self, folderName, moduleFilename, name ):
@@ -264,12 +270,13 @@ class Filename( BooleanPreference ):
 	def execute( self ):
 		try:
 			import tkFileDialog
-                        summarized = gcodec.getSummarizedFilename( self.value )
-                        initialdir = os.path.dirname( summarized )
-                        if len(initialdir) > 0: initialdir += os.sep
-                        else: initialdir = "."
-                        initialfile = os.path.basename( summarized )
-                        filename = tkFileDialog.askopenfilename( filetypes = self.getFilenameFirstTypes(), initialdir = initialdir, initialfile = initialfile, title = self.name )
+			summarized = gcodec.getSummarizedFilename( self.value )
+			initialDirectory = os.path.dirname( summarized )
+			if len( initialDirectory ) > 0:
+				initialDirectory += os.sep
+			else:
+				initialDirectory = "."
+			filename = tkFileDialog.askopenfilename( filetypes = self.getFilenameFirstTypes(), initialdir = initialDirectory, initialfile = os.path.basename( summarized ), title = self.name )
 			if ( str( filename ) == '()' ):
 				self.wasCancelled = True
 			else:
@@ -361,6 +368,10 @@ class LabelDisplay:
 		"Initialize."
 		self.name = name
 		return self
+
+	def getName( self ):
+		"Get name for key sorting."
+		return self.name
 
 	def setToDisplay( self ):
 		"Do nothing because the label display is not archivable."

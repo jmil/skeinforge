@@ -46,6 +46,7 @@ from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import polyfile
 import cStringIO
 import math
+import sys
 
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
@@ -280,9 +281,12 @@ class StatisticPreferences:
 			statisticFile( filename )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the statistics dialog."
-	preferences.displayDialog( StatisticPreferences() )
+	if len( sys.argv ) > 1:
+		statisticFile( sys.argv[ 1 ] )
+	else:
+		preferences.displayDialog( StatisticPreferences() )
 
 if __name__ == "__main__":
 	main()

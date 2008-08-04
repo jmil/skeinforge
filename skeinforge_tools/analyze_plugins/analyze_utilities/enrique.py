@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 import Image, ImageDraw, ImageChops
 from GifImagePlugin import getheader, getdata
+from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
 
 # Get the entire text of a file.
 # @param  filename name of the file
@@ -59,17 +60,9 @@ def makedelta(fp, sequence):
 
 
 
-class vec3:
-    "A three dimensional vector class."
-    def __init__( self ):
-        self.x = 0.0
-        self.y = 0.0
-        self.z = 0.0
-
-
 class g2gif:
     def __init__(self,filename, outfile):
-        self.last_pos = vec3()
+        self.last_pos = Vec3()
         self.last_pos.z = 999
         self.do_move = 1
         fileText = getFileText( filename )
@@ -113,7 +106,7 @@ class g2gif:
         return x * 5 + 150, -y * 5 + 100
 
     def linearMove( self, splitLine ):
-        location = vec3()
+        location = Vec3()
         self.setFeedrate( splitLine )
         self.setPointComponent( location, splitLine )
         if location.z != self.last_pos.z:

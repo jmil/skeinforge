@@ -74,7 +74,7 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities.vec3 import vec3
+from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
@@ -235,7 +235,7 @@ class StretchSkein:
 		if relativeStretchLength > 1.0:
 			relativeStretch /= relativeStretchLength
 		absoluteStretch = relativeStretch * self.maximumAbsoluteStretch
-		stretchedLocation = location.plus( vec3( absoluteStretch.real, absoluteStretch.imag, 0.0 ) )
+		stretchedLocation = location.plus( Vec3( absoluteStretch.real, absoluteStretch.imag, 0.0 ) )
 		feedrateString = self.getRounded( self.feedrateMinute )
 		return "G1 X%s Y%s Z%s F%s" % ( self.getRounded( stretchedLocation.x ), self.getRounded( stretchedLocation.y ), self.getRounded( stretchedLocation.z ), feedrateString )
 

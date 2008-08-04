@@ -77,6 +77,7 @@ import cmath
 import cStringIO
 import math
 import os
+import sys
 import time
 
 
@@ -480,6 +481,7 @@ class SliceSkein:
 		self.addLine( 'G28' ) # Start at home.
 		self.addLine( 'M103' ) # Turn extruder off.
 		self.addLine( 'M105' ) # Custom code for temperature reading.
+		self.addLine( 'M106' ) # Turn fan on.
 		self.addFromUpperLowerFile( 'EndOfTheBeginning.txt' ) # Add a second start file if it exists.
 		self.addLine( '(<decimalPlacesCarried> ' + str( self.decimalPlacesCarried ) + ' )' ) # Set decimal places carried.
 		self.addLine( '(<extrusionDiameter> ' + self.getRounded( self.extrusionDiameter ) + ' )' ) # Set extrusion diameter.
@@ -503,6 +505,7 @@ class SliceSkein:
 		self.addLine( '(<extruderShutDown> )' ) # GCode formatted comment
 		self.addLine( 'M103' ) # Turn extruder motor off.
 		self.addLine( 'M104 S0' ) # Turn extruder heater off.
+		self.addLine( 'M107' ) # Turn fan off.
 #		self.addLine( 'M30' ) # End gcode program.
 		self.addFromUpperLowerFile( 'End.txt' ) # Add an end file if it exists.
 
@@ -699,8 +702,8 @@ class SlicePreferences:
 			self.perimeterInfillPreference,
 			self.perimeterPreference ]
 		self.executeTitle = 'Slice'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'slice.csv' )
-		self.filenameHelp = 'skeinforge_tools.slice.html'
+		self.filenamePreferences = preferences.getPreferencesFilePath( 'slice_shape.csv' )
+		self.filenameHelp = 'skeinforge_tools.slice_shape.html'
 		self.saveTitle = 'Save Preferences'
 		self.title = 'Slice Preferences'
 
@@ -711,9 +714,12 @@ class SlicePreferences:
 			writeOutput( filename )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the slice dialog."
-	preferences.displayDialog( SlicePreferences() )
+	if len( sys.argv ) > 1:
+		writeOutput( sys.argv[ 1 ] )
+	else:
+		preferences.displayDialog( SlicePreferences() )
 
 if __name__ == "__main__":
 	main()

@@ -66,10 +66,10 @@ def isDirectoryPreference():
 	"Determine if the directory preference is true."
 	polyfilePreferences = PolyfilePreferences()
 	preferences.readPreferences( polyfilePreferences )
-	if polyfilePreferences.directoryPreference.value:
-		print( '"Execute All Unmodified Files in a Directory" is selected, so all the unmodified files in the directory will be executed.  To only execute one file, change the preference in polyfile.' )
-	else:
-		print( '"Execute File" is selected, so only the opened file will be executed.  To execute all the unmodified files in the directory, change the preference in polyfile.' )
+#	if polyfilePreferences.directoryPreference.value:
+#		print( '"Execute All Unmodified Files in a Directory" is selected, so all the unmodified files in the directory will be executed.  To only execute one file, change the preference in polyfile.' )
+#	else:
+#		print( '"Execute File" is selected, so only the opened file will be executed.  To execute all the unmodified files in the directory, change the preference in polyfile.' )
 	return polyfilePreferences.directoryPreference.value
 
 def isEmptyOrCancelled( filename, wasCancelled ):

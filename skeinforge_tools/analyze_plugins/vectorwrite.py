@@ -43,6 +43,7 @@ from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import polyfile
 import cStringIO
 import math
+import sys
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __credits__ = 'Nophead <http://hydraraptor.blogspot.com/>'
@@ -209,7 +210,7 @@ class VectorwriteSkein:
 		elif firstWord == 'M103':
 			self.extruderActive = False
 		elif firstWord == '(<extrusionWidth>':
-                        self.extrusionWidth = float( splitLine[ 1 ] )
+			self.extrusionWidth = float( splitLine[ 1 ] )
 
 	def parseGcode( self, gcodeText, vectorwritePreferences ):
 		"Parse gcode text and store the vector output."
@@ -282,7 +283,10 @@ class VectorwritePreferences:
 
 def main( hashtable = None ):
 	"Display the vectorwrite dialog."
-	preferences.displayDialog( VectorwritePreferences() )
+	if len( sys.argv ) > 1:
+		writeVectorFile( sys.argv[ 1 ] )
+	else:
+		preferences.displayDialog( VectorwritePreferences() )
 
 if __name__ == "__main__":
 	main()

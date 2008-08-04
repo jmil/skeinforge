@@ -169,7 +169,13 @@ def writeOutput( filename = '' ):
 		for skeinforgePluginFilename in skeinforgePluginFilenames:
 			if skeinforgePluginFilename == toolName:
 				pluginModule = gcodec.getModule( skeinforgePluginFilename, 'skeinforge_tools', __file__ )
-				pluginModule.writeOutput( filename )
+				if pluginModule == None:
+					print( '' )
+					print( 'The plugin could not be imported.  So to run ' + skeinforgePluginFilename + ',' )
+					print( 'in a shell in the skeinforge_tools folder type ' )
+					print( '> python ' + skeinforgePluginFilename + '.py' )
+				else:
+					pluginModule.writeOutput( filename )
 				return
 
 
@@ -202,13 +208,12 @@ class SkeinforgePreferences:
 		for filename in filenames:
 			writeOutput( filename )
 
-
-def main( hashtable = None ):
-        if len(sys.argv) > 1:
-                writeOutput(sys.argv[1])
-        else:
-                "Display the skeinforge dialog."
-                preferences.displayDialog( SkeinforgePreferences() )
+def main():
+	"Display the skeinforge dialog."
+	if len( sys.argv ) > 1:
+		writeOutput( sys.argv[ 1 ] )
+	else:
+		preferences.displayDialog( SkeinforgePreferences() )
 
 if __name__ == "__main__":
 	main()

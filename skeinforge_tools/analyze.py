@@ -41,8 +41,9 @@ def writeOutput( filename = '', gcodeText = '' ):
 		gcodeText = gcodec.getFileText( filename )
 	analyzePluginFilenames = getAnalyzePluginFilenames()
 	for analyzePluginFilename in analyzePluginFilenames:
-		pluginModule = gcodec.getModule( analyzePluginFilename, 'skeinforge_tools.analyze_plugins', __file__ )
-		pluginModule.writeOutput( filename, gcodeText )
+		pluginModule = gcodec.getModule( analyzePluginFilename, 'analyze_plugins', __file__ )
+		if pluginModule != None:
+			pluginModule.writeOutput( filename, gcodeText )
 
 
 class AnalyzePreferences:

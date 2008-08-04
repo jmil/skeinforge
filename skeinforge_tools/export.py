@@ -54,7 +54,6 @@ from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
-from skeinforge_tools.skeinforge_utilities.vec3 import vec3
 from skeinforge_tools import analyze
 from skeinforge_tools import fillet
 from skeinforge_tools import polyfile
@@ -115,8 +114,9 @@ def writeOutput( filename = '' ):
 	pluginModule = None
 	selectedPlugin = getSelectedPlugin( exportPreferences )
 	if selectedPlugin != None:
-		pluginModule = gcodec.getModule( selectedPlugin.name, 'skeinforge_tools.export_plugins', __file__ )
-		exportChainGcode = pluginModule.getOutput( exportChainGcode )
+		pluginModule = gcodec.getModule( selectedPlugin.name, 'export_plugins', __file__ )
+		if pluginModule != None:
+			exportChainGcode = pluginModule.getOutput( exportChainGcode )
 	if exportPreferences.alsoSendOutputTo.value != '':
 		exec( 'print >> ' + exportPreferences.alsoSendOutputTo.value + ', exportChainGcode' )
 	if selectedPlugin == None:

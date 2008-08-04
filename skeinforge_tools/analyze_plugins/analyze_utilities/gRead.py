@@ -51,10 +51,11 @@ class gRead:
         self.newLayer()
 
     def parseLine(self, line):
-        if line.startswith("("):
-            if line.startswith("(<layerStart>"): self.newLayer()
+        if line.startswith( "(" ):
+            if line.startswith( "(<layerStart>" ):
+                self.newLayer()
             return
-        splitLine = line.split( ' ' )
+        splitLine = line.split()
         if len( splitLine ) < 1:
             return 0
         firstWord = splitLine[ 0 ]

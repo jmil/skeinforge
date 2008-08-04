@@ -50,24 +50,24 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
-from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
-from skeinforge_tools.skeinforge_utilities.vec3 import vec3
-from skeinforge_tools import analyze
-from skeinforge_tools import fillet
 from skeinforge_tools import polyfile
 import cStringIO
 import os
 import sys
-import time
 
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
+
+def getFileTypes():
+	"Get the file types from the translators in the import plugins folder."
+	fileTypes = [ ( 'GNU Triangulated Surface text files', '*.gts' ) ] + getTranslatorFileTypes()
+	fileTypes.sort()
+	return fileTypes
 
 def getImportGcode( gcodeText, importPreferences = None ):
 	"Import a gcode linear move text."
@@ -90,6 +90,17 @@ def getSelectedPlugin( importPreferences ):
 		if plugin.value:
 			return plugin
 	return None
+
+def getTranslatorFileTypes():
+	"Get the file types from the translators in the import plugins folder."
+	pluginFilenames = gcodec.getPluginFilenames( 'import_plugins', __file__ )
+	fileTypes = []
+	for pluginFilename in pluginFilenames:
+		fileTypeTitle = pluginFilename.upper() + ' files'
+		fileType = ( fileTypeTitle, '*.' + pluginFilename )
+		fileTypes.append( fileType )
+	fileTypes.sort()
+	return fileTypes
 
 def writeOutput( filename = '' ):
 	"""Import a gcode linear move file.  Chain import the gcode if it is not already imported.
@@ -190,34 +201,22 @@ class ImportPreferences:
 		self.archive = []
 		self.activateImport = preferences.BooleanPreference().getFromValue( 'Activate Import', True )
 		self.archive.append( self.activateImport )
-		self.alsoSendOutputTo = preferences.StringPreference().getFromValue( 'Also Send Output To:', '' )
-		self.archive.append( self.alsoSendOutputTo )
-		self.deleteM110GcodeLine = preferences.BooleanPreference().getFromValue( 'Delete M110 Gcode Line', True )
-		self.archive.append( self.deleteM110GcodeLine )
 		importPluginFilenames = gcodec.getPluginFilenames( 'import_plugins', __file__ )
-		self.importLabel = preferences.LabelDisplay().getFromName( 'Import Operations: ' )
+		self.importLabel = preferences.LabelDisplay().getFromName( 'Import Translators: ' )
 		self.archive.append( self.importLabel )
 		self.importOperations = []
 		self.importPlugins = []
-		importRadio = []
-		self.doNotChangeOutput = preferences.RadioCapitalized().getFromRadio( 'Do Not Change Output', importRadio, True )
 		for importPluginFilename in importPluginFilenames:
-			importPlugin = preferences.RadioCapitalized().getFromRadio( importPluginFilename, importRadio, False )
-			if importPluginFilename == 'gcode_only':
-				self.doNotChangeOutput.value = False
-				importPlugin.value = True
+			importPlugin = preferences.LabelDisplay().getFromName( importPluginFilename.upper() )
 			self.importPlugins.append( importPlugin )
-		self.importOperations = [ self.doNotChangeOutput ]
-		self.importOperations += self.importPlugins
-		self.importOperations.sort( key = preferences.RadioCapitalized.getLowerName )
-#		self.importOperations.sort( compareRadio ) first.name.lower()
-		self.archive += self.importOperations
-		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface text files', '*.gts' ), ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Imported', '' )
+		self.importPlugins.sort( key = preferences.LabelDisplay.getName )
+		self.archive += self.importPlugins
+		self.filenameInput = preferences.Filename().getFromFilename( getTranslatorFileTypes(), 'Open File to be Imported', '' )
 		self.archive.append( self.filenameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.executeTitle = 'Import'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'import.csv' )
-		self.filenameHelp = 'skeinforge_tools.import.html'
+		self.filenamePreferences = preferences.getPreferencesFilePath( 'import_translator.csv' )
+		self.filenameHelp = 'skeinforge_tools.import_translator.html'
 		self.saveTitle = 'Save Preferences'
 		self.title = 'Import Preferences'
 
