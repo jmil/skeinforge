@@ -63,7 +63,7 @@ except:
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities.vec3 import vec3
+from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
@@ -857,7 +857,7 @@ class TriangleMesh:
 		for vertexIndex in range( numberOfVertices ):
 			line = linesWithoutComments[ vertexIndex + 1 ]
 			splitLine = line.split( " " )
-			vertex = vec3().getFromXYZ( float( splitLine[ 0 ] ), float( splitLine[ 1 ] ), float( splitLine[ 2 ] ) )
+			vertex = Vec3().getFromXYZ( float( splitLine[ 0 ] ), float( splitLine[ 1 ] ), float( splitLine[ 2 ] ) )
 			self.vertices.append( vertex )
 		edgeStart = numberOfVertices + 1
 		for edgeIndex in range( numberOfEdges ):
