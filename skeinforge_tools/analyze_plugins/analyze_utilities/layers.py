@@ -2,7 +2,7 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities.vec3 import vec3
+from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
 import Image, ImageDraw
 
 def bounding_cube(layers):
