@@ -18,6 +18,7 @@ from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import polyfile
 import cStringIO
 import os
+import sys
 
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
@@ -32,7 +33,7 @@ def getAnalyzePluginFilenames():
 def writeOutput( filename = '', gcodeText = '' ):
 	"Analyze a gcode file.  If no filename is specified, comment the first gcode file in this folder that is not modified."
 	if filename == '':
-		unmodified = getUncommentedGcodeFiles()
+		unmodified = gcodec.getUncommentedGcodeFiles()
 		if len( unmodified ) == 0:
 			print( "There is no gcode file in this folder that is not a comment file." )
 			return
@@ -72,14 +73,17 @@ class AnalyzePreferences:
 
 	def execute( self ):
 		"Analyze button has been clicked."
-		filenames = polyfile.getFileOrGNUUnmodifiedGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
+		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, [], self.filenameInput.wasCancelled )
 		for filename in filenames:
 			writeOutput( filename )
 
 
 def main( hashtable = None ):
 	"Display the analyze dialog."
-	preferences.displayDialog( AnalyzePreferences() )
+	if len( sys.argv ) > 1:
+		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
+	else:
+		preferences.displayDialog( AnalyzePreferences() )
 
 if __name__ == "__main__":
 	main()

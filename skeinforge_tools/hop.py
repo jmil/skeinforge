@@ -66,10 +66,12 @@ from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
+from skeinforge_tools import import_translator
 from skeinforge_tools import polyfile
 from skeinforge_tools import stretch
 import cStringIO
 import math
+import sys
 import time
 
 
@@ -78,10 +80,11 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def getHopChainGcode( gcodeText, hopPreferences = None ):
+def getHopChainGcode( filename, gcodeText, hopPreferences = None ):
 	"Hop a gcode linear move text.  Chain hop the gcode if it is not already hopped."
+	gcodeText = gcodec.getGcodeFileText( filename, gcodeText )
 	if not gcodec.isProcedureDone( gcodeText, 'stretch' ):
-		gcodeText = stretch.getStretchChainGcode( gcodeText )
+		gcodeText = stretch.getStretchChainGcode( filename, gcodeText )
 	return getHopGcode( gcodeText, hopPreferences )
 
 def getHopGcode( gcodeText, hopPreferences = None ):
@@ -102,7 +105,7 @@ def getHopGcode( gcodeText, hopPreferences = None ):
 def writeOutput( filename = '' ):
 	"Hop a gcode linear move file.  Chain hop the gcode if it is not already hopped. If no filename is specified, hop the first unmodified gcode file in this folder."
 	if filename == '':
-		unmodified = gcodec.getGNUGcode()
+		unmodified = import_translator.getGNUTranslatorFilesUnmodified()
 		if len( unmodified ) == 0:
 			print( "There are no unmodified gcode files in this folder." )
 			return
@@ -111,11 +114,10 @@ def writeOutput( filename = '' ):
 	preferences.readPreferences( hopPreferences )
 	startTime = time.time()
 	print( 'File ' + gcodec.getSummarizedFilename( filename ) + ' is being chain hopped.' )
-	gcodeText = gcodec.getFileText( filename )
-	if gcodeText == '':
-		return
 	suffixFilename = filename[ : filename.rfind( '.' ) ] + '_hop.gcode'
-	hopGcode = getHopChainGcode( gcodeText, hopPreferences )
+	hopGcode = getHopChainGcode( filename, '', hopPreferences )
+	if hopGcode == '':
+		return
 	gcodec.writeFileText( suffixFilename, hopGcode )
 	print( 'The hopped file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
 	analyze.writeOutput( suffixFilename, hopGcode )
@@ -202,7 +204,7 @@ class HopSkein:
 		"Parse gcode initialization and store the parameters."
 		for self.lineIndex in range( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
-			splitLine = line.split( ' ' )
+			splitLine = line.split()
 			firstWord = ''
 			if len( splitLine ) > 0:
 				firstWord = splitLine[ 0 ]
@@ -220,8 +222,8 @@ class HopSkein:
 
 	def parseLine( self, line ):
 		"Parse a gcode line and add it to the bevel gcode."
-		splitLine = line.split( ' ' )
-		if len( splitLine ) < 1 or len( line ) < 1:
+		splitLine = line.split()
+		if len( splitLine ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':
@@ -251,7 +253,7 @@ class HopPreferences:
 		self.archive = []
 		self.activateHop = preferences.BooleanPreference().getFromValue( 'Activate Hop', True )
 		self.archive.append( self.activateHop )
-		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface text files', '*.gts' ), ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Hoped', '' )
+		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Hoped', '' )
 		self.archive.append( self.filenameInput )
 		self.hopOverExtrusionHeight = preferences.FloatPreference().getFromValue( 'Hop Over Extrusion Height (ratio):', 1.0 )
 		self.archive.append( self.hopOverExtrusionHeight )
@@ -266,14 +268,17 @@ class HopPreferences:
 
 	def execute( self ):
 		"Hop button has been clicked."
-		filenames = polyfile.getFileOrGNUUnmodifiedGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
+		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
 		for filename in filenames:
 			writeOutput( filename )
 
 
 def main( hashtable = None ):
 	"Display the hop dialog."
-	preferences.displayDialog( HopPreferences() )
+	if len( sys.argv ) > 1:
+		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
+	else:
+		preferences.displayDialog( HopPreferences() )
 
 if __name__ == "__main__":
 	main()

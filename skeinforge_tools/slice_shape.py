@@ -72,6 +72,7 @@ from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities import triangle_mesh
 from skeinforge_tools import analyze
+from skeinforge_tools import import_translator
 from skeinforge_tools import polyfile
 import cmath
 import cStringIO
@@ -315,15 +316,20 @@ def getSharedFace( firstEdge, faces, secondEdge ):
 				return faces[ firstEdgeFaceIndex ]
 	return None
 
-def getSliceGcode( gnuTriangulatedSurfaceText, slicePreferences = None ):
-	"Slice a GNU Triangulated Surface text."
-	if gnuTriangulatedSurfaceText == '':
+def getSliceGcode( filename, slicePreferences = None ):
+	"Slice a shape file."
+	triangleMesh = None
+	if filename[ - 4 : ] == '.gts':
+		triangleMesh = triangle_mesh.TriangleMesh().getFromGNUTriangulatedSurfaceText( gcodec.getFileText( filename ) )
+	else:
+		triangleMesh = import_translator.getTriangleMesh( filename )
+	if triangleMesh == None:
 		return ''
 	if slicePreferences == None:
 		slicePreferences = SlicePreferences()
 		preferences.readPreferences( slicePreferences )
 	skein = SliceSkein()
-	skein.parseGnuTriangulatedSurface( gnuTriangulatedSurfaceText, slicePreferences )
+	skein.parseTriangleMesh( slicePreferences, triangleMesh )
 	return skein.output.getvalue()
 
 def getSliceIntersectionFromEdge( edge, loop, z ):
@@ -370,7 +376,7 @@ def isZInEdge( edge, vertices, z ):
 def writeOutput( filename = '' ):
 	"Slice a GNU Triangulated Surface file.  If no filename is specified, slice the first GNU Triangulated Surface file in this folder."
 	if filename == '':
-		unmodified = gcodec.getGNUTriangulatedSurfaceFiles()
+		unmodified = gcodec.getFilesWithFileTypesWithoutWords( import_translator.getGNUTranslatorFileTypes() )
 		if len( unmodified ) == 0:
 			print( "There are no GNU Triangulated Surface files in this folder." )
 			return
@@ -379,11 +385,10 @@ def writeOutput( filename = '' ):
 	slicePreferences = SlicePreferences()
 	preferences.readPreferences( slicePreferences )
 	print( 'File ' + gcodec.getSummarizedFilename( filename ) + ' is being sliced.' )
-	gnuTriangulatedSurfaceText = gcodec.getFileText( filename )
-	if gnuTriangulatedSurfaceText == '':
+	sliceGcode = getSliceGcode( filename, slicePreferences )
+	if sliceGcode == '':
 		return
 	suffixFilename = filename[ : filename.rfind( '.' ) ] + '_slice.gcode'
-	sliceGcode = getSliceGcode( gnuTriangulatedSurfaceText, slicePreferences )
 	gcodec.writeFileText( suffixFilename, sliceGcode )
 	print( 'The sliced file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
 	analyze.writeOutput( suffixFilename, sliceGcode )
@@ -626,10 +631,10 @@ class SliceSkein:
 			return z + self.extrusionHeight
 		return z + self.bridgeextrusionHeight
 
-	def parseGnuTriangulatedSurface( self, gnuTriangulatedSurfaceText, slicePreferences ):
+	def parseTriangleMesh( self, slicePreferences, triangleMesh ):
 		"Parse gnu triangulated surface text and store the sliced gcode."
 		self.slicePreferences = slicePreferences
-		self.triangleMesh = triangle_mesh.TriangleMesh().getFromGNUTriangulatedSurfaceText( gnuTriangulatedSurfaceText )
+		self.triangleMesh = triangleMesh
 		self.extrusionDiameter = slicePreferences.extrusionDiameter.value
 		self.decimalPlacesCarried = int( max( 0.0, math.ceil( 1.0 - math.log10( self.extrusionDiameter / slicePreferences.extrusionDiameterOverPrecision.value ) ) ) )
 		self.bridgeExtrusionWidth = slicePreferences.infillBridgeWidthOverDiameter.value * self.extrusionDiameter
@@ -674,7 +679,7 @@ class SlicePreferences:
 		self.extrusionHeightOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Height Over Diameter (ratio):', 0.67 )
 		self.extrusionPerimeterWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Perimeter Width Over Diameter (ratio):', 1.2 )
 		self.extrusionWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Width Over Diameter (ratio):', 1.0 )
-		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface files', '*.gts' ) ], 'Open File to be Sliced', '' )
+		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorFileTypeTuples(), 'Open File to be Sliced', '' )
 		self.importCoarseness = preferences.FloatPreference().getFromValue( 'Import Coarseness (ratio):', 1.0 )
 		importRadio = []
 		self.correct = preferences.RadioLabel().getFromRadioLabel( 'Correct Mesh', 'Mesh Type:', importRadio, True )
@@ -709,7 +714,7 @@ class SlicePreferences:
 
 	def execute( self ):
 		"Slice button has been clicked."
-		filenames = polyfile.getFileOrGNUUnmodifiedGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
+		filenames = polyfile.getFileOrDirectoryTypes( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
 		for filename in filenames:
 			writeOutput( filename )
 
@@ -717,7 +722,7 @@ class SlicePreferences:
 def main():
 	"Display the slice dialog."
 	if len( sys.argv ) > 1:
-		writeOutput( sys.argv[ 1 ] )
+		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
 		preferences.displayDialog( SlicePreferences() )
 

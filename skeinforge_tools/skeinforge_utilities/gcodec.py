@@ -60,6 +60,18 @@ def getFeedrateMinute( feedrateMinute, splitLine ):
 		return getDoubleAfterFirstLetter( splitLine[ indexOfF ] )
 	return feedrateMinute
 
+def getFilesWithFileTypesWithoutWords( fileTypes, words = [], fileInDirectory = '' ):
+	"""Get files which have a given file type, but with do not contain a word in a list.
+
+	Keyword arguments:
+	fileType -- file types required
+	words -- list of words which the file must not have"""
+	filesWithFileTypes = []
+	for fileType in fileTypes:
+		filesWithFileTypes += getFilesWithFileTypeWithoutWords( fileType, words, fileInDirectory )
+	filesWithFileTypes.sort()
+	return filesWithFileTypes
+
 def getFilesWithFileTypeWithoutWords( fileType, words = [], fileInDirectory = '' ):
 	"""Get files which have a given file type, but with do not contain a word in a list.
 
@@ -91,21 +103,29 @@ def getFileText( filename, readMode = 'r' ):
 		print( 'The file ' + filename + ' does not exist, an empty string will be returned.' )
 		return ''
 
-def getGNUGcode( fileInDirectory = '' ):
-	"Get GNU Triangulated Surface files and gcode files which are not modified."
-	return getGNUTriangulatedSurfaceFiles( fileInDirectory ) + getUnmodifiedGCodeFiles( fileInDirectory )
+def getGcodeFileText( filename, gcodeText ):
+	"Get the gcode text from a file if it the gcode text is empty and if the file is a gcode file."
+	if gcodeText != '':
+		return gcodeText
+	if filename[ - 5 : ] == '.gcode':
+		return gcodec.getFileText( filename )
+	return ''
 
-def getGNUDirectoryOrFile( isDirectory, filename, wasCancelled ):
-	"Get the GNU Triangulated Surface files in the directory the file is in if isDirectory is true.  Otherwise, return the file in a list."
-	if str( filename ) == '()' or wasCancelled:
-		return []
-	if isDirectory:
-		return getGNUTriangulatedSurfaceFiles( filename )
-	return [ filename ]
+#def getGNUGcode( fileInDirectory = '' ):
+#	"Get GNU Triangulated Surface files and gcode files which are not modified."
+#	return getGNUTriangulatedSurfaceFiles( fileInDirectory ) + getUnmodifiedGCodeFiles( fileInDirectory )
 
-def getGNUTriangulatedSurfaceFiles( fileInDirectory = '' ):
-	"Get GNU Triangulated Surface files."
-	return getFilesWithFileTypeWithoutWords( 'gts', [], fileInDirectory )
+#def getGNUDirectoryOrFile( isDirectory, filename, wasCancelled ):
+#	"Get the GNU Triangulated Surface files in the directory the file is in if isDirectory is true.  Otherwise, return the file in a list."
+#	if str( filename ) == '()' or wasCancelled:
+#		return []
+#	if isDirectory:
+#		return getGNUTriangulatedSurfaceFiles( filename )
+#	return [ filename ]
+
+#def getGNUTriangulatedSurfaceFiles( fileInDirectory = '' ):
+#	"Get GNU Triangulated Surface files."
+#	return getFilesWithFileTypeWithoutWords( 'gts', [], fileInDirectory )
 
 def getLocationFromSplitLine( oldLocation, splitLine ):
 	"Get the location from the split line."
@@ -119,51 +139,24 @@ def getLocationFromSplitLine( oldLocation, splitLine ):
 def getModule( filename, folderName, moduleFilename ):
 	"Get the module from the filename and folder name."
 	absoluteDirectory = os.path.join( os.path.dirname( os.path.abspath( moduleFilename ) ), folderName )
-#	splitFolderName = folderName.split( '.' )
-#	pluginsFolderName = ''
-#	for word in splitFolderName:
-#		pluginsFolderName = os.path.join( pluginsFolderName, word )
-	pluginsFilename = os.path.join( absoluteDirectory, filename )
-#	pluginsFolderName = os.path.join( os.path.dirname( os.path.abspath( moduleFilename ) ), folderName )
-	folderPluginsModule = None
-	try:
-		folderPluginsModule = __import__( pluginsFilename )
-		return folderPluginsModule
-	except Exception, why:
-		print( why )
-		print( '' )
-		print( 'That error means; could not import a module with the filename ' + filename )
-		print( 'folder name ' + folderName )
-#		print( 'and module filename ' + moduleFilename )
-		print( 'giving an absolute directory name of ' + absoluteDirectory )
-		print( 'giving a plugins filename of ' + pluginsFilename )
-		print( 'The system path is:' )
-		print( sys.path )
-		print( '' )
-		print( 'Will now try to import with alternate method developed by Marius.' )
-	absoluteDirectory = os.path.join( os.path.dirname( os.path.abspath( moduleFilename ) ), folderName )
 	originalSystemPath = sys.path[ : ]
 	try:
-		sys.path.append( absoluteDirectory )
+		sys.path.insert( 0, absoluteDirectory )
 		folderPluginsModule = __import__( filename )
 		sys.path = originalSystemPath
-		print( 'Alternate import method worked.' )
 		return folderPluginsModule
 	except Exception, why:
+		sys.path = originalSystemPath
 		print( why )
 		print( '' )
 		print( 'That error means; could not import a module with the filename ' + filename )
 		print( 'folder name ' + folderName )
-#		print( 'and module filename ' + moduleFilename )
+		print( 'and module filename ' + moduleFilename )
 		print( 'giving an absolute directory name of ' + absoluteDirectory )
-		sys.path = originalSystemPath
-		print( sys.path )
-#	try:
-#		print( 'Will now executing the file to at least get a more informative error.' )
-#		namespace = {}
-#		execfile( pluginsFilename + '.py', namespace)
-#	except Exception, why:
-#		print( why )
+		print( '' )
+		print( 'The plugin could not be imported.  So to run ' + filename + ' directly and at least get a more informative error message,' )
+		print( 'in a shell in the ' + folderName + ' folder type ' )
+		print( '> python ' + filename + '.py' )
 	return None
 
 def getPluginFilenames( folderName, moduleFilename ):
@@ -229,7 +222,8 @@ def getTextLines( text ):
 
 def getUnmodifiedGCodeFiles( fileInDirectory = '' ):
 	"Get gcode files which are not modified."
-	return getFilesWithFileTypeWithoutWords( 'gcode', [ '_comb', '_comment', '_cool', '_fill', '_fillet', '_hop', '_raft', '_slice', '_stretch', '_tower', '_transform', '_wipe' ], fileInDirectory )
+	words = '_comb,_comment,_cool,_fill,_fillet,_hop,_oozebane,_raft,_slice,_statistic,_stretch,_tower,_transform,_wipe'.split( ',' )
+	return getFilesWithFileTypeWithoutWords( 'gcode', words, fileInDirectory )
 
 def indexOfStartingWithSecond( letter, splitLine ):
 	"Get index of the first occurence of the given letter in the split line, starting with the second word.  Return - 1 if letter is not found"
@@ -248,8 +242,8 @@ def isFileWithFileTypeWithoutWords( fileType, filename, words ):
 	filename -- name of the file
 	words -- list of words which the filename must not have"""
 	filename = os.path.basename( filename )
-	splitFile = filename.split( '.' )
-	if splitFile[ - 1 ] != fileType:
+	fileTypeDot = '.' + fileType
+	if filename[ - len( fileTypeDot ) : ] != fileTypeDot:
 		return False
 	for word in words:
 		if filename.find( word ) >= 0:
@@ -258,6 +252,8 @@ def isFileWithFileTypeWithoutWords( fileType, filename, words ):
 
 def isProcedureDone( gcodeText, procedure ):
 	"Determine if the procedure has been done on the gcode text."
+	if gcodeText == '':
+		return False
 	lines = getTextLines( gcodeText )
 	for line in lines:
 		splitLine = line.split( ' ' )

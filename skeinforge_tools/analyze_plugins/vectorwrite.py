@@ -75,7 +75,7 @@ def writeOutput( filename, gcodeText = '' ):
 def writeVectorFile( filename = '' ):
 	"Write scalable vector graphics for a gcode file.  If no filename is specified, write scalable vector graphics for the first gcode file in this folder."
 	if filename == '':
-		unmodified = gcodec.getFilesWithFileTypeWithoutWords( 'gcode' )
+		unmodified = gcodec.getUnmodifiedGCodeFiles()
 		if len( unmodified ) == 0:
 			print( "There is no gcode file in this folder." )
 			return
@@ -199,7 +199,7 @@ class VectorwriteSkein:
 
 	def parseCorner( self, line ):
 		"Parse a gcode line and use the location to update the bounding corners."
-		splitLine = line.split( ' ' )
+		splitLine = line.split()
 		if len( splitLine ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
@@ -235,8 +235,8 @@ class VectorwriteSkein:
 
 	def parseLine( self, line, nextLine ):
 		"Parse a gcode line and add it to the vector output."
-		splitLine = line.split( ' ' )
-		if len( splitLine ) < 1 or len( line ) < 1:
+		splitLine = line.split()
+		if len( splitLine ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':
@@ -284,7 +284,7 @@ class VectorwritePreferences:
 def main( hashtable = None ):
 	"Display the vectorwrite dialog."
 	if len( sys.argv ) > 1:
-		writeVectorFile( sys.argv[ 1 ] )
+		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
 		preferences.displayDialog( VectorwritePreferences() )
 

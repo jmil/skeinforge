@@ -112,17 +112,19 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 <font color="#fffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
     
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="skeinforge_tools.__init__.html">skeinforge_tools.__init__</a><br>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="__init__.html">__init__</a><br>
 <a href="skeinforge_tools.analyze.html">skeinforge_tools.analyze</a><br>
 <a href="cStringIO.html">cStringIO</a><br>
-</td><td width="25%" valign=top><a href="skeinforge_tools.comb.html">skeinforge_tools.comb</a><br>
-<a href="skeinforge_tools.skeinforge_utilities.euclidean.html">skeinforge_tools.skeinforge_utilities.euclidean</a><br>
+<a href="skeinforge_tools.comb.html">skeinforge_tools.comb</a><br>
+</td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.euclidean.html">skeinforge_tools.skeinforge_utilities.euclidean</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
-</td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.intercircle.html">skeinforge_tools.skeinforge_utilities.intercircle</a><br>
-<a href="skeinforge_tools.material.html">skeinforge_tools.material</a><br>
+<a href="skeinforge_tools.import_translator.html">skeinforge_tools.import_translator</a><br>
+<a href="skeinforge_tools.skeinforge_utilities.intercircle.html">skeinforge_tools.skeinforge_utilities.intercircle</a><br>
+</td><td width="25%" valign=top><a href="skeinforge_tools.material.html">skeinforge_tools.material</a><br>
 <a href="math.html">math</a><br>
-</td><td width="25%" valign=top><a href="skeinforge_tools.polyfile.html">skeinforge_tools.polyfile</a><br>
+<a href="skeinforge_tools.polyfile.html">skeinforge_tools.polyfile</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.preferences.html">skeinforge_tools.skeinforge_utilities.preferences</a><br>
+</td><td width="25%" valign=top><a href="sys.html">sys</a><br>
 <a href="time.html">time</a><br>
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -206,10 +208,10 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-getRaftChainGcode"><strong>getRaftChainGcode</strong></a>(gcodeText, raftPreferences<font color="#909090">=None</font>)</dt><dd><tt>Raft&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.&nbsp;&nbsp;Chain&nbsp;raft&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;rafted.</tt></dd></dl>
+<td width="100%"><dl><dt><a name="-getRaftChainGcode"><strong>getRaftChainGcode</strong></a>(filename, gcodeText, raftPreferences<font color="#909090">=None</font>)</dt><dd><tt>Raft&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.&nbsp;&nbsp;Chain&nbsp;raft&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;rafted.</tt></dd></dl>
  <dl><dt><a name="-getRaftGcode"><strong>getRaftGcode</strong></a>(gcodeText, raftPreferences<font color="#909090">=None</font>)</dt><dd><tt>Raft&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-getSquareLoop"><strong>getSquareLoop</strong></a>(begin, end)</dt><dd><tt>Get&nbsp;a&nbsp;square&nbsp;loop&nbsp;from&nbsp;the&nbsp;beginning&nbsp;to&nbsp;the&nbsp;end&nbsp;and&nbsp;back.</tt></dd></dl>
- <dl><dt><a name="-main"><strong>main</strong></a>(hashtable<font color="#909090">=None</font>)</dt><dd><tt>Display&nbsp;the&nbsp;raft&nbsp;dialog.</tt></dd></dl>
+ <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>Display&nbsp;the&nbsp;raft&nbsp;dialog.</tt></dd></dl>
  <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(filename<font color="#909090">=''</font>)</dt><dd><tt>Raft&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;Chain&nbsp;raft&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;rafted.<br>
 If&nbsp;no&nbsp;filename&nbsp;is&nbsp;specified,&nbsp;raft&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
 </td></tr></table><p>
@@ -221,7 +223,8 @@ If&nbsp;no&nbsp;filename&nbsp;is&nbsp;specified,&nbsp;raft&nbsp;the&nbsp;first&n
 <tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><strong>__author__</strong> = 'Enrique Perez (perez_enrique@yahoo.com)'<br>
 <strong>__date__</strong> = '$Date: 2008/21/04 $'<br>
-<strong>__license__</strong> = 'GPL 3.0'</td></tr></table><p>
+<strong>__license__</strong> = 'GPL 3.0'<br>
+<strong>absolute_import</strong> = _Feature((2, 5, 0, 'alpha', 1), (2, 7, 0, 'alpha', 0), 16384)</td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#7799ee">
 <td colspan=3 valign=bottom>&nbsp;<br>

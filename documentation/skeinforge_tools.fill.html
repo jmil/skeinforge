@@ -35,25 +35,7 @@ It&nbsp;took&nbsp;3&nbsp;seconds&nbsp;to&nbsp;fill&nbsp;the&nbsp;file.<br>
 &gt;&gt;&gt;&nbsp;fill.<a href="#-writeOutput">writeOutput</a>()<br>
 File&nbsp;Hollow&nbsp;Square.gts&nbsp;is&nbsp;being&nbsp;filled.<br>
 The&nbsp;filled&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_fill.gcode<br>
-It&nbsp;took&nbsp;3&nbsp;seconds&nbsp;to&nbsp;fill&nbsp;the&nbsp;file.<br>
-&nbsp;<br>
-&nbsp;<br>
-&gt;&gt;&gt;&nbsp;fill.<a href="#-getFillChainGcode">getFillChainGcode</a>("<br>
-(&nbsp;GCode&nbsp;generated&nbsp;by&nbsp;May&nbsp;8,&nbsp;2008&nbsp;slice.py&nbsp;)<br>
-(&nbsp;Extruder&nbsp;Initialization&nbsp;)<br>
-..<br>
-many&nbsp;lines&nbsp;of&nbsp;gcode<br>
-..<br>
-")<br>
-&nbsp;<br>
-&nbsp;<br>
-&gt;&gt;&gt;&nbsp;fill.<a href="#-getFillGcode">getFillGcode</a>("<br>
-(&nbsp;GCode&nbsp;generated&nbsp;by&nbsp;May&nbsp;8,&nbsp;2008&nbsp;slice.py&nbsp;)<br>
-(&nbsp;Extruder&nbsp;Initialization&nbsp;)<br>
-..<br>
-many&nbsp;lines&nbsp;of&nbsp;gcode<br>
-..<br>
-")</tt></p>
+It&nbsp;took&nbsp;3&nbsp;seconds&nbsp;to&nbsp;fill&nbsp;the&nbsp;file.</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -61,18 +43,19 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 <font color="#fffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
     
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="skeinforge_tools.__init__.html">skeinforge_tools.__init__</a><br>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="__init__.html">__init__</a><br>
 <a href="skeinforge_tools.analyze.html">skeinforge_tools.analyze</a><br>
 <a href="cStringIO.html">cStringIO</a><br>
-</td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.euclidean.html">skeinforge_tools.skeinforge_utilities.euclidean</a><br>
-<a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
+<a href="skeinforge_tools.skeinforge_utilities.euclidean.html">skeinforge_tools.skeinforge_utilities.euclidean</a><br>
+</td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
+<a href="skeinforge_tools.import_translator.html">skeinforge_tools.import_translator</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.intercircle.html">skeinforge_tools.skeinforge_utilities.intercircle</a><br>
-</td><td width="25%" valign=top><a href="math.html">math</a><br>
-<a href="skeinforge_tools.polyfile.html">skeinforge_tools.polyfile</a><br>
+<a href="math.html">math</a><br>
+</td><td width="25%" valign=top><a href="skeinforge_tools.polyfile.html">skeinforge_tools.polyfile</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.preferences.html">skeinforge_tools.skeinforge_utilities.preferences</a><br>
-</td><td width="25%" valign=top><a href="skeinforge_tools.slice.html">skeinforge_tools.slice</a><br>
+<a href="skeinforge_tools.slice_shape.html">skeinforge_tools.slice_shape</a><br>
 <a href="sys.html">sys</a><br>
-<a href="time.html">time</a><br>
+</td><td width="25%" valign=top><a href="time.html">time</a><br>
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ee77aa">
@@ -182,7 +165,7 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
  <dl><dt><a name="-createExtraFillLoops"><strong>createExtraFillLoops</strong></a>(surroundingLoop)</dt><dd><tt>Create&nbsp;extra&nbsp;fill&nbsp;loops.</tt></dd></dl>
  <dl><dt><a name="-createFillForSurroundings"><strong>createFillForSurroundings</strong></a>(surroundingLoops)</dt><dd><tt>Create&nbsp;extra&nbsp;fill&nbsp;loops&nbsp;for&nbsp;surrounding&nbsp;loops.</tt></dd></dl>
  <dl><dt><a name="-getExtraFillLoops"><strong>getExtraFillLoops</strong></a>(insideLoops, outsideLoop, radius)</dt><dd><tt>Get&nbsp;extra&nbsp;loops&nbsp;between&nbsp;inside&nbsp;and&nbsp;outside&nbsp;loops.</tt></dd></dl>
- <dl><dt><a name="-getFillChainGcode"><strong>getFillChainGcode</strong></a>(gcodeText, fillPreferences<font color="#909090">=None</font>)</dt><dd><tt>Fill&nbsp;the&nbsp;slices&nbsp;of&nbsp;a&nbsp;gcode&nbsp;text.&nbsp;&nbsp;Chain&nbsp;fill&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;sliced.</tt></dd></dl>
+ <dl><dt><a name="-getFillChainGcode"><strong>getFillChainGcode</strong></a>(filename, gcodeText, fillPreferences<font color="#909090">=None</font>)</dt><dd><tt>Fill&nbsp;the&nbsp;slices&nbsp;of&nbsp;a&nbsp;gcode&nbsp;text.&nbsp;&nbsp;Chain&nbsp;fill&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;sliced.</tt></dd></dl>
  <dl><dt><a name="-getFillGcode"><strong>getFillGcode</strong></a>(gcodeText, fillPreferences<font color="#909090">=None</font>)</dt><dd><tt>Fill&nbsp;the&nbsp;slices&nbsp;of&nbsp;a&nbsp;gcode&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-getHalfSimplifiedPath"><strong>getHalfSimplifiedPath</strong></a>(path, radius, remainder)</dt><dd><tt>Get&nbsp;the&nbsp;path&nbsp;with&nbsp;half&nbsp;of&nbsp;the&nbsp;points&nbsp;inside&nbsp;the&nbsp;channel&nbsp;removed.</tt></dd></dl>
  <dl><dt><a name="-getHorizontalSegments"><strong>getHorizontalSegments</strong></a>(fillLoops, alreadyFilledArounds, y)</dt><dd><tt>Get&nbsp;horizontal&nbsp;segments&nbsp;inside&nbsp;loops.</tt></dd></dl>
@@ -206,7 +189,8 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 <tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><strong>__author__</strong> = 'Enrique Perez (perez_enrique@yahoo.com)'<br>
 <strong>__date__</strong> = '$Date: 2008/28/04 $'<br>
-<strong>__license__</strong> = 'GPL 3.0'</td></tr></table><p>
+<strong>__license__</strong> = 'GPL 3.0'<br>
+<strong>absolute_import</strong> = _Feature((2, 5, 0, 'alpha', 1), (2, 7, 0, 'alpha', 0), 16384)</td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#7799ee">
 <td colspan=3 valign=bottom>&nbsp;<br>

@@ -12,7 +12,7 @@ from skeinforge_tools.skeinforge_utilities import gcodec
 import os
 import webbrowser
 try:
-	from Tkinter import *
+	import Tkinter
 except:
 	print( 'You do not have Tkinter, which is needed for the graphical interface, you will only be able to use the command line.' )
 	print( 'Information on how to download Tkinter is at:\nwww.tcl.tk/software/tcltk/' )
@@ -28,7 +28,7 @@ globalSpreadsheetSeparator = '\t'
 def displayDialog( displayPreferences ):
 	"Display the preferences dialog."
 	readPreferences( displayPreferences )
-	root = Tk()
+	root = Tkinter.Tk()
 	preferencesDialog = PreferencesDialog( displayPreferences, root )
 	global globalIsMainLoopRunning
 #	print( globalIsMainLoopRunning )
@@ -47,11 +47,8 @@ def getArchiveText( preferences ):
 	return archiveWriter.getvalue()
 
 def getPreferencesFilePath( filename ):
-#def getPreferencesFilePath( filename, folderName = '' ):
 	"Get the preferences file path, which is the home directory joined with the folder name and filename."
 	directoryName = os.path.join( os.path.expanduser( '~' ), '.skeinforge' )
-#	if folderName != '':
-#		directoryName = os.path.join( directoryName, folderName )
 	try:
 		os.mkdir( directoryName )
 	except OSError:
@@ -100,10 +97,10 @@ class AddListboxSelection:
 	"A class to add the selection of a listbox preference."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.entry = Entry( preferencesDialog.master )
+		self.entry = Tkinter.Entry( preferencesDialog.master )
 		self.entry.bind( '<Return>', self.addSelectionWithEvent )
-		self.entry.grid( row = preferencesDialog.row, column = 1, columnspan = 2, sticky=W )
-		self.addButton = Button( preferencesDialog.master, text = 'Add Listbox Selection', command = self.addSelection )
+		self.entry.grid( row = preferencesDialog.row, column = 1, columnspan = 2, sticky = Tkinter.W )
+		self.addButton = Tkinter.Button( preferencesDialog.master, text = 'Add Listbox Selection', command = self.addSelection )
 		self.addButton.grid( row = preferencesDialog.row, column = 0 )
 		preferencesDialog.row += 1
 
@@ -113,10 +110,10 @@ class AddListboxSelection:
 		if entryText == '':
 			print( 'To add to the selection, enter the material name.' )
 			return
-		self.entry.delete( 0, END )
+		self.entry.delete( 0, Tkinter.END )
 		self.listboxPreference.listPreference.value.append( entryText )
 		self.listboxPreference.listPreference.value.sort()
-		self.listboxPreference.listbox.delete( 0, END )
+		self.listboxPreference.listbox.delete( 0, Tkinter.END )
 		self.listboxPreference.value = entryText
 		self.listboxPreference.setListboxItems()
 		self.listboxPreference.setToDisplay()
@@ -147,9 +144,9 @@ class BooleanPreference:
 	"A class to display, read & write a boolean."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.checkbutton = Checkbutton( preferencesDialog.master, command = self.toggleCheckbox, text = self.name )
+		self.checkbutton = Tkinter.Checkbutton( preferencesDialog.master, command = self.toggleCheckbox, text = self.name )
 #toggleCheckbox is being used instead of a Tkinter IntVar because there is a weird bug where it doesn't work properly if this preference is not on the first window.
-		self.checkbutton.grid( row = preferencesDialog.row, columnspan = 4, sticky=W )
+		self.checkbutton.grid( row = preferencesDialog.row, columnspan = 4, sticky = Tkinter.W )
 		self.setStateToValue()
 		preferencesDialog.row += 1
 
@@ -196,7 +193,7 @@ class DeleteListboxSelection( AddListboxSelection ):
 	"A class to delete the selection of a listbox preference."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.deleteButton = Button( preferencesDialog.master, text = "Delete Listbox Selection", command = self.deleteSelection )
+		self.deleteButton = Tkinter.Button( preferencesDialog.master, text = "Delete Listbox Selection", command = self.deleteSelection )
 		self.deleteButton.grid( row = preferencesDialog.row, column = 0 )
 		preferencesDialog.row += 1
 
@@ -206,7 +203,7 @@ class DeleteListboxSelection( AddListboxSelection ):
 		if self.listboxPreference.value not in self.listboxPreference.listPreference.value:
 			return
 		self.listboxPreference.listPreference.value.remove( self.listboxPreference.value )
-		self.listboxPreference.listbox.delete( 0, END )
+		self.listboxPreference.listbox.delete( 0, Tkinter.END )
 		self.listboxPreference.setListboxItems()
 		self.listboxPreference.listbox.select_set( 0 )
 		self.listboxPreference.setToDisplay()
@@ -222,7 +219,7 @@ class DisplayToolButton:
 		for word in words:
 			capitalizedStrings.append( word.capitalize() )
 		capitalizedName = ' '.join( capitalizedStrings )
-		self.displayButton = Button( preferencesDialog.master, text = capitalizedName, command = self.displayTool )
+		self.displayButton = Tkinter.Button( preferencesDialog.master, text = capitalizedName, command = self.displayTool )
 		self.displayButton.grid( row = preferencesDialog.row, column = 0 )
 		preferencesDialog.row += 1
 
@@ -233,13 +230,8 @@ class DisplayToolButton:
 	def displayTool( self ):
 		"Display the tool preferences dialog."
 		pluginModule = gcodec.getModule( self.name, self.folderName, self.moduleFilename )
-		if pluginModule == None:
-			print( '' )
-			print( 'The plugin could not be imported.  So to run ' + self.name + ',' )
-			print( 'in a shell in the folder ' + self.name + ' is in, type:' )
-			print( '> python ' + self.name + '.py' )
-			return
-		pluginModule.main()
+		if pluginModule != None:
+			pluginModule.main()
 
 	def getFromFolderName( self, folderName, moduleFilename, name ):
 		"Initialize."
@@ -319,11 +311,11 @@ class FloatPreference( BooleanPreference ):
 	"A class to display, read & write a float."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.entry = Entry( preferencesDialog.master )
+		self.entry = Tkinter.Entry( preferencesDialog.master )
 		self.entry.insert( 0, str( self.value ) )
-		self.entry.grid( row = preferencesDialog.row, column = 2, columnspan = 2, sticky=W )
-		self.label = Label( preferencesDialog.master, text = self.name )
-		self.label.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky=W )
+		self.entry.grid( row = preferencesDialog.row, column = 2, columnspan = 2, sticky = Tkinter.W )
+		self.label = Tkinter.Label( preferencesDialog.master, text = self.name )
+		self.label.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky = Tkinter.W )
 		preferencesDialog.row += 1
 
 	def setToDisplay( self ):
@@ -356,8 +348,8 @@ class LabelDisplay:
 	"A class to add a label."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.label = Label( preferencesDialog.master, text = self.name )
-		self.label.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky=W )
+		self.label = Tkinter.Label( preferencesDialog.master, text = self.name )
+		self.label.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky = Tkinter.W )
 		preferencesDialog.row += 1
 
 	def addToPreferenceTable( self, preferenceTable ):
@@ -413,14 +405,14 @@ class ListboxPreference( BooleanPreference ):
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
 #http://www.pythonware.com/library/tkinter/introduction/x5453-patterns.htm
-		frame = Frame( preferencesDialog.master )
-		scrollbar = Scrollbar( frame, orient = VERTICAL )
-		self.listbox = Listbox( frame, selectmode = SINGLE, yscrollcommand = scrollbar.set )
+		frame = Tkinter.Frame( preferencesDialog.master )
+		scrollbar = Tkinter.Scrollbar( frame, orient = Tkinter.VERTICAL )
+		self.listbox = Tkinter.Listbox( frame, selectmode = Tkinter.SINGLE, yscrollcommand = scrollbar.set )
 		scrollbar.config( command = self.listbox.yview )
-		scrollbar.pack( side = RIGHT, fill = Y )
-		self.listbox.pack( side = LEFT, fill = BOTH, expand = 1 )
+		scrollbar.pack( side = Tkinter.RIGHT, fill = Tkinter.Y )
+		self.listbox.pack( side = Tkinter.LEFT, fill = Tkinter.BOTH, expand = 1 )
 		self.setListboxItems()
-		frame.grid( row = preferencesDialog.row, columnspan = 4, sticky=W )
+		frame.grid( row = preferencesDialog.row, columnspan = 4, sticky = Tkinter.W )
 		preferencesDialog.row += 1
 
 	def getFromListPreference( self, listPreference, name, value ):
@@ -432,13 +424,13 @@ class ListboxPreference( BooleanPreference ):
 	def setListboxItems( self ):
 		"Set the listbox items to the list preference."
 		for item in self.listPreference.value:
-			self.listbox.insert( END, item )
+			self.listbox.insert( Tkinter.END, item )
 			if self.value == item:
-				self.listbox.select_set( END )
+				self.listbox.select_set( Tkinter.END )
 
 	def setToDisplay( self ):
 		"Set the selection value to the listbox selection."
-		valueString = self.listbox.get( ACTIVE )
+		valueString = self.listbox.get( Tkinter.ACTIVE )
 		self.setValueToString( valueString )
 
 	def setValueToString( self, valueString ):
@@ -450,8 +442,8 @@ class Radio( BooleanPreference ):
 	"A class to display, read & write a boolean with associated radio button."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.radiobutton = Radiobutton( preferencesDialog.master, command = self.clickRadio, text = self.name, value = preferencesDialog.row, variable = self.getIntVar() )
-		self.radiobutton.grid( row = preferencesDialog.row, columnspan = 4, sticky=W )
+		self.radiobutton = Tkinter.Radiobutton( preferencesDialog.master, command = self.clickRadio, text = self.name, value = preferencesDialog.row, variable = self.getIntVar() )
+		self.radiobutton.grid( row = preferencesDialog.row, columnspan = 4, sticky = Tkinter.W )
 		self.setDisplayState( preferencesDialog.row )
 		preferencesDialog.row += 1
 
@@ -468,7 +460,7 @@ class Radio( BooleanPreference ):
 	def getIntVar( self ):
 		"Get the IntVar for this radio button group."
 		if len( self.radio ) == 0:
-			self.radio.append( IntVar() )
+			self.radio.append( Tkinter.IntVar() )
 		return self.radio[ 0 ]
 
 	def setToDisplay( self ):
@@ -492,8 +484,8 @@ class RadioCapitalized( Radio ):
 		for word in words:
 			capitalizedStrings.append( word.capitalize() )
 		capitalizedName = ' '.join( capitalizedStrings )
-		self.radiobutton = Radiobutton( preferencesDialog.master, command = self.clickRadio, text = capitalizedName, value = preferencesDialog.row, variable = self.getIntVar() )
-		self.radiobutton.grid( row = preferencesDialog.row, columnspan = 4, sticky=W )
+		self.radiobutton = Tkinter.Radiobutton( preferencesDialog.master, command = self.clickRadio, text = capitalizedName, value = preferencesDialog.row, variable = self.getIntVar() )
+		self.radiobutton.grid( row = preferencesDialog.row, columnspan = 4, sticky = Tkinter.W )
 		self.setDisplayState( preferencesDialog.row )
 		preferencesDialog.row += 1
 
@@ -506,9 +498,9 @@ class RadioLabel( Radio ):
 	"A class to display, read & write a boolean with associated radio button."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		Label( preferencesDialog.master, text = self.labelText ).grid( row = preferencesDialog.row, column = 0, columnspan = 4, sticky=W )
-		self.radiobutton = Radiobutton( preferencesDialog.master, command = self.clickRadio, text = self.name, value = preferencesDialog.row, variable = self.getIntVar() )
-		self.radiobutton.grid( row = preferencesDialog.row + 1, columnspan = 4, sticky=W )
+		Tkinter.Label( preferencesDialog.master, text = self.labelText ).grid( row = preferencesDialog.row, column = 0, columnspan = 4, sticky = Tkinter.W )
+		self.radiobutton = Tkinter.Radiobutton( preferencesDialog.master, command = self.clickRadio, text = self.name, value = preferencesDialog.row, variable = self.getIntVar() )
+		self.radiobutton.grid( row = preferencesDialog.row + 1, columnspan = 4, sticky = Tkinter.W )
 		self.setDisplayState( preferencesDialog.row )
 		preferencesDialog.row += 2
 
@@ -521,7 +513,7 @@ class RadioLabel( Radio ):
 	def getIntVar( self ):
 		"Get the IntVar for this radio button group."
 		if len( self.radio ) == 0:
-			self.radio.append( IntVar() )
+			self.radio.append( Tkinter.IntVar() )
 		return self.radio[ 0 ]
 
 	def setToDisplay( self ):
@@ -533,11 +525,11 @@ class StringPreference( BooleanPreference ):
 	"A class to display, read & write a string."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.entry = Entry( preferencesDialog.master )
+		self.entry = Tkinter.Entry( preferencesDialog.master )
 		self.entry.insert( 0, self.value )
-		self.entry.grid( row = preferencesDialog.row, column = 2, columnspan = 2, sticky=W )
-		self.label = Label( preferencesDialog.master, text = self.name )
-		self.label.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky=W )
+		self.entry.grid( row = preferencesDialog.row, column = 2, columnspan = 2, sticky = Tkinter.W )
+		self.label = Tkinter.Label( preferencesDialog.master, text = self.name )
+		self.label.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky = Tkinter.W )
 		preferencesDialog.row += 1
 
 	def setToDisplay( self ):
@@ -558,27 +550,27 @@ class PreferencesDialog:
 		self.master = master
 		self.row = 0
 		master.title( displayPreferences.title )
-		frame = Frame( master )
+		frame = Tkinter.Frame( master )
 		for preference in displayPreferences.archive:
 			preference.addToDialog( self )
-		Label( master ).grid( row = self.row, column = 0 )
+		Tkinter.Label( master ).grid( row = self.row, column = 0 )
 		self.row += 1
 		cancelColor = 'black'
 		cancelTitle = 'Close'
 		if displayPreferences.saveTitle != None:
-			saveButton = Button( master, text = displayPreferences.saveTitle, command = self.savePreferencesDestroy )
+			saveButton = Tkinter.Button( master, text = displayPreferences.saveTitle, command = self.savePreferencesDestroy )
 			saveButton.grid( row = self.row, column = self.column )
 			self.column += 1
 			cancelColor = 'red'
 			cancelTitle = 'Cancel'
 		if displayPreferences.executeTitle != None:
-			executeButton = Button( master, text = displayPreferences.executeTitle, command = self.execute )
+			executeButton = Tkinter.Button( master, text = displayPreferences.executeTitle, command = self.execute )
 			executeButton.grid( row = self.row, column = self.column )
 			self.column += 1
-		helpButton = Button( master, text = "       ?       ", command = self.openBrowser )
+		helpButton = Tkinter.Button( master, text = "       ?       ", command = self.openBrowser )
 		helpButton.grid( row = self.row, column = self.column )
 		self.column += 1
-		cancelButton = Button( master, command = master.destroy, fg = cancelColor, text = cancelTitle )
+		cancelButton = Tkinter.Button( master, command = master.destroy, fg = cancelColor, text = cancelTitle )
 		cancelButton.grid( row = self.row, column = self.column )
 
 	def execute( self ):
@@ -606,35 +598,6 @@ class PreferencesDialog:
 		self.master.destroy()
 
 """
-def displayDialog( displayPreferences ):
-	"Display the preferences dialog."
-	readPreferences( displayPreferences )
-#	global globalIsMainLoopRunning
-	global globalTkRoot
-	root = globalTkRoot
-	if root == None:
-		root = Tk()
-	preferencesDialog = PreferencesDialog( displayPreferences, root )
-	if globalTkRoot != None:
-		return
-	globalTkRoot = root
-	root.mainloop()
-	globalTkRoot = None
-		master = Tk()
-		r = 0
-		master.title( 't' )
-		frame = Frame( master )
-		Label( master ).grid( row = r, column = 0 )
-		r += 1
-		saveButton = Button( master, text = "Save Preferences", command = self.savePreferencesDestroy )
-		saveButton.grid( row = r, column = 0 )
-		helpButton = Button( master, text = "       ?       ", command = self.openBrowser )
-		helpButton.grid( row = r, column = 2 )
-		cancelButton = Button( master, text = "Cancel", fg = "red", command = master.destroy )
-		cancelButton.grid( row = r, column = 3 )
-#		initial_focus = self.body(frame)
-		frame.focus_set()
-		#self.master.destroy()
 class Dialog(Toplevel):
     def __init__(self, parent, title = None):
         Toplevel.__init__(self, parent)
@@ -643,7 +606,7 @@ class Dialog(Toplevel):
             self.title(title)
         self.parent = parent
         self.result = None
-        body = Frame(self)
+        body = Tkinter.Frame(self)
         self.initial_focus = self.body(body)
         body.pack(padx=5, pady=5)
         self.buttonbox()
@@ -666,12 +629,12 @@ class Dialog(Toplevel):
         # add standard button box. override if you don't want the
         # standard buttons
         
-        box = Frame(self)
+        box = Tkinter.Frame(self)
 
-        w = Button(box, text="OK", width=10, command=self.ok, default=ACTIVE)
-        w.pack(side=LEFT, padx=5, pady=5)
-        w = Button(box, text="Cancel", width=10, command=self.cancel)
-        w.pack(side=LEFT, padx=5, pady=5)
+        w = Tkinter.Button(box, text="OK", width=10, command=self.ok, default=ACTIVE)
+        w.pack(side=Tkinter.LEFT, padx=5, pady=5)
+        w = Tkinter.Button(box, text="Cancel", width=10, command=self.cancel)
+        w.pack(side=Tkinter.LEFT, padx=5, pady=5)
 
         self.bind("&lt;Return>", self.ok)
         self.bind("&lt;Escape>", self.cancel)
@@ -711,35 +674,4 @@ class Dialog(Toplevel):
 
         pass # override
 
-class MyDialog(Dialog):
-
-    def body(self, master):
-
-        Label(master, text="First:").grid(row=0)
-        Label(master, text="Second:").grid(row=1)
-
-        self.e1 = Entry(master)
-        self.e2 = Entry(master)
-
-        self.e1.grid(row=0, column=1)
-        self.e2.grid(row=1, column=1)
-        return self.e1 # initial focus
-
-    def apply(self):
-        first = float(self.e1.get())
-        second = float(self.e2.get())
-        self.result = first, second
-
-def dialogTest():
-    root = Tk()
-    d = MyDialog(root)
-    print( d.result)
-
-
-root = Tk()
-
-w = Label(root, text="Hello, world!")
-w.pack()
-
-root.mainloop()
 """

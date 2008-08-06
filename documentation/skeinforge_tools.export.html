@@ -22,7 +22,8 @@ the&nbsp;output&nbsp;in&nbsp;the&nbsp;shell&nbsp;screen.&nbsp;&nbsp;Another&nbsp
 printed&nbsp;to&nbsp;a&nbsp;file.<br>
 &nbsp;<br>
 If&nbsp;the&nbsp;"Delete&nbsp;M110&nbsp;Gcode&nbsp;Line"&nbsp;checkbox&nbsp;is&nbsp;true,&nbsp;export&nbsp;will&nbsp;delete&nbsp;the&nbsp;M110&nbsp;gcode&nbsp;line,&nbsp;whose&nbsp;only&nbsp;purpose&nbsp;is&nbsp;to&nbsp;indicate&nbsp;that<br>
-the&nbsp;gcode&nbsp;is&nbsp;generated&nbsp;by&nbsp;skeinforge.&nbsp;&nbsp;The&nbsp;M110&nbsp;gcode&nbsp;is&nbsp;not&nbsp;necessary&nbsp;to&nbsp;run&nbsp;a&nbsp;fabricator.<br>
+the&nbsp;gcode&nbsp;is&nbsp;generated&nbsp;by&nbsp;skeinforge.&nbsp;&nbsp;If&nbsp;the&nbsp;"Delete&nbsp;Comments"&nbsp;checkbox&nbsp;is&nbsp;true,&nbsp;export&nbsp;will&nbsp;delete&nbsp;the&nbsp;comments.&nbsp;&nbsp;The&nbsp;M110<br>
+gcode&nbsp;and&nbsp;the&nbsp;comments&nbsp;are&nbsp;not&nbsp;necessary&nbsp;to&nbsp;run&nbsp;a&nbsp;fabricator.<br>
 &nbsp;<br>
 An&nbsp;export&nbsp;plugin&nbsp;is&nbsp;a&nbsp;script&nbsp;in&nbsp;the&nbsp;export_plugins&nbsp;folder&nbsp;which&nbsp;has&nbsp;the&nbsp;functions&nbsp;getOuput&nbsp;and&nbsp;writeOutput.<br>
 &nbsp;<br>
@@ -60,18 +61,19 @@ The&nbsp;exported&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_e
 <font color="#fffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
     
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="skeinforge_tools.__init__.html">skeinforge_tools.__init__</a><br>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="__init__.html">__init__</a><br>
 <a href="skeinforge_tools.analyze.html">skeinforge_tools.analyze</a><br>
 <a href="cStringIO.html">cStringIO</a><br>
-</td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.euclidean.html">skeinforge_tools.skeinforge_utilities.euclidean</a><br>
-<a href="skeinforge_tools.fillet.html">skeinforge_tools.fillet</a><br>
+<a href="skeinforge_tools.skeinforge_utilities.euclidean.html">skeinforge_tools.skeinforge_utilities.euclidean</a><br>
+</td><td width="25%" valign=top><a href="skeinforge_tools.fillet.html">skeinforge_tools.fillet</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
-</td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.intercircle.html">skeinforge_tools.skeinforge_utilities.intercircle</a><br>
-<a href="os.html">os</a><br>
+<a href="skeinforge_tools.import_translator.html">skeinforge_tools.import_translator</a><br>
+<a href="skeinforge_tools.skeinforge_utilities.intercircle.html">skeinforge_tools.skeinforge_utilities.intercircle</a><br>
+</td><td width="25%" valign=top><a href="os.html">os</a><br>
 <a href="skeinforge_tools.polyfile.html">skeinforge_tools.polyfile</a><br>
-</td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.preferences.html">skeinforge_tools.skeinforge_utilities.preferences</a><br>
+<a href="skeinforge_tools.skeinforge_utilities.preferences.html">skeinforge_tools.skeinforge_utilities.preferences</a><br>
 <a href="sys.html">sys</a><br>
-<a href="time.html">time</a><br>
+</td><td width="25%" valign=top><a href="time.html">time</a><br>
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ee77aa">
@@ -115,7 +117,7 @@ The&nbsp;exported&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_e
 
 <dl><dt><a name="ExportSkein-parseGcode"><strong>parseGcode</strong></a>(self, exportPreferences, gcodeText)</dt><dd><tt>Parse&nbsp;gcode&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;export&nbsp;gcode.</tt></dd></dl>
 
-<dl><dt><a name="ExportSkein-parseLine"><strong>parseLine</strong></a>(self, line, removeM110GcodeLine)</dt><dd><tt>Parse&nbsp;a&nbsp;gcode&nbsp;line.</tt></dd></dl>
+<dl><dt><a name="ExportSkein-parseLine"><strong>parseLine</strong></a>(self, exportPreferences, line)</dt><dd><tt>Parse&nbsp;a&nbsp;gcode&nbsp;line.</tt></dd></dl>
 
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -138,7 +140,8 @@ If&nbsp;no&nbsp;filename&nbsp;is&nbsp;specified,&nbsp;export&nbsp;the&nbsp;first
 <tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><strong>__author__</strong> = 'Enrique Perez (perez_enrique@yahoo.com)'<br>
 <strong>__date__</strong> = '$Date: 2008/21/04 $'<br>
-<strong>__license__</strong> = 'GPL 3.0'</td></tr></table><p>
+<strong>__license__</strong> = 'GPL 3.0'<br>
+<strong>absolute_import</strong> = _Feature((2, 5, 0, 'alpha', 1), (2, 7, 0, 'alpha', 0), 16384)</td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#7799ee">
 <td colspan=3 valign=bottom>&nbsp;<br>

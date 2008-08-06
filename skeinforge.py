@@ -5,8 +5,8 @@ Skeinforge is a tool chain to forge a gcode skein for a model.
 
 The tool chain starts with slice_shape, which slices the model into layers, then the layers are modified by other tools in turn like
 fill, comb, tower, raft, stretch, hop, fillet & export.  Each tool automatically gets the gcode from the previous tool.  So if you want
-a sliced & filled gcode, call the fill tool and it will call slice, then it will fill and output the gcode.  If you want to use all the tools,
-call export and it will call in turn all the other tools down the chain to produce the gcode file.
+a sliced & filled gcode, call the fill tool and it will call slice_shape, then it will fill and output the gcode.  If you want to use all the
+tools, call export and it will call in turn all the other tools down the chain to produce the gcode file.
 
 The skeinforge module provides a single place to call up all the preference dialogs.  When the 'Skeinforge' button is clicked,
 skeinforge calls export, since that is the end of the chain.
@@ -25,8 +25,10 @@ There are also tools which handle preferences for the chain, like material & pol
 The analyze tool calls plugins in the analyze_plugins folder, which will analyze the gcode in some way when it is generated if
 their Activate checkbox is selected.
 
+The import_translator tool accesses and displays the import plugins.
+
 The default preferences are similar to those on Nophead's machine.  A preference which is often different is the
-'Extrusion Diameter' in slice.
+'Extrusion Diameter' in slice_shape.
 
 
 
@@ -41,7 +43,8 @@ http://www.tcl.tk/software/tcltk/
 To run gifscene you need the Python Imaging Library, which can be downloaded from:
 http://www.pythonware.com/products/pil/
 
-Skeinforge imports GNU Triangulated Surface (.gts) files.  To turn an STL file into a GTS file, you can use the Export GNU
+Skeinforge imports StereoLithography (.stl) files or GNU Triangulated Surface (.gts) files.  The import plugin for STL files is
+experimental and if it doesn't work, an indirect way to import an STL file is by turning it into a GTS file is by using the Export GNU
 Triangulated Surface script at:
 http://members.axion.net/~enrique/Export%20GNU%20Triangulated%20Surface.bsh
 
@@ -59,6 +62,9 @@ Once you've created the GTS file, you can turn it into gcode by typing in a shel
 When the skeinforge dialog pops up, click 'Skeinforge', choose the file which you exported in 'Export GNU Triangulated Surface'
 and the gcode file will be saved with the suffix '_export.gcode'.
 
+Or you can turn files into gcode by adding the file name, for example:
+> python skeinforge.py Hollow Square.stl
+
 
 
 End of the Beginning
@@ -75,6 +81,7 @@ The psyco download page is:
 http://psyco.sourceforge.net/download.html
 
 
+
 Documentation
 
 The documentation is in the documentation folder, in the doc strings for each module and it can be called from the '?'
@@ -85,6 +92,20 @@ the skeinforge.py directory, then type:
 > pydoc -w ./'
 
 Then move all the generated html files to the documentation folder.
+
+
+
+Fabrication
+
+To fabricate a model with gcode you can use the Arduino, like the Metalab group does; whose adventures are described at:
+http://reprap.soup.io/
+
+Another way is to use an EMC2 or similar computer controlled milling machine, as described in the "ECM2 based repstrap"
+forum thread at:
+http://forums.reprap.org/read.php?1,12143
+
+using the M-Apps package, which is at:
+http://forums.reprap.org/file.php?1,file=772
 
 
 
@@ -99,9 +120,6 @@ http://reprap.org/bin/view/Main/MCodeReference
 A gode example is at:
 http://forums.reprap.org/file.php?12,file=565
 
-The GTS format is supported by Mesh Viewer, and it is described at:
-http://gts.sourceforge.net/reference/gts-surfaces.html#GTS-SURFACE-WRITE
-
 The preferences are saved as tab separated .csv files in the .skeinforge folder in your home directory.  The preferences can
 be set in the tool dialogs.  The .csv files can also be edited with a text editor or a spreadsheet program set to separate tabs.
 
@@ -109,24 +127,54 @@ The Scalable Vector Graphics file produced by vectorwrite can be opened by an SV
 like Mozilla:
 http://www.mozilla.com/firefox/
 
+A good triangle surface format is the GNU Triangulated Surface format, which is supported by Mesh Viewer and described at:
+http://gts.sourceforge.net/reference/gts-surfaces.html#GTS-SURFACE-WRITE
+
+STL is an inferior triangle surface format, described at:
+http://en.wikipedia.org/wiki/STL_(file_format)
+
+
+
+Getting Skeinforge
+
+The latest version is in the last reprap_python_beanshell.zip attachment in the "How to Print Gcode from Host" thread at:
+http://forums.reprap.org/read.php?12,10772
+
+a sometimes out of date version is at:
+http://members.axion.net/~enrique/reprap_python_beanshell.zip
+
+
+
+Troubleshooting
+
+You can ask for skeinforge help by posting in the "How to Print Gcode from Host" thread at:
+http://forums.reprap.org/read.php?12,10772
+
+or send a private message through the forum software by going to my page at:
+http://forums.reprap.org/profile.php?12,488
+
 
 
 Examples
 
-The following examples slice and dice the GNU Triangulated Surface file Screw Holder.gts.  The examples are run in a terminal in the
-folder which contains Screw Holder.gts and skeinforge.py.
+The following examples slice and dice the STL file Screw Holder.stl.  The examples are run in a terminal in the folder which
+contains Screw Holder.gts and skeinforge.py.
+
+> python skeinforge.py Screw Holder.stl
+The exported file is saved as Screw Holder_export.gcode
+
 
 > python
 Python 2.5.1 (r251:54863, Sep 22 2007, 01:43:31)
 [GCC 4.2.1 (SUSE Linux)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
 >>> import skeinforge
->>> skeinforge.main()
-This brings up the skeinforge dialog.
-
-
 >>> skeinforge.writeOutput()
 The exported file is saved as Screw Holder_export.gcode
+
+
+>>> skeinforge.main()
+This brings up the skeinforge dialog.
 
 """
 
@@ -136,6 +184,7 @@ import __init__
 
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
+from skeinforge_tools import import_translator
 from skeinforge_tools import polyfile
 import cStringIO
 import sys
@@ -148,6 +197,7 @@ Brendan Erwin <http://forums.reprap.org/profile.php?12,217>
 Greenarrow <http://forums.reprap.org/profile.php?12,81>
 Ian England <http://forums.reprap.org/profile.php?12,192>
 Kyle Corbitt <http://forums.reprap.org/profile.php?12,90>
+Marius Kintel <http://reprap.soup.io/>
 Nophead <www.blogger.com/profile/12801535866788103677>
 Reece.Arnott <http://forums.reprap.org/profile.php?12,152>
 
@@ -162,19 +212,14 @@ def getSkeinforgeToolFilenames():
 	return gcodec.getPluginFilenames( 'skeinforge_tools', __file__ )
 
 def writeOutput( filename = '' ):
-	"Skeinforge a gcode file.  If no filename is specified, comment the first gcode file in this folder that is not modified."
+	"Skeinforge a gcode file.  If no filename is specified, skeinforge the first gcode file in this folder that is not modified."
 	skeinforgePluginFilenames = getSkeinforgeToolFilenames()
-	toolNames = 'export fillet stretch raft comb tower fill slice_shape'.split()
+	toolNames = 'export fillet hop stretch raft comb tower fill slice_shape'.split()
 	for toolName in toolNames:
 		for skeinforgePluginFilename in skeinforgePluginFilenames:
 			if skeinforgePluginFilename == toolName:
 				pluginModule = gcodec.getModule( skeinforgePluginFilename, 'skeinforge_tools', __file__ )
-				if pluginModule == None:
-					print( '' )
-					print( 'The plugin could not be imported.  So to run ' + skeinforgePluginFilename + ',' )
-					print( 'in a shell in the skeinforge_tools folder type ' )
-					print( '> python ' + skeinforgePluginFilename + '.py' )
-				else:
+				if pluginModule != None:
 					pluginModule.writeOutput( filename )
 				return
 
@@ -193,7 +238,7 @@ class SkeinforgePreferences:
 			skeinforgePlugin = preferences.DisplayToolButton().getFromFolderName( 'skeinforge_tools', __file__, skeinforgePluginFilename )
 			self.skeinforgePlugins.append( skeinforgePlugin )
 		self.archive += self.skeinforgePlugins
-		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface text files', '*.gts' ), ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Skeinforged', '' )
+		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Skeinforged', '' )
 		self.archive.append( self.filenameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.executeTitle = 'Skeinforge'
@@ -204,14 +249,14 @@ class SkeinforgePreferences:
 
 	def execute( self ):
 		"Skeinforge button has been clicked."
-		filenames = polyfile.getFileOrGNUUnmodifiedGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
+		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
 		for filename in filenames:
 			writeOutput( filename )
 
 def main():
 	"Display the skeinforge dialog."
 	if len( sys.argv ) > 1:
-		writeOutput( sys.argv[ 1 ] )
+		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
 		preferences.displayDialog( SkeinforgePreferences() )
 

@@ -43,6 +43,7 @@ from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import polyfile
 import cStringIO
+import sys
 
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
@@ -104,8 +105,8 @@ class CommentSkein:
 
 	def parseLine( self, line ):
 		"Parse a gcode line and add it to the commented gcode."
-		splitLine = line.split( ' ' )
-		if len( splitLine ) < 1 or len( line ) < 1:
+		splitLine = line.split()
+		if len( splitLine ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':
@@ -169,14 +170,17 @@ class CommentPreferences:
 
 	def execute( self ):
 		"Write button has been clicked."
-		filenames = polyfile.getFileOrGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
+		filenames = polyfile.getFileOrGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled, [ '_comment' ] )
 		for filename in filenames:
 			commentFile( filename )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the comment dialog."
-	preferences.displayDialog( CommentPreferences() )
+	if len( sys.argv ) > 1:
+		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
+	else:
+		preferences.displayDialog( CommentPreferences() )
 
 if __name__ == "__main__":
 	main()

@@ -64,9 +64,11 @@ from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
+from skeinforge_tools import import_translator
 from skeinforge_tools import polyfile
 from skeinforge_tools import tower
 import cStringIO
+import sys
 import time
 
 
@@ -75,10 +77,11 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 #maybe use 2d everywhere in case there is movement across layers
-def getCombChainGcode( gcodeText, combPreferences = None ):
+def getCombChainGcode( filename, gcodeText, combPreferences = None ):
 	"Comb a gcode linear move text.  Chain comb the gcode if it is not already combed."
+	gcodeText = gcodec.getGcodeFileText( filename, gcodeText )
 	if not gcodec.isProcedureDone( gcodeText, 'tower' ):
-		gcodeText = tower.getTowerChainGcode( gcodeText )
+		gcodeText = tower.getTowerChainGcode( filename, gcodeText )
 	return getCombGcode( gcodeText, combPreferences )
 
 def getCombGcode( gcodeText, combPreferences = None ):
@@ -103,11 +106,9 @@ def isLoopNumberEqual( betweenX, betweenXIndex, loopNumber ):
 	return betweenX[ betweenXIndex ].index == loopNumber
 
 def writeOutput( filename = '' ):
-	"""Comb a gcode linear move file.  Chain comb the gcode if it is not already combed.
-	Depending on the preferences, either arcPoint, arcRadius, arcSegment, bevel or do nothing.
-	If no filename is specified, comb the first unmodified gcode file in this folder."""
+	"Comb a gcode linear move file.  Chain comb the gcode if it is not already combed.  If no filename is specified, comb the first unmodified gcode file in this folder."
 	if filename == '':
-		unmodified = gcodec.getGNUGcode()
+		unmodified = import_translator.getGNUTranslatorFilesUnmodified()
 		if len( unmodified ) == 0:
 			print( "There are no unmodified gcode files in this folder." )
 			return
@@ -116,11 +117,10 @@ def writeOutput( filename = '' ):
 	preferences.readPreferences( combPreferences )
 	startTime = time.time()
 	print( 'File ' + gcodec.getSummarizedFilename( filename ) + ' is being chain combed.' )
-	gcodeText = gcodec.getFileText( filename )
-	if gcodeText == '':
-		return
 	suffixFilename = filename[ : filename.rfind( '.' ) ] + '_comb.gcode'
-	combGcode = getCombChainGcode( gcodeText, combPreferences )
+	combGcode = getCombChainGcode( filename, '', combPreferences )
+	if combGcode == '':
+		return
 	gcodec.writeFileText( suffixFilename, combGcode )
 	print( 'The combed file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
 	analyze.writeOutput( suffixFilename, combGcode )
@@ -336,7 +336,7 @@ class CombPreferences:
 		self.archive = []
 		self.activateComb = preferences.BooleanPreference().getFromValue( 'Activate Comb', True )
 		self.archive.append( self.activateComb )
-		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface text files', '*.gts' ), ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Combed', '' )
+		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Combed', '' )
 		self.archive.append( self.filenameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.executeTitle = 'Comb'
@@ -347,14 +347,17 @@ class CombPreferences:
 
 	def execute( self ):
 		"Comb button has been clicked."
-		filenames = polyfile.getFileOrGNUUnmodifiedGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
+		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
 		for filename in filenames:
 			writeOutput( filename )
 
 
 def main( hashtable = None ):
 	"Display the comb dialog."
-	preferences.displayDialog( CombPreferences() )
+	if len( sys.argv ) > 1:
+		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
+	else:
+		preferences.displayDialog( CombPreferences() )
 
 if __name__ == "__main__":
 	main()

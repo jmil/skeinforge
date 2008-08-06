@@ -109,6 +109,7 @@ from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
 from skeinforge_tools import comb
+from skeinforge_tools import import_translator
 from skeinforge_tools import material
 from skeinforge_tools import polyfile
 import cStringIO
@@ -123,10 +124,11 @@ __license__ = "GPL 3.0"
 
 
 #maybe cool for a minute
-def getRaftChainGcode( gcodeText, raftPreferences = None ):
+def getRaftChainGcode( filename, gcodeText, raftPreferences = None ):
 	"Raft a gcode linear move text.  Chain raft the gcode if it is not already rafted."
+	gcodeText = gcodec.getGcodeFileText( filename, gcodeText )
 	if not gcodec.isProcedureDone( gcodeText, 'comb' ):
-		gcodeText = comb.getCombChainGcode( gcodeText )
+		gcodeText = comb.getCombChainGcode( filename, gcodeText )
 	return getRaftGcode( gcodeText, raftPreferences )
 
 def getRaftGcode( gcodeText, raftPreferences = None ):
@@ -154,7 +156,7 @@ def writeOutput( filename = '' ):
 	"""Raft a gcode linear move file.  Chain raft the gcode if it is not already rafted.
 	If no filename is specified, raft the first unmodified gcode file in this folder."""
 	if filename == '':
-		unmodified = gcodec.getGNUGcode()
+		unmodified = import_translator.getGNUTranslatorFilesUnmodified()
 		if len( unmodified ) == 0:
 			print( "There are no unmodified gcode files in this folder." )
 			return
@@ -163,11 +165,10 @@ def writeOutput( filename = '' ):
 	preferences.readPreferences( raftPreferences )
 	startTime = time.time()
 	print( 'File ' + gcodec.getSummarizedFilename( filename ) + ' is being chain rafted.' )
-	gcodeText = gcodec.getFileText( filename )
-	if gcodeText == '':
-		return
 	suffixFilename = filename[ : filename.rfind( '.' ) ] + '_raft.gcode'
-	raftGcode = getRaftChainGcode( gcodeText, raftPreferences )
+	raftGcode = getRaftChainGcode( filename, '', raftPreferences )
+	if raftGcode == '':
+		return
 	gcodec.writeFileText( suffixFilename, raftGcode )
 	print( 'The rafted file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
 	analyze.writeOutput( suffixFilename, raftGcode )
@@ -410,7 +411,7 @@ class RaftSkein:
 		"Parse gcode initialization and store the parameters."
 		for self.lineIndex in range( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
-			splitLine = line.split( ' ' )
+			splitLine = line.split()
 			firstWord = ''
 			if len( splitLine ) > 0:
 				firstWord = splitLine[ 0 ]
@@ -434,8 +435,8 @@ class RaftSkein:
 
 	def parseLine( self, line ):
 		"Parse a gcode line and add it to the raft skein."
-		splitLine = line.split( ' ' )
-		if len( splitLine ) < 1 or len( line ) < 1:
+		splitLine = line.split()
+		if len( splitLine ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':
@@ -507,7 +508,7 @@ class RaftPreferences:
 		self.temperatureShapeFirstLayer = preferences.FloatPreference().getFromValue( 'Temperature of Shape First Layer (Celcius):', 215.0 )
 		self.temperatureShapeNextLayers = preferences.FloatPreference().getFromValue( 'Temperature of Shape Next Layers (Celcius):', 230.0 )
 		self.turnExtruderOnEarly = preferences.BooleanPreference().getFromValue( 'Turn Extruder On Early:', True )
-		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface text files', '*.gts' ), ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Rafted', '' )
+		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Rafted', '' )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.archive = [
 			self.activateRaft,
@@ -542,7 +543,7 @@ class RaftPreferences:
 
 	def execute( self ):
 		"Raft button has been clicked."
-		filenames = polyfile.getFileOrGNUUnmodifiedGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
+		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
 		for filename in filenames:
 			writeOutput( filename )
 
@@ -550,7 +551,7 @@ class RaftPreferences:
 def main():
 	"Display the raft dialog."
 	if len( sys.argv ) > 1:
-		writeOutput( sys.argv[ 1 ] )
+		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
 		preferences.displayDialog( RaftPreferences() )
 

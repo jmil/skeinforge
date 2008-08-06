@@ -80,9 +80,11 @@ from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
+from skeinforge_tools import import_translator
 from skeinforge_tools import polyfile
 from skeinforge_tools import raft
 import cStringIO
+import sys
 import time
 
 
@@ -91,10 +93,11 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def getStretchChainGcode( gcodeText, stretchPreferences = None ):
+def getStretchChainGcode( filename, gcodeText, stretchPreferences = None ):
 	"Stretch a gcode linear move text.  Chain stretch the gcode if it is not already stretched."
+	gcodeText = gcodec.getGcodeFileText( filename, gcodeText )
 	if not gcodec.isProcedureDone( gcodeText, 'raft' ):
-		gcodeText = raft.getRaftChainGcode( gcodeText )
+		gcodeText = raft.getRaftChainGcode( filename, gcodeText )
 	return getStretchGcode( gcodeText, stretchPreferences )
 
 def getStretchGcode( gcodeText, stretchPreferences = None ):
@@ -115,7 +118,7 @@ def getStretchGcode( gcodeText, stretchPreferences = None ):
 def writeOutput( filename = '' ):
 	"Stretch a gcode linear move file.  Chain stretch the gcode if it is not already stretched.  If no filename is specified, stretch the first unmodified gcode file in this folder."
 	if filename == '':
-		unmodified = gcodec.getGNUGcode()
+		unmodified = import_translator.getGNUTranslatorFilesUnmodified()
 		if len( unmodified ) == 0:
 			print( "There are no unmodified gcode files in this folder." )
 			return
@@ -124,11 +127,10 @@ def writeOutput( filename = '' ):
 	preferences.readPreferences( stretchPreferences )
 	startTime = time.time()
 	print( 'File ' + gcodec.getSummarizedFilename( filename ) + ' is being chain stretched.' )
-	gcodeText = gcodec.getFileText( filename )
-	if gcodeText == '':
-		return
 	suffixFilename = filename[ : filename.rfind( '.' ) ] + '_stretch.gcode'
-	stretchGcode = getStretchChainGcode( gcodeText, stretchPreferences )
+	stretchGcode = getStretchChainGcode( filename, '', stretchPreferences )
+	if stretchGcode == '':
+		return
 	gcodec.writeFileText( suffixFilename, stretchGcode )
 	print( 'The stretched file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
 	analyze.writeOutput( suffixFilename, stretchGcode )
@@ -249,8 +251,8 @@ class StretchSkein:
 
 	def parseStretch( self, line ):
 		"Parse a gcode line and add it to the stretch skein."
-		splitLine = line.split( ' ' )
-		if len( splitLine ) < 1 or len( line ) < 1:
+		splitLine = line.split()
+		if len( splitLine ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':
@@ -287,7 +289,7 @@ class StretchPreferences:
 		self.archive = []
 		self.activateStretch = preferences.BooleanPreference().getFromValue( 'Activate Stretch', True )
 		self.archive.append( self.activateStretch )
-		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface text files', '*.gts' ), ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Stretched', '' )
+		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Stretched', '' )
 		self.archive.append( self.filenameInput )
 		self.stretchFromDistanceOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Stretch From Distance Over Extrusion Width (ratio):', 2.0 )
 		self.archive.append( self.stretchFromDistanceOverExtrusionWidth )
@@ -304,14 +306,17 @@ class StretchPreferences:
 
 	def execute( self ):
 		"Stretch button has been clicked."
-		filenames = polyfile.getFileOrGNUUnmodifiedGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
+		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
 		for filename in filenames:
 			writeOutput( filename )
 
 
 def main( hashtable = None ):
 	"Display the stretch dialog."
-	preferences.displayDialog( StretchPreferences() )
+	if len( sys.argv ) > 1:
+		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
+	else:
+		preferences.displayDialog( StretchPreferences() )
 
 if __name__ == "__main__":
 	main()

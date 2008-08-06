@@ -25,6 +25,8 @@ http://reprap.org/bin/view/Main/MCodeReference
 A gode example is at:
 http://forums.reprap.org/file.php?12,file=565
 
+Gifscene may not work when called from the toolchain.  If it does not, try running it directly.
+
 This example displays gifs for the gcode file Screw Holder.gcode.  This example is run in a terminal in the folder which
 contains Screw Holder.gcode and gifscene.py.
 
@@ -67,72 +69,19 @@ def gifsceneFile( filename = '' ):
 			print( "There are no unmodified gcode files in this folder." )
 			return
 		filename = unmodified[ 0 ]
-	writeGifsceneFileGivenText( filename, gcodec.getFileText( filename ) )
+	writeGifsceneFileGivenText( filename )
 
-def getGifsceneGcode( gcodeText ):
-	"Get gcode text with added gifscenes."
-	skein = GifsceneSkein()
-	skein.parseGcode( gcodeText )
-	return skein.output.getvalue()
-
-def writeGifsceneFileGivenText( filename, gcodeText ):
+def writeGifsceneFileGivenText( filename, gcodeText = '' ):
 	"Write a gifsceneed gcode file for a gcode file."
 	from skeinforge_tools.analyze_plugins.analyze_utilities import preview
 	preview.viewGif( filename, gcodeText )
 
 def writeOutput( filename, gcodeText = '' ):
-	"Write a gifsceneed gcode file for a skeinforge gcode file, if 'Write Gifsceneed File for Skeinforge Chain' is selected."
+	"Write a gifsceneed gcode file for a skeinforge gcode file, if 'Activate Gifscene' is selected."
 	gifscenePreferences = GifscenePreferences()
 	preferences.readPreferences( gifscenePreferences )
-	if gcodeText == '':
-		gcodeText = gcodec.getFileText( filename )
 	if gifscenePreferences.activateGifscene.value:
 		writeGifsceneFileGivenText( filename, gcodeText )
-
-
-class GifsceneSkein:
-	"A class to gifscene a gcode skein."
-	def __init__( self ):
-		self.oldLocation = None
-		self.output = cStringIO.StringIO()
-
-	def addGifscene( self, gifscene ):
-		"Add a gcode gifscene and a newline to the output."
-		self.output.write( "( " + gifscene + " )\n" )
-
-	def linearMove( self, splitLine ):
-		"Gifscene a linear move."
-		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-		self.addGifscene( "Linear move to " + str( location ) + "." );
-		self.oldLocation = location
-
-	def parseGcode( self, gcodeText ):
-		"Parse gcode text and store the gifsceneed gcode."
-		lines = gcodec.getTextLines( gcodeText )
-		for line in lines:
-			self.parseLine( line )
-
-	def parseLine( self, line ):
-		"Parse a gcode line and add it to the gifsceneed gcode."
-		splitLine = line.split( ' ' )
-		if len( splitLine ) < 1 or len( line ) < 1:
-			return
-		firstWord = splitLine[ 0 ]
-		if firstWord == 'G1':
-			self.linearMove( splitLine )
-		elif firstWord == 'G2':
-			self.setHelicalMoveEndpoint( splitLine )
-			self.addGifscene( "Helical clockwise move to " + str( self.oldLocation ) + "." )
-		self.output.write( line + "\n" )
-
-	def setHelicalMoveEndpoint( self, splitLine ):
-		"Get the endpoint of a helical move."
-		if self.oldLocation == None:
-			print( "A helical move is relative and therefore must not be the first move of a gcode file." )
-			return
-		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-		location.add( self.oldLocation )
-		self.oldLocation = location
 
 
 class GifscenePreferences:
@@ -162,7 +111,7 @@ class GifscenePreferences:
 def main():
 	"Display the gifscene dialog."
 	if len( sys.argv ) > 1:
-		gifsceneFile( sys.argv[ 1 ] )
+		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
 		preferences.displayDialog( GifscenePreferences() )
 

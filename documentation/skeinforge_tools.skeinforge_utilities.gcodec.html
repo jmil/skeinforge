@@ -45,8 +45,10 @@ many&nbsp;lines&nbsp;of&nbsp;text<br>
 <font color="#fffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
     
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="os.html">os</a><br>
-</td><td width="25%" valign=top></td><td width="25%" valign=top></td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="__init__.html">__init__</a><br>
+</td><td width="25%" valign=top><a href="os.html">os</a><br>
+</td><td width="25%" valign=top><a href="sys.html">sys</a><br>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#eeaa77">
 <td colspan=3 valign=bottom>&nbsp;<br>
@@ -61,18 +63,18 @@ word&nbsp;--&nbsp;string&nbsp;with&nbsp;value&nbsp;starting&nbsp;after&nbsp;the&
  <dl><dt><a name="-getDoubleForLetter"><strong>getDoubleForLetter</strong></a>(letter, splitLine)</dt><dd><tt>Get&nbsp;the&nbsp;double&nbsp;value&nbsp;of&nbsp;the&nbsp;word&nbsp;after&nbsp;the&nbsp;first&nbsp;occurence&nbsp;of&nbsp;the&nbsp;letter&nbsp;in&nbsp;the&nbsp;split&nbsp;line.</tt></dd></dl>
  <dl><dt><a name="-getDoubleFromCharacterSplitLineValue"><strong>getDoubleFromCharacterSplitLineValue</strong></a>(character, splitLine, value)</dt><dd><tt>Get&nbsp;the&nbsp;double&nbsp;value&nbsp;of&nbsp;the&nbsp;string&nbsp;after&nbsp;the&nbsp;first&nbsp;occurence&nbsp;of&nbsp;the&nbsp;character&nbsp;in&nbsp;the&nbsp;split&nbsp;line.</tt></dd></dl>
  <dl><dt><a name="-getFeedrateMinute"><strong>getFeedrateMinute</strong></a>(feedrateMinute, splitLine)</dt><dd><tt>Get&nbsp;the&nbsp;feedrate&nbsp;per&nbsp;minute&nbsp;if&nbsp;the&nbsp;split&nbsp;line&nbsp;has&nbsp;a&nbsp;feedrate.</tt></dd></dl>
- <dl><dt><a name="-getFileText"><strong>getFileText</strong></a>(filename)</dt><dd><tt>Get&nbsp;the&nbsp;entire&nbsp;text&nbsp;of&nbsp;a&nbsp;file.<br>
-&nbsp;<br>
-Keyword&nbsp;arguments:<br>
-filename&nbsp;--&nbsp;name&nbsp;of&nbsp;the&nbsp;file</tt></dd></dl>
+ <dl><dt><a name="-getFileText"><strong>getFileText</strong></a>(filename, readMode<font color="#909090">='r'</font>)</dt><dd><tt>Get&nbsp;the&nbsp;entire&nbsp;text&nbsp;of&nbsp;a&nbsp;file.</tt></dd></dl>
  <dl><dt><a name="-getFilesWithFileTypeWithoutWords"><strong>getFilesWithFileTypeWithoutWords</strong></a>(fileType, words<font color="#909090">=[]</font>, fileInDirectory<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;files&nbsp;which&nbsp;have&nbsp;a&nbsp;given&nbsp;file&nbsp;type,&nbsp;but&nbsp;with&nbsp;do&nbsp;not&nbsp;contain&nbsp;a&nbsp;word&nbsp;in&nbsp;a&nbsp;list.<br>
 &nbsp;<br>
 Keyword&nbsp;arguments:<br>
 fileType&nbsp;--&nbsp;file&nbsp;type&nbsp;required<br>
 words&nbsp;--&nbsp;list&nbsp;of&nbsp;words&nbsp;which&nbsp;the&nbsp;file&nbsp;must&nbsp;not&nbsp;have</tt></dd></dl>
- <dl><dt><a name="-getGNUDirectoryOrFile"><strong>getGNUDirectoryOrFile</strong></a>(isDirectory, filename, wasCancelled)</dt><dd><tt>Get&nbsp;the&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;files&nbsp;in&nbsp;the&nbsp;directory&nbsp;the&nbsp;file&nbsp;is&nbsp;in&nbsp;if&nbsp;isDirectory&nbsp;is&nbsp;true.&nbsp;&nbsp;Otherwise,&nbsp;return&nbsp;the&nbsp;file&nbsp;in&nbsp;a&nbsp;list.</tt></dd></dl>
- <dl><dt><a name="-getGNUGcode"><strong>getGNUGcode</strong></a>(fileInDirectory<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;files&nbsp;and&nbsp;gcode&nbsp;files&nbsp;which&nbsp;are&nbsp;not&nbsp;modified.</tt></dd></dl>
- <dl><dt><a name="-getGNUTriangulatedSurfaceFiles"><strong>getGNUTriangulatedSurfaceFiles</strong></a>(fileInDirectory<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;files.</tt></dd></dl>
+ <dl><dt><a name="-getFilesWithFileTypesWithoutWords"><strong>getFilesWithFileTypesWithoutWords</strong></a>(fileTypes, words<font color="#909090">=[]</font>, fileInDirectory<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;files&nbsp;which&nbsp;have&nbsp;a&nbsp;given&nbsp;file&nbsp;type,&nbsp;but&nbsp;with&nbsp;do&nbsp;not&nbsp;contain&nbsp;a&nbsp;word&nbsp;in&nbsp;a&nbsp;list.<br>
+&nbsp;<br>
+Keyword&nbsp;arguments:<br>
+fileType&nbsp;--&nbsp;file&nbsp;types&nbsp;required<br>
+words&nbsp;--&nbsp;list&nbsp;of&nbsp;words&nbsp;which&nbsp;the&nbsp;file&nbsp;must&nbsp;not&nbsp;have</tt></dd></dl>
+ <dl><dt><a name="-getGcodeFileText"><strong>getGcodeFileText</strong></a>(filename, gcodeText)</dt><dd><tt>Get&nbsp;the&nbsp;gcode&nbsp;text&nbsp;from&nbsp;a&nbsp;file&nbsp;if&nbsp;it&nbsp;the&nbsp;gcode&nbsp;text&nbsp;is&nbsp;empty&nbsp;and&nbsp;if&nbsp;the&nbsp;file&nbsp;is&nbsp;a&nbsp;gcode&nbsp;file.</tt></dd></dl>
  <dl><dt><a name="-getLocationFromSplitLine"><strong>getLocationFromSplitLine</strong></a>(oldLocation, splitLine)</dt><dd><tt>Get&nbsp;the&nbsp;location&nbsp;from&nbsp;the&nbsp;split&nbsp;line.</tt></dd></dl>
  <dl><dt><a name="-getModule"><strong>getModule</strong></a>(filename, folderName, moduleFilename)</dt><dd><tt>Get&nbsp;the&nbsp;module&nbsp;from&nbsp;the&nbsp;filename&nbsp;and&nbsp;folder&nbsp;name.</tt></dd></dl>
  <dl><dt><a name="-getPluginFilenames"><strong>getPluginFilenames</strong></a>(folderName, moduleFilename)</dt><dd><tt>Get&nbsp;the&nbsp;filenames&nbsp;of&nbsp;the&nbsp;python&nbsp;plugins&nbsp;in&nbsp;the&nbsp;export_plugins&nbsp;folder.</tt></dd></dl>
@@ -93,7 +95,7 @@ words&nbsp;--&nbsp;list&nbsp;of&nbsp;words&nbsp;which&nbsp;the&nbsp;filename&nbs
  <dl><dt><a name="-isProcedureDone"><strong>isProcedureDone</strong></a>(gcodeText, procedure)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;procedure&nbsp;has&nbsp;been&nbsp;done&nbsp;on&nbsp;the&nbsp;gcode&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-replaceWords"><strong>replaceWords</strong></a>(filenames, original, replacement)</dt><dd><tt>Replace&nbsp;in&nbsp;files&nbsp;the&nbsp;original&nbsp;with&nbsp;the&nbsp;replacement.</tt></dd></dl>
  <dl><dt><a name="-writeFileMessageEnd"><strong>writeFileMessageEnd</strong></a>(end, filename, fileText, message)</dt><dd><tt>Write&nbsp;to&nbsp;a&nbsp;filename&nbsp;with&nbsp;a&nbsp;suffix&nbsp;and&nbsp;print&nbsp;a&nbsp;message.</tt></dd></dl>
- <dl><dt><a name="-writeFileText"><strong>writeFileText</strong></a>(filename, fileText)</dt><dd><tt>Write&nbsp;a&nbsp;text&nbsp;to&nbsp;a&nbsp;file.</tt></dd></dl>
+ <dl><dt><a name="-writeFileText"><strong>writeFileText</strong></a>(filename, fileText, writeMode<font color="#909090">='w+'</font>)</dt><dd><tt>Write&nbsp;a&nbsp;text&nbsp;to&nbsp;a&nbsp;file.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">
@@ -103,7 +105,8 @@ words&nbsp;--&nbsp;list&nbsp;of&nbsp;words&nbsp;which&nbsp;the&nbsp;filename&nbs
 <tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><strong>__author__</strong> = 'Enrique Perez (perez_enrique@yahoo.com)'<br>
 <strong>__date__</strong> = '$Date: 2008/21/04 $'<br>
-<strong>__license__</strong> = 'GPL 3.0'</td></tr></table><p>
+<strong>__license__</strong> = 'GPL 3.0'<br>
+<strong>absolute_import</strong> = _Feature((2, 5, 0, 'alpha', 1), (2, 7, 0, 'alpha', 0), 16384)</td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#7799ee">
 <td colspan=3 valign=bottom>&nbsp;<br>

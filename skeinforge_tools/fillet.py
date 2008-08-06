@@ -119,10 +119,12 @@ from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
+from skeinforge_tools import import_translator
 from skeinforge_tools import hop
 from skeinforge_tools import polyfile
 import cStringIO
 import math
+import sys
 import time
 
 
@@ -219,10 +221,11 @@ def getBevelGcode( filletPreferences, gcodeText ):
 	skein.parseGcode( filletPreferences, gcodeText )
 	return skein.output.getvalue()
 
-def getFilletChainGcode( gcodeText, filletPreferences = None ):
+def getFilletChainGcode( filename, gcodeText, filletPreferences = None ):
 	"Fillet a gcode linear move text.  Chain hop the gcode if it is not already hopped."
+	gcodeText = gcodec.getGcodeFileText( filename, gcodeText )
 	if not gcodec.isProcedureDone( gcodeText, 'hop' ):
-		gcodeText = hop.getHopChainGcode( gcodeText )
+		gcodeText = hop.getHopChainGcode( filename, gcodeText )
 	return getFilletGcode( gcodeText, filletPreferences )
 
 def getFilletGcode( gcodeText, filletPreferences = None ):
@@ -251,7 +254,7 @@ def writeOutput( filename = '' ):
 	Depending on the preferences, either arcPoint, arcRadius, arcSegment, bevel or do nothing.
 	If no filename is specified, fillet the first unmodified gcode file in this folder."""
 	if filename == '':
-		unmodified = gcodec.getGNUGcode()
+		unmodified = import_translator.getGNUTranslatorFilesUnmodified()
 		if len( unmodified ) == 0:
 			print( "There are no unmodified gcode files in this folder." )
 			return
@@ -260,11 +263,10 @@ def writeOutput( filename = '' ):
 	preferences.readPreferences( filletPreferences )
 	startTime = time.time()
 	print( 'File ' + gcodec.getSummarizedFilename( filename ) + ' is being chain filleted.' )
-	gcodeText = gcodec.getFileText( filename )
-	if gcodeText == '':
-		return
 	suffixFilename = filename[ : filename.rfind( '.' ) ] + '_fillet.gcode'
-	filletGcode = getFilletChainGcode( gcodeText, filletPreferences )
+	filletGcode = getFilletChainGcode( filename, '', filletPreferences )
+	if filletGcode == '':
+		return
 	gcodec.writeFileText( suffixFilename, filletGcode )
 	print( 'The filleted file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
 	analyze.writeOutput( suffixFilename, filletGcode )
@@ -349,7 +351,7 @@ class BevelSkein:
 		"Parse gcode initialization and store the parameters."
 		for self.lineIndex in range( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
-			splitLine = line.split( ' ' )
+			splitLine = line.split()
 			firstWord = ''
 			if len( splitLine ) > 0:
 				firstWord = splitLine[ 0 ]
@@ -367,8 +369,8 @@ class BevelSkein:
 	def parseLine( self, line ):
 		"Parse a gcode line and add it to the bevel gcode."
 		self.shouldAddLine = True
-		splitLine = line.split( ' ' )
-		if len( splitLine ) < 1 or len( line ) < 1:
+		splitLine = line.split()
+		if len( splitLine ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':
@@ -519,7 +521,7 @@ class FilletPreferences:
 		self.archive.append( self.bevel )
 		self.filletRadiusOverHalfExtrusionWidth = preferences.FloatPreference().getFromValue( 'Fillet Radius Over Half Extrusion Width (ratio):', 0.7 )
 		self.archive.append( self.filletRadiusOverHalfExtrusionWidth )
-		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface text files', '*.gts' ), ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Filleted', '' )
+		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Filleted', '' )
 		self.archive.append( self.filenameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.executeTitle = 'Fillet'
@@ -530,14 +532,17 @@ class FilletPreferences:
 
 	def execute( self ):
 		"Fillet button has been clicked."
-		filenames = polyfile.getFileOrGNUUnmodifiedGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
+		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
 		for filename in filenames:
 			writeOutput( filename )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the fillet dialog."
-	preferences.displayDialog( FilletPreferences() )
+	if len( sys.argv ) > 1:
+		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
+	else:
+		preferences.displayDialog( FilletPreferences() )
 
 if __name__ == "__main__":
 	main()

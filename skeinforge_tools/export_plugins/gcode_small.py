@@ -87,7 +87,7 @@ class GcodeSmallSkein:
 
 	def parseLine( self, line ):
 		"Parse a gcode line."
-		splitLine = line.split( ' ' )
+		splitLine = line.split()
 		if len( splitLine ) < 1:
 			return
 		firstWord = splitLine[ 0 ]

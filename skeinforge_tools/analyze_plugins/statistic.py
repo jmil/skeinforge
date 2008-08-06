@@ -227,8 +227,8 @@ class StatisticSkein:
 		"Parse a gcode line and add it to the statistics."
 		self.characters += len( line )
 		self.numberOfLines += 1
-		splitLine = line.split( ' ' )
-		if len( splitLine ) < 1 or len( line ) < 1:
+		splitLine = line.split()
+		if len( splitLine ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':
@@ -276,7 +276,7 @@ class StatisticPreferences:
 
 	def execute( self ):
 		"Write button has been clicked."
-		filenames = polyfile.getFileOrGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
+		filenames = polyfile.getFileOrGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled, [ '_comment' ] )
 		for filename in filenames:
 			statisticFile( filename )
 
@@ -284,7 +284,7 @@ class StatisticPreferences:
 def main():
 	"Display the statistics dialog."
 	if len( sys.argv ) > 1:
-		statisticFile( sys.argv[ 1 ] )
+		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
 		preferences.displayDialog( StatisticPreferences() )
 

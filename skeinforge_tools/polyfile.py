@@ -38,28 +38,28 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def getFileOrGcodeDirectory( filename, wasCancelled ):
+def getFileOrGcodeDirectory( filename, wasCancelled, words = [] ):
 	"Get the gcode files in the directory the file is in if directory preference is true.  Otherwise, return the file in a list."
 	if isEmptyOrCancelled( filename, wasCancelled ):
 		return []
 	if isDirectoryPreference():
-		return gcodec.getFilesWithFileTypeWithoutWords( 'gcode', [], filename )
+		return gcodec.getFilesWithFileTypeWithoutWords( 'gcode', words, filename )
 	return [ filename ]
 
-def getFileOrUnmodifiedGcodeDirectory( filename, wasCancelled ):
+def getFileOrDirectoryTypes( filename, fileTypes, wasCancelled ):
 	"Get the gcode files in the directory the file is in if directory preference is true.  Otherwise, return the file in a list."
 	if isEmptyOrCancelled( filename, wasCancelled ):
 		return []
 	if isDirectoryPreference():
-		return gcodec.getUnmodifiedGCodeFiles( filename )
+		return gcodec.getFilesWithFileTypesWithoutWords( fileTypes, [], filename )
 	return [ filename ]
 
-def getFileOrGNUUnmodifiedGcodeDirectory( filename, wasCancelled ):
+def getFileOrDirectoryTypesUnmodifiedGcode( filename, fileTypes, wasCancelled ):
 	"Get the gcode files in the directory the file is in if directory preference is true.  Otherwise, return the file in a list."
 	if isEmptyOrCancelled( filename, wasCancelled ):
 		return []
 	if isDirectoryPreference():
-		return gcodec.getGNUGcode( filename )
+		return gcodec.getFilesWithFileTypesWithoutWords( fileTypes, [], filename ) + gcodec.getUnmodifiedGCodeFiles( filename )
 	return [ filename ]
 
 def isDirectoryPreference():

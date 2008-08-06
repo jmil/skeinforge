@@ -205,6 +205,8 @@ class TriangleMesh:
 
 	def getFromGNUTriangulatedSurfaceText( self, gnuTriangulatedSurfaceText ):
 		"Initialize from a GNU Triangulated Surface Text."
+		if gnuTriangulatedSurfaceText == '':
+			return None
 		lines = gcodec.getTextLines( gnuTriangulatedSurfaceText )
 		linesWithoutComments = []
 		for line in lines:

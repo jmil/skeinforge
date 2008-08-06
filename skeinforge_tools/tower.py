@@ -80,6 +80,7 @@ from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
 from skeinforge_tools import fill
+from skeinforge_tools import import_translator
 from skeinforge_tools import polyfile
 import cStringIO
 import math
@@ -91,10 +92,11 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
-def getTowerChainGcode( gcodeText, towerPreferences = None ):
+def getTowerChainGcode( filename, gcodeText, towerPreferences = None ):
 	"Tower a gcode linear move text.  Chain tower the gcode if it is not already towered."
+	gcodeText = gcodec.getGcodeFileText( filename, gcodeText )
 	if not gcodec.isProcedureDone( gcodeText, 'fill' ):
-		gcodeText = fill.getFillChainGcode( gcodeText )
+		gcodeText = fill.getFillChainGcode( filename, gcodeText )
 	return getTowerGcode( gcodeText, towerPreferences )
 
 def getTowerGcode( gcodeText, towerPreferences = None ):
@@ -127,7 +129,7 @@ def writeOutput( filename = '' ):
 	"""Tower a gcode linear move file.  Chain tower the gcode if it is not already towered.
 	If no filename is specified, tower the first unmodified gcode file in this folder."""
 	if filename == '':
-		unmodified = gcodec.getGNUGcode()
+		unmodified = import_translator.getGNUTranslatorFilesUnmodified()
 		if len( unmodified ) == 0:
 			print( "There are no unmodified gcode files in this folder." )
 			return
@@ -135,12 +137,12 @@ def writeOutput( filename = '' ):
 	towerPreferences = TowerPreferences()
 	preferences.readPreferences( towerPreferences )
 	startTime = time.time()
+	print( filename )
 	print( 'File ' + gcodec.getSummarizedFilename( filename ) + ' is being chain towered.' )
-	gcodeText = gcodec.getFileText( filename )
-	if gcodeText == '':
-		return
 	suffixFilename = filename[ : filename.rfind( '.' ) ] + '_tower.gcode'
-	towerGcode = getTowerChainGcode( gcodeText, towerPreferences )
+	towerGcode = getTowerChainGcode( filename, '', towerPreferences )
+	if towerGcode == '':
+		return
 	gcodec.writeFileText( suffixFilename, towerGcode )
 	print( 'The towered file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
 	analyze.writeOutput( suffixFilename, towerGcode )
@@ -337,7 +339,7 @@ class TowerSkein:
 		"Parse gcode initialization and store the parameters."
 		for self.lineIndex in range( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
-			splitLine = line.split( ' ' )
+			splitLine = line.split()
 			firstWord = ''
 			if len( splitLine ) > 0:
 				firstWord = splitLine[ 0 ]
@@ -356,8 +358,8 @@ class TowerSkein:
 	def parseLine( self, lineIndex ):
 		"Parse a gcode line."
 		line = self.lines[ lineIndex ]
-		splitLine = line.split( ' ' )
-		if len( splitLine ) < 1 or len( line ) < 1:
+		splitLine = line.split()
+		if len( splitLine ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':
@@ -422,7 +424,7 @@ class TowerPreferences:
 		self.archive.append( self.activateTower )
 		self.extruderPossibleCollisionConeAngle = preferences.FloatPreference().getFromValue( 'Extruder Possible Collision Cone Angle (degrees):', 60.0 )
 		self.archive.append( self.extruderPossibleCollisionConeAngle )
-		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'GNU Triangulated Surface text files', '*.gts' ), ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Towered', '' )
+		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Towered', '' )
 		self.archive.append( self.filenameInput )
 		self.maximumTowerHeight = preferences.IntPreference().getFromValue( 'Maximum Tower Height (layers):', 0 )
 		self.archive.append( self.maximumTowerHeight )
@@ -437,14 +439,17 @@ class TowerPreferences:
 
 	def execute( self ):
 		"Tower button has been clicked."
-		filenames = polyfile.getFileOrGNUUnmodifiedGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
+		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
 		for filename in filenames:
 			writeOutput( filename )
 
 
 def main( hashtable = None ):
 	"Display the tower dialog."
-	preferences.displayDialog( TowerPreferences() )
+	if len( sys.argv ) > 1:
+		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
+	else:
+		preferences.displayDialog( TowerPreferences() )
 
 if __name__ == "__main__":
 	main()
