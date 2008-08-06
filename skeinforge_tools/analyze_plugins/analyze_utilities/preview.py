@@ -8,10 +8,9 @@ try:
     from skeinforge_tools.analyze_plugins.analyze_utilities.layers import *
     from skeinforge_tools.analyze_plugins.analyze_utilities.gRead import *
     import ImageTk
-except Exception, why:
+except:
     print( 'You do not have the Python Imaging Library, which is needed by preview and gifview to view the gcode.' )
     print( 'The Python Imaging Library can be downloaded from:\nwww.pythonware.com/products/pil/' )
-    print( 'Reason: ' + str(why))
 
 class Preview:
     def __init__(self, layers):
