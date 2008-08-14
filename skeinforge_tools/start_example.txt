@@ -1,0 +1,9 @@
+(this is a sample gcode start file, it must be renamed start.txt for skeinforge to recognize it)
+G61
+G21
+G54
+G40 G80
+G90
+G49
+G0 X+0.0 Y-0.0
+G43 H1
