@@ -15,7 +15,9 @@ The&nbsp;default&nbsp;'Activate&nbsp;Vectorwrite'&nbsp;checkbox&nbsp;is&nbsp;on.
 skeinforge&nbsp;toolchain,&nbsp;when&nbsp;it&nbsp;is&nbsp;off,&nbsp;the&nbsp;functions&nbsp;will&nbsp;not&nbsp;be&nbsp;called&nbsp;from&nbsp;the&nbsp;toolchain.&nbsp;&nbsp;The&nbsp;functions&nbsp;will&nbsp;still&nbsp;be&nbsp;called,&nbsp;whether<br>
 or&nbsp;not&nbsp;the&nbsp;'Activate&nbsp;Vectorwrite'&nbsp;checkbox&nbsp;is&nbsp;on,&nbsp;when&nbsp;vectorwrite&nbsp;is&nbsp;run&nbsp;directly.<br>
 &nbsp;<br>
-The&nbsp;'Pixels&nbsp;over&nbsp;Extrusion&nbsp;Width'&nbsp;preference&nbsp;is&nbsp;the&nbsp;scale&nbsp;of&nbsp;the&nbsp;graphic&nbsp;in&nbsp;pixels&nbsp;per&nbsp;extrusion&nbsp;width.<br>
+The&nbsp;'Pixels&nbsp;over&nbsp;Extrusion&nbsp;Width'&nbsp;preference&nbsp;is&nbsp;the&nbsp;scale&nbsp;of&nbsp;the&nbsp;graphic&nbsp;in&nbsp;pixels&nbsp;per&nbsp;extrusion&nbsp;width.&nbsp;&nbsp;If&nbsp;the&nbsp;number&nbsp;of&nbsp;layers&nbsp;is<br>
+equal&nbsp;or&nbsp;greater&nbsp;to&nbsp;the&nbsp;'Minimum&nbsp;Number&nbsp;of&nbsp;Layers&nbsp;for&nbsp;Multiple&nbsp;Files'&nbsp;preference,&nbsp;then&nbsp;vectorwrite&nbsp;will&nbsp;write&nbsp;a&nbsp;directory&nbsp;with&nbsp;a<br>
+file&nbsp;for&nbsp;each&nbsp;layer,&nbsp;rather&nbsp;than&nbsp;just&nbsp;a&nbsp;single&nbsp;large&nbsp;scalable&nbsp;vector&nbsp;graphic.<br>
 &nbsp;<br>
 To&nbsp;run&nbsp;vectorwrite,&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;vectorwrite&nbsp;is&nbsp;in&nbsp;type:<br>
 &gt;&nbsp;python&nbsp;vectorwrite.py<br>
@@ -37,7 +39,7 @@ This&nbsp;brings&nbsp;up&nbsp;the&nbsp;vectorwrite&nbsp;dialog.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&gt;&gt;&nbsp;vectorwrite.vectorwriteFile()<br>
-The&nbsp;vector&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder_vectorwrite.svg</tt></p>
+The&nbsp;vector&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder.svg</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -47,13 +49,14 @@ The&nbsp;vector&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder_vect
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="__init__.html">__init__</a><br>
 <a href="cStringIO.html">cStringIO</a><br>
-</td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.euclidean.html">skeinforge_tools.skeinforge_utilities.euclidean</a><br>
-<a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
-</td><td width="25%" valign=top><a href="math.html">math</a><br>
-<a href="skeinforge_tools.polyfile.html">skeinforge_tools.polyfile</a><br>
-</td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.preferences.html">skeinforge_tools.skeinforge_utilities.preferences</a><br>
+<a href="skeinforge_tools.skeinforge_utilities.euclidean.html">skeinforge_tools.skeinforge_utilities.euclidean</a><br>
+</td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
+<a href="math.html">math</a><br>
+<a href="os.html">os</a><br>
+</td><td width="25%" valign=top><a href="skeinforge_tools.polyfile.html">skeinforge_tools.polyfile</a><br>
+<a href="skeinforge_tools.skeinforge_utilities.preferences.html">skeinforge_tools.skeinforge_utilities.preferences</a><br>
 <a href="sys.html">sys</a><br>
-</td></tr></table></td></tr></table><p>
+</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ee77aa">
 <td colspan=3 valign=bottom>&nbsp;<br>
@@ -89,6 +92,8 @@ The&nbsp;vector&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder_vect
 
 <dl><dt><a name="VectorWindow-addText"><strong>addText</strong></a>(self, fontSize, line)</dt><dd><tt>Add&nbsp;a&nbsp;colored&nbsp;line&nbsp;to&nbsp;the&nbsp;text.</tt></dd></dl>
 
+<dl><dt><a name="VectorWindow-getHeightWidthString"><strong>getHeightWidthString</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;height&nbsp;and&nbsp;width&nbsp;string.</tt></dd></dl>
+
 <dl><dt><a name="VectorWindow-getVectorFormattedText"><strong>getVectorFormattedText</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;text&nbsp;in&nbsp;scalable&nbsp;vector&nbsp;graphics&nbsp;format.</tt></dd></dl>
 
 <dl><dt><a name="VectorWindow-setPaneCorners"><strong>setPaneCorners</strong></a>(self, bottomLeftCorner, topRightCorner)</dt><dd><tt>Set&nbsp;the&nbsp;corners&nbsp;for&nbsp;the&nbsp;window&nbsp;pane.</tt></dd></dl>
@@ -121,6 +126,16 @@ The&nbsp;vector&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder_vect
 
 <dl><dt><a name="VectorwriteSkein-addToPath"><strong>addToPath</strong></a>(self, location, nextLine)</dt><dd><tt>Add&nbsp;a&nbsp;point&nbsp;to&nbsp;travel&nbsp;and&nbsp;maybe&nbsp;extrusion.</tt></dd></dl>
 
+<dl><dt><a name="VectorwriteSkein-addVectorWindow"><strong>addVectorWindow</strong></a>(self)</dt><dd><tt>Add&nbsp;a&nbsp;new&nbsp;vector&nbsp;window&nbsp;to&nbsp;vector&nbsp;windows.</tt></dd></dl>
+
+<dl><dt><a name="VectorwriteSkein-getFilenameWriteFiles"><strong>getFilenameWriteFiles</strong></a>(self, filename)</dt><dd><tt>Write&nbsp;one&nbsp;or&nbsp;multiple&nbsp;files&nbsp;for&nbsp;the&nbsp;filename.</tt></dd></dl>
+
+<dl><dt><a name="VectorwriteSkein-getHypertextLinkBasename"><strong>getHypertextLinkBasename</strong></a>(self, baseUnderscoredPrefix, vectorWindowIndex)</dt><dd><tt>Get&nbsp;hypertext&nbsp;link&nbsp;basename&nbsp;for&nbsp;a&nbsp;numbered&nbsp;vector&nbsp;window.</tt></dd></dl>
+
+<dl><dt><a name="VectorwriteSkein-getLinkBasename"><strong>getLinkBasename</strong></a>(self, baseUnderscoredPrefix, vectorWindowIndex)</dt><dd><tt>Get&nbsp;link&nbsp;basename&nbsp;for&nbsp;a&nbsp;numbered&nbsp;vector&nbsp;window.</tt></dd></dl>
+
+<dl><dt><a name="VectorwriteSkein-getSuffixFilename"><strong>getSuffixFilename</strong></a>(self, baseUnderscoredPrefix, multipleDirectoryName, vectorWindowIndex)</dt><dd><tt>Get&nbsp;suffix&nbsp;filename&nbsp;for&nbsp;a&nbsp;numbered&nbsp;vector&nbsp;window.</tt></dd></dl>
+
 <dl><dt><a name="VectorwriteSkein-initializeActiveLocation"><strong>initializeActiveLocation</strong></a>(self)</dt><dd><tt>Set&nbsp;variables&nbsp;to&nbsp;default.</tt></dd></dl>
 
 <dl><dt><a name="VectorwriteSkein-linearCorner"><strong>linearCorner</strong></a>(self, splitLine)</dt><dd><tt>Update&nbsp;the&nbsp;bounding&nbsp;corners.</tt></dd></dl>
@@ -133,6 +148,10 @@ The&nbsp;vector&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder_vect
 
 <dl><dt><a name="VectorwriteSkein-parseLine"><strong>parseLine</strong></a>(self, line, nextLine)</dt><dd><tt>Parse&nbsp;a&nbsp;gcode&nbsp;line&nbsp;and&nbsp;add&nbsp;it&nbsp;to&nbsp;the&nbsp;vector&nbsp;output.</tt></dd></dl>
 
+<dl><dt><a name="VectorwriteSkein-writeIndexText"><strong>writeIndexText</strong></a>(self, baseUnderscoredPrefix, indexFilename, indexName, multipleDirectoryName, suffixFilenames)</dt><dd><tt>Write&nbsp;the&nbsp;text&nbsp;for&nbsp;the&nbsp;index&nbsp;page.</tt></dd></dl>
+
+<dl><dt><a name="VectorwriteSkein-writeVectorWindowText"><strong>writeVectorWindowText</strong></a>(self, baseUnderscoredPrefix, multipleDirectoryName, suffixFilenames, vectorWindowIndex)</dt><dd><tt>Write&nbsp;the&nbsp;text&nbsp;for&nbsp;a&nbsp;vector&nbsp;window&nbsp;page.</tt></dd></dl>
+
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#eeaa77">
@@ -140,8 +159,7 @@ The&nbsp;vector&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder_vect
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-getVectorGcode"><strong>getVectorGcode</strong></a>(gcodeText, vectorwritePreferences<font color="#909090">=None</font>)</dt><dd><tt>Write&nbsp;a&nbsp;gcode&nbsp;text.</tt></dd></dl>
- <dl><dt><a name="-main"><strong>main</strong></a>(hashtable<font color="#909090">=None</font>)</dt><dd><tt>Display&nbsp;the&nbsp;vectorwrite&nbsp;dialog.</tt></dd></dl>
+<td width="100%"><dl><dt><a name="-main"><strong>main</strong></a>(hashtable<font color="#909090">=None</font>)</dt><dd><tt>Display&nbsp;the&nbsp;vectorwrite&nbsp;dialog.</tt></dd></dl>
  <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(filename, gcodeText<font color="#909090">=''</font>)</dt><dd><tt>Write&nbsp;scalable&nbsp;vector&nbsp;graphics&nbsp;for&nbsp;a&nbsp;skeinforge&nbsp;gcode&nbsp;file,&nbsp;if&nbsp;'Write&nbsp;Scalable&nbsp;Vector&nbsp;Graphics&nbsp;for&nbsp;Skeinforge&nbsp;Chain'&nbsp;is&nbsp;selected.</tt></dd></dl>
  <dl><dt><a name="-writeVectorFile"><strong>writeVectorFile</strong></a>(filename<font color="#909090">=''</font>)</dt><dd><tt>Write&nbsp;scalable&nbsp;vector&nbsp;graphics&nbsp;for&nbsp;a&nbsp;gcode&nbsp;file.&nbsp;&nbsp;If&nbsp;no&nbsp;filename&nbsp;is&nbsp;specified,&nbsp;write&nbsp;scalable&nbsp;vector&nbsp;graphics&nbsp;for&nbsp;the&nbsp;first&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
  <dl><dt><a name="-writeVectorFileGivenText"><strong>writeVectorFileGivenText</strong></a>(filename, gcodeText, vectorwritePreferences)</dt><dd><tt>Write&nbsp;scalable&nbsp;vector&nbsp;graphics&nbsp;for&nbsp;a&nbsp;gcode&nbsp;file.</tt></dd></dl>

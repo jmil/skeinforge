@@ -12,7 +12,7 @@ The following examples fillet the files Hollow Square.gcode & Hollow Square.gts.
 which contains Hollow Square.gcode, Hollow Square.gts and fillet.py.  The fillet function executes the preferred fillet type, which
 can be set in the dialog or by changing the preferences file 'fillet.csv' with a text editor or a spreadsheet program set to separate
 tabs.  The functions writeOutput and getFilletChainGcode check to see if the text has been combed, if not they call the
-getHopChainGcode in hop.py to fill the text; once they have the hopped text, then they fillet.
+getOozebaneChainGcode in oozebane.py to fill the text; once they have the oozebaned text, then they fillet.
 
 
 > python fillet.py
@@ -120,7 +120,7 @@ from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
 from skeinforge_tools import import_translator
-from skeinforge_tools import hop
+from skeinforge_tools import oozebane
 from skeinforge_tools import polyfile
 import cStringIO
 import math
@@ -222,10 +222,10 @@ def getBevelGcode( filletPreferences, gcodeText ):
 	return skein.output.getvalue()
 
 def getFilletChainGcode( filename, gcodeText, filletPreferences = None ):
-	"Fillet a gcode linear move text.  Chain hop the gcode if it is not already hopped."
+	"Fillet a gcode linear move text.  Chain oozebane the gcode if it is not already oozebaned."
 	gcodeText = gcodec.getGcodeFileText( filename, gcodeText )
-	if not gcodec.isProcedureDone( gcodeText, 'hop' ):
-		gcodeText = hop.getHopChainGcode( filename, gcodeText )
+	if not gcodec.isProcedureDone( gcodeText, 'oozebane' ):
+		gcodeText = oozebane.getOozebaneChainGcode( filename, gcodeText )
 	return getFilletGcode( gcodeText, filletPreferences )
 
 def getFilletGcode( gcodeText, filletPreferences = None ):

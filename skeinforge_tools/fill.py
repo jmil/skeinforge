@@ -39,11 +39,11 @@ except:
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
+from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
 from skeinforge_tools import analyze
 from skeinforge_tools import import_translator
 from skeinforge_tools import polyfile
@@ -58,22 +58,18 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-#unsquish
-#get gcode scripts from .skeinforge
-#cool
-#one direction for while, one direction narrow then wide, split to weave, hex fill, loop inside sparse fill or run along sparse infill, fill in one direction for a number of layers
-#fix gifscene bug, maybe from windows?
-#oozebane
-#raft supports overhangs
+#add index to skeinview
+#looptailor
+#check loops for intersections with their own arounds
 #array_place
+#one direction for while, one direction narrow then wide, split to weave, hex fill, loop inside sparse fill or run along sparse infill, fill in one direction for a number of layers
+#raft supports overhangs
 #transform
 #stack
 #mosaic
 #infill first
-#check loops for intersections with their own arounds
 #searchable help
 #custom inclined plane, inclined plane from model, screw, fillet travel as well maybe
-#maybe fillet should have just amount a choice is unneeded
 #later maybe addAroundClosest around arounds and check for closeness to other infills
 #maybe much afterwards make congajure multistep view
 #maybe bridge supports although staggered spans are probably better

@@ -22,7 +22,7 @@ The&nbsp;following&nbsp;examples&nbsp;fillet&nbsp;the&nbsp;files&nbsp;Hollow&nbs
 which&nbsp;contains&nbsp;Hollow&nbsp;Square.gcode,&nbsp;Hollow&nbsp;Square.gts&nbsp;and&nbsp;fillet.py.&nbsp;&nbsp;The&nbsp;fillet&nbsp;function&nbsp;executes&nbsp;the&nbsp;preferred&nbsp;fillet&nbsp;type,&nbsp;which<br>
 can&nbsp;be&nbsp;set&nbsp;in&nbsp;the&nbsp;dialog&nbsp;or&nbsp;by&nbsp;changing&nbsp;the&nbsp;preferences&nbsp;file&nbsp;'fillet.csv'&nbsp;with&nbsp;a&nbsp;text&nbsp;editor&nbsp;or&nbsp;a&nbsp;spreadsheet&nbsp;program&nbsp;set&nbsp;to&nbsp;separate<br>
 tabs.&nbsp;&nbsp;The&nbsp;functions&nbsp;writeOutput&nbsp;and&nbsp;getFilletChainGcode&nbsp;check&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text&nbsp;has&nbsp;been&nbsp;combed,&nbsp;if&nbsp;not&nbsp;they&nbsp;call&nbsp;the<br>
-getHopChainGcode&nbsp;in&nbsp;hop.py&nbsp;to&nbsp;fill&nbsp;the&nbsp;text;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;hopped&nbsp;text,&nbsp;then&nbsp;they&nbsp;fillet.<br>
+getOozebaneChainGcode&nbsp;in&nbsp;oozebane.py&nbsp;to&nbsp;fill&nbsp;the&nbsp;text;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;oozebaned&nbsp;text,&nbsp;then&nbsp;they&nbsp;fillet.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python&nbsp;fillet.py<br>
@@ -130,9 +130,9 @@ The&nbsp;filleted&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_f
 <a href="cStringIO.html">cStringIO</a><br>
 </td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.euclidean.html">skeinforge_tools.skeinforge_utilities.euclidean</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
-<a href="skeinforge_tools.hop.html">skeinforge_tools.hop</a><br>
-</td><td width="25%" valign=top><a href="skeinforge_tools.import_translator.html">skeinforge_tools.import_translator</a><br>
-<a href="math.html">math</a><br>
+<a href="skeinforge_tools.import_translator.html">skeinforge_tools.import_translator</a><br>
+</td><td width="25%" valign=top><a href="math.html">math</a><br>
+<a href="skeinforge_tools.oozebane.html">skeinforge_tools.oozebane</a><br>
 <a href="skeinforge_tools.polyfile.html">skeinforge_tools.polyfile</a><br>
 </td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.preferences.html">skeinforge_tools.skeinforge_utilities.preferences</a><br>
 <a href="sys.html">sys</a><br>
@@ -363,7 +363,7 @@ Methods inherited from <a href="skeinforge_tools.fillet.html#BevelSkein">BevelSk
  <dl><dt><a name="-getArcRadiusGcode"><strong>getArcRadiusGcode</strong></a>(filletPreferences, gcodeText)</dt><dd><tt>Arc&nbsp;radius&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text&nbsp;into&nbsp;a&nbsp;helical&nbsp;radius&nbsp;move&nbsp;gcode&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-getArcSegmentGcode"><strong>getArcSegmentGcode</strong></a>(filletPreferences, gcodeText)</dt><dd><tt>Arc&nbsp;segment&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text&nbsp;into&nbsp;an&nbsp;arc&nbsp;segment&nbsp;linear&nbsp;move&nbsp;gcode&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-getBevelGcode"><strong>getBevelGcode</strong></a>(filletPreferences, gcodeText)</dt><dd><tt>Bevel&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
- <dl><dt><a name="-getFilletChainGcode"><strong>getFilletChainGcode</strong></a>(filename, gcodeText, filletPreferences<font color="#909090">=None</font>)</dt><dd><tt>Fillet&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.&nbsp;&nbsp;Chain&nbsp;hop&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;hopped.</tt></dd></dl>
+ <dl><dt><a name="-getFilletChainGcode"><strong>getFilletChainGcode</strong></a>(filename, gcodeText, filletPreferences<font color="#909090">=None</font>)</dt><dd><tt>Fillet&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.&nbsp;&nbsp;Chain&nbsp;oozebane&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;oozebaned.</tt></dd></dl>
  <dl><dt><a name="-getFilletGcode"><strong>getFilletGcode</strong></a>(gcodeText, filletPreferences<font color="#909090">=None</font>)</dt><dd><tt>Fillet&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>Display&nbsp;the&nbsp;fillet&nbsp;dialog.</tt></dd></dl>
  <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(filename<font color="#909090">=''</font>)</dt><dd><tt>Fillet&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;Chain&nbsp;fill&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;filled.<br>

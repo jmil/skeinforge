@@ -14,9 +14,9 @@
 Skeinforge&nbsp;is&nbsp;a&nbsp;tool&nbsp;chain&nbsp;to&nbsp;forge&nbsp;a&nbsp;gcode&nbsp;skein&nbsp;for&nbsp;a&nbsp;model.<br>
 &nbsp;<br>
 The&nbsp;tool&nbsp;chain&nbsp;starts&nbsp;with&nbsp;slice_shape,&nbsp;which&nbsp;slices&nbsp;the&nbsp;model&nbsp;into&nbsp;layers,&nbsp;then&nbsp;the&nbsp;layers&nbsp;are&nbsp;modified&nbsp;by&nbsp;other&nbsp;tools&nbsp;in&nbsp;turn&nbsp;like<br>
-fill,&nbsp;comb,&nbsp;tower,&nbsp;raft,&nbsp;stretch,&nbsp;hop,&nbsp;fillet&nbsp;&amp;&nbsp;export.&nbsp;&nbsp;Each&nbsp;tool&nbsp;automatically&nbsp;gets&nbsp;the&nbsp;gcode&nbsp;from&nbsp;the&nbsp;previous&nbsp;tool.&nbsp;&nbsp;So&nbsp;if&nbsp;you&nbsp;want<br>
-a&nbsp;sliced&nbsp;&amp;&nbsp;filled&nbsp;gcode,&nbsp;call&nbsp;the&nbsp;fill&nbsp;tool&nbsp;and&nbsp;it&nbsp;will&nbsp;call&nbsp;slice_shape,&nbsp;then&nbsp;it&nbsp;will&nbsp;fill&nbsp;and&nbsp;output&nbsp;the&nbsp;gcode.&nbsp;&nbsp;If&nbsp;you&nbsp;want&nbsp;to&nbsp;use&nbsp;all&nbsp;the<br>
-tools,&nbsp;call&nbsp;export&nbsp;and&nbsp;it&nbsp;will&nbsp;call&nbsp;in&nbsp;turn&nbsp;all&nbsp;the&nbsp;other&nbsp;tools&nbsp;down&nbsp;the&nbsp;chain&nbsp;to&nbsp;produce&nbsp;the&nbsp;gcode&nbsp;file.<br>
+fill,&nbsp;comb,&nbsp;tower,&nbsp;raft,&nbsp;stretch,&nbsp;hop,&nbsp;nozzle_wipe,&nbsp;oozebane,&nbsp;fillet&nbsp;&amp;&nbsp;export.&nbsp;&nbsp;Each&nbsp;tool&nbsp;automatically&nbsp;gets&nbsp;the&nbsp;gcode&nbsp;from&nbsp;the<br>
+previous&nbsp;tool.&nbsp;&nbsp;So&nbsp;if&nbsp;you&nbsp;want&nbsp;a&nbsp;sliced&nbsp;&amp;&nbsp;filled&nbsp;gcode,&nbsp;call&nbsp;the&nbsp;fill&nbsp;tool&nbsp;and&nbsp;it&nbsp;will&nbsp;call&nbsp;slice_shape,&nbsp;then&nbsp;it&nbsp;will&nbsp;fill&nbsp;and&nbsp;output&nbsp;the<br>
+gcode.&nbsp;&nbsp;If&nbsp;you&nbsp;want&nbsp;to&nbsp;use&nbsp;all&nbsp;the&nbsp;tools,&nbsp;call&nbsp;export&nbsp;and&nbsp;it&nbsp;will&nbsp;call&nbsp;in&nbsp;turn&nbsp;all&nbsp;the&nbsp;other&nbsp;tools&nbsp;down&nbsp;the&nbsp;chain&nbsp;to&nbsp;produce&nbsp;the&nbsp;gcode&nbsp;file.<br>
 &nbsp;<br>
 The&nbsp;skeinforge&nbsp;module&nbsp;provides&nbsp;a&nbsp;single&nbsp;place&nbsp;to&nbsp;call&nbsp;up&nbsp;all&nbsp;the&nbsp;preference&nbsp;dialogs.&nbsp;&nbsp;When&nbsp;the&nbsp;'Skeinforge'&nbsp;button&nbsp;is&nbsp;clicked,<br>
 skeinforge&nbsp;calls&nbsp;export,&nbsp;since&nbsp;that&nbsp;is&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;chain.<br>
@@ -49,6 +49,13 @@ For&nbsp;skeinforge&nbsp;to&nbsp;run,&nbsp;install&nbsp;python&nbsp;2.x&nbsp;on&
 &nbsp;<br>
 To&nbsp;use&nbsp;the&nbsp;preferences&nbsp;dialog&nbsp;you'll&nbsp;also&nbsp;need&nbsp;Tkinter,&nbsp;which&nbsp;probably&nbsp;came&nbsp;with&nbsp;the&nbsp;python&nbsp;installation.&nbsp;&nbsp;If&nbsp;it&nbsp;did&nbsp;not,&nbsp;look&nbsp;for&nbsp;it&nbsp;at:<br>
 <a href="http://www.tcl.tk/software/tcltk/">http://www.tcl.tk/software/tcltk/</a><br>
+&nbsp;<br>
+If&nbsp;you&nbsp;want&nbsp;python&nbsp;and&nbsp;Tkinter&nbsp;together&nbsp;on&nbsp;MacOS,&nbsp;you&nbsp;can&nbsp;try:<br>
+<a href="http://www.astro.washington.edu/owen/PythonOnMacOSX.html">http://www.astro.washington.edu/owen/PythonOnMacOSX.html</a><br>
+&nbsp;<br>
+If&nbsp;you&nbsp;want&nbsp;python&nbsp;and&nbsp;Tkinter&nbsp;together&nbsp;on&nbsp;all&nbsp;platforms&nbsp;and&nbsp;don't&nbsp;mind&nbsp;filling&nbsp;out&nbsp;forms,&nbsp;you&nbsp;can&nbsp;try&nbsp;the&nbsp;ActivePython&nbsp;package<br>
+from&nbsp;Active&nbsp;State&nbsp;at:<br>
+<a href="http://www.activestate.com/Products/activepython/feature_list.mhtml">http://www.activestate.com/Products/activepython/feature_list.mhtml</a><br>
 &nbsp;<br>
 To&nbsp;run&nbsp;gifscene&nbsp;you&nbsp;need&nbsp;the&nbsp;Python&nbsp;Imaging&nbsp;Library,&nbsp;which&nbsp;can&nbsp;be&nbsp;downloaded&nbsp;from:<br>
 <a href="http://www.pythonware.com/products/pil/">http://www.pythonware.com/products/pil/</a><br>
@@ -104,8 +111,9 @@ Then&nbsp;move&nbsp;all&nbsp;the&nbsp;generated&nbsp;html&nbsp;files&nbsp;to&nbs
 &nbsp;<br>
 Fabrication<br>
 &nbsp;<br>
-To&nbsp;fabricate&nbsp;a&nbsp;model&nbsp;with&nbsp;gcode&nbsp;you&nbsp;can&nbsp;use&nbsp;the&nbsp;Arduino,&nbsp;like&nbsp;the&nbsp;Metalab&nbsp;group&nbsp;does;&nbsp;whose&nbsp;adventures&nbsp;are&nbsp;described&nbsp;at:<br>
-<a href="http://reprap.soup.io/">http://reprap.soup.io/</a><br>
+To&nbsp;fabricate&nbsp;a&nbsp;model&nbsp;with&nbsp;gcode&nbsp;and&nbsp;the&nbsp;Arduino&nbsp;you&nbsp;can&nbsp;use&nbsp;the&nbsp;send.py&nbsp;in&nbsp;the&nbsp;fabricate&nbsp;folder.&nbsp;&nbsp;The&nbsp;documentation&nbsp;for&nbsp;it&nbsp;is<br>
+in&nbsp;the&nbsp;folder&nbsp;as&nbsp;send.html&nbsp;and&nbsp;at:<br>
+<a href="http://reprap.org/bin/view/Main/ArduinoSend">http://reprap.org/bin/view/Main/ArduinoSend</a><br>
 &nbsp;<br>
 Another&nbsp;way&nbsp;is&nbsp;to&nbsp;use&nbsp;an&nbsp;EMC2&nbsp;or&nbsp;similar&nbsp;computer&nbsp;controlled&nbsp;milling&nbsp;machine,&nbsp;as&nbsp;described&nbsp;in&nbsp;the&nbsp;"ECM2&nbsp;based&nbsp;repstrap"<br>
 forum&nbsp;thread&nbsp;at:<br>
@@ -114,6 +122,14 @@ forum&nbsp;thread&nbsp;at:<br>
 using&nbsp;the&nbsp;M-Apps&nbsp;package,&nbsp;which&nbsp;is&nbsp;at:<br>
 <a href="http://forums.reprap.org/file.php?1,file=772">http://forums.reprap.org/file.php?1,file=772</a><br>
 &nbsp;<br>
+Yet&nbsp;another&nbsp;way&nbsp;is&nbsp;to&nbsp;use&nbsp;Zach's&nbsp;GCode&nbsp;Host,&nbsp;written&nbsp;in&nbsp;Processing:<br>
+<a href="http://reprap.svn.sourceforge.net/viewvc/reprap/trunk/users/hoeken/arduino/GCode_Host/">http://reprap.svn.sourceforge.net/viewvc/reprap/trunk/users/hoeken/arduino/GCode_Host/</a><br>
+&nbsp;<br>
+For&nbsp;jogging,&nbsp;the&nbsp;Metalab&nbsp;group&nbsp;wrote&nbsp;their&nbsp;own&nbsp;exerciser,&nbsp;also&nbsp;in&nbsp;Processing:<br>
+<a href="http://reprap.svn.sourceforge.net/viewvc/reprap/trunk/users/metalab/processing/GCode_Exerciser/">http://reprap.svn.sourceforge.net/viewvc/reprap/trunk/users/metalab/processing/GCode_Exerciser/</a><br>
+&nbsp;<br>
+The&nbsp;Metalab&nbsp;group&nbsp;adventures&nbsp;are&nbsp;described&nbsp;at:<br>
+<a href="http://reprap.soup.io/">http://reprap.soup.io/</a><br>
 &nbsp;<br>
 &nbsp;<br>
 File&nbsp;Formats<br>
@@ -150,6 +166,9 @@ The&nbsp;latest&nbsp;version&nbsp;is&nbsp;in&nbsp;the&nbsp;last&nbsp;reprap_pyth
 a&nbsp;sometimes&nbsp;out&nbsp;of&nbsp;date&nbsp;version&nbsp;is&nbsp;at:<br>
 <a href="http://members.axion.net/~enrique/reprap_python_beanshell.zip">http://members.axion.net/~enrique/reprap_python_beanshell.zip</a><br>
 &nbsp;<br>
+another&nbsp;sometimes&nbsp;out&nbsp;of&nbsp;date&nbsp;version&nbsp;is&nbsp;at:<br>
+https://reprap.svn.sourceforge.net/svnroot/reprap/trunk/reprap/miscellaneous/python-beanshell-scripts/<br>
+&nbsp;<br>
 &nbsp;<br>
 &nbsp;<br>
 Troubleshooting<br>
@@ -166,6 +185,11 @@ Examples<br>
 &nbsp;<br>
 The&nbsp;following&nbsp;examples&nbsp;slice&nbsp;and&nbsp;dice&nbsp;the&nbsp;STL&nbsp;file&nbsp;Screw&nbsp;Holder.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which<br>
 contains&nbsp;Screw&nbsp;Holder.gts&nbsp;and&nbsp;skeinforge.py.<br>
+&nbsp;<br>
+&gt;&nbsp;python&nbsp;skeinforge.py<br>
+This&nbsp;brings&nbsp;up&nbsp;the&nbsp;dialog,&nbsp;after&nbsp;clicking&nbsp;'Skeinforge',&nbsp;the&nbsp;following&nbsp;is&nbsp;printed:<br>
+The&nbsp;exported&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder_export.gcode<br>
+&nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python&nbsp;skeinforge.py&nbsp;Screw&nbsp;Holder.stl<br>
 The&nbsp;exported&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder_export.gcode<br>

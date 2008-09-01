@@ -1,12 +1,14 @@
+#!/bin/sh
+
 """
 Introduction
 
 Skeinforge is a tool chain to forge a gcode skein for a model.
 
 The tool chain starts with slice_shape, which slices the model into layers, then the layers are modified by other tools in turn like
-fill, comb, tower, raft, stretch, hop, fillet & export.  Each tool automatically gets the gcode from the previous tool.  So if you want
-a sliced & filled gcode, call the fill tool and it will call slice_shape, then it will fill and output the gcode.  If you want to use all the
-tools, call export and it will call in turn all the other tools down the chain to produce the gcode file.
+fill, comb, tower, raft, stretch, hop, nozzle_wipe, oozebane, fillet & export.  Each tool automatically gets the gcode from the
+previous tool.  So if you want a sliced & filled gcode, call the fill tool and it will call slice_shape, then it will fill and output the
+gcode.  If you want to use all the tools, call export and it will call in turn all the other tools down the chain to produce the gcode file.
 
 The skeinforge module provides a single place to call up all the preference dialogs.  When the 'Skeinforge' button is clicked,
 skeinforge calls export, since that is the end of the chain.
@@ -39,6 +41,13 @@ http://www.python.org/download/
 
 To use the preferences dialog you'll also need Tkinter, which probably came with the python installation.  If it did not, look for it at:
 http://www.tcl.tk/software/tcltk/
+
+If you want python and Tkinter together on MacOS, you can try:
+http://www.astro.washington.edu/owen/PythonOnMacOSX.html
+
+If you want python and Tkinter together on all platforms and don't mind filling out forms, you can try the ActivePython package
+from Active State at:
+http://www.activestate.com/Products/activepython/feature_list.mhtml
 
 To run gifscene you need the Python Imaging Library, which can be downloaded from:
 http://www.pythonware.com/products/pil/
@@ -94,8 +103,9 @@ Then move all the generated html files to the documentation folder.
 
 Fabrication
 
-To fabricate a model with gcode you can use the Arduino, like the Metalab group does; whose adventures are described at:
-http://reprap.soup.io/
+To fabricate a model with gcode and the Arduino you can use the send.py in the fabricate folder.  The documentation for it is
+in the folder as send.html and at:
+http://reprap.org/bin/view/Main/ArduinoSend
 
 Another way is to use an EMC2 or similar computer controlled milling machine, as described in the "ECM2 based repstrap"
 forum thread at:
@@ -104,6 +114,14 @@ http://forums.reprap.org/read.php?1,12143
 using the M-Apps package, which is at:
 http://forums.reprap.org/file.php?1,file=772
 
+Yet another way is to use Zach's GCode Host, written in Processing:
+http://reprap.svn.sourceforge.net/viewvc/reprap/trunk/users/hoeken/arduino/GCode_Host/
+
+For jogging, the Metalab group wrote their own exerciser, also in Processing:
+http://reprap.svn.sourceforge.net/viewvc/reprap/trunk/users/metalab/processing/GCode_Exerciser/
+
+The Metalab group adventures are described at:
+http://reprap.soup.io/
 
 
 File Formats
@@ -140,6 +158,9 @@ http://forums.reprap.org/read.php?12,10772
 a sometimes out of date version is at:
 http://members.axion.net/~enrique/reprap_python_beanshell.zip
 
+another sometimes out of date version is at:
+https://reprap.svn.sourceforge.net/svnroot/reprap/trunk/reprap/miscellaneous/python-beanshell-scripts/
+
 
 
 Troubleshooting
@@ -156,6 +177,11 @@ Examples
 
 The following examples slice and dice the STL file Screw Holder.stl.  The examples are run in a terminal in the folder which
 contains Screw Holder.gts and skeinforge.py.
+
+> python skeinforge.py
+This brings up the dialog, after clicking 'Skeinforge', the following is printed:
+The exported file is saved as Screw Holder_export.gcode
+
 
 > python skeinforge.py Screw Holder.stl
 The exported file is saved as Screw Holder_export.gcode
@@ -209,7 +235,7 @@ def getSkeinforgeToolFilenames():
 def writeOutput( filename = '' ):
 	"Skeinforge a gcode file.  If no filename is specified, skeinforge the first gcode file in this folder that is not modified."
 	skeinforgePluginFilenames = getSkeinforgeToolFilenames()
-	toolNames = 'export fillet hop stretch raft comb tower fill slice_shape'.split()
+	toolNames = 'export fillet oozebane nozzle_wipe hop stretch raft comb tower fill slice_shape'.split()
 	for toolName in toolNames:
 		for skeinforgePluginFilename in skeinforgePluginFilenames:
 			if skeinforgePluginFilename == toolName:

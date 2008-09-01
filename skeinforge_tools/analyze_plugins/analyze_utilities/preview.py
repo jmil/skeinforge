@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+import sys
 try:
     import Tkinter
 except:
@@ -63,3 +64,7 @@ def viewGif( filename, gcodeText = '' ):
         Preview(layers)
     except Exception, why:
         print( 'Preview failed: ' + str( why ) )
+
+
+if __name__ == "__main__":
+    viewGif( ' '.join( sys.argv[ 1 : ] ) )

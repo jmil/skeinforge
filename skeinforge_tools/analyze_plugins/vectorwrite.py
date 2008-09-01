@@ -5,7 +5,9 @@ The default 'Activate Vectorwrite' checkbox is on.  When it is on, the functions
 skeinforge toolchain, when it is off, the functions will not be called from the toolchain.  The functions will still be called, whether
 or not the 'Activate Vectorwrite' checkbox is on, when vectorwrite is run directly.
 
-The 'Pixels over Extrusion Width' preference is the scale of the graphic in pixels per extrusion width.
+The 'Pixels over Extrusion Width' preference is the scale of the graphic in pixels per extrusion width.  If the number of layers is
+equal or greater to the 'Minimum Number of Layers for Multiple Files' preference, then vectorwrite will write a directory with a
+file for each layer, rather than just a single large scalable vector graphic.
 
 To run vectorwrite, in a shell in the folder which vectorwrite is in type:
 > python vectorwrite.py
@@ -27,7 +29,7 @@ This brings up the vectorwrite dialog.
 
 
 >>> vectorwrite.vectorwriteFile()
-The vector file is saved as Screw Holder_vectorwrite.svg
+The vector file is saved as Screw Holder.svg
 
 """
 
@@ -43,6 +45,7 @@ from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import polyfile
 import cStringIO
 import math
+import os
 import sys
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
@@ -52,17 +55,6 @@ __license__ = "GPL 3.0"
 
 
 #add open webbrowser first time file is created choice
-def getVectorGcode( gcodeText, vectorwritePreferences = None ):
-	"Write a gcode text."
-	if gcodeText == '':
-		return ''
-	if vectorwritePreferences == None:
-		vectorwritePreferences = VectorwritePreferences()
-		preferences.readPreferences( vectorwritePreferences )
-	skein = VectorwriteSkein()
-	skein.parseGcode( gcodeText, vectorwritePreferences )
-	return skein.vectorWindow.getVectorFormattedText()
-
 def writeOutput( filename, gcodeText = '' ):
 	"Write scalable vector graphics for a skeinforge gcode file, if 'Write Scalable Vector Graphics for Skeinforge Chain' is selected."
 	vectorwritePreferences = VectorwritePreferences()
@@ -87,17 +79,18 @@ def writeVectorFile( filename = '' ):
 
 def writeVectorFileGivenText( filename, gcodeText, vectorwritePreferences ):
 	"Write scalable vector graphics for a gcode file."
-	suffixFilename = filename[ : filename.rfind( '.' ) ] + '.svg'
-	suffixFilename = suffixFilename.replace( ' ', '_' )
-	gcodec.writeFileText( suffixFilename, getVectorGcode( gcodeText, vectorwritePreferences ) )
-	print( 'The scalable vector graphics file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
+	if gcodeText == '':
+		return ''
+	skein = VectorwriteSkein()
+	skein.parseGcode( gcodeText, vectorwritePreferences )
+	print( 'The scalable vector graphics file is saved as ' + skein.getFilenameWriteFiles( filename ) )
 
 class VectorWindow:
 	"A class to accumulate a scalable vector graphics text."
 	def __init__( self ):
 		self.height = 0
 		self.leftMargin = 20
-		self.text = cStringIO.StringIO()
+		self.output = cStringIO.StringIO()
 		self.width = 0
 
 	def __repr__( self ):
@@ -119,11 +112,11 @@ class VectorWindow:
 
 	def addLine( self, line ):
 		"Add a line to the text and a newline."
-		self.text.write( line + "\n" )
+		self.output.write( line + "\n" )
 
 	def addPane( self ):
 		"Add a new window pane for drawing lines."
-		self.height += self.topRightCorner.imag - self.bottomLeftCorner.imag
+		self.height += int( self.topRightCorner.imag - self.bottomLeftCorner.imag )
 
 	def addText( self, fontSize, line ):
 		"Add a colored line to the text."
@@ -134,18 +127,22 @@ class VectorWindow:
 		self.addFontHeight( fontSize )
 		self.width = max( self.width, fontSize * len( line ) )
 
+	def getHeightWidthString( self ):
+		"Get the height and width string."
+		return 'height="' + str( math.ceil( self.height ) ) + '" width="' + str( self.width + self.leftMargin ) + '"'
+
 	def getVectorFormattedText( self ):
 		"Get the text in scalable vector graphics format."
 		textBeginning = '<?xml version="1.0"?>\n<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">\n'
-		textBeginning += '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" height="' + str( math.ceil( self.height ) ) + '" width="' + str( self.width + self.leftMargin ) + '">\n'
+		textBeginning += '<svg xmlns="http://www.w3.org/2000/svg" version="1.1" %s>\n' % self.getHeightWidthString()
 		textBeginning += '  <g style="fill-opacity:1.0; stroke:black; stroke-width:1;">\n'
-		return textBeginning + self.text.getvalue() + '  </g>\n</svg>\n'
+		return textBeginning + self.output.getvalue() + '  </g>\n</svg>\n'
 
 	def setPaneCorners( self, bottomLeftCorner, topRightCorner ):
 		"Set the corners for the window pane."
 		self.bottomLeftCorner = bottomLeftCorner
 		self.topRightCorner = topRightCorner
-		self.width = self.topRightCorner.real - self.bottomLeftCorner.real
+		self.width = int( self.topRightCorner.real - self.bottomLeftCorner.real )
 
 
 class VectorwriteSkein:
@@ -154,6 +151,9 @@ class VectorwriteSkein:
 		self.extrusionNumber = 0
 		self.extrusionWidth = 0.4
 		self.fontSize = 24
+		self.layerIndex = 0
+		self.numberOfLayers = 0
+		self.vectorWindows = []
 
 	def addToPath( self, location, nextLine ):
 		"Add a point to travel and maybe extrusion."
@@ -177,10 +177,51 @@ class VectorwriteSkein:
 					endComplex -= segment / segmentLength * truncation
 		self.vectorWindow.addColoredLine( self.scale * beginningComplex, self.scale * endComplex, colorName )
 
+	def addVectorWindow( self ):
+		"Add a new vector window to vector windows."
+		self.vectorWindow = VectorWindow()
+		self.vectorWindow.setPaneCorners( self.scaleCornerLow, self.scaleCornerHigh )
+		self.vectorWindows.append( self.vectorWindow )
+
+	def getFilenameWriteFiles( self, filename ):
+		"Write one or multiple files for the filename."
+		directoryName = os.path.dirname( filename )
+		baseUnderscoredName = os.path.basename( filename ).replace( ' ', '_' )
+		baseUnderscoredPrefix = baseUnderscoredName[ : baseUnderscoredName.rfind( '.' ) ]
+		if not self.isMultiple:
+			suffixFilename = os.path.join( directoryName, baseUnderscoredPrefix + '.svg' )
+			gcodec.writeFileText( suffixFilename, self.vectorWindow.getVectorFormattedText() )
+			return gcodec.getSummarizedFilename( suffixFilename )
+		multipleDirectoryName = os.path.join( directoryName, baseUnderscoredPrefix )
+		try:
+			os.mkdir( multipleDirectoryName )
+		except OSError:
+			pass
+		suffixFilenames = []
+		indexFilename = os.path.join( multipleDirectoryName, 'index.html' )
+		for vectorWindowIndex in range( len( self.vectorWindows ) ):
+			self.writeVectorWindowText( baseUnderscoredPrefix, multipleDirectoryName, suffixFilenames, vectorWindowIndex )
+		self.writeIndexText( baseUnderscoredPrefix, indexFilename, baseUnderscoredPrefix + ' Index', multipleDirectoryName, suffixFilenames )
+		return gcodec.getSummarizedFilename( indexFilename )
+
+	def getHypertextLinkBasename( self, baseUnderscoredPrefix, vectorWindowIndex ):
+		"Get hypertext link basename for a numbered vector window."
+		return self.getLinkBasename( baseUnderscoredPrefix, vectorWindowIndex ) + '.html'
+
+	def getLinkBasename( self, baseUnderscoredPrefix, vectorWindowIndex ):
+		"Get link basename for a numbered vector window."
+		zeroString = '0' * len( str( len( self.vectorWindows ) - 1 ) )
+		vectorWindowIndexString = str( vectorWindowIndex )
+		zeroPrefixIndex = zeroString[ len( vectorWindowIndexString ) : ] + vectorWindowIndexString
+		return baseUnderscoredPrefix + '_' + zeroPrefixIndex
+
+	def getSuffixFilename( self, baseUnderscoredPrefix, multipleDirectoryName, vectorWindowIndex ):
+		"Get suffix filename for a numbered vector window."
+		return os.path.join( multipleDirectoryName, self.getLinkBasename( baseUnderscoredPrefix, vectorWindowIndex ) + '.svg' )
+
 	def initializeActiveLocation( self ):
 		"Set variables to default."
 		self.extruderActive = False
-		self.layerIndex = 0
 		self.oldLocation = None
 
 	def linearCorner( self, splitLine ):
@@ -211,6 +252,8 @@ class VectorwriteSkein:
 			self.extruderActive = False
 		elif firstWord == '(<extrusionWidth>':
 			self.extrusionWidth = float( splitLine[ 1 ] )
+		elif firstWord == '(<layerStart>':
+			self.numberOfLayers += 1
 
 	def parseGcode( self, gcodeText, vectorwritePreferences ):
 		"Parse gcode text and store the vector output."
@@ -220,11 +263,13 @@ class VectorwriteSkein:
 		lines = gcodec.getTextLines( gcodeText )
 		for line in lines:
 			self.parseCorner( line )
+		self.scale = vectorwritePreferences.pixelsWidthExtrusion.value / self.extrusionWidth
+		self.scaleCornerHigh = self.scale * self.cornerHigh.dropAxis( 2 )
+		self.scaleCornerLow = self.scale * self.cornerLow.dropAxis( 2 )
+		self.isMultiple = self.numberOfLayers >= vectorwritePreferences.minimumNumberLayersMultipleFiles.value
 		self.initializeActiveLocation()
 		self.colorNames = [ 'brown', 'red', 'orange', 'yellow', 'green', 'blue', 'purple' ]
-		self.scale = vectorwritePreferences.pixelsWidthExtrusion.value / self.extrusionWidth
-		self.vectorWindow = VectorWindow()
-		self.vectorWindow.setPaneCorners( self.scale * self.cornerLow.dropAxis( 2 ), self.scale * self.cornerHigh.dropAxis( 2 ) )
+		self.addVectorWindow()
 		for lineIndex in range( len( lines ) ):
 			line = lines[ lineIndex ]
 			nextLine = ''
@@ -249,10 +294,47 @@ class VectorwriteSkein:
 		elif firstWord == '(<layerStart>':
 			self.extrusionNumber = 0
 			if self.layerIndex > 0:
-				self.vectorWindow.addFontHeight( self.fontSize )
+				if self.isMultiple:
+					self.addVectorWindow()
+				else:
+					self.vectorWindow.addFontHeight( self.fontSize )
 			self.vectorWindow.addText( self.fontSize, 'Layer index ' + str( self.layerIndex ) + ', z ' + splitLine[ 1 ] )
 			self.layerIndex += 1
 			self.vectorWindow.addPane()
+
+	def writeIndexText( self, baseUnderscoredPrefix, indexFilename, indexName, multipleDirectoryName, suffixFilenames ):
+		"Write the text for the index page."
+		indexText = cStringIO.StringIO()
+		indexText.write( '<html>\n<head>\n  <title>%s</title>\n</head>\n<body>\n' % indexName )
+		for suffixFilename in suffixFilenames:
+			indexText.write( '<a href="%s">%s</a><br />\n' % ( suffixFilename[ : - 3 ] + 'html', os.path.basename( suffixFilename )[ : - 4 ] ) )
+		nextFilename = self.getHypertextLinkBasename( baseUnderscoredPrefix, 0 )
+		previousFilename = self.getHypertextLinkBasename( baseUnderscoredPrefix, len( self.vectorWindows ) - 1 )
+		indexText.write( '  <br />\n  <br />\n<a href="%s"><- Previous</a> Index <a href="%s">Next -></a>\n' % ( previousFilename, nextFilename ) )
+		indexText.write( '</body>\n</html>' )
+		gcodec.writeFileText( indexFilename, indexText.getvalue() )
+
+	def writeVectorWindowText( self, baseUnderscoredPrefix, multipleDirectoryName, suffixFilenames, vectorWindowIndex ):
+		"Write the text for a vector window page."
+		suffixFilename = self.getSuffixFilename( baseUnderscoredPrefix, multipleDirectoryName, vectorWindowIndex )
+		vectorWindow = self.vectorWindows[ vectorWindowIndex ]
+		gcodec.writeFileText( suffixFilename, vectorWindow.getVectorFormattedText() )
+		htmlPageFilename = suffixFilename[ : - 3 ] + 'html'
+		hypertext = cStringIO.StringIO()
+		suffixBasename = os.path.basename( suffixFilename )
+		suffixFilenames.append( suffixBasename )
+		hypertext.write( '<html>\n<head>\n  <title>%s</title>\n</head>\n<body>\n' % suffixBasename[ : - 4 ] )
+		hypertext.write( '  <object type="image/svg+xml" data="%s" %s>  </object><br />\n  <br />\n' % ( suffixBasename, vectorWindow.getHeightWidthString() ) )
+#		hypertext.write( '  <iframe src="%s" %s>  </iframe>\n' % ( suffixBasename, vectorWindow.getHeightWidthString() ) )
+		nextFilename = 'index.html'
+		if vectorWindowIndex < len( self.vectorWindows ) - 1:
+			nextFilename = self.getHypertextLinkBasename( baseUnderscoredPrefix, vectorWindowIndex + 1 )
+		previousFilename = 'index.html'
+		if vectorWindowIndex > 0:
+			previousFilename = self.getHypertextLinkBasename( baseUnderscoredPrefix, vectorWindowIndex - 1 )
+		hypertext.write( '<a href="%s"><- Previous</a> <a href="%s">Index</a> <a href="%s">Next -></a>\n' % ( previousFilename, 'index.html', nextFilename ) )
+		hypertext.write( '</body>\n</html>' )
+		gcodec.writeFileText( htmlPageFilename, hypertext.getvalue() )
 
 
 class VectorwritePreferences:
@@ -261,10 +343,12 @@ class VectorwritePreferences:
 		"Set the default preferences, execute title & preferences filename."
 		#Set the default preferences.
 		self.archive = []
-		self.activateVectorwrite = preferences.BooleanPreference().getFromValue( 'Activate Vectorwrite', True )
+		self.activateVectorwrite = preferences.BooleanPreference().getFromValue( 'Activate Vectorwrite', False )
 		self.archive.append( self.activateVectorwrite )
 		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Write Vector Graphics for', '' )
 		self.archive.append( self.filenameInput )
+		self.minimumNumberLayersMultipleFiles = preferences.IntPreference().getFromValue( 'Minimum Number of Layers for Multiple Files (integer):', 10 )
+		self.archive.append( self.minimumNumberLayersMultipleFiles )
 		self.pixelsWidthExtrusion = preferences.FloatPreference().getFromValue( 'Pixels over Extrusion Width (ratio):', 10.0 )
 		self.archive.append( self.pixelsWidthExtrusion )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
@@ -284,7 +368,7 @@ class VectorwritePreferences:
 def main( hashtable = None ):
 	"Display the vectorwrite dialog."
 	if len( sys.argv ) > 1:
-		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
+		writeVectorFile( ' '.join( sys.argv[ 1 : ] ) )
 	else:
 		preferences.displayDialog( VectorwritePreferences() )
 
