@@ -9,6 +9,10 @@ If "Go Around Extruder Off Travel" is selected, the display will include the tra
 include the nozzle wipe path if any.  The "Pixels over Extrusion Width" preference is the scale of the image, the higher the
 number, the greater the size of the display.  If the number is too high, the display will be larger than the screen.
 
+On the skeinview display window, the up button increases the layer index shown by one, and the down button decreases the
+layer index by one.  When the index displayed in the index field is changed then "<return>" is hit, the layer index shown will
+be set to the index field, to a mimimum of zero and to a maximum of the highest index layer.
+
 To run skeinview, in a shell in the folder which skeinview is in type:
 > python skeinview.py
 
@@ -263,12 +267,29 @@ class SkeinWindow:
 		self.down_button.pack( side=preferences.Tkinter.LEFT )
 		self.up_button = preferences.Tkinter.Button( frame, text = "Up", command = self.up )
 		self.up_button.pack( side=preferences.Tkinter.LEFT )
+		self.indexEntry = preferences.Tkinter.Entry( frame )
+		self.indexEntry.bind( "<Return>", self.indexEntryReturnPressed )
+		self.indexEntry.pack( side = preferences.Tkinter.LEFT )
 		self.update()
 		if preferences.globalIsMainLoopRunning:
 			return
 		preferences.globalIsMainLoopRunning = True
 		self.root.mainloop()
 		preferences.globalIsMainLoopRunning = False
+
+	def down( self ):
+		self.index -= 1
+		self.update()
+
+	def indexEntryReturnPressed( self, event ):
+		self.index = int( self.indexEntry.get() )
+		self.index = max( 0, self.index )
+		self.index = min( len( self.skeinPanes ) - 1, self.index )
+		self.update()
+
+	def up( self ):
+		self.index += 1
+		self.update()
 
 	def update( self ):
 		skeinPane = self.skeinPanes[ self.index ]
@@ -283,14 +304,8 @@ class SkeinWindow:
 			self.down_button.config( state = preferences.Tkinter.NORMAL )
 		else:
 			self.down_button.config( state = preferences.Tkinter.DISABLED )
-
-	def up( self ):
-		self.index += 1
-		self.update()
-
-	def down( self ):
-		self.index -= 1
-		self.update()
+		self.indexEntry.delete( 0, preferences.Tkinter.END )
+		self.indexEntry.insert( 0, str( self.index ) )
 
 
 def main():

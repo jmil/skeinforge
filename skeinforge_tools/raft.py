@@ -190,6 +190,7 @@ class RaftSkein:
 		self.extrusionTop = 0.0
 		self.extrusionWidth = 0.6
 		self.feedratePerSecond = 16.0
+		self.isStartupEarly = False
 		self.layerIndex = - 1
 		self.extrusionHeight = 0.4
 		self.lineIndex = 0
@@ -372,6 +373,7 @@ class RaftSkein:
 		self.addTemperature( raftPreferences.temperatureShapeFirstLayer.value )
 		if raftPreferences.turnExtruderOnEarly.value:
 			self.addLine( 'M101' )
+			self.isStartupEarly = True
 		for line in self.lines[ self.lineIndex : ]:
 			self.parseLine( line )
 
@@ -410,6 +412,10 @@ class RaftSkein:
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':
 			line = self.getRaftedLine( splitLine )
+		elif firstWord == 'M101':
+			if self.isStartupEarly:
+				self.isStartupEarly = False
+				return
 		elif firstWord == '(<boundaryPoint>':
 			self.boundaryLoop.append( gcodec.getLocationFromSplitLine( None, splitLine ) )
 		elif firstWord == '(<layerStart>':

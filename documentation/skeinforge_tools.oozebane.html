@@ -22,6 +22,11 @@ When&nbsp;oozebane&nbsp;turns&nbsp;the&nbsp;extruder&nbsp;off,&nbsp;it&nbsp;slow
 thickness&nbsp;until&nbsp;the&nbsp;end.&nbsp;&nbsp;The&nbsp;"Turn&nbsp;Off&nbsp;Steps"&nbsp;preference&nbsp;is&nbsp;the&nbsp;number&nbsp;of&nbsp;steps,&nbsp;the&nbsp;more&nbsp;steps&nbsp;the&nbsp;smaller&nbsp;the&nbsp;size&nbsp;of&nbsp;the&nbsp;step&nbsp;that<br>
 the&nbsp;feedrate&nbsp;will&nbsp;be&nbsp;decreased&nbsp;and&nbsp;the&nbsp;larger&nbsp;the&nbsp;size&nbsp;of&nbsp;the&nbsp;resulting&nbsp;gcode&nbsp;file,&nbsp;the&nbsp;default&nbsp;is&nbsp;3.<br>
 &nbsp;<br>
+Oozebane&nbsp;also&nbsp;turns&nbsp;the&nbsp;extruder&nbsp;on&nbsp;just&nbsp;before&nbsp;the&nbsp;start&nbsp;of&nbsp;a&nbsp;thread.&nbsp;&nbsp;The&nbsp;"Early&nbsp;Startup&nbsp;Maximum&nbsp;Distance&nbsp;Over&nbsp;Extrusion&nbsp;Width"<br>
+preference&nbsp;is&nbsp;the&nbsp;ratio&nbsp;of&nbsp;the&nbsp;maximum&nbsp;distance&nbsp;before&nbsp;the&nbsp;thread&nbsp;starts&nbsp;that&nbsp;the&nbsp;extruder&nbsp;will&nbsp;be&nbsp;turned&nbsp;off&nbsp;over&nbsp;the&nbsp;extrusion&nbsp;width,<br>
+the&nbsp;default&nbsp;is&nbsp;2.0.&nbsp;&nbsp;The&nbsp;longer&nbsp;the&nbsp;extruder&nbsp;has&nbsp;been&nbsp;off,&nbsp;the&nbsp;sooner&nbsp;the&nbsp;extruder&nbsp;will&nbsp;turn&nbsp;back&nbsp;on,&nbsp;the&nbsp;ratio&nbsp;is&nbsp;one&nbsp;minus&nbsp;one&nbsp;over&nbsp;e<br>
+to&nbsp;the&nbsp;power&nbsp;of&nbsp;the&nbsp;distance&nbsp;the&nbsp;extruder&nbsp;has&nbsp;been&nbsp;off&nbsp;over&nbsp;the&nbsp;"Early&nbsp;Startup&nbsp;Distance&nbsp;Constant&nbsp;Over&nbsp;Extrusion&nbsp;Width".<br>
+&nbsp;<br>
 To&nbsp;run&nbsp;oozebane,&nbsp;in&nbsp;a&nbsp;shell&nbsp;which&nbsp;oozebane&nbsp;is&nbsp;in&nbsp;type:<br>
 &gt;&nbsp;python&nbsp;oozebane.py<br>
 &nbsp;<br>
@@ -131,11 +136,19 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 
 <dl><dt><a name="OozebaneSkein-addLine"><strong>addLine</strong></a>(self, line)</dt><dd><tt>Add&nbsp;a&nbsp;line&nbsp;of&nbsp;text&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="OozebaneSkein-addShutSlowDownLine"><strong>addShutSlowDownLine</strong></a>(self, line)</dt><dd><tt>Add&nbsp;the&nbsp;shutdown&nbsp;and&nbsp;slowdown&nbsp;lines.</tt></dd></dl>
+<dl><dt><a name="OozebaneSkein-addShutSlowDownLine"><strong>addShutSlowDownLine</strong></a>(self, splitLine)</dt><dd><tt>Add&nbsp;the&nbsp;shutdown&nbsp;and&nbsp;slowdown&nbsp;lines.</tt></dd></dl>
+
+<dl><dt><a name="OozebaneSkein-addStartupLine"><strong>addStartupLine</strong></a>(self, distanceThreadBeginning, splitLine)</dt><dd><tt>Add&nbsp;the&nbsp;startup&nbsp;line.</tt></dd></dl>
 
 <dl><dt><a name="OozebaneSkein-getAddShutSlowDownLines"><strong>getAddShutSlowDownLines</strong></a>(self, line)</dt><dd><tt>Get&nbsp;and&nbsp;/&nbsp;or&nbsp;add&nbsp;the&nbsp;shutdown&nbsp;and&nbsp;slowdown&nbsp;lines.</tt></dd></dl>
 
+<dl><dt><a name="OozebaneSkein-getAddStartupLines"><strong>getAddStartupLines</strong></a>(self, line)</dt><dd><tt>Get&nbsp;and&nbsp;/&nbsp;or&nbsp;add&nbsp;the&nbsp;startup&nbsp;lines.</tt></dd></dl>
+
+<dl><dt><a name="OozebaneSkein-getDistanceThreadBeginning"><strong>getDistanceThreadBeginning</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;distance&nbsp;to&nbsp;the&nbsp;beginning&nbsp;of&nbsp;the&nbsp;thread.</tt></dd></dl>
+
 <dl><dt><a name="OozebaneSkein-getDistanceThreadEnd"><strong>getDistanceThreadEnd</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;distance&nbsp;to&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;thread.</tt></dd></dl>
+
+<dl><dt><a name="OozebaneSkein-getDistanceToWord"><strong>getDistanceToWord</strong></a>(self, remainingDistance, word)</dt><dd><tt>Get&nbsp;the&nbsp;distance&nbsp;to&nbsp;the&nbsp;word.</tt></dd></dl>
 
 <dl><dt><a name="OozebaneSkein-getLinearMoveWithFeedrate"><strong>getLinearMoveWithFeedrate</strong></a>(self, feedrate, location)</dt><dd><tt>Get&nbsp;a&nbsp;linear&nbsp;move&nbsp;line&nbsp;with&nbsp;the&nbsp;feedrate.</tt></dd></dl>
 
@@ -151,7 +164,9 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 
 <dl><dt><a name="OozebaneSkein-parseLine"><strong>parseLine</strong></a>(self, line)</dt><dd><tt>Parse&nbsp;a&nbsp;gcode&nbsp;line&nbsp;and&nbsp;add&nbsp;it&nbsp;to&nbsp;the&nbsp;bevel&nbsp;gcode.</tt></dd></dl>
 
-<dl><dt><a name="OozebaneSkein-setExtrusionWidth"><strong>setExtrusionWidth</strong></a>(self, oozebanePreferences)</dt><dd><tt>Parse&nbsp;gcode&nbsp;initialization&nbsp;and&nbsp;store&nbsp;the&nbsp;parameters.</tt></dd></dl>
+<dl><dt><a name="OozebaneSkein-setEarlyStartupDistance"><strong>setEarlyStartupDistance</strong></a>(self, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;early&nbsp;startup&nbsp;distance.</tt></dd></dl>
+
+<dl><dt><a name="OozebaneSkein-setExtrusionWidth"><strong>setExtrusionWidth</strong></a>(self, oozebanePreferences)</dt><dd><tt>Set&nbsp;the&nbsp;extrusion&nbsp;width.</tt></dd></dl>
 
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">

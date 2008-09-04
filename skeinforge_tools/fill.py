@@ -58,12 +58,16 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-#add index to skeinview
+#oozebane entry
 #looptailor
 #check loops for intersections with their own arounds
 #array_place
+#comb back
+#change material
+#add raft outline temperature http://hydraraptor.blogspot.com/2008/09/screw-top-pot.html
 #one direction for while, one direction narrow then wide, split to weave, hex fill, loop inside sparse fill or run along sparse infill, fill in one direction for a number of layers
 #raft supports overhangs
+#stripe
 #transform
 #stack
 #mosaic

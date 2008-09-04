@@ -19,6 +19,10 @@ If&nbsp;"Go&nbsp;Around&nbsp;Extruder&nbsp;Off&nbsp;Travel"&nbsp;is&nbsp;selecte
 include&nbsp;the&nbsp;nozzle&nbsp;wipe&nbsp;path&nbsp;if&nbsp;any.&nbsp;&nbsp;The&nbsp;"Pixels&nbsp;over&nbsp;Extrusion&nbsp;Width"&nbsp;preference&nbsp;is&nbsp;the&nbsp;scale&nbsp;of&nbsp;the&nbsp;image,&nbsp;the&nbsp;higher&nbsp;the<br>
 number,&nbsp;the&nbsp;greater&nbsp;the&nbsp;size&nbsp;of&nbsp;the&nbsp;display.&nbsp;&nbsp;If&nbsp;the&nbsp;number&nbsp;is&nbsp;too&nbsp;high,&nbsp;the&nbsp;display&nbsp;will&nbsp;be&nbsp;larger&nbsp;than&nbsp;the&nbsp;screen.<br>
 &nbsp;<br>
+On&nbsp;the&nbsp;skeinview&nbsp;display&nbsp;window,&nbsp;the&nbsp;up&nbsp;button&nbsp;increases&nbsp;the&nbsp;layer&nbsp;index&nbsp;shown&nbsp;by&nbsp;one,&nbsp;and&nbsp;the&nbsp;down&nbsp;button&nbsp;decreases&nbsp;the<br>
+layer&nbsp;index&nbsp;by&nbsp;one.&nbsp;&nbsp;When&nbsp;the&nbsp;index&nbsp;displayed&nbsp;in&nbsp;the&nbsp;index&nbsp;field&nbsp;is&nbsp;changed&nbsp;then&nbsp;"&lt;return&gt;"&nbsp;is&nbsp;hit,&nbsp;the&nbsp;layer&nbsp;index&nbsp;shown&nbsp;will<br>
+be&nbsp;set&nbsp;to&nbsp;the&nbsp;index&nbsp;field,&nbsp;to&nbsp;a&nbsp;mimimum&nbsp;of&nbsp;zero&nbsp;and&nbsp;to&nbsp;a&nbsp;maximum&nbsp;of&nbsp;the&nbsp;highest&nbsp;index&nbsp;layer.<br>
+&nbsp;<br>
 To&nbsp;run&nbsp;skeinview,&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;skeinview&nbsp;is&nbsp;in&nbsp;type:<br>
 &gt;&nbsp;python&nbsp;skeinview.py<br>
 &nbsp;<br>
@@ -106,6 +110,8 @@ This&nbsp;brings&nbsp;up&nbsp;a&nbsp;skein&nbsp;window&nbsp;to&nbsp;view&nbsp;ea
 <dl><dt><a name="SkeinWindow-__init__"><strong>__init__</strong></a>(self, size, skeinPanes)</dt></dl>
 
 <dl><dt><a name="SkeinWindow-down"><strong>down</strong></a>(self)</dt></dl>
+
+<dl><dt><a name="SkeinWindow-indexEntryReturnPressed"><strong>indexEntryReturnPressed</strong></a>(self, event)</dt></dl>
 
 <dl><dt><a name="SkeinWindow-up"><strong>up</strong></a>(self)</dt></dl>
 

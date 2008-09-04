@@ -103,6 +103,12 @@ def getFileText( filename, readMode = 'r' ):
 		print( 'The file ' + filename + ' does not exist, an empty string will be returned.' )
 		return ''
 
+def getFirstWord( splitLine ):
+	"Get the first word of a split line."
+	if len( splitLine ) > 0:
+		return splitLine[ 0 ]
+	return ''
+
 def getGcodeFileText( filename, gcodeText ):
 	"Get the gcode text from a file if it the gcode text is empty and if the file is a gcode file."
 	if gcodeText != '':
