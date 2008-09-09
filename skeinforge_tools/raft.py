@@ -255,8 +255,8 @@ class RaftSkein:
 		halfInterfaceExtrusionWidth = 0.5 * interfaceExtrusionWidth
 		stepsUntilEnd = self.getStepsUntilEnd( stepBegin.real + halfInterfaceExtrusionWidth, stepEnd.real, interfaceStep )
 		interfaceOverhang = self.raftPreferences.infillOverhang.value * halfInterfaceExtrusionWidth - halfInterfaceExtrusionWidth
-		beginY = stepBegin.real - interfaceOverhang
-		endY = stepEnd.real + interfaceOverhang
+		beginY = stepBegin.imag - interfaceOverhang
+		endY = stepEnd.imag + interfaceOverhang
 		segments = []
 		zCenter = self.extrusionTop + halfInterfaceExtrusionHeight
 		z = zCenter + halfInterfaceExtrusionHeight * self.raftPreferences.interfaceNozzleLiftOverHalfInterfaceExtrusionHeight.value
