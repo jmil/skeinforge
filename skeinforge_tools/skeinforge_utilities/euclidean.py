@@ -186,6 +186,21 @@ def getHalfSimplifiedLoop( loop, radius, remainder ):
 			simplified.append( point )
 	return simplified
 
+def getHalfSimplifiedPath( path, radius, remainder ):
+	"Get the path with half of the points inside the channel removed."
+	if len( path ) < 2:
+		return path
+	channelRadius = radius * .01
+	simplified = []
+	addIndex = len( path ) - 1
+	for pointIndex in range( len( path ) ):
+		point = path[ pointIndex ]
+		if pointIndex % 2 == remainder or pointIndex == 0 or pointIndex == addIndex:
+			simplified.append( point )
+		elif not isWithinChannel( channelRadius, pointIndex, path ):
+			simplified.append( point )
+	return simplified
+
 def getInsidesAddToOutsides( loops, outsides ):
 	"Add loops to either the insides or outsides."
 	insides = []
@@ -453,6 +468,22 @@ def getSimplifiedLoop( loop, radius ):
 		simplificationRadius = min( simplificationRadius, radius )
 		pointIndex += pointIndex
 	return getAwayPath( loop, radius )
+
+def getSimplifiedPath( path, radius ):
+	"Get path with points inside the channel removed."
+	if len( path ) < 2:
+		return path
+	simplificationMultiplication = 256
+	simplificationRadius = radius / float( simplificationMultiplication )
+	maximumIndex = len( path ) * simplificationMultiplication
+	pointIndex = 1
+	while pointIndex < maximumIndex:
+		path = getHalfSimplifiedPath( path, simplificationRadius, 0 )
+		path = getHalfSimplifiedPath( path, simplificationRadius, 1 )
+		simplificationRadius += simplificationRadius
+		simplificationRadius = min( simplificationRadius, radius )
+		pointIndex += pointIndex
+	return getAwayPath( path, radius )
 
 def getTransferClosestSurroundingLoop( oldOrderedLocation, remainingSurroundingLoops, skein ):
 	"Get and transfer the closest remaining surrounding loop."

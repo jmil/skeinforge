@@ -139,7 +139,6 @@ class CombSkein:
 		self.layers = []
 		self.layerTable = {}
 		self.layerZ = None
-		self.lineIndex = 0
 		self.lines = None
 		self.loop = None
 		self.oldLocation = None

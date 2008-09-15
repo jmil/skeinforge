@@ -58,19 +58,18 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-#oozebane entry
 #looptailor
+#add raft outline temperature http://hydraraptor.blogspot.com/2008/09/screw-top-pot.html
 #check loops for intersections with their own arounds
 #array_place
 #comb back
 #change material
-#add raft outline temperature http://hydraraptor.blogspot.com/2008/09/screw-top-pot.html
 #one direction for while, one direction narrow then wide, split to weave, hex fill, loop inside sparse fill or run along sparse infill, fill in one direction for a number of layers
 #raft supports overhangs
-#stripe
-#transform
-#stack
 #mosaic
+#transform
+#pick and place
+#stack
 #infill first
 #searchable help
 #custom inclined plane, inclined plane from model, screw, fillet travel as well maybe
@@ -78,6 +77,7 @@ __license__ = "GPL 3.0"
 #maybe much afterwards make congajure multistep view
 #maybe bridge supports although staggered spans are probably better
 #maybe update slice to add perimeter path intersection information to the large loop also
+#maybe stripe although mosaic alone can handle it
 def addAroundClosest( arounds, layerExtrusionWidth, paths, removedEndpoint ):
 	"Add the closest removed endpoint to the path, with minimal twisting."
 	removedEndpointPoint = removedEndpoint.point
@@ -108,7 +108,7 @@ def addAroundClosest( arounds, layerExtrusionWidth, paths, removedEndpoint ):
 
 def addPath( extrusionWidth, fill, path, rotationPlaneAngle ):
 	"Add simplified path to fill."
-	planeRotated = euclidean.getPathRoundZAxisByPlaneAngle( rotationPlaneAngle, getSimplifiedPath( path, extrusionWidth ) )
+	planeRotated = euclidean.getPathRoundZAxisByPlaneAngle( rotationPlaneAngle, euclidean.getSimplifiedPath( path, extrusionWidth ) )
 	fill.append( planeRotated )
 
 def addSparseEndpoints( doubleExtrusionWidth, endpoints, fillLine, horizontalSegments, infillDensity, removedEndpoints, surroundingXIntersections ):
@@ -204,43 +204,12 @@ def getFillGcode( gcodeText, fillPreferences = None ):
 	skein.parseGcode( fillPreferences, gcodeText )
 	return skein.output.getvalue()
 
-def getHalfSimplifiedPath( path, radius, remainder ):
-	"Get the path with half of the points inside the channel removed."
-	if len( path ) < 2:
-		return path
-	channelRadius = radius * .01
-	simplified = []
-	addIndex = len( path ) - 1
-	for pointIndex in range( len( path ) ):
-		point = path[ pointIndex ]
-		if pointIndex % 2 == remainder or pointIndex == 0 or pointIndex == addIndex:
-			simplified.append( point )
-		elif not euclidean.isWithinChannel( channelRadius, pointIndex, path ):
-			simplified.append( point )
-	return simplified
-
 def getHorizontalSegments( fillLoops, alreadyFilledArounds, y ):
 	"Get horizontal segments inside loops."
 	solidXIntersectionList = []
 	euclidean.addXIntersectionsFromLoops( fillLoops, - 1, solidXIntersectionList, y )
 	euclidean.addXIntersectionsFromLoopLists( alreadyFilledArounds, solidXIntersectionList, y )
 	return euclidean.getSegmentsFromIntersections( solidXIntersectionList, y, fillLoops[ 0 ][ 0 ].z )
-
-def getSimplifiedPath( path, radius ):
-	"Get path with points inside the channel removed."
-	if len( path ) < 2:
-		return path
-	simplificationMultiplication = 256
-	simplificationRadius = radius / float( simplificationMultiplication )
-	maximumIndex = len( path ) * simplificationMultiplication
-	pointIndex = 1
-	while pointIndex < maximumIndex:
-		path = getHalfSimplifiedPath( path, simplificationRadius, 0 )
-		path = getHalfSimplifiedPath( path, simplificationRadius, 1 )
-		simplificationRadius += simplificationRadius
-		simplificationRadius = min( simplificationRadius, radius )
-		pointIndex += pointIndex
-	return euclidean.getAwayPath( path, radius )
 
 def getSurroundingXIntersections( alreadyFilledSize, doubleSolidSurfaceThickness, surroundingSlices, y ):
 	"Get x intersections from surrounding layers."

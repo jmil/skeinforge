@@ -171,12 +171,12 @@ class ExportSkein:
 			return
 		if firstWord == '(<decimalPlacesCarried>':
 			self.decimalPlacesExported = max( 1, int( splitLine[ 1 ] ) - 1 )
-		elif firstWord == '(<extrusionStart>':
+		if firstWord[ 0 ] == '(' and exportPreferences.deleteComments.value:
+			return
+		if firstWord == '(<extrusionStart>':
 			self.addLine( '(<procedureDone> export )' )
 		if firstWord != 'G1' and firstWord != 'G2' and firstWord != 'G3' :
 			self.addLine( line )
-			return
-		if firstWord[ 0 ] == '(' and exportPreferences.deleteComments.value:
 			return
 		line = self.getLineWithTruncatedNumber( 'X', line )
 		line = self.getLineWithTruncatedNumber( 'Y', line )

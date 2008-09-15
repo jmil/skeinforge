@@ -377,7 +377,7 @@ class StretchSkein:
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.stretchPreferences = stretchPreferences
 		self.parseInitialization()
-		for self.lineIndex in range( self.lineIndex, len( self.lines ) ):
+		for self.lineIndex in xrange( self.lineIndex, len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			self.parseStretch( line )
 
@@ -400,7 +400,6 @@ class StretchSkein:
 				self.stretchFromDistance = self.stretchPreferences.stretchFromDistanceOverExtrusionWidth.value * extrusionWidth
 			elif firstWord == '(<extrusionStart>':
 				self.addLine( '(<procedureDone> stretch )' )
-				self.addLine( line )
 				return
 			self.addLine( line )
 

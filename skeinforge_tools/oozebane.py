@@ -153,6 +153,7 @@ class OozebaneSkein:
 		self.extruderInactiveLongEnough= False
 		self.feedrateMinute = 960.0
 		self.isShutdownEarly = False
+		self.isShutdownNeeded = False
 		self.isStartupEarly = False
 		self.lineIndex = 0
 		self.lines = None
@@ -160,10 +161,6 @@ class OozebaneSkein:
 		self.output = cStringIO.StringIO()
 		self.shutdownStepIndex = 999999999
 		self.startupStepIndex = 999999999
-
-	def addLine( self, line ):
-		"Add a line of text and a newline to the output."
-		self.output.write( line + "\n" )
 
 	def addAfterStartupLine( self, splitLine ):
 		"Add the after startup lines."
@@ -179,6 +176,16 @@ class OozebaneSkein:
 				self.addLine( self.getLinearMoveWithFeedrate( feedrate, locationBack ) )
 		self.startupStepIndex += 1
 
+	def addLine( self, line ):
+		"Add a line of text and a newline to the output."
+		self.output.write( line + "\n" )
+
+	def addLineSetShutdowns( self, line ):
+		"Add a line and set the shutdown variables."
+		self.addLine( line )
+		self.isShutdownNeeded = False
+		self.isShutdownEarly = True
+
 	def addShutSlowDownLine( self, splitLine ):
 		"Add the shutdown and slowdown lines."
 		distanceThreadEnd = self.getDistanceThreadEnd()
@@ -186,14 +193,15 @@ class OozebaneSkein:
 		segment = self.oldLocation.minus( location )
 		segmentLength = segment.length()
 		distanceBack = self.earlyShutdownDistances[ self.shutdownStepIndex ] - distanceThreadEnd
+		if self.shutdownStepIndex == 0:
+			self.isShutdownNeeded = True
 		if segmentLength > 0.0:
 			locationBack = location.plus( segment.times( distanceBack / segmentLength ) )
 			feedrate = self.feedrateMinute * self.earlyShutdownFlowRates[ self.shutdownStepIndex ]
 			if not self.isClose( locationBack, self.oldLocation ) and not self.isClose( locationBack, location ):
 				self.addLine( self.getLinearMoveWithFeedrate( feedrate, locationBack ) )
-		if self.shutdownStepIndex == 0:
-			self.addLine( 'M103' )
-			self.isShutdownEarly = True
+				if self.isShutdownNeeded:
+					self.addLineSetShutdowns( 'M103' )
 		self.shutdownStepIndex += 1
 
 	def addStartupLine( self, distanceThreadBeginning, splitLine ):
@@ -239,7 +247,11 @@ class OozebaneSkein:
 			self.addShutSlowDownLine( splitLine )
 		if distanceThreadEnd != None:
 			if distanceThreadEnd > 0.0:
-				return self.getLinearMoveWithFeedrateSplitLine( self.feedrateMinute * self.getShutdownFlowRateMultiplier( 1.0 - distanceThreadEnd / self.earlyShutdownDistance ), splitLine )
+				shutdownLine = self.getLinearMoveWithFeedrateSplitLine( self.feedrateMinute * self.getShutdownFlowRateMultiplier( 1.0 - distanceThreadEnd / self.earlyShutdownDistance ), splitLine )
+				if self.isShutdownNeeded:
+					self.addLineSetShutdowns( shutdownLine )
+					return 'M103'
+				return shutdownLine
 		return line
 
 	def getDistanceAfterThreadBeginning( self ):
@@ -307,9 +319,7 @@ class OozebaneSkein:
 	def getOozebaneLine( self, line ):
 		"Get oozebaned gcode line."
 		splitLine = line.split()
-		indexOfF = gcodec.indexOfStartingWithSecond( "F", splitLine )
-		if indexOfF > 0:
-			self.feedrateMinute = float( splitLine[ indexOfF ][ 1 : ] )
+		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
 		if self.oldLocation == None:
 			return line
 		if self.startupStepIndex < self.slowdownStartupSteps:
@@ -328,6 +338,7 @@ class OozebaneSkein:
 
 	def getShutdownFlowRateMultiplier( self, along ):
 		"Get the shut down flow rate multipler."
+		along = min( along, float( self.slowdownStartupSteps - 1 ) / float( self.slowdownStartupSteps ) )
 		return 1.0 - 0.5 / float( self.slowdownStartupSteps ) - along
 
 	def getStartupFlowRateMultiplier( self, along ):
@@ -407,6 +418,7 @@ class OozebaneSkein:
 			self.extruderActive = True
 			self.extruderInactiveLongEnough = False
 			if self.getDistanceThreadEnd() == None:
+				self.isShutdownNeeded = True
 				self.shutdownStepIndex = 0
 			if self.isStartupEarly:
 				self.isStartupEarly = False

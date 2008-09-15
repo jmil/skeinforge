@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # encoding: utf-8
 """
+Extrude requires pySerial installed for this module to work. If you are using Fedora it is available on yum
+(run "sudo yum install pyserial").  To actually control the reprap requires write access to the serial device,
+running as root is one way to get that access.
+
 Created by Brendan Erwin on 2008-05-21.
 Copyright (c) 2008 Brendan Erwin. All rights reserved.
 
@@ -22,7 +26,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 import sys
 import os
-import serial
+import serial	# Import the pySerial modules.
 import time
 
 
@@ -35,6 +39,7 @@ class RepRapArduinoSerialSender:
 	"""
 	
 	_verbose = False
+	block = "empty"
 	
 	def __init__(self, port, verbose=False):
 		"""
@@ -71,7 +76,9 @@ class RepRapArduinoSerialSender:
 	def write(self, block):
 		"""
 			Writes one block of g-code out to arduino and waits for an "ok".
-			This will raise "ValueError" if it doesn't get an "ok" back.
+			This version will wait for an "ok" before returning and prints any intermediate output received.
+			No error will be raised if non-ok response is received.  Loop in read() is infinite if "ok"
+			does not come back!
 			This routine also removes all whitespace before sending it to the arduino,
 			which is handy for gcode, but will screw up if you try to do binary communications.
 		"""
@@ -93,21 +100,26 @@ class RepRapArduinoSerialSender:
 	def read(self, expect=None):
 		"""
 			This routine should never be called directly. It's used by write() and reset()
-			to read a one-line response from the Arduino, and raise an exception if
-			it doesn't contain the expected response.
+			to read a one-line response from the Arduino.
+			This version will wait for an "ok" before returning and prints any intermediate output received.
+			No error will be raised if non-ok response is received.  Loop is infinite if "ok"
+			does not come back!
 		"""
 		#The g-code firmware returns exactly ONE line per block of gcode sent.
-		response = self.ser.readline().strip() 
-		if expect is None:
-			return
+		#Unless it is M104, M105 or other code that returns info!!
+		#It WILL return "ok" once the command has finished sending and completed.
+		while True:
+			response = self.ser.readline().strip() 
+			if expect is None:
+				return
 
-		if expect in response:
-			if self._verbose:
+			if expect in response:
+				if self._verbose:
+					print response
+				return
+			else:
+				#Just print the response since it is useful data or an error message
 				print response
-		else:
-			respone="Got non-ok reponse: \""+response + "\" when sending \"" + block + "\""
-			print response
-			raise ValueError(response)
 
 
 	def close():

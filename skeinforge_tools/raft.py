@@ -11,8 +11,8 @@ raft, in a shell type:
 > python raft.py
 
 The important values for the raft preferences are the temperatures of the raft, the first layer and the next layers.  These will be
-different for each material.  The default preferences for ABS, HDPE, PCL & PLA are from Nophead's experiments.  To change
-the material, in a shell type:
+different for each material.  The default preferences for ABS, HDPE, PCL & PLA are extrapolated from Nophead's
+experiments.  To change the material, in a shell type:
 > python material.py
 
 This brings up the material preferences dialog.  In that dialog you can add or delete a material on the listbox and you change
@@ -45,13 +45,19 @@ The raft fills a rectangle whose size is the rectangle around the bottom layer o
 width of the extrusion of the raft.
 
 The extruder will orbit for at least "Temperature Change Time of Raft" seconds before extruding the raft.  It will orbit for at least
-"Temperature Change Time of First Layer" seconds before extruding the first layer of the shape.  It will orbit for at least
-"Temperature Change Time of Next Layers" seconds before extruding the next layers of the shape.  If a time is zero, it will not
-orbit.
+"Temperature Change Time of First Layer Outline" seconds before extruding the outline of the first layer of the shape.  It will
+orbit for at least "Temperature of Shape First Layer Within" seconds before extruding within the outline of the first layer of the
+shape.  It will orbit for at least "Temperature Change Time of Next Layers" seconds before extruding the next layers of the
+shape.  If a time is zero, it will not orbit.
 
-The "Temperature of Raft" preference sets the temperature of the raft.  The "Temperature of Shape First Layer" preference sets
-the temperature of the first layer of the shape.  The "Temperature of Shape Next Layers" preference sets the temperature of the
-next layers of the shape.
+The "Temperature of Raft" preference sets the temperature of the raft.  The "Temperature of Shape First Layer Outline"
+preference sets the temperature of the outline of the first layer of the shape.  The "Temperature of Shape First Layer Within"
+preference sets the temperature within the outline of the first layer of the shape.  The "Temperature of Shape Next Layers"
+preference sets the temperature of the next layers of the shape.
+
+If the "Turn Extruder On Early" checkbox is checked, the extruder will be turned on before the first layer is extruded.  Now that
+oozebane turns on the extruder just before a thread begins, the "Turn Extruder On Early" option is probably not necesary so the
+default is now off.
 
 The following examples raft the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder
 which contains Hollow Square.gcode, Hollow Square.gts and raft.py.  The raft function will raft if
@@ -190,7 +196,9 @@ class RaftSkein:
 		self.extrusionTop = 0.0
 		self.extrusionWidth = 0.6
 		self.feedratePerSecond = 16.0
+		self.isFirstLayerWithinTemperatureAdded = False
 		self.isStartupEarly = False
+		self.isSurroundingLoop = True
 		self.layerIndex = - 1
 		self.extrusionHeight = 0.4
 		self.lineIndex = 0
@@ -319,7 +327,7 @@ class RaftSkein:
 		if extrudeRaft:
 			self.addTemperature( self.raftPreferences.temperatureRaft.value )
 		else:
-			self.addTemperature( self.raftPreferences.temperatureShapeFirstLayer.value )
+			self.addTemperature( self.raftPreferences.temperatureShapeFirstLayerOutline.value )
 		self.addLine( '(<layerStart> ' + self.getRounded( self.extrusionTop ) + ' )' ) # Indicate that a new layer is starting.
 		intercircle.addOrbits( beginLoop, self, self.raftPreferences.temperatureChangeTimeRaft.value )
 		for baseLayerIndex in range( self.raftPreferences.baseLayers.value ):
@@ -328,9 +336,9 @@ class RaftSkein:
 			self.addInterfaceLayer( interfaceExtrusionWidth, interfaceStep, stepBegin, stepEnd )
 		self.operatingJump = self.extrusionTop - self.cornerLow.z + halfExtrusionHeight + halfExtrusionHeight * self.raftPreferences.operatingNozzleLiftOverHalfExtrusionHeight.value
 		if extrudeRaft:
-			self.addTemperature( self.raftPreferences.temperatureShapeFirstLayer.value )
+			self.addTemperature( self.raftPreferences.temperatureShapeFirstLayerOutline.value )
 			squareLoop = getSquareLoop( Vec3( stepBegin.real, stepBegin.imag, self.extrusionTop ), Vec3( stepEnd.real, stepEnd.imag, self.extrusionTop ) )
-			intercircle.addOrbits( squareLoop, self, self.raftPreferences.temperatureChangeTimeFirstLayer.value )
+			intercircle.addOrbits( squareLoop, self, self.raftPreferences.temperatureChangeTimeFirstLayerOutline.value )
 
 	def addTemperature( self, temperature ):
 		"Add a line of temperature."
@@ -346,6 +354,10 @@ class RaftSkein:
 		self.oldLocation = Vec3().getFromVec3( location )
 		if self.operatingJump != None:
 			location.z += self.operatingJump
+		if not self.isFirstLayerWithinTemperatureAdded and not self.isSurroundingLoop:
+			self.isFirstLayerWithinTemperatureAdded = True
+			self.addTemperature( self.raftPreferences.temperatureShapeFirstLayerWithin.value )
+			intercircle.addOperatingOrbits( self.operatingJump, self, self.raftPreferences.temperatureChangeTimeFirstLayerWithin.value )
 		return self.getGcodeFromFeedrateMovement( 60.0 * self.feedratePerSecond, location )
 
 	def getRounded( self, number ):
@@ -370,7 +382,7 @@ class RaftSkein:
 		self.parseInitialization()
 		if raftPreferences.activateRaft.value:
 			self.addRaft()
-		self.addTemperature( raftPreferences.temperatureShapeFirstLayer.value )
+		self.addTemperature( raftPreferences.temperatureShapeFirstLayerOutline.value )
 		if raftPreferences.turnExtruderOnEarly.value:
 			self.addLine( 'M101' )
 			self.isStartupEarly = True
@@ -423,6 +435,7 @@ class RaftSkein:
 			if self.operatingJump != None:
 				line = '(<layerStart> ' + self.getRounded( self.extrusionTop + float( splitLine[ 1 ] ) ) + ' )'
 			if self.layerIndex == 1:
+				self.addTemperature( self.raftPreferences.temperatureShapeNextLayers.value )
 				intercircle.addOperatingOrbits( self.operatingJump, self, self.raftPreferences.temperatureChangeTimeNextLayers.value )
 			if self.layerIndex > 1:
 				self.addLine( '(<operatingLayerEnd> )' )
@@ -430,6 +443,9 @@ class RaftSkein:
 		elif firstWord == '(<surroundingLoop>':
 			self.boundaryLoop = []
 			self.boundaryLoops.append( self.boundaryLoop )
+			self.isSurroundingLoop = True
+		elif firstWord == '(</surroundingLoop>':
+			self.isSurroundingLoop = False
 		self.addLine( line )
 
 	def setCornersZ( self ):
@@ -503,17 +519,21 @@ class RaftPreferences:
 		self.archive.append( self.raftOutsetRadiusOverExtrusionWidth )
 		self.temperatureChangeTimeRaft = preferences.FloatPreference().getFromValue( 'Temperature Change Time of Raft (seconds):', 120.0 )
 		self.archive.append( self.temperatureChangeTimeRaft )
-		self.temperatureChangeTimeFirstLayer = preferences.FloatPreference().getFromValue( 'Temperature Change Time of First Layer (seconds):', 120.0 )
-		self.archive.append( self.temperatureChangeTimeFirstLayer )
+		self.temperatureChangeTimeFirstLayerOutline = preferences.FloatPreference().getFromValue( 'Temperature Change Time of First Layer Outline (seconds):', 120.0 )
+		self.archive.append( self.temperatureChangeTimeFirstLayerOutline )
+		self.temperatureChangeTimeFirstLayerWithin = preferences.FloatPreference().getFromValue( 'Temperature Change Time of First Layer Within (seconds):', 120.0 )
+		self.archive.append( self.temperatureChangeTimeFirstLayerWithin )
 		self.temperatureChangeTimeNextLayers = preferences.FloatPreference().getFromValue( 'Temperature Change Time of Next Layers (seconds):', 120.0 )
 		self.archive.append( self.temperatureChangeTimeNextLayers )
 		self.temperatureRaft = preferences.FloatPreference().getFromValue( 'Temperature of Raft (Celcius):', 200.0 )
 		self.archive.append( self.temperatureRaft )
-		self.temperatureShapeFirstLayer = preferences.FloatPreference().getFromValue( 'Temperature of Shape First Layer (Celcius):', 215.0 )
-		self.archive.append( self.temperatureShapeFirstLayer )
+		self.temperatureShapeFirstLayerOutline = preferences.FloatPreference().getFromValue( 'Temperature of Shape First Layer Outline (Celcius):', 220.0 )
+		self.archive.append( self.temperatureShapeFirstLayerOutline )
+		self.temperatureShapeFirstLayerWithin = preferences.FloatPreference().getFromValue( 'Temperature of Shape First Layer Within (Celcius):', 195.0 )
+		self.archive.append( self.temperatureShapeFirstLayerWithin )
 		self.temperatureShapeNextLayers = preferences.FloatPreference().getFromValue( 'Temperature of Shape Next Layers (Celcius):', 230.0 )
 		self.archive.append( self.temperatureShapeNextLayers )
-		self.turnExtruderOnEarly = preferences.BooleanPreference().getFromValue( 'Turn Extruder On Early:', True )
+		self.turnExtruderOnEarly = preferences.BooleanPreference().getFromValue( 'Turn Extruder On Early:', False )
 		self.archive.append( self.turnExtruderOnEarly )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.executeTitle = 'Raft'
