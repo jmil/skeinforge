@@ -60,7 +60,7 @@ def addOperatingOrbits( operatingJump, skein, temperatureChangeTime ):
 	for boundaryLoop in skein.boundaryLoops:
 		centers = getCentersFromLoopDirection( True, boundaryLoop, greaterThanPerimeterOutset )
 		for center in centers:
-			outset = getInsetFromClockwiseLoop( center, perimeterOutset )
+			outset = getSimplifiedInsetFromClockwiseLoop( center, perimeterOutset )
 			if euclidean.isLargeSameDirection( outset, center, perimeterOutset ):
 				loopLength = euclidean.getPolygonLength( outset )
 				if loopLength > largestLength:
@@ -138,7 +138,7 @@ def getCentersFromOutside( isOutside, loop, radius ):
 	outsideCenters = []
 	halfRadius = 0.5 * radius
 	for center in centers:
-		inset = getInsetFromClockwiseLoop( center, halfRadius )
+		inset = getSimplifiedInsetFromClockwiseLoop( center, halfRadius )
 		if euclidean.isPathInsideLoop( loop, inset ) != isOutside:
 			outsideCenters.append( center )
 	return outsideCenters
@@ -192,16 +192,6 @@ def getCircleNodesFromPath( path, radius ):
 		circleNodes.append( CircleNode().getFromCircleRadius( point, len( circleNodes ), radius ) )
 	return circleNodes
 
-def getInsetFromClockwiseLoop( loop, radius ):
-	"Get loop inset from clockwise loop, out from widdershins loop."
-	insetLoop = []
-	for pointIndex in range( len( loop ) ):
-		behindAbsolute = loop[ ( pointIndex + len( loop ) - 1 ) % len( loop ) ]
-		center = loop[ pointIndex ]
-		aheadAbsolute = loop[ ( pointIndex + 1 ) % len( loop ) ]
-		insetLoop.append( getInsetFromClockwiseTriple( aheadAbsolute, behindAbsolute, center, radius ) )
-	return getWithoutIntersections( euclidean.getSimplifiedLoop( insetLoop, radius ) )
-
 def getInsetFromClockwiseTriple( aheadAbsolute, behindAbsolute, center, radius ):
 	"Get loop inset from clockwise triple, out from widdershins loop."
 	originalCenterMinusBehind = center.minus( behindAbsolute )
@@ -223,6 +213,16 @@ def getInsetFromClockwiseTriple( aheadAbsolute, behindAbsolute, center, radius )
 	between = Vec3( x, behindIntersection.y, behindIntersection.z )
 	return euclidean.getRoundZAxisByPlaneAngle( centerRoundZAngle, between )
 
+def getInsetFromClockwiseLoop( loop, radius ):
+	"Get loop inset from clockwise loop, out from widdershins loop."
+	insetLoop = []
+	for pointIndex in range( len( loop ) ):
+		behindAbsolute = loop[ ( pointIndex + len( loop ) - 1 ) % len( loop ) ]
+		center = loop[ pointIndex ]
+		aheadAbsolute = loop[ ( pointIndex + 1 ) % len( loop ) ]
+		insetLoop.append( getInsetFromClockwiseTriple( aheadAbsolute, behindAbsolute, center, radius ) )
+	return insetLoop
+
 def getIntersectionAtInset( ahead, behind, inset ):
 	"Get circle intersection loop at inset from segment."
 	aheadMinusBehind = ahead.minus( behind )
@@ -240,6 +240,10 @@ def getLoopsFromLoopsDirection( isWiddershins, loops ):
 		if euclidean.isWiddershins( loop ) == isWiddershins:
 			directionalLoops.append( loop )
 	return directionalLoops
+
+def getSimplifiedInsetFromClockwiseLoop( loop, radius ):
+	"Get loop inset from clockwise loop, out from widdershins loop."
+	return getWithoutIntersections( euclidean.getSimplifiedLoop( getInsetFromClockwiseLoop( loop, radius ), radius ) )
 
 def getWithoutIntersections( loop ):
 	"Get loop without intersections."
@@ -326,7 +330,7 @@ class BoundingLoop:
 		outsetBoundingLoop.minimum = self.minimum - complex( outsetDistance, outsetDistance )
 		greaterThanOutsetDistance = 1.1 * outsetDistance
 		centers = getCentersFromLoopDirection( True, self.loop, greaterThanOutsetDistance )
-		outsetBoundingLoop.loop = getInsetFromClockwiseLoop( centers[ 0 ], outsetDistance )
+		outsetBoundingLoop.loop = getSimplifiedInsetFromClockwiseLoop( centers[ 0 ], outsetDistance )
 		return outsetBoundingLoop
 
 	def isEntirelyInsideAnother( self, anotherBoundingLoop ):

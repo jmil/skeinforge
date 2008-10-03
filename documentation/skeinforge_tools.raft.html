@@ -73,8 +73,9 @@ The&nbsp;following&nbsp;examples&nbsp;raft&nbsp;the&nbsp;files&nbsp;Hollow&nbsp;
 which&nbsp;contains&nbsp;Hollow&nbsp;Square.gcode,&nbsp;Hollow&nbsp;Square.gts&nbsp;and&nbsp;raft.py.&nbsp;&nbsp;The&nbsp;raft&nbsp;function&nbsp;will&nbsp;raft&nbsp;if<br>
 "Activate&nbsp;Raft,&nbsp;Elevate&nbsp;Nozzle,&nbsp;Orbit&nbsp;and&nbsp;Set&nbsp;Altitude"&nbsp;is&nbsp;true,&nbsp;which&nbsp;can&nbsp;be&nbsp;set&nbsp;in&nbsp;the&nbsp;dialog&nbsp;or&nbsp;by&nbsp;changing&nbsp;the&nbsp;preferences&nbsp;file<br>
 'raft.csv'&nbsp;with&nbsp;a&nbsp;text&nbsp;editor&nbsp;or&nbsp;a&nbsp;spreadsheet&nbsp;program&nbsp;set&nbsp;to&nbsp;separate&nbsp;tabs.&nbsp;&nbsp;The&nbsp;functions&nbsp;writeOutput&nbsp;and&nbsp;getRaftChainGcode<br>
-check&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text&nbsp;has&nbsp;been&nbsp;rafted,&nbsp;if&nbsp;not&nbsp;they&nbsp;call&nbsp;getCombChainGcode&nbsp;in&nbsp;comb.py&nbsp;to&nbsp;get&nbsp;combed&nbsp;gcode;&nbsp;once&nbsp;they&nbsp;have<br>
-the&nbsp;combed&nbsp;text,&nbsp;then&nbsp;they&nbsp;raft.<br>
+check&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text&nbsp;has&nbsp;been&nbsp;rafted,&nbsp;if&nbsp;not&nbsp;they&nbsp;call&nbsp;getClipChainGcode&nbsp;in&nbsp;clip.py&nbsp;to&nbsp;get&nbsp;clipped&nbsp;gcode;&nbsp;once&nbsp;they&nbsp;have<br>
+the&nbsp;clipped&nbsp;text,&nbsp;then&nbsp;they&nbsp;raft.&nbsp;&nbsp;Pictures&nbsp;of&nbsp;rafting&nbsp;in&nbsp;action&nbsp;are&nbsp;available&nbsp;from&nbsp;the&nbsp;Metalab&nbsp;blog&nbsp;at:<br>
+<a href="http://reprap.soup.io/?search=rafting">http://reprap.soup.io/?search=rafting</a><br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python&nbsp;raft.py<br>
@@ -124,7 +125,7 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 <td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="__init__.html">__init__</a><br>
 <a href="skeinforge_tools.analyze.html">skeinforge_tools.analyze</a><br>
 <a href="cStringIO.html">cStringIO</a><br>
-<a href="skeinforge_tools.comb.html">skeinforge_tools.comb</a><br>
+<a href="skeinforge_tools.clip.html">skeinforge_tools.clip</a><br>
 </td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.euclidean.html">skeinforge_tools.skeinforge_utilities.euclidean</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
 <a href="skeinforge_tools.import_translator.html">skeinforge_tools.import_translator</a><br>

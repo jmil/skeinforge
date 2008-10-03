@@ -1,9 +1,13 @@
 """
 Comb is a script to comb the extrusion hair of a gcode file.
 
-Comb bends the extruder travel paths around holes in the slice, to avoid stringers.  The default 'Activate Comb' checkbox is on.
-When it's on the paths are bent.  When it is off, this script does nothing, the gcode text is handed over the next tool in the
-skeinforge chain.  To run comb, in a shell type:
+The default 'Activate Comb' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions
+will not be called.
+
+Comb bends the extruder travel paths around holes in the slice, to avoid stringers and it jitters the loop end position to a different
+place on each layer to prevent the a ridge from forming.  The "Jitter Over Extrusion Width (ratio)" is the ratio of the amount the
+loop ends will be jittered.  A high value means the loops will start all over the place and a low value means loops will start at
+roughly the same place on each layer.  To run comb, in a shell type:
 > python comb.py
 
 The following examples comb the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder
@@ -11,7 +15,8 @@ which contains Hollow Square.gcode, Hollow Square.gts and comb.py.  The comb fun
 can be set in the dialog or by changing the preferences file 'comb.csv' in the '.skeinforge' folder in your home directory with a text
 editor or a spreadsheet program set to separate tabs.  The functions writeOutput and getCombChainGcode check to see if the
 text has been combed, if not they call getTowerChainGcode in tower.py to tower the text; once they have the towered text, then
-they comb.
+they comb.  Pictures of combing in action are available from the Metalab blog at:
+http://reprap.soup.io/?search=combing
 
 
 > python comb.py
@@ -68,6 +73,7 @@ from skeinforge_tools import import_translator
 from skeinforge_tools import polyfile
 from skeinforge_tools import tower
 import cStringIO
+import math
 import sys
 import time
 
@@ -96,7 +102,7 @@ def getCombGcode( gcodeText, combPreferences = None ):
 	if not combPreferences.activateComb.value:
 		return gcodeText
 	skein = CombSkein()
-	skein.parseGcode( gcodeText )
+	skein.parseGcode( combPreferences, gcodeText )
 	return skein.output.getvalue()
 
 def isLoopNumberEqual( betweenX, betweenXIndex, loopNumber ):
@@ -126,41 +132,120 @@ def writeOutput( filename = '' ):
 	analyze.writeOutput( suffixFilename, combGcode )
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to comb the file.' )
 
+
+class CombPreferences:
+	"A class to handle the comb preferences."
+	def __init__( self ):
+		"Set the default preferences, execute title & preferences filename."
+		#Set the default preferences.
+		self.archive = []
+		self.activateComb = preferences.BooleanPreference().getFromValue( 'Activate Comb', True )
+		self.archive.append( self.activateComb )
+		self.arrivalInsetFollowDistanceOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Arrival Inset Follow Distance over Extrusion Width (ratio):', 3.0 )
+		self.archive.append( self.arrivalInsetFollowDistanceOverExtrusionWidth )
+		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Combed', '' )
+		self.archive.append( self.filenameInput )
+		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		self.jitterOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Jitter Over Extrusion Width (ratio):', 2.0 )
+		self.archive.append( self.jitterOverExtrusionWidth )
+		self.executeTitle = 'Comb'
+		self.filenamePreferences = preferences.getPreferencesFilePath( 'comb.csv' )
+		self.filenameHelp = 'skeinforge_tools.comb.html'
+		self.saveTitle = 'Save Preferences'
+		self.title = 'Comb Preferences'
+
+	def execute( self ):
+		"Comb button has been clicked."
+		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
+		for filename in filenames:
+			writeOutput( filename )
+
+
 class CombSkein:
 	"A class to comb a skein of extrusions."
 	def __init__( self ):
+		self.beforeLoopLocation = None
 		self.betweenTable = {}
+		self.boundaryLoop = None
 		self.bridgeExtrusionWidthOverSolid = 1.0
-		self.decimalPlacesCarried = 3
-		self.extruderActive = False
 		self.fillInset = 0.18
+		self.isPerimeter = False
 		self.layerFillInset = self.fillInset
 		self.layer = None
 		self.layers = []
 		self.layerTable = {}
 		self.layerZ = None
+		self.lineIndex = 0
 		self.lines = None
-		self.loop = None
-		self.oldLocation = None
 		self.oldZ = None
-		self.output = cStringIO.StringIO()
+		self.perimeter = None
 		self.pointTable = {}
+		self.initializeMoreParameters()
+
+	def addGcodeFromThread( self, thread ):
+		"Add a gcode thread to the output."
+		if len( thread ) > 0:
+			self.addGcodeMovement( thread[ 0 ] )
+		else:
+			print( "zero length vertex positions array which was skipped over, this should never happen" )
+		if len( thread ) < 2:
+			return
+		self.addLine( 'M101' )
+		for point in thread[ 1 : ]:
+			self.addGcodeMovement( point )
 
 	def addGcodeMovement( self, point ):
 		"Add a movement to the output."
-		self.addLine( "G1 X%s Y%s Z%s" % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ) ) )
+		if self.feedrateMinute == None:
+			self.addLine( "G1 X%s Y%s Z%s" % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ) ) )
+		else:
+			self.addLine( "G1 X%s Y%s Z%s F%s" % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ), self.getRounded( self.feedrateMinute ) ) )
 
 	def addIfTravel( self, splitLine ):
 		"Add travel move around loops if this the extruder is off."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		if not self.extruderActive and self.oldLocation != None:
 			if len( self.getBetweens() ) > 0:
-				self.insertPathsBetween( self.getOutloopLocation( location ), self.getOutloopLocation( self.oldLocation ) )
+				self.insertPathsAroundBetween( location )
 		self.oldLocation = location
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
 		self.output.write( line + "\n" )
+
+	def addPathBeforeEnd( self, loop ):
+		"Add the path before the end of the loop."
+		halfFillInset = 0.5 * self.layerFillInset
+		if self.arrivalInsetFollowDistance < halfFillInset:
+			return
+		beginningPoint = loop[ 0 ]
+		closestInset = None
+		closestDistanceSquaredIndex = complex( 999999999999999999.0, - 1 )
+		circleNodes = intercircle.getCircleNodesFromLoop( loop, self.layerFillInset )
+		centers = intercircle.getCentersFromCircleNodes( circleNodes )
+		for center in centers:
+			inset = intercircle.getInsetFromClockwiseLoop( center, halfFillInset )
+			if euclidean.isLargeSameDirection( inset, center, self.layerFillInset ):
+				if euclidean.isPathInsideLoop( loop, inset ) == euclidean.isWiddershins( loop ):
+					distanceSquaredIndex = euclidean.getNearestDistanceSquaredIndex( beginningPoint, inset )
+					if distanceSquaredIndex.real < closestDistanceSquaredIndex.real:
+						closestInset = inset
+						closestDistanceSquaredIndex = distanceSquaredIndex
+		if closestInset == None:
+			return
+		if euclidean.getPolygonLength( closestInset ) < 0.2 * self.arrivalInsetFollowDistance:
+			return
+		closestInset.append( closestInset[ 0 ] )
+		closestInset.reverse()
+		pathBeforeArrival = euclidean.getClippedLoopPath( self.arrivalInsetFollowDistance, closestInset )
+		pointBeforeArrival = pathBeforeArrival[ - 1 ]
+		self.addGcodeMovement( pointBeforeArrival )
+		if self.arrivalInsetFollowDistance <= halfFillInset:
+			return
+		pathBetween = euclidean.getClippedLoopPath( halfFillInset, closestInset )[ len( pathBeforeArrival ) - 1 : ]
+		for point in pathBetween:
+			if not self.isClose( pointBeforeArrival, point ):
+				self.addGcodeMovement( point )
 
 	def addPathBetween( self, betweenFirst, betweenSecond, loopFirst ):
 		"Add a path between the perimeter and the fill."
@@ -183,18 +268,30 @@ class CombSkein:
 		for point in widdershinsPath:
 			self.addGcodeMovement( point )
 
+	def addTailoredLoopPath( self ):
+		"Add a clipped and jittered loop path."
+		loop = self.loopPath[ : - 1 ]
+		jitterDistance = self.layerJitter + self.arrivalInsetFollowDistance
+		if self.beforeLoopLocation != None:
+			extrusionHalfWidthSquared = 0.25 * self.extrusionWidth * self.extrusionWidth
+			loop = euclidean.getLoopStartingNearest( extrusionHalfWidthSquared, self.beforeLoopLocation, loop )
+		if jitterDistance != 0.0:
+			loop = self.getJitteredLoop( jitterDistance, loop )
+		self.loopPath = loop + [ loop[ 0 ] ]
+		self.addGcodeFromThread( self.loopPath )
+		self.loopPath = None
+
 	def addToLoop( self, location ):
 		"Add a location to loop."
 		if self.layer == None:
 			if not self.oldZ in self.layerTable:
 				self.layerTable[ self.oldZ ] = []
 			self.layer = self.layerTable[ self.oldZ ]
-		if self.loop == None:
-			self.loop = [] #starting with an empty array because a closed loop does not have to restate its beginning
-			self.layer.append( self.loop )
-		if self.loop != None:
-			self.loop.append( location )
-			self.pointTable[ str( location ) ] = True
+		if self.boundaryLoop == None:
+			self.boundaryLoop = [] #starting with an empty array because a closed loop does not have to restate its beginning
+			self.layer.append( self.boundaryLoop )
+		if self.boundaryLoop != None:
+			self.boundaryLoop.append( location )
 
 	def getBetweens( self ):
 		"Set betweens for the layer."
@@ -202,16 +299,42 @@ class CombSkein:
 			return self.betweenTable[ self.layerZ ]
 		halfFillInset = 0.5 * self.layerFillInset
 		betweens = []
-		for loop in self.layerTable[ self.layerZ ]:
-			circleNodes = intercircle.getCircleNodesFromLoop( loop, self.layerFillInset )
+		for boundaryLoop in self.layerTable[ self.layerZ ]:
+			circleNodes = intercircle.getCircleNodesFromLoop( boundaryLoop, self.layerFillInset )
 			centers = intercircle.getCentersFromCircleNodes( circleNodes )
 			for center in centers:
-				inset = intercircle.getInsetFromClockwiseLoop( center, halfFillInset )
+				inset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, halfFillInset )
 				if euclidean.isLargeSameDirection( inset, center, self.layerFillInset ):
-					if euclidean.isPathInsideLoop( loop, inset ) != euclidean.isWiddershins( loop ):
+					if euclidean.isPathInsideLoop( boundaryLoop, inset ) == euclidean.isWiddershins( boundaryLoop ):
 						betweens.append( inset )
 		self.betweenTable[ self.layerZ ] = betweens
 		return betweens
+
+	def getJitteredLoop( self, jitterDistance, jitterLoop ):
+		"Get a jittered loop path."
+		loopLength = euclidean.getPolygonLength( jitterLoop )
+		lastLength = 0.0
+		pointIndex = 0
+		totalLength = 0.0
+		jitterPosition = ( jitterDistance + 256.0 * loopLength ) % loopLength
+		while totalLength < jitterPosition and pointIndex < len( jitterLoop ):
+			firstPoint = jitterLoop[ pointIndex ]
+			secondPoint  = jitterLoop[ ( pointIndex + 1 ) % len( jitterLoop ) ]
+			pointIndex += 1
+			lastLength = totalLength
+			totalLength += firstPoint.distance( secondPoint )
+		remainingLength = jitterPosition - lastLength
+		pointIndex = pointIndex % len( jitterLoop )
+		ultimateJitteredPoint = jitterLoop[ pointIndex ]
+		penultimateJitteredPointIndex = ( pointIndex + len( jitterLoop ) - 1 ) % len( jitterLoop )
+		penultimateJitteredPoint = jitterLoop[ penultimateJitteredPointIndex ]
+		segment = ultimateJitteredPoint.minus( penultimateJitteredPoint )
+		segmentLength = segment.length()
+		originalOffsetLoop = euclidean.getAroundLoop( pointIndex, pointIndex, jitterLoop )
+		if segmentLength <= 0.0:
+			return [ penultimateJitteredPoint ] + originalOffsetLoop[ - 1 ]
+		newUltimatePoint = penultimateJitteredPoint.plus( segment.times( remainingLength / segmentLength ) )
+		return [ newUltimatePoint ] + originalOffsetLoop
 
 	def getOutloopLocation( self, point ):
 		"Get location outside of loop."
@@ -241,6 +364,29 @@ class CombSkein:
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
 		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
+
+	def initializeMoreParameters( self ):
+		"Add a movement to the output."
+		self.extruderActive = False
+		self.feedrateMinute = None
+		self.isLoopPerimeter = False
+		self.layerGolden = 0.0
+		self.loopPath = None
+		self.oldLocation = None
+		self.output = cStringIO.StringIO()
+
+	def insertPathsAroundBetween( self, location ):
+		"Insert paths around and between the perimeter and the fill."
+		outerPerimeter = None
+		if str( location ) in self.pointTable:
+			perimeter = self.pointTable[ str( location ) ]
+			if euclidean.isWiddershins( perimeter ):
+				outerPerimeter = perimeter
+		nextBeginning = self.getOutloopLocation( location )
+		pathEnd = self.getOutloopLocation( self.oldLocation )
+		self.insertPathsBetween( nextBeginning, pathEnd )
+		if outerPerimeter != None:
+			self.addPathBeforeEnd( outerPerimeter )
 
 	def insertPathsBetween( self, nextBeginning, pathEnd ):
 		"Insert paths between the perimeter and the fill."
@@ -276,37 +422,55 @@ class CombSkein:
 				self.addPathBetween( betweenFirst, betweenSecond, loopFirst )
 			betweenXIndex += 1
 
-	def parseGcode( self, gcodeText ):
-		"Parse gcode text and store the comb gcode."
-		self.lines = gcodec.getTextLines( gcodeText )
-		for line in self.lines:
-			self.parseLine( line )
-		self.oldLocation = None
-		for lineIndex in range( len( self.lines ) ):
-			line = self.lines[ lineIndex ]
-			self.parseAddTravel( line )
+	def isClose( self, locationFirst, locationSecond ):
+		"Determine if the first location is close to the second location."
+		return locationFirst.distance2( locationSecond ) < self.closeSquared
 
-	def parseLine( self, line ):
-		"Parse a gcode line."
+	def isNextExtruderOn( self ):
+		"Determine if there is an extruder on command before a move command."
+		line = self.lines[ self.lineIndex ]
+		splitLine = line.split()
+		for afterIndex in xrange( self.lineIndex + 1, len( self.lines ) ):
+			line = self.lines[ afterIndex ]
+			splitLine = line.split()
+			firstWord = gcodec.getFirstWord( splitLine )
+			if firstWord == 'G1' or firstWord == 'M103':
+				return False
+			elif firstWord == 'M101':
+				return True
+		return False
+
+	def linearMove( self, splitLine ):
+		"Add to loop path if this is a loop or path."
+		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
+		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
+		if self.isLoopPerimeter:
+			if self.isNextExtruderOn():
+				self.loopPath = []
+				self.beforeLoopLocation = self.oldLocation
+		if self.loopPath != None:
+			self.loopPath.append( location )
+		self.oldLocation = location
+
+	def parseAddJitter( self, line ):
+		"Parse a gcode line, jitter it and add it to the comb skein."
 		splitLine = line.split()
 		if len( splitLine ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
-		if firstWord == 'M103':
-			self.loop = None
-		elif firstWord == '(<bridgeExtrusionWidthOverSolid>':
-			self.bridgeExtrusionWidthOverSolid = float( splitLine[ 1 ] )
-		elif firstWord == '(<boundaryPoint>':
-			location = gcodec.getLocationFromSplitLine( None, splitLine )
-			self.addToLoop( location )
-		elif firstWord == '(<decimalPlacesCarried>':
-			self.decimalPlacesCarried = int( splitLine[ 1 ] )
+		if firstWord == 'G1':
+			self.linearMove( splitLine )
+		elif firstWord == 'M103':
+			self.isLoopPerimeter = False
+			if self.loopPath != None:
+				self.addTailoredLoopPath()
 		elif firstWord == '(<layerStart>':
-			self.layer = None
-			self.loop = None
-			self.oldZ = float( splitLine[ 1 ] )
-		elif firstWord == '(<fillInset>':
-			self.fillInset = float( splitLine[ 1 ] )
+			self.layerGolden += 0.61803398874989479
+			self.layerJitter = self.jitter * ( math.fmod( self.layerGolden, 1.0 ) - 0.5 )
+		elif firstWord == '(<loop>' or firstWord == '(<perimeter>':
+			self.isLoopPerimeter = True
+		if self.loopPath == None:
+			self.addLine( line )
 
 	def parseAddTravel( self, line ):
 		"Parse a gcode line and add it to the comb skein."
@@ -320,38 +484,82 @@ class CombSkein:
 			self.extruderActive = True
 		elif firstWord == 'M103':
 			self.extruderActive = False
-		elif firstWord == '(<extrusionStart>':
-			self.addLine( '(<procedureDone> comb )' )
+		elif firstWord == '(<bridgeLayer>':
+			self.layerFillInset = self.fillInset * self.bridgeExtrusionWidthOverSolid
 		elif firstWord == '(<layerStart>':
 			self.layerFillInset = self.fillInset
 			self.layerZ = float( splitLine[ 1 ] )
-		elif firstWord == '(<bridgeLayer>':
-			self.layerFillInset = self.fillInset * self.bridgeExtrusionWidthOverSolid
 		self.addLine( line )
 
+	def parseGcode( self, combPreferences, gcodeText ):
+		"Parse gcode text and store the comb gcode."
+		self.lines = gcodec.getTextLines( gcodeText )
+		self.parseInitialization( combPreferences )
+		for self.lineIndex in xrange( self.lineIndex, len( self.lines ) ):
+			line = self.lines[ self.lineIndex ]
+			self.parseAddJitter( line )
+		self.lines = gcodec.getTextLines( self.output.getvalue() )
+		self.initializeMoreParameters()
+		for self.lineIndex in xrange( len( self.lines ) ):
+			line = self.lines[ self.lineIndex ]
+			self.parseLine( combPreferences, line )
+		for self.lineIndex in xrange( len( self.lines ) ):
+			line = self.lines[ self.lineIndex ]
+			self.parseAddTravel( line )
 
-class CombPreferences:
-	"A class to handle the comb preferences."
-	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
-		#Set the default preferences.
-		self.archive = []
-		self.activateComb = preferences.BooleanPreference().getFromValue( 'Activate Comb', True )
-		self.archive.append( self.activateComb )
-		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Combed', '' )
-		self.archive.append( self.filenameInput )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.executeTitle = 'Comb'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'comb.csv' )
-		self.filenameHelp = 'skeinforge_tools.comb.html'
-		self.saveTitle = 'Save Preferences'
-		self.title = 'Comb Preferences'
+	def parseInitialization( self, combPreferences ):
+		"Parse gcode initialization and store the parameters."
+		for self.lineIndex in xrange( len( self.lines ) ):
+			line = self.lines[ self.lineIndex ]
+			splitLine = line.split()
+			firstWord = gcodec.getFirstWord( splitLine )
+			if firstWord == '(<bridgeExtrusionWidthOverSolid>':
+				self.bridgeExtrusionWidthOverSolid = float( splitLine[ 1 ] )
+			elif firstWord == '(<decimalPlacesCarried>':
+				self.decimalPlacesCarried = int( splitLine[ 1 ] )
+			elif firstWord == '(<extrusionStart>':
+				self.addLine( '(<procedureDone> comb )' )
+				return
+			elif firstWord == '(<extrusionWidth>':
+				self.extrusionWidth = float( splitLine[ 1 ] )
+				self.arrivalInsetFollowDistance = combPreferences.arrivalInsetFollowDistanceOverExtrusionWidth.value * self.extrusionWidth
+				self.closeSquared = 0.01 * self.extrusionWidth * self.extrusionWidth
+				self.jitter = combPreferences.jitterOverExtrusionWidth.value * self.extrusionWidth
+			elif firstWord == '(<fillInset>':
+				self.fillInset = float( splitLine[ 1 ] )
+			self.addLine( line )
 
-	def execute( self ):
-		"Comb button has been clicked."
-		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
-		for filename in filenames:
-			writeOutput( filename )
+	def parseLine( self, combPreferences, line ):
+		"Parse a gcode line."
+		splitLine = line.split()
+		if len( splitLine ) < 1:
+			return
+		firstWord = splitLine[ 0 ]
+		if firstWord == 'G1':
+			if self.isPerimeter:
+				location = gcodec.getLocationFromSplitLine( None, splitLine )
+				if self.perimeter == None:
+					self.perimeter = []
+				self.perimeter.append( location )
+				self.pointTable[ str( location ) ] = self.perimeter
+		elif firstWord == 'M103':
+			self.boundaryLoop = None
+			if self.perimeter != None:
+				if len( self.perimeter ) > 2:
+					if self.perimeter[ 0 ] == self.perimeter[ - 1 ]:
+						del self.perimeter[ - 1 ]
+				self.perimeter = None
+			self.isPerimeter = False
+		elif firstWord == '(<boundaryPoint>':
+			location = gcodec.getLocationFromSplitLine( None, splitLine )
+			self.addToLoop( location )
+		elif firstWord == '(<layerStart>':
+			self.boundaryLoop = None
+			self.layer = None
+			self.perimeter = None
+			self.oldZ = float( splitLine[ 1 ] )
+		elif firstWord == '(<perimeter>':
+			self.isPerimeter = True
 
 
 def main( hashtable = None ):

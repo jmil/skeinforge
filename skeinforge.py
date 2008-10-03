@@ -163,6 +163,12 @@ https://reprap.svn.sourceforge.net/svnroot/reprap/trunk/reprap/miscellaneous/pyt
 
 
 
+Motto
+
+I may be slow, but I get there in the end.
+
+
+
 Troubleshooting
 
 You can ask for skeinforge help by posting in the "How to Print Gcode from Host" thread at:
@@ -235,7 +241,7 @@ def getSkeinforgeToolFilenames():
 def writeOutput( filename = '' ):
 	"Skeinforge a gcode file.  If no filename is specified, skeinforge the first gcode file in this folder that is not modified."
 	skeinforgePluginFilenames = getSkeinforgeToolFilenames()
-	toolNames = 'export fillet oozebane nozzle_wipe hop stretch raft comb tower fill slice_shape'.split()
+	toolNames = 'export fillet oozebane nozzle_wipe hop stretch raft clip comb tower fill slice_shape'.split()
 	for toolName in toolNames:
 		for skeinforgePluginFilename in skeinforgePluginFilenames:
 			if skeinforgePluginFilename == toolName:

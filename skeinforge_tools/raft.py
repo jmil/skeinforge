@@ -63,8 +63,9 @@ The following examples raft the files Hollow Square.gcode & Hollow Square.gts.  
 which contains Hollow Square.gcode, Hollow Square.gts and raft.py.  The raft function will raft if
 "Activate Raft, Elevate Nozzle, Orbit and Set Altitude" is true, which can be set in the dialog or by changing the preferences file
 'raft.csv' with a text editor or a spreadsheet program set to separate tabs.  The functions writeOutput and getRaftChainGcode
-check to see if the text has been rafted, if not they call getCombChainGcode in comb.py to get combed gcode; once they have
-the combed text, then they raft.
+check to see if the text has been rafted, if not they call getClipChainGcode in clip.py to get clipped gcode; once they have
+the clipped text, then they raft.  Pictures of rafting in action are available from the Metalab blog at:
+http://reprap.soup.io/?search=rafting
 
 
 > python raft.py
@@ -117,7 +118,7 @@ from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
-from skeinforge_tools import comb
+from skeinforge_tools import clip
 from skeinforge_tools import import_translator
 from skeinforge_tools import material
 from skeinforge_tools import polyfile
@@ -132,12 +133,12 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-#maybe cool for a minute
+#raft outline temperature http://hydraraptor.blogspot.com/2008/09/screw-top-pot.html
 def getRaftChainGcode( filename, gcodeText, raftPreferences = None ):
 	"Raft a gcode linear move text.  Chain raft the gcode if it is not already rafted."
 	gcodeText = gcodec.getGcodeFileText( filename, gcodeText )
-	if not gcodec.isProcedureDone( gcodeText, 'comb' ):
-		gcodeText = comb.getCombChainGcode( filename, gcodeText )
+	if not gcodec.isProcedureDone( gcodeText, 'clip' ):
+		gcodeText = clip.getClipChainGcode( filename, gcodeText )
 	return getRaftGcode( gcodeText, raftPreferences )
 
 def getRaftGcode( gcodeText, raftPreferences = None ):
@@ -394,9 +395,7 @@ class RaftSkein:
 		for self.lineIndex in range( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
-			firstWord = ''
-			if len( splitLine ) > 0:
-				firstWord = splitLine[ 0 ]
+			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == '(<decimalPlacesCarried>':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
 			elif firstWord == '(<extrusionDiameter>':
@@ -452,10 +451,8 @@ class RaftSkein:
 		"Set maximum and minimum corners and z."
 		layerIndex = - 1
 		for line in self.lines[ self.lineIndex : ]:
-			splitLine = line.split( ' ' )
-			firstWord = ''
-			if len( splitLine ) > 0:
-				firstWord = splitLine[ 0 ]
+			splitLine = line.split()
+			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == 'G1':
 				location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 				self.cornerHigh = euclidean.getPointMaximum( self.cornerHigh, location )

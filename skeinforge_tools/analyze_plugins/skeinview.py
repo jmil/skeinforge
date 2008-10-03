@@ -153,8 +153,8 @@ class SkeinviewSkein:
 		"Add a point to travel and maybe extrusion."
 		if self.oldLocation == None:
 			return
-		beginningComplex = self.oldLocation.dropAxis( 2 )
-		endComplex = location.dropAxis( 2 )
+		beginningComplex = complex( self.oldLocation.x, self.cornerImaginaryTotal - self.oldLocation.y )
+		endComplex = complex( location.x, self.cornerImaginaryTotal - location.y )
 		colorName = 'gray'
 		if self.extruderActive:
 			colorName = self.colorNames[ self.extrusionNumber % len( self.colorNames ) ]
@@ -218,6 +218,7 @@ class SkeinviewSkein:
 		self.scale = skeinviewPreferences.pixelsWidthExtrusion.value / self.extrusionWidth
 		self.scaleCornerHigh = self.scale * self.cornerHigh.dropAxis( 2 )
 		self.scaleCornerLow = self.scale * self.cornerLow.dropAxis( 2 )
+		self.cornerImaginaryTotal = self.cornerHigh.y + self.cornerLow.y
 		margin = complex( 5.0, 5.0 )
 		self.marginCornerLow = self.scaleCornerLow - margin
 		self.scaleSize = margin + self.scaleCornerHigh - self.marginCornerLow

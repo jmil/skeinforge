@@ -101,7 +101,7 @@ def addAlreadyFilledArounds( alreadyFilledArounds, loop, radius ):
 	circleNodes = intercircle.getCircleNodesFromLoop( loop, slightlyGreaterThanRadius )
 	centers = intercircle.getCentersFromCircleNodes( circleNodes )
 	for center in centers:
-		alreadyFilledInset = intercircle.getInsetFromClockwiseLoop( center, radius )
+		alreadyFilledInset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, radius )
 		if euclidean.getMaximumSpan( alreadyFilledInset ) > muchGreaterThanRadius or euclidean.isWiddershins( alreadyFilledInset ):
 			alreadyFilledLoop.append( alreadyFilledInset )
 
@@ -119,6 +119,57 @@ def addPointsAtZ( edgePair, points, radius, vertices, z ):
 	sliceIntersectionFirst = getSliceIntersectionFromEdge( edgePair.edges[ 0 ], vertices, z )
 	sliceIntersectionSecond = getSliceIntersectionFromEdge( edgePair.edges[ 1 ], vertices, z )
 	intercircle.addPointsFromSegment( points, radius, sliceIntersectionFirst, sliceIntersectionSecond )
+
+def addSegmentOutline( isThick, outlines, pointBegin, pointEnd, width ):
+	"Add a diamond or hexagonal outline for a line segment."
+	exclusionWidth = 0.6 * width
+	slope = 0.3
+	if isThick:
+		slope = 3.0
+		exclusionWidth = 0.8 * width
+	segment = pointEnd.dropAxis( 2 ) - pointBegin.dropAxis( 2 )
+	segmentLength = abs( segment )
+	if segmentLength == 0.0:
+		return
+	normalizedSegment = segment / segmentLength
+	outline = []
+	segmentYMirror = complex( normalizedSegment.real, - normalizedSegment.imag )
+	pointBeginRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, pointBegin )
+	pointEndRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, pointEnd )
+	along = 0.01
+	alongLength = along * segmentLength
+	if alongLength > 0.1 * exclusionWidth:
+		along *= 0.1 * exclusionWidth / alongLength
+	alongEnd = 1.0 - along
+	remainingToHalf = 0.5 - along
+	alongToWidth = exclusionWidth / slope / segmentLength
+	pointBeginIntermediate = euclidean.getIntermediateLocation( along, pointBeginRotated, pointEndRotated )
+	pointEndIntermediate = euclidean.getIntermediateLocation( alongEnd, pointBeginRotated, pointEndRotated )
+	outline.append( pointBeginIntermediate )
+	verticalWidth = Vec3( 0.0, exclusionWidth, 0.0 )
+	if alongToWidth > 0.9 * remainingToHalf:
+		verticalWidth = Vec3( 0.0, slope * remainingToHalf, 0.0 )
+		middle = ( pointBeginIntermediate.plus( pointEndIntermediate ) ).times( 0.5 )
+		middleDown = middle.minus( verticalWidth )
+		middleUp = middle.plus( verticalWidth )
+		outline.append( middleUp )
+		outline.append( pointEndIntermediate )
+		outline.append( middleDown )
+	else:
+		alongOutsideBegin = along + alongToWidth
+		alongOutsideEnd = alongEnd - alongToWidth
+		outsideBeginCenter = euclidean.getIntermediateLocation( alongOutsideBegin, pointBeginRotated, pointEndRotated )
+		outsideBeginCenterDown = outsideBeginCenter.minus( verticalWidth )
+		outsideBeginCenterUp = outsideBeginCenter.plus( verticalWidth )
+		outsideEndCenter = euclidean.getIntermediateLocation( alongOutsideEnd, pointBeginRotated, pointEndRotated )
+		outsideEndCenterDown = outsideEndCenter.minus( verticalWidth )
+		outsideEndCenterUp = outsideEndCenter.plus( verticalWidth )
+		outline.append( outsideBeginCenterUp )
+		outline.append( outsideEndCenterUp )
+		outline.append( pointEndIntermediate )
+		outline.append( outsideEndCenterDown )
+		outline.append( outsideBeginCenterDown )
+	outlines.append( euclidean.getPathRoundZAxisByPlaneAngle( normalizedSegment, outline ) )
 
 def getCommonVertexIndex( edgeFirst, edgeSecond ):
 	"Get the vertex index that both edges have in common."
@@ -285,7 +336,7 @@ def getRemainingEdgeTable( edges, vertices, z ):
 	return remainingEdgeTable
 
 def getSegmentsFromPoints( loopLists, pointBegin, pointEnd ):
-	"Get enpoint segments from the beginning and end of a line segment."
+	"Get endpoint segments from the beginning and end of a line segment."
 	normalizedSegment = pointEnd.dropAxis( 2 ) - pointBegin.dropAxis( 2 )
 	normalizedSegmentLength = abs( normalizedSegment )
 	if normalizedSegmentLength == 0.0:
@@ -372,6 +423,17 @@ def isIntersectingWithinLists( loop, loopLists ):
 			return True
 	return False
 
+def isIntersectingItself( loop, width ):
+	"Determine if the loop is intersecting itself."
+	outlines = []
+	for pointIndex in xrange( len( loop ) ):
+		pointBegin = loop[ pointIndex ]
+		pointEnd = loop[ ( pointIndex + 1 ) % len( loop ) ]
+		if euclidean.isLineIntersectingLoops( outlines, pointBegin, pointEnd ):
+			return True
+		addSegmentOutline( False, outlines, pointBegin, pointEnd, width )
+	return False
+
 def isZInEdge( edge, vertices, z ):
 	"Determine if z is inside the edge."
 	vertex1ZHigher = vertices[ edge.vertexIndexes[ 0 ] ].z > z
@@ -434,13 +496,24 @@ class SliceSkein:
 		if lowerFilename in directory:
 			self.addFromFile( os.path.join( gcodeDirectoryPath, filename.lower() ) )
 
-	def addGcodeFromPerimeterPaths( self, loop, loopLists, radius ):
+	def addGcodeFromPerimeterPaths( self, isIntersectingSelf, loop, loopLists, radius ):
 		"Add the perimeter paths to the output."
 		segments = []
+		outlines = []
+		thickOutlines = []
+		allLoopLists = loopLists[ : ] + [ thickOutlines ]
 		for pointIndex in range( len( loop ) ):
 			pointBegin = loop[ pointIndex ]
 			pointEnd = loop[ ( pointIndex + 1 ) % len( loop ) ]
-			segments += getSegmentsFromPoints( loopLists, pointBegin, pointEnd )
+			if isIntersectingSelf:
+				if euclidean.isLineIntersectingLoops( outlines, pointBegin, pointEnd ):
+					segments += getSegmentsFromPoints( allLoopLists, pointBegin, pointEnd )
+				else:
+					segments += getSegmentsFromPoints( loopLists, pointBegin, pointEnd )
+				addSegmentOutline( False, outlines, pointBegin, pointEnd, self.extrusionWidth )
+				addSegmentOutline( True, thickOutlines, pointBegin, pointEnd, self.extrusionWidth )
+			else:
+				segments += getSegmentsFromPoints( loopLists, pointBegin, pointEnd )
 		perimeterPaths = []
 		path = []
 		muchSmallerThanRadius = 0.1 * radius
@@ -463,8 +536,9 @@ class SliceSkein:
 	def addGcodeFromRemainingLoop( self, loop, loopLists, radius ):
 		"Add the remainder of the loop which does not overlap the alreadyFilledArounds loops."
 		euclidean.addSurroundingLoopBeginning( loop, self )
-		if isIntersectingWithinLists( loop, loopLists ):
-			self.addGcodeFromPerimeterPaths( loop, loopLists, radius )
+		isIntersectingSelf = isIntersectingItself( loop, self.extrusionWidth )
+		if isIntersectingWithinLists( loop, loopLists ) or isIntersectingSelf:
+			self.addGcodeFromPerimeterPaths( isIntersectingSelf, loop, loopLists, radius )
 		else:
 			self.addLine( '(<perimeter> )' ) # Indicate that a perimeter is beginning.
 			self.addGcodeFromThread( loop + [ loop[ 0 ] ] )
@@ -512,7 +586,7 @@ class SliceSkein:
 		self.addLine( '(<fillInset> ' + str( self.fillInset ) + ' )' ) # Set fill inset.
 		# Set bridge extrusion width over solid extrusion width.
 		self.addLine( '(<bridgeExtrusionWidthOverSolid> ' + euclidean.getRoundedToThreePlaces( self.bridgeExtrusionWidth / self.extrusionWidth ) + ' )' )
-		self.addLine( '(<procedureDone> slice )' ) # The skein has been sliced.
+		self.addLine( '(<procedureDone> slice_shape )' ) # The skein has been sliced.
 		self.addLine( '(<extrusionStart> )' ) # Initialization is finished, extrusion is starting.
 		circleArea = self.extrusionDiameter * self.extrusionDiameter * math.pi / 4.0
 		print( 'The extrusion fill density ratio is ' + euclidean.getRoundedToThreePlaces( self.extrusionWidth * self.extrusionHeight / circleArea ) )
@@ -550,7 +624,7 @@ class SliceSkein:
 		for loop in self.belowLoops:
 			centers = intercircle.getCentersFromLoopDirection( True, loop, greaterThanOverhang )
 			for center in centers:
-				outset = intercircle.getInsetFromClockwiseLoop( center, overhangInset )
+				outset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, overhangInset )
 				if euclidean.isLargeSameDirection( outset, center, self.extrusionWidth ):
 					belowOutsetLoops.append( outset )
 		bridgeDirection = complex()
@@ -572,9 +646,10 @@ class SliceSkein:
 		circleNodes = intercircle.getCircleNodesFromLoop( loop, slightlyGreaterThanHalfWIdth )
 		centers = intercircle.getCentersFromCircleNodes( circleNodes )
 		for center in centers:
-			extrudateLoop = intercircle.getInsetFromClockwiseLoop( center, halfWidth )
+			extrudateLoop = intercircle.getSimplifiedInsetFromClockwiseLoop( center, halfWidth )
 			if euclidean.isLargeSameDirection( extrudateLoop, center, muchGreaterThanHalfWIdth ):
 				if euclidean.isPathInsideLoop( loop, extrudateLoop ) == euclidean.isWiddershins( loop ):
+					extrudateLoop.reverse()
 					extrudateLoops.append( extrudateLoop )
 		return extrudateLoops
 
@@ -678,49 +753,43 @@ class SliceSkein:
 		self.addShutdownToOutput()
 
 
-#extrusionWidthOverDiameter
-#extrusionHeightOverDiameter
-#(<extrusionDiameter> 0.5 )
-#(<extrusionWidth> 0.599 )
-#(<fillInset> 0.449484698309 )
-#(<extrusionHeight> 0.4 )
 class SlicePreferences:
 	"A class to handle the slice preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences filename."
 		#Set the default preferences.
+		self.archive = []
 		self.extrusionDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Diameter (mm):', 0.6 )
+		self.archive.append( self.extrusionDiameter )
 		self.extrusionDiameterOverPrecision = preferences.FloatPreference().getFromValue( 'Extrusion Diameter Over Precision (ratio):', 10.0 )
+		self.archive.append( self.extrusionDiameterOverPrecision )
 		self.extrusionHeightOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Height Over Diameter (ratio):', 0.67 )
+		self.archive.append( self.extrusionHeightOverDiameter )
 		self.extrusionPerimeterWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Perimeter Width Over Diameter (ratio):', 1.2 )
+		self.archive.append( self.extrusionPerimeterWidthOverDiameter )
 		self.extrusionWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Width Over Diameter (ratio):', 1.0 )
+		self.archive.append( self.extrusionWidthOverDiameter )
 		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorFileTypeTuples(), 'Open File to be Sliced', '' )
+		self.archive.append( self.filenameInput )
 		self.importCoarseness = preferences.FloatPreference().getFromValue( 'Import Coarseness (ratio):', 1.0 )
+		self.archive.append( self.importCoarseness )
 		importRadio = []
 		self.correct = preferences.RadioLabel().getFromRadioLabel( 'Correct Mesh', 'Mesh Type:', importRadio, True )
+		self.archive.append( self.correct )
 		self.unproven = preferences.Radio().getFromRadio( 'Unproven Mesh', importRadio,False  )
+		self.archive.append( self.unproven )
 		self.infillBridgeWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Infill Bridge Width Over Thickness (ratio):', 1.0 )
+		self.archive.append( self.infillBridgeWidthOverDiameter )
 		self.infillDirectionBridge = preferences.BooleanPreference().getFromValue( 'Infill in Direction of Bridges', True )
+		self.archive.append( self.infillDirectionBridge )
 		self.infillPerimeterOverlap = preferences.FloatPreference().getFromValue( 'Infill Perimeter Overlap (ratio):', 0.1 )
+		self.archive.append( self.infillPerimeterOverlap )
 		infillRadio = []
 		self.perimeterInfillPreference = preferences.RadioLabel().getFromRadioLabel( 'Calculate Overlap from Perimeter and Infill', 'Infill Perimeter Overlap Method of Calculation:', infillRadio, True )
+		self.archive.append( self.perimeterInfillPreference )
 		self.perimeterPreference = preferences.Radio().getFromRadio( 'Calculate Overlap from Perimeter Only', infillRadio, False )
+		self.archive.append( self.perimeterPreference )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.archive = [
-			self.extrusionDiameter,
-			self.extrusionDiameterOverPrecision,
-			self.extrusionPerimeterWidthOverDiameter,
-			self.extrusionHeightOverDiameter,
-			self.extrusionWidthOverDiameter,
-			self.filenameInput,
-			self.importCoarseness,
-			self.correct,
-			self.unproven,
-			self.infillBridgeWidthOverDiameter,
-			self.infillDirectionBridge,
-			self.infillPerimeterOverlap,
-			self.perimeterInfillPreference,
-			self.perimeterPreference ]
 		self.executeTitle = 'Slice'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'slice_shape.csv' )
 		self.filenameHelp = 'skeinforge_tools.slice_shape.html'

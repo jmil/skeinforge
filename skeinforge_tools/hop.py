@@ -1,8 +1,8 @@
 """
 Hop is a script to raise the extruder when it is not extruding.
 
-The default 'Activate Hop' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions
-will not be called.
+The default 'Activate Hop' checkbox is off.  It is off because Vik and Nophead found better results without hopping.  When it
+is on, the functions described below will work, when it is off, the functions will not be called.
 
 The important value for the hop preferences is "Hop Over Extrusion Height (ratio)" which is the ratio of the hop height over the
 extrusion height, the default is 1.0.  The 'Minimum Hop Angle (degrees)' is the minimum angle that the path of the extruder
@@ -249,7 +249,7 @@ class HopPreferences:
 		"Set the default preferences, execute title & preferences filename."
 		#Set the default preferences.
 		self.archive = []
-		self.activateHop = preferences.BooleanPreference().getFromValue( 'Activate Hop', True )
+		self.activateHop = preferences.BooleanPreference().getFromValue( 'Activate Hop', False )
 		self.archive.append( self.activateHop )
 		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Hopped', '' )
 		self.archive.append( self.filenameInput )

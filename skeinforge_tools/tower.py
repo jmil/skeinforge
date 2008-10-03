@@ -26,7 +26,9 @@ The following examples tower the files Hollow Square.gcode & Hollow Square.gts. 
 which contains Hollow Square.gcode, Hollow Square.gts and tower.py.  The tower function will tower if 'Maximum Tower Layers' is
 greater than zero, which can be set in the dialog or by changing the preferences file 'tower.csv' with a text editor or a spreadsheet
 program set to separate tabs.  The functions writeOutput and getTowerChainGcode check to see if the text has been towered,
-if not they call the getFillChainGcode in fill.py to fill the text; once they have the filled text, then they tower.
+if not they call the getFillChainGcode in fill.py to fill the text; once they have the filled text, then they tower.  Pictures of towering in
+action are available from the Metalab blog at:
+http://reprap.soup.io/?search=towering
 
 
 > python tower.py

@@ -58,26 +58,32 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-#looptailor
-#add raft outline temperature http://hydraraptor.blogspot.com/2008/09/screw-top-pot.html
 #check loops for intersections with their own arounds
+#comb around, back
 #array_place
-#comb back
-#change material
 #one direction for while, one direction narrow then wide, split to weave, hex fill, loop inside sparse fill or run along sparse infill, fill in one direction for a number of layers
+#distance option
+#change material
 #raft supports overhangs
+#document gear script
+#email marcus about peek extruder, raft problem and gear script http://reprap.org/bin/view/Main/ExtruderImprovementsAndAlternatives
 #mosaic
 #transform
 #pick and place
 #stack
 #infill first
 #searchable help
+#faster
 #custom inclined plane, inclined plane from model, screw, fillet travel as well maybe
 #later maybe addAroundClosest around arounds and check for closeness to other infills
 #maybe much afterwards make congajure multistep view
 #maybe bridge supports although staggered spans are probably better
 #maybe update slice to add perimeter path intersection information to the large loop also
 #maybe stripe although mosaic alone can handle it
+#stretch fiber around shape
+#multiple heads around edge
+#angle shape for overhang extrusions
+#free fabricator
 def addAroundClosest( arounds, layerExtrusionWidth, paths, removedEndpoint ):
 	"Add the closest removed endpoint to the path, with minimal twisting."
 	removedEndpointPoint = removedEndpoint.point
@@ -176,7 +182,7 @@ def getExtraFillLoops( insideLoops, outsideLoop, radius ):
 	centers = intercircle.getCentersFromCircleNodes( circleNodes )
 	otherLoops = insideLoops + [ outsideLoop ]
 	for center in centers:
-		inset = intercircle.getInsetFromClockwiseLoop( center, radius )
+		inset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, radius )
 		if euclidean.isLargeSameDirection( inset, center, muchGreaterThanRadius ):
 			if isPathAlwaysInsideLoop( outsideLoop, inset ):
 				if isPathAlwaysOutsideLoops( insideLoops, inset ):
@@ -338,9 +344,6 @@ class FillSkein:
 
 	def addFill( self, layerIndex ):
 		"Add fill to the slice layer."
-#		if layerIndex > 0:
-#			return
-#		print( 'layerIndex ' + str( layerIndex ) )
 		alreadyFilledArounds = []
 		arounds = []
 		back = - 999999999.0
@@ -393,11 +396,11 @@ class FillSkein:
 			circleNodes = intercircle.getCircleNodesFromLoop( planeRotatedPerimeter, slightlyGreaterThanFill )
 			centers = intercircle.getCentersFromCircleNodes( circleNodes )
 			for center in centers:
-				alreadyFilledInset = intercircle.getInsetFromClockwiseLoop( center, layerFillInset )
+				alreadyFilledInset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, layerFillInset )
 				if euclidean.getMaximumSpan( alreadyFilledInset ) > muchGreaterThanLayerFillInset or euclidean.isWiddershins( alreadyFilledInset ):
 					alreadyFilledLoop.append( alreadyFilledInset )
-				around = intercircle.getInsetFromClockwiseLoop( center, aroundInset )
-				if euclidean.isPathInsideLoop( planeRotatedPerimeter, around ) != euclidean.isWiddershins( planeRotatedPerimeter ):
+				around = intercircle.getSimplifiedInsetFromClockwiseLoop( center, aroundInset )
+				if euclidean.isPathInsideLoop( planeRotatedPerimeter, around ) == euclidean.isWiddershins( planeRotatedPerimeter ):
 					if euclidean.getMaximumSpan( alreadyFilledInset ) > muchGreaterThanLayerFillInset:
 						arounds.append( around )
 						for point in around:

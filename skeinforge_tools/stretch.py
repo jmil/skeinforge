@@ -152,9 +152,7 @@ class LineIteratorBackward:
 		for lineIndex in xrange( self.lineIndex + 1, len( self.lines ) ):
 			line = self.lines[ lineIndex ]
 			splitLine = line.split()
-			firstWord = ''
-			if len( splitLine ) > 0:
-				firstWord = splitLine[ 0 ]
+			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == 'M103':
 				return lineIndex - 2
 		print( 'This should never happen in stretch, no deactivate command was found for this thread.' )
@@ -170,9 +168,7 @@ class LineIteratorBackward:
 			nextLineIndex = self.lineIndex - 1
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
-			firstWord = ''
-			if len( splitLine ) > 0:
-				firstWord = splitLine[ 0 ]
+			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == 'M103':
 				if self.isLoop:
 					nextLineIndex = self.getIndexBeforeNextDeactivate()
@@ -196,9 +192,7 @@ class LineIteratorBackward:
 		for lineIndex in xrange( self.lineIndex + 1, len( self.lines ) ):
 			line = self.lines[ lineIndex ]
 			splitLine = line.split()
-			firstWord = ''
-			if len( splitLine ) > 0:
-				firstWord = splitLine[ 0 ]
+			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == 'G1':
 				linearMoves += 1
 			if firstWord == 'M101':
@@ -222,9 +216,7 @@ class LineIteratorForward:
 		for lineIndex in xrange( self.lineIndex - 1, 3, - 1 ):
 			line = self.lines[ lineIndex ]
 			splitLine = line.split()
-			firstWord = ''
-			if len( splitLine ) > 0:
-				firstWord = splitLine[ 0 ]
+			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == 'M101':
 				return lineIndex + 1
 		print( 'This should never happen in stretch, no activate command was found for this thread.' )
@@ -240,9 +232,7 @@ class LineIteratorForward:
 			nextLineIndex = self.lineIndex + 1
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
-			firstWord = ''
-			if len( splitLine ) > 0:
-				firstWord = splitLine[ 0 ]
+			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == 'M103':
 				if self.isLoop:
 					nextLineIndex = self.getIndexJustAfterActivate()
@@ -263,7 +253,6 @@ class StretchSkein:
 		self.extrusionWidth = 0.4
 		self.feedrateMinute = 960.0
 		self.isLoop = False
-		self.isPerimeter = False
 		self.lineIndex = 0
 		self.lines = None
 		self.oldLocation = None
@@ -362,9 +351,7 @@ class StretchSkein:
 		for lineIndex in xrange( self.lineIndex + 1, len( self.lines ) ):
 			line = self.lines[ lineIndex ]
 			splitLine = line.split()
-			firstWord = ''
-			if len( splitLine ) > 0:
-				firstWord = splitLine[ 0 ]
+			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == 'G1' or firstWord == 'M103':
 				return False
 			if firstWord == 'M101':
@@ -386,9 +373,7 @@ class StretchSkein:
 		for self.lineIndex in range( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
-			firstWord = ''
-			if len( splitLine ) > 0:
-				firstWord = splitLine[ 0 ]
+			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == '(<bridgeExtrusionWidthOverSolid>':
 				self.bridgeExtrusionWidthOverSolid = float( splitLine[ 1 ] )
 			elif firstWord == '(<decimalPlacesCarried>':
@@ -416,7 +401,6 @@ class StretchSkein:
 		elif firstWord == 'M103':
 			self.extruderActive = False
 			self.isLoop = False
-			self.isPerimeter = False
 			self.threadMaximumAbsoluteStretch = self.layerMaximumAbsoluteStretch
 		elif firstWord == '(<bridgeLayer>':
 			self.layerMaximumAbsoluteStretch = self.maximumAbsoluteStretch * self.bridgeExtrusionWidthOverSolid
@@ -430,7 +414,6 @@ class StretchSkein:
 			self.isLoop = True
 		elif firstWord == '(<perimeter>':
 			self.isLoop = True
-			self.isPerimeter = True
 			self.threadMaximumAbsoluteStretch = self.perimeterMaximumAbsoluteStretch
 		self.addLine( line )
 

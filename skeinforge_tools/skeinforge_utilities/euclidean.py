@@ -51,11 +51,7 @@ def addSurroundingLoopBeginning( loop, skein ):
 
 def addToThreadsFromLoop( extrusionHalfWidthSquared, gcodeType, loop, oldOrderedLocation, skein ):
 	"Add to threads from the last location from loop."
-	nearestIndex = int( round( getNearestDistanceSquaredIndex( oldOrderedLocation, loop ).imag ) )
-	loop = getAroundLoop( nearestIndex, nearestIndex, loop )
-	nearestPoint = getNearestPointOnSegment( loop[ 0 ], loop[ 1 ], oldOrderedLocation )
-	if nearestPoint.distance2( loop[ 0 ] ) > extrusionHalfWidthSquared and nearestPoint.distance2( loop[ 1 ] ) > extrusionHalfWidthSquared:
-		loop = [ nearestPoint ] + loop[ 1 : ] + [ loop[ 0 ] ]
+	loop = getLoopStartingNearest( extrusionHalfWidthSquared, oldOrderedLocation, loop )
 	oldOrderedLocation.setToVec3( loop[ 0 ] )
 	skein.addLine( gcodeType )
 	skein.addGcodeFromThread( loop + [ loop[ 0 ] ] ) # Turn extruder on and indicate that a loop is beginning.
@@ -116,6 +112,32 @@ def getAwayPath( path, radius ):
 			point = path[ pointIndex ]
 			away.append( point )
 	return away
+
+def getClippedLoopPath( clip, loopPath ):
+	"Get a clipped loop path."
+	if clip <= 0.0:
+		return loopPath
+	loopPathLength = getPathLength( loopPath )
+	lastLength = 0.0
+	pointIndex = 0
+	totalLength = 0.0
+	clippedLength = loopPathLength - clip
+	while totalLength < clippedLength and pointIndex < len( loopPath ) - 1:
+		firstPoint = loopPath[ pointIndex ]
+		secondPoint  = loopPath[ pointIndex + 1 ]
+		pointIndex += 1
+		lastLength = totalLength
+		totalLength += firstPoint.distance( secondPoint )
+	remainingLength = clippedLength - lastLength
+	clippedLoopPath = loopPath[ : pointIndex ]
+	ultimateClippedPoint = loopPath[ pointIndex ]
+	penultimateClippedPoint = clippedLoopPath[ - 1 ]
+	segment = ultimateClippedPoint.minus( penultimateClippedPoint )
+	segmentLength = segment.length()
+	if segmentLength <= 0.0:
+		return clippedLoopPath
+	newUltimatePoint = penultimateClippedPoint.plus( segment.times( remainingLength / segmentLength ) )
+	return clippedLoopPath + [ newUltimatePoint ]
 
 def getComplexCrossProduct( firstComplex, secondComplex ):
 	"Get z component cross product of a pair of complexes."
@@ -212,6 +234,10 @@ def getInsidesAddToOutsides( loops, outsides ):
 			outsides.append( loop )
 	return insides
 
+def getIntermediateLocation( alongWay, begin, end ):
+	"Get the intermediate location between begin and end."
+	return ( begin.times( 1.0 - alongWay ) ).plus( end.times( alongWay ) )
+
 def getLeftPoint( path ):
 	"Get the leftmost point in the path."
 	left = 999999999.0
@@ -221,6 +247,17 @@ def getLeftPoint( path ):
 			left = point.x
 			leftPoint = point
 	return leftPoint
+
+def getLoopStartingNearest( extrusionHalfWidthSquared, location, loop ):
+	"Add to threads from the last location from loop."
+	nearestIndex = int( round( getNearestDistanceSquaredIndex( location, loop ).imag ) )
+	loop = getAroundLoop( nearestIndex, nearestIndex, loop )
+	nearestPoint = getNearestPointOnSegment( loop[ 0 ], loop[ 1 ], location )
+	if nearestPoint.distance2( loop[ 0 ] ) > extrusionHalfWidthSquared and nearestPoint.distance2( loop[ 1 ] ) > extrusionHalfWidthSquared:
+		loop = [ nearestPoint ] + loop[ 1 : ] + [ loop[ 0 ] ]
+	elif nearestPoint.distance2( loop[ 0 ] ) > nearestPoint.distance2( loop[ 1 ] ):
+		loop = loop[ 1 : ] + [ loop[ 0 ] ]
+	return loop
 
 def getMaximumSpan( loop ):
 	"Get the maximum span in the xy plane."
@@ -565,6 +602,19 @@ def isLineIntersectingInsideXSegment( segmentFirstX, segmentSecondX, vector3Firs
 		return False
 	return xIntersection < max( segmentFirstX, segmentSecondX )
 
+def isLineIntersectingLoops( loops, pointBegin, pointEnd ):
+	"Determine if the line is intersecting loops."
+	normalizedSegment = pointEnd.dropAxis( 2 ) - pointBegin.dropAxis( 2 )
+	normalizedSegmentLength = abs( normalizedSegment )
+	if normalizedSegmentLength > 0.0:
+		normalizedSegment /= normalizedSegmentLength
+		segmentYMirror = complex( normalizedSegment.real, - normalizedSegment.imag )
+		pointBeginRotated = getRoundZAxisByPlaneAngle( segmentYMirror, pointBegin )
+		pointEndRotated = getRoundZAxisByPlaneAngle( segmentYMirror, pointEnd )
+		if isLoopListIntersectingInsideXSegment( loops, pointBeginRotated.x, pointEndRotated.x, segmentYMirror, pointBeginRotated.y ):
+			return True
+	return False
+
 def isLoopIntersectingInsideXSegment( loop, segmentFirstX, segmentSecondX, segmentYMirror, y ):
 	"Determine if the loop is intersecting inside the x segment."
 	rotatedLoop = getPathRoundZAxisByPlaneAngle( segmentYMirror, loop )
@@ -580,15 +630,8 @@ def isLoopIntersectingLoops( loop, otherLoops ):
 	for pointIndex in range( len( loop ) ):
 		pointBegin = loop[ pointIndex ]
 		pointEnd = loop[ ( pointIndex + 1 ) % len( loop ) ]
-		normalizedSegment = pointEnd.dropAxis( 2 ) - pointBegin.dropAxis( 2 )
-		normalizedSegmentLength = abs( normalizedSegment )
-		if normalizedSegmentLength > 0.0:
-			normalizedSegment /= normalizedSegmentLength
-			segmentYMirror = complex( normalizedSegment.real, - normalizedSegment.imag )
-			pointBeginRotated = getRoundZAxisByPlaneAngle( segmentYMirror, pointBegin )
-			pointEndRotated = getRoundZAxisByPlaneAngle( segmentYMirror, pointEnd )
-			if isLoopListIntersectingInsideXSegment( otherLoops, pointBeginRotated.x, pointEndRotated.x, segmentYMirror, pointBeginRotated.y ):
-				return True
+		if isLineIntersectingLoops( otherLoops, pointBegin, pointEnd ):
+			return True
 	return False
 
 def isLoopListIntersectingInsideXSegment( loopList, segmentFirstX, segmentSecondX, segmentYMirror, y ):

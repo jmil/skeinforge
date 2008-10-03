@@ -228,7 +228,7 @@ def getTextLines( text ):
 
 def getUnmodifiedGCodeFiles( fileInDirectory = '' ):
 	"Get gcode files which are not modified."
-	words = '_comb,_comment,_cool,_fill,_fillet,_hop,_oozebane,_raft,_slice,_statistic,_stretch,_tower,_transform,_wipe'.split( ',' )
+	words = '_clip _comb _comment _cool _fill _fillet _hop _nozzle_wipe _oozebane _raft _slice _statistic _stretch _tower _transform _wipe'.split()
 	return getFilesWithFileTypeWithoutWords( 'gcode', words, fileInDirectory )
 
 def indexOfStartingWithSecond( letter, splitLine ):
@@ -279,9 +279,12 @@ def replaceWords( filenames, original, replacement ):
 	for filename in filenames:
 		fileText = getFileText( filename )
 		if fileText != '':
-			print( filename )
-			fileText = fileText.replace( original, replacement )
-			writeFileText( filename, fileText )
+			whereInText = fileText.find( original )
+			if whereInText != - 1:
+				print( filename )
+				print( whereInText )
+				fileText = fileText.replace( original, replacement )
+				writeFileText( filename, fileText )
 
 def writeFileMessageEnd( end, filename, fileText, message ):
 	"Write to a filename with a suffix and print a message."

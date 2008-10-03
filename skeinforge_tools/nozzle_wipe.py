@@ -92,10 +92,6 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def getIntermediateLocation( alongWay, begin, end ):
-	"Get the intermediate location between begin and end."
-	return ( begin.times( 1.0 - alongWay ) ).plus( end.times( alongWay ) )
-
 def getNozzleWipeChainGcode( filename, gcodeText, nozzleWipePreferences = None ):
 	"Nozzle wipe a gcode linear move text.  Chain nozzle wipe the gcode if it is not already nozzle wiped."
 	gcodeText = gcodec.getGcodeFileText( filename, gcodeText )
@@ -160,10 +156,10 @@ class NozzleWipeSkein:
 		if beginEndDistance < 3.0 * self.extrusionWidth:
 			return
 		alongWay = self.extrusionWidth / beginEndDistance
-		closeToOldLocation = getIntermediateLocation( alongWay, begin, end )
+		closeToOldLocation = euclidean.getIntermediateLocation( alongWay, begin, end )
 		closeToOldLocation.z = self.highestZ
 		self.addLine( self.getLinearMoveWithFeedrate( self.feedrateMinute, closeToOldLocation ) )
-		closeToOldArrival = getIntermediateLocation( alongWay, end, begin )
+		closeToOldArrival = euclidean.getIntermediateLocation( alongWay, end, begin )
 		closeToOldArrival.z = self.highestZ
 		self.addLine( self.getLinearMoveWithFeedrate( self.feedrateMinute, closeToOldArrival ) )
 
@@ -190,13 +186,13 @@ class NozzleWipeSkein:
 		feedrateOverThree = 0.33333 * self.feedrateMinute
 		if arrivalWipeDistance > 2.0 * self.extrusionWidth:
 			alongWay = self.extrusionWidth / arrivalWipeDistance
-			justBeforeWipeLocation = getIntermediateLocation( alongWay, self.locationWipe, self.locationArrival )
+			justBeforeWipeLocation = euclidean.getIntermediateLocation( alongWay, self.locationWipe, self.locationArrival )
 			self.addLine( self.getLinearMoveWithFeedrate( feedrateOverThree, justBeforeWipeLocation ) )
 		self.addLine( self.getLinearMoveWithFeedrate( self.feedrateMinute, self.locationWipe ) )
 		wipeDepartureDistance = self.locationWipe.distance( self.locationDeparture )
 		if wipeDepartureDistance > 2.0 * self.extrusionWidth:
 			alongWay = self.extrusionWidth / wipeDepartureDistance
-			justAfterWipeLocation = getIntermediateLocation( alongWay, self.locationWipe, self.locationDeparture )
+			justAfterWipeLocation = euclidean.getIntermediateLocation( alongWay, self.locationWipe, self.locationDeparture )
 			self.addLine( self.getLinearMoveWithFeedrate( feedrateOverThree, justAfterWipeLocation ) )
 		self.addLine( self.getLinearMoveWithFeedrate( self.feedrateMinute, self.locationDeparture ) )
 		self.addHop( self.locationDeparture, location )
@@ -228,9 +224,7 @@ class NozzleWipeSkein:
 		for self.lineIndex in range( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
-			firstWord = ''
-			if len( splitLine ) > 0:
-				firstWord = splitLine[ 0 ]
+			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == '(<decimalPlacesCarried>':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
 			elif firstWord == '(<extrusionStart>':

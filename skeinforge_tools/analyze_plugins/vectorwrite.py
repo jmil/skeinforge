@@ -85,6 +85,7 @@ def writeVectorFileGivenText( filename, gcodeText, vectorwritePreferences ):
 	skein.parseGcode( gcodeText, vectorwritePreferences )
 	print( 'The scalable vector graphics file is saved as ' + skein.getFilenameWriteFiles( filename ) )
 
+
 class VectorWindow:
 	"A class to accumulate a scalable vector graphics text."
 	def __init__( self ):
@@ -143,6 +144,28 @@ class VectorWindow:
 		self.bottomLeftCorner = bottomLeftCorner
 		self.topRightCorner = topRightCorner
 		self.width = int( self.topRightCorner.real - self.bottomLeftCorner.real )
+
+
+class VectorwritePreferences:
+	"A class to handle the vectorwrite preferences."
+	def __init__( self ):
+		"Set the default preferences, execute title & preferences filename."
+		#Set the default preferences.
+		self.archive = []
+		self.activateVectorwrite = preferences.BooleanPreference().getFromValue( 'Activate Vectorwrite', False )
+		self.archive.append( self.activateVectorwrite )
+		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Write Vector Graphics for', '' )
+		self.archive.append( self.filenameInput )
+		self.minimumNumberLayersMultipleFiles = preferences.IntPreference().getFromValue( 'Minimum Number of Layers for Multiple Files (integer):', 10 )
+		self.archive.append( self.minimumNumberLayersMultipleFiles )
+		self.pixelsWidthExtrusion = preferences.FloatPreference().getFromValue( 'Pixels over Extrusion Width (ratio):', 5.0 )
+		self.archive.append( self.pixelsWidthExtrusion )
+		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		self.executeTitle = 'Write Vector Graphics'
+		self.filenamePreferences = preferences.getPreferencesFilePath( 'vectorwrite.csv' )
+		self.filenameHelp = 'skeinforge_tools.analyze_plugins.vectorwrite.html'
+		self.saveTitle = 'Save Preferences'
+		self.title = 'Vectorwrite Preferences'
 
 
 class VectorwriteSkein:
@@ -335,28 +358,6 @@ class VectorwriteSkein:
 		hypertext.write( '<a href="%s"><- Previous</a> <a href="%s">Index</a> <a href="%s">Next -></a>\n' % ( previousFilename, 'index.html', nextFilename ) )
 		hypertext.write( '</body>\n</html>' )
 		gcodec.writeFileText( htmlPageFilename, hypertext.getvalue() )
-
-
-class VectorwritePreferences:
-	"A class to handle the vectorwrite preferences."
-	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
-		#Set the default preferences.
-		self.archive = []
-		self.activateVectorwrite = preferences.BooleanPreference().getFromValue( 'Activate Vectorwrite', False )
-		self.archive.append( self.activateVectorwrite )
-		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Write Vector Graphics for', '' )
-		self.archive.append( self.filenameInput )
-		self.minimumNumberLayersMultipleFiles = preferences.IntPreference().getFromValue( 'Minimum Number of Layers for Multiple Files (integer):', 10 )
-		self.archive.append( self.minimumNumberLayersMultipleFiles )
-		self.pixelsWidthExtrusion = preferences.FloatPreference().getFromValue( 'Pixels over Extrusion Width (ratio):', 10.0 )
-		self.archive.append( self.pixelsWidthExtrusion )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.executeTitle = 'Write Vector Graphics'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'vectorwrite.csv' )
-		self.filenameHelp = 'skeinforge_tools.analyze_plugins.vectorwrite.html'
-		self.saveTitle = 'Save Preferences'
-		self.title = 'Vectorwrite Preferences'
 
 	def execute( self ):
 		"Write button has been clicked."
