@@ -4,10 +4,14 @@ Comb is a script to comb the extrusion hair of a gcode file.
 The default 'Activate Comb' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions
 will not be called.
 
-Comb bends the extruder travel paths around holes in the slice, to avoid stringers and it jitters the loop end position to a different
-place on each layer to prevent the a ridge from forming.  The "Jitter Over Extrusion Width (ratio)" is the ratio of the amount the
-loop ends will be jittered.  A high value means the loops will start all over the place and a low value means loops will start at
-roughly the same place on each layer.  To run comb, in a shell type:
+Comb bends the extruder travel paths around holes in the slice, to avoid stringers.  It moves the extruder to the inside of outer
+perimeters before turning the extruder on so any start up ooze will be inside the shape.  It jitters the loop end position to a
+different place on each layer to prevent the a ridge from forming.  The 'Arrival Inset Follow Distance over Extrusion Width' is the
+ratio of the amount before the start of the outer perimeter the extruder will be moved to.  A high value means the extruder will
+move way before the beginning of the perimeter and a low value means the extruder will be moved just before the beginning.
+The "Jitter Over Extrusion Width (ratio)" is the ratio of the amount the loop ends will be jittered.  A high value means the loops
+will start all over the place and a low value means loops will start at roughly the same place on each layer.  To run comb, in a
+shell type:
 > python comb.py
 
 The following examples comb the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder
@@ -277,6 +281,7 @@ class CombSkein:
 			loop = euclidean.getLoopStartingNearest( extrusionHalfWidthSquared, self.beforeLoopLocation, loop )
 		if jitterDistance != 0.0:
 			loop = self.getJitteredLoop( jitterDistance, loop )
+			loop = euclidean.getAwayPath( loop, 0.2 * self.layerFillInset )
 		self.loopPath = loop + [ loop[ 0 ] ]
 		self.addGcodeFromThread( self.loopPath )
 		self.loopPath = None

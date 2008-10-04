@@ -181,8 +181,14 @@ def getCircleNodesFromLoop( loop, radius ):
 	for pointIndex in range( len( loop ) ):
 		point = loop[ pointIndex ]
 		pointSecond = loop[ ( pointIndex + 1 ) % len( loop ) ]
-		points.append( point )
-		addPointsFromSegment( points, radius, point, pointSecond )
+		if point == pointSecond:
+			print( 'This should never happen, point equals pointSecond in intercircle.' )
+			print( point )
+			print( pointSecond )
+			print( loop )
+		else:
+			points.append( point )
+			addPointsFromSegment( points, radius, point, pointSecond )
 	return getCircleNodesFromPath( points, radius )
 
 def getCircleNodesFromPath( path, radius ):
