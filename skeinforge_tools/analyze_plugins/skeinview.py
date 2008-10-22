@@ -126,7 +126,7 @@ class SkeinviewPreferences:
 		self.archive.append( self.filenameInput )
 		self.goAroundExtruderOffTravel = preferences.BooleanPreference().getFromValue( 'Go Around Extruder Off Travel', False )
 		self.archive.append( self.goAroundExtruderOffTravel )
-		self.pixelsWidthExtrusion = preferences.FloatPreference().getFromValue( 'Pixels over Extrusion Width (ratio):', 5.0 )
+		self.pixelsWidthExtrusion = preferences.FloatPreference().getFromValue( 'Pixels over Extrusion Width (ratio):', 10.0 )
 		self.archive.append( self.pixelsWidthExtrusion )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.executeTitle = 'Skeinview'
@@ -218,6 +218,8 @@ class SkeinviewSkein:
 		self.scale = skeinviewPreferences.pixelsWidthExtrusion.value / self.extrusionWidth
 		self.scaleCornerHigh = self.scale * self.cornerHigh.dropAxis( 2 )
 		self.scaleCornerLow = self.scale * self.cornerLow.dropAxis( 2 )
+		print( "The lower left corner of the skeinview window is at %s, %s" % ( self.cornerLow.x, self.cornerLow.y ) )
+		print( "The upper right corner of the skeinview window is at %s, %s" % ( self.cornerHigh.x, self.cornerHigh.y ) )
 		self.cornerImaginaryTotal = self.cornerHigh.y + self.cornerLow.y
 		margin = complex( 5.0, 5.0 )
 		self.marginCornerLow = self.scaleCornerLow - margin
@@ -258,19 +260,27 @@ class SkeinWindow:
 		self.root = preferences.Tkinter.Tk()
 		self.root.title( "Skeinview from HydraRaptor" )
 		frame = preferences.Tkinter.Frame( self.root )
-		frame.pack()
-		self.canvas = preferences.Tkinter.Canvas( frame, width = int( size.real ), height = int( size.imag ) )
-		self.canvas.pack()
-		self.canvas.config( scrollregion = self.canvas.bbox( preferences.Tkinter.ALL ) )
-		self.exit_button = preferences.Tkinter.Button( frame, text = "Exit", fg = "red", command = frame.quit )
-		self.exit_button.pack( side=preferences.Tkinter.RIGHT )
-		self.down_button = preferences.Tkinter.Button( frame, text = "Down", command = self.down )
-		self.down_button.pack( side=preferences.Tkinter.LEFT )
-		self.up_button = preferences.Tkinter.Button( frame, text = "Up", command = self.up )
-		self.up_button.pack( side=preferences.Tkinter.LEFT )
-		self.indexEntry = preferences.Tkinter.Entry( frame )
+		xScrollbar = preferences.Tkinter.Scrollbar( self.root, orient = preferences.Tkinter.HORIZONTAL )
+		yScrollbar = preferences.Tkinter.Scrollbar( self.root )
+		canvasHeight = min( int( size.imag ), self.root.winfo_screenheight() - 100 )
+		canvasWidth = min( int( size.real ), self.root.winfo_screenwidth() - 50 )
+		self.canvas = preferences.Tkinter.Canvas( self.root, width = canvasWidth, height = canvasHeight, scrollregion = ( 0, 0, int( size.real ), int( size.imag ) ) )
+		self.canvas.grid( row = 0, rowspan = 98, column = 0, columnspan = 99, sticky = preferences.Tkinter.W )
+		xScrollbar.grid( row = 98, column = 0, columnspan = 99, sticky = preferences.Tkinter.E + preferences.Tkinter.W )
+		xScrollbar.config( command = self.canvas.xview )
+		yScrollbar.grid( row = 0, rowspan = 98, column = 99, sticky = preferences.Tkinter.N + preferences.Tkinter.S )
+		yScrollbar.config( command = self.canvas.yview )
+		self.canvas[ 'xscrollcommand' ] = xScrollbar.set
+		self.canvas[ 'yscrollcommand' ] = yScrollbar.set
+		self.exit_button = preferences.Tkinter.Button( self.root, text = "Exit", fg = "red", command = self.root.quit )
+		self.exit_button.grid( row = 99, column = 95, columnspan = 5, sticky = preferences.Tkinter.W )
+		self.down_button = preferences.Tkinter.Button( self.root, text = "Down", command = self.down )
+		self.down_button.grid( row = 99, column = 0, sticky = preferences.Tkinter.W )
+		self.up_button = preferences.Tkinter.Button( self.root, text = "Up", command = self.up )
+		self.up_button.grid( row = 99, column = 1, sticky = preferences.Tkinter.W )
+		self.indexEntry = preferences.Tkinter.Entry( self.root )
 		self.indexEntry.bind( "<Return>", self.indexEntryReturnPressed )
-		self.indexEntry.pack( side = preferences.Tkinter.LEFT )
+		self.indexEntry.grid( row = 99, column = 2, columnspan = 10, sticky = preferences.Tkinter.W )
 		self.update()
 		if preferences.globalIsMainLoopRunning:
 			return

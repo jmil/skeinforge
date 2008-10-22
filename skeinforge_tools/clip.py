@@ -5,8 +5,8 @@ The default 'Activate Clip' checkbox is on.  When it is on, the functions descri
 will not be called.
 
 Clip clips the ends of loops to prevent bumps from forming.  The "Clip Over Extrusion Width (ratio)" is the ratio of the amount
-the loops are clipped over the extrusion width.  If the ratio is too high loops will have a gap, if the ratio is too low there will be
-a bulge at the loop ends.  To run clip, in a shell type:
+each end of the loop is clipped over the extrusion width.  The total gap will therefore be twice the clip.  If the ratio is too high
+loops will have a gap, if the ratio is too low there will be a bulge at the loop ends.  To run clip, in a shell type:
 > python clip.py
 
 The following examples clip the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the
@@ -129,6 +129,32 @@ def writeOutput( filename = '' ):
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to clip the file.' )
 
 
+class ClipPreferences:
+	"A class to handle the clip preferences."
+	def __init__( self ):
+		"Set the default preferences, execute title & preferences filename."
+		#Set the default preferences.
+		self.archive = []
+		self.activateClip = preferences.BooleanPreference().getFromValue( 'Activate Clip', True )
+		self.archive.append( self.activateClip )
+		self.clipOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Clip Over Extrusion Width (ratio):', 0.15 )
+		self.archive.append( self.clipOverExtrusionWidth )
+		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Clipped', '' )
+		self.archive.append( self.filenameInput )
+		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		self.executeTitle = 'Clip'
+		self.filenamePreferences = preferences.getPreferencesFilePath( 'clip.csv' )
+		self.filenameHelp = 'skeinforge_tools.clip.html'
+		self.saveTitle = 'Save Preferences'
+		self.title = 'Clip Preferences'
+
+	def execute( self ):
+		"Clip button has been clicked."
+		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
+		for filename in filenames:
+			writeOutput( filename )
+
+
 class ClipSkein:
 	"A class to clip a skein of extrusions."
 	def __init__( self ):
@@ -165,8 +191,8 @@ class ClipSkein:
 	def addTailoredLoopPath( self ):
 		"Add a clipped and jittered loop path."
 		if self.clipLength > 0.0:
-			clippedLoopPath = euclidean.getClippedLoopPath( self.clipLength, self.loopPath )
-			self.loopPath = euclidean.getSimplifiedPath( clippedLoopPath, self.extrusionWidth )
+			self.loopPath = euclidean.getClippedLoopPath( self.clipLength, self.loopPath )
+			self.loopPath = euclidean.getSimplifiedPath( self.loopPath, self.extrusionWidth )
 		self.addGcodeFromThread( self.loopPath )
 		self.loopPath = None
 
@@ -239,32 +265,6 @@ class ClipSkein:
 			self.isLoopPerimeter = True
 		if self.loopPath == None:
 			self.addLine( line )
-
-
-class ClipPreferences:
-	"A class to handle the clip preferences."
-	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
-		#Set the default preferences.
-		self.archive = []
-		self.activateClip = preferences.BooleanPreference().getFromValue( 'Activate Clip', True )
-		self.archive.append( self.activateClip )
-		self.clipOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Clip Over Extrusion Width (ratio):', 0.3 )
-		self.archive.append( self.clipOverExtrusionWidth )
-		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Clipped', '' )
-		self.archive.append( self.filenameInput )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.executeTitle = 'Clip'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'clip.csv' )
-		self.filenameHelp = 'skeinforge_tools.clip.html'
-		self.saveTitle = 'Save Preferences'
-		self.title = 'Clip Preferences'
-
-	def execute( self ):
-		"Clip button has been clicked."
-		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
-		for filename in filenames:
-			writeOutput( filename )
 
 
 def main( hashtable = None ):

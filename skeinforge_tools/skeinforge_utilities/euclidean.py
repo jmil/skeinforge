@@ -113,11 +113,12 @@ def getAwayPath( path, radius ):
 			away.append( point )
 	return away
 
-def getClippedLoopPath( clip, loopPath ):
+def getClippedAtEndLoopPath( clip, loopPath ):
 	"Get a clipped loop path."
 	if clip <= 0.0:
 		return loopPath
 	loopPathLength = getPathLength( loopPath )
+	clip = min( clip, 0.3 * loopPathLength )
 	lastLength = 0.0
 	pointIndex = 0
 	totalLength = 0.0
@@ -138,6 +139,33 @@ def getClippedLoopPath( clip, loopPath ):
 		return clippedLoopPath
 	newUltimatePoint = penultimateClippedPoint.plus( segment.times( remainingLength / segmentLength ) )
 	return clippedLoopPath + [ newUltimatePoint ]
+
+def getClippedLoopPath( clip, loopPath ):
+	"Get a clipped loop path."
+	if clip <= 0.0:
+		return loopPath
+	loopPathLength = getPathLength( loopPath )
+	clip = min( clip, 0.3 * loopPathLength )
+	lastLength = 0.0
+	pointIndex = 0
+	totalLength = 0.0
+	while totalLength < clip and pointIndex < len( loopPath ) - 1:
+		firstPoint = loopPath[ pointIndex ]
+		secondPoint  = loopPath[ pointIndex + 1 ]
+		pointIndex += 1
+		lastLength = totalLength
+		totalLength += firstPoint.distance( secondPoint )
+	remainingLength = clip - lastLength
+	clippedLoopPath = loopPath[ pointIndex : ]
+	ultimateClippedPoint = clippedLoopPath[ 0 ]
+	penultimateClippedPoint = loopPath[ pointIndex - 1 ]
+	segment = ultimateClippedPoint.minus( penultimateClippedPoint )
+	segmentLength = segment.length()
+	loopPath = clippedLoopPath
+	if segmentLength > 0.0:
+		newUltimatePoint = penultimateClippedPoint.plus( segment.times( remainingLength / segmentLength ) )
+		loopPath = [ newUltimatePoint ] + loopPath
+	return getClippedAtEndLoopPath( clip, loopPath )
 
 def getComplexCrossProduct( firstComplex, secondComplex ):
 	"Get z component cross product of a pair of complexes."
@@ -352,6 +380,19 @@ def getPathRoundZAxisByPlaneAngle( planeAngle, path ):
 	for point in path:
 		planeArray.append( getRoundZAxisByPlaneAngle( planeAngle, point ) )
 	return planeArray
+
+def getPathWithoutCloseSequentials( path, radius ):
+	"Get a path without points in a row which are too close too each other."
+	pathWithoutCloseSequentials = []
+	closeDistanceSquared = 0.0001 * radius * radius
+	lastPoint = None
+	for point in path:
+		if lastPoint == None:
+			pathWithoutCloseSequentials.append( point )
+		elif lastPoint.distance2( point ) > closeDistanceSquared:
+			pathWithoutCloseSequentials.append( point )
+		lastPoint = point
+	return pathWithoutCloseSequentials
 
 def getPlaneDot( vec3First, vec3Second ):
 	"Get the dot product of the x and y components of a pair of Vec3s."

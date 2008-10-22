@@ -69,6 +69,8 @@ def getTriangleMesh( filename = '' ):
 			return None
 		filename = unmodified[ 0 ]
 	gnuTriangulatedSurfaceText = gcodec.getFileText( filename )
+	if gnuTriangulatedSurfaceText == '':
+		return None
 	triangleMesh = TriangleMesh().getFromGNUTriangulatedSurfaceText( gnuTriangulatedSurfaceText )
 	return triangleMesh
 

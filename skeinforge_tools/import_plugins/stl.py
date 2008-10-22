@@ -99,6 +99,8 @@ def getTriangleMesh( filename = '' ):
 			return
 		filename = unmodified[ 0 ]
 	stlData = gcodec.getFileText( filename, 'rb' )
+	if stlData == '':
+		return None
 	triangleMesh = triangle_mesh.TriangleMesh()
 	vertexIndexTable = {}
 	if ( stlData[ : 5 ] == 'solid' ):

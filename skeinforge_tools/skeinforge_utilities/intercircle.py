@@ -25,15 +25,14 @@ __license__ = "GPL 3.0"
 def addCircleIntersectionLoop( circleIntersectionPath, circleIntersections ):
 	"Add a circle intersection loop."
 	firstCircleIntersection = circleIntersectionPath[ 0 ]
-	firstCircleIntersection.steppedOn = False
 	circleIntersectionAhead = firstCircleIntersection
-	for circleIntersectionIndex in range( len( circleIntersections ) + 1 ):
+	for circleIntersectionIndex in xrange( len( circleIntersections ) + 1 ):
 		circleIntersectionAhead = circleIntersectionAhead.getCircleIntersectionAhead()
 		if circleIntersectionAhead.index == firstCircleIntersection.index:
 			firstCircleIntersection.steppedOn = True
 			return
 		if circleIntersectionAhead.steppedOn == True:
-			print( 'circleIntersectionAhead.steppedOn == True' )
+			print( 'circleIntersectionAhead.steppedOn == True in intercircle.' )
 			print( circleIntersectionAhead )
 		circleIntersectionAhead.addToList( circleIntersectionPath )
 	firstCircleIntersection.steppedOn = True
@@ -87,14 +86,14 @@ def addOrbits( loop, skein, temperatureChangeTime ):
 
 def addPointsFromSegment( points, radius, pointBegin, pointEnd ):
 	"Add points between the endpoints of a segment."
-	thresholdRadius = radius * 0.9 # a higher number would be faster but would leave bigger dangling loops
+	thresholdRadius = radius * 0.9 # a higher number would be faster but would leave bigger dangling loops.
 	thresholdDiameter = thresholdRadius * 2.0
 	segment = pointEnd.minus( pointBegin )
 	segmentLength = segment.length()
 	extraCircles = int( math.floor( segmentLength / thresholdDiameter ) )
 	lengthIncrement = segmentLength / ( float( extraCircles ) + 1.0 )
 	if segmentLength == 0.0:
-		print( 'This should never happen, segmentLength = 0.0' )
+		print( 'This should never happen, segmentLength = 0.0 in intercircle.' )
 		print( 'pointBegin' )
 		print( pointBegin )
 		print( pointEnd )
@@ -144,13 +143,12 @@ def getCentersFromOutside( isOutside, loop, radius ):
 	return outsideCenters
 
 def getCircleIntersectionsFromCircleNodes( circleNodes ):
-	"Get all the circle intersections with exist between all the circle nodes."
+	"Get all the circle intersections which exist between all the circle nodes."
 	circleIntersections = []
 	index = 0
 	for circleNodeIndex in range( len( circleNodes ) ):
 		circleNodeBehind = circleNodes[ circleNodeIndex ]
-		for aheadIndex in range( circleNodeIndex + 1, len( circleNodes ) ):
-			circleNodeAhead = circleNodes[ aheadIndex ]
+		for circleNodeAhead in circleNodes[ circleNodeIndex + 1 : ]:
 			if circleNodeBehind.isWithin( circleNodeAhead.circle ):
 				circleIntersectionForward = CircleIntersection().getFromCircleNodes( circleNodeAhead, index, circleNodeBehind )
 				if not circleIntersectionForward.isWithinCircles( circleNodes ):
@@ -169,9 +167,8 @@ def getCircleIntersectionLoops( circleIntersections ):
 	circleIntersectionLoops = []
 	for circleIntersection in circleIntersections:
 		if not circleIntersection.steppedOn:
-			circleIntersectionLoop = []
+			circleIntersectionLoop = [ circleIntersection ]
 			circleIntersectionLoops.append( circleIntersectionLoop )
-			circleIntersection.addToList( circleIntersectionLoop )
 			addCircleIntersectionLoop( circleIntersectionLoop, circleIntersections )
 	return circleIntersectionLoops
 
@@ -401,6 +398,7 @@ class CircleIntersection:
 		circleIntersectionAhead = None
 		smallestWiddershinsDot = 999999999.0
 		positionRelativeToAhead = self.getAbsolutePosition().minus( self.circleNodeAhead.circle )
+		positionRelativeToAhead.normalize()
 		for circleIntersection in circleIntersections:
 			if not circleIntersection.steppedOn:
 				circleIntersectionRelative = circleIntersection.getPositionRelativeToBehind()

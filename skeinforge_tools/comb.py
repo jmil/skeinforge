@@ -10,8 +10,11 @@ different place on each layer to prevent the a ridge from forming.  The 'Arrival
 ratio of the amount before the start of the outer perimeter the extruder will be moved to.  A high value means the extruder will
 move way before the beginning of the perimeter and a low value means the extruder will be moved just before the beginning.
 The "Jitter Over Extrusion Width (ratio)" is the ratio of the amount the loop ends will be jittered.  A high value means the loops
-will start all over the place and a low value means loops will start at roughly the same place on each layer.  To run comb, in a
-shell type:
+will start all over the place and a low value means loops will start at roughly the same place on each layer.  The 'Minimum
+Perimeter Departure Distance over Extrusion Width' is the ratio of the minimum distance that the extruder will travel and loop
+before leaving an outer perimeter.  A high value means the extruder will loop many times before leaving, so that the ooze will
+finish within the perimeter, a low value means the extruder will not loop and a stringer might be created from the outer
+perimeter.  To run comb, in a shell type:
 > python comb.py
 
 The following examples comb the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder
@@ -147,11 +150,13 @@ class CombPreferences:
 		self.archive.append( self.activateComb )
 		self.arrivalInsetFollowDistanceOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Arrival Inset Follow Distance over Extrusion Width (ratio):', 3.0 )
 		self.archive.append( self.arrivalInsetFollowDistanceOverExtrusionWidth )
+		self.jitterOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Jitter Over Extrusion Width (ratio):', 2.0 )
+		self.archive.append( self.jitterOverExtrusionWidth )
+		self.minimumPerimeterDepartureDistanceOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Minimum Perimeter Departure Distance over Extrusion Width (ratio):', 30.0 )
+		self.archive.append( self.minimumPerimeterDepartureDistanceOverExtrusionWidth )
 		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Combed', '' )
 		self.archive.append( self.filenameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.jitterOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Jitter Over Extrusion Width (ratio):', 2.0 )
-		self.archive.append( self.jitterOverExtrusionWidth )
 		self.executeTitle = 'Comb'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'comb.csv' )
 		self.filenameHelp = 'skeinforge_tools.comb.html'
@@ -210,14 +215,37 @@ class CombSkein:
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		if not self.extruderActive and self.oldLocation != None:
 			if len( self.getBetweens() ) > 0:
-				self.insertPathsAroundBetween( location )
+				aroundBetweenPath = []
+				self.insertPathsAroundBetween( aroundBetweenPath, location )
+				aroundBetweenPath = euclidean.getPathWithoutCloseSequentials( aroundBetweenPath, self.extrusionWidth )
+				for point in aroundBetweenPath:
+					self.addGcodeMovement( point )
 		self.oldLocation = location
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
 		self.output.write( line + "\n" )
 
-	def addPathBeforeEnd( self, loop ):
+	def addLoopsBeforeLeavingPerimeter( self, aroundBetweenPath, insetPerimeter, perimeterCrossing ):
+		"Add loops before leaving the first outer perimeter, in order to leave most of the ooze in the infill."
+		totalDistance = perimeterCrossing.distance( self.oldLocation )
+		loopLength = euclidean.getPolygonLength( insetPerimeter )
+		nearestCrossingDistanceIndex = euclidean.getNearestDistanceSquaredIndex( perimeterCrossing, insetPerimeter )
+		crossingBeginIndex = ( int( nearestCrossingDistanceIndex.imag ) + 1 ) % len( insetPerimeter )
+		aroundLoop = euclidean.getAroundLoop( crossingBeginIndex, crossingBeginIndex, insetPerimeter )
+		aroundPath = [ perimeterCrossing ] + aroundLoop + [ perimeterCrossing ]
+		aroundPath = euclidean.getClippedAtEndLoopPath( self.extrusionWidth, aroundPath )
+		crossingToEnd = aroundPath[ - 1 ].minus( perimeterCrossing )
+		crossingToOld = self.oldLocation.minus( perimeterCrossing )
+		planeDot = euclidean.getPlaneDot( crossingToEnd, crossingToOld )
+		if planeDot < 0.0:
+			aroundLoop.reverse()
+		while totalDistance < self.minimumPerimeterDepartureDistance:
+			aroundBetweenPath += aroundLoop
+			totalDistance += loopLength
+		aroundBetweenPath.append( perimeterCrossing )
+
+	def addPathBeforeEnd( self, aroundBetweenPath, loop ):
 		"Add the path before the end of the loop."
 		halfFillInset = 0.5 * self.layerFillInset
 		if self.arrivalInsetFollowDistance < halfFillInset:
@@ -241,24 +269,26 @@ class CombSkein:
 			return
 		closestInset.append( closestInset[ 0 ] )
 		closestInset.reverse()
-		pathBeforeArrival = euclidean.getClippedLoopPath( self.arrivalInsetFollowDistance, closestInset )
+		pathBeforeArrival = euclidean.getClippedAtEndLoopPath( self.arrivalInsetFollowDistance, closestInset )
 		pointBeforeArrival = pathBeforeArrival[ - 1 ]
-		self.addGcodeMovement( pointBeforeArrival )
+		aroundBetweenPath.append( pointBeforeArrival )
 		if self.arrivalInsetFollowDistance <= halfFillInset:
 			return
-		pathBetween = euclidean.getClippedLoopPath( halfFillInset, closestInset )[ len( pathBeforeArrival ) - 1 : ]
-		for point in pathBetween:
-			if not self.isClose( pointBeforeArrival, point ):
-				self.addGcodeMovement( point )
+		aroundBetweenPath += euclidean.getClippedAtEndLoopPath( halfFillInset, closestInset )[ len( pathBeforeArrival ) - 1 : ]
 
-	def addPathBetween( self, betweenFirst, betweenSecond, loopFirst ):
+	def addPathBetween( self, aroundBetweenPath, betweenFirst, betweenSecond, loopFirst ):
 		"Add a path between the perimeter and the fill."
 		clockwisePath = [ betweenFirst ]
 		widdershinsPath = [ betweenFirst ]
 		nearestFirstDistanceIndex = euclidean.getNearestDistanceSquaredIndex( betweenFirst, loopFirst )
 		nearestSecondDistanceIndex = euclidean.getNearestDistanceSquaredIndex( betweenSecond, loopFirst )
+		secondBeforeIndex = int( nearestSecondDistanceIndex.imag )
 		firstBeginIndex = ( int( nearestFirstDistanceIndex.imag ) + 1 ) % len( loopFirst )
-		secondBeginIndex = ( int( nearestSecondDistanceIndex.imag ) + 1 ) % len( loopFirst )
+		secondBeginIndex = ( secondBeforeIndex + 1 ) % len( loopFirst )
+		if nearestFirstDistanceIndex.imag == nearestSecondDistanceIndex.imag:
+			nearestPoint = euclidean.getNearestPointOnSegment( loopFirst[ secondBeforeIndex ], loopFirst[ secondBeginIndex ], betweenSecond )
+			aroundBetweenPath += [ betweenFirst, nearestPoint ]
+			return
 		widdershinsLoop = euclidean.getAroundLoop( firstBeginIndex, secondBeginIndex, loopFirst )
 		widdershinsPath += widdershinsLoop
 		clockwiseLoop = euclidean.getAroundLoop( secondBeginIndex, firstBeginIndex, loopFirst )
@@ -269,8 +299,7 @@ class CombSkein:
 		if euclidean.getPathLength( widdershinsPath ) > euclidean.getPathLength( clockwisePath ):
 			widdershinsPath = clockwisePath
 		widdershinsPath = euclidean.getAwayPath( widdershinsPath, 0.2 * self.layerFillInset )
-		for point in widdershinsPath:
-			self.addGcodeMovement( point )
+		aroundBetweenPath += widdershinsPath
 
 	def addTailoredLoopPath( self ):
 		"Add a clipped and jittered loop path."
@@ -380,7 +409,7 @@ class CombSkein:
 		self.oldLocation = None
 		self.output = cStringIO.StringIO()
 
-	def insertPathsAroundBetween( self, location ):
+	def insertPathsAroundBetween( self, aroundBetweenPath, location ):
 		"Insert paths around and between the perimeter and the fill."
 		outerPerimeter = None
 		if str( location ) in self.pointTable:
@@ -389,11 +418,11 @@ class CombSkein:
 				outerPerimeter = perimeter
 		nextBeginning = self.getOutloopLocation( location )
 		pathEnd = self.getOutloopLocation( self.oldLocation )
-		self.insertPathsBetween( nextBeginning, pathEnd )
+		self.insertPathsBetween( aroundBetweenPath, nextBeginning, pathEnd )
 		if outerPerimeter != None:
-			self.addPathBeforeEnd( outerPerimeter )
+			self.addPathBeforeEnd( aroundBetweenPath, outerPerimeter )
 
-	def insertPathsBetween( self, nextBeginning, pathEnd ):
+	def insertPathsBetween( self, aroundBetweenPath, nextBeginning, pathEnd ):
 		"Insert paths between the perimeter and the fill."
 		betweenX = []
 		switchX = []
@@ -419,17 +448,15 @@ class CombSkein:
 		while betweenXIndex < len( betweenX ) - 1:
 			betweenXFirst = betweenX[ betweenXIndex ]
 			betweenXSecond = betweenX[ betweenXIndex + 1 ]
+			loopFirst = self.getBetweens()[ betweenXFirst.index ]
+			betweenFirst = euclidean.getRoundZAxisByPlaneAngle( segmentXY, Vec3( betweenXFirst.x, y, z ) )
+			betweenSecond = euclidean.getRoundZAxisByPlaneAngle( segmentXY, Vec3( betweenXSecond.x, y, z ) )
 			if betweenXSecond.index == betweenXFirst.index:
 				betweenXIndex += 1
-				betweenFirst = euclidean.getRoundZAxisByPlaneAngle( segmentXY, Vec3( betweenXFirst.x, y, z ) )
-				betweenSecond = euclidean.getRoundZAxisByPlaneAngle( segmentXY, Vec3( betweenXSecond.x, y, z ) )
-				loopFirst = self.getBetweens()[ betweenXFirst.index ]
-				self.addPathBetween( betweenFirst, betweenSecond, loopFirst )
+			else:
+				self.addLoopsBeforeLeavingPerimeter( aroundBetweenPath, loopFirst, betweenFirst )
+			self.addPathBetween( aroundBetweenPath, betweenFirst, betweenSecond, loopFirst )
 			betweenXIndex += 1
-
-	def isClose( self, locationFirst, locationSecond ):
-		"Determine if the first location is close to the second location."
-		return locationFirst.distance2( locationSecond ) < self.closeSquared
 
 	def isNextExtruderOn( self ):
 		"Determine if there is an extruder on command before a move command."
@@ -528,8 +555,8 @@ class CombSkein:
 			elif firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
 				self.arrivalInsetFollowDistance = combPreferences.arrivalInsetFollowDistanceOverExtrusionWidth.value * self.extrusionWidth
-				self.closeSquared = 0.01 * self.extrusionWidth * self.extrusionWidth
 				self.jitter = combPreferences.jitterOverExtrusionWidth.value * self.extrusionWidth
+				self.minimumPerimeterDepartureDistance = combPreferences.minimumPerimeterDepartureDistanceOverExtrusionWidth.value * self.extrusionWidth
 			elif firstWord == '(<fillInset>':
 				self.fillInset = float( splitLine[ 1 ] )
 			self.addLine( line )

@@ -136,6 +136,50 @@ def writeOutput( filename = '' ):
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to nozzle wipe the file.' )
 
 
+class NozzleWipePreferences:
+	"A class to handle the nozzle wipe preferences."
+	def __init__( self ):
+		"Set the default preferences, execute title & preferences filename."
+		#Set the default preferences.
+		self.archive = []
+		self.activateNozzleWipe = preferences.BooleanPreference().getFromValue( 'Activate Nozzle Wipe', False )
+		self.archive.append( self.activateNozzleWipe )
+		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Nozzle Wiped', '' )
+		self.archive.append( self.filenameInput )
+		self.locationArrivalX = preferences.FloatPreference().getFromValue( 'Location Arrival X (mm):', - 70.0 )
+		self.archive.append( self.locationArrivalX )
+		self.locationArrivalY = preferences.FloatPreference().getFromValue( 'Location Arrival Y (mm):', - 50.0 )
+		self.archive.append( self.locationArrivalY )
+		self.locationArrivalZ = preferences.FloatPreference().getFromValue( 'Location Arrival Z (mm):', 50.0 )
+		self.archive.append( self.locationArrivalZ )
+		self.locationDepartureX = preferences.FloatPreference().getFromValue( 'Location Departure X (mm):', - 70.0 )
+		self.archive.append( self.locationDepartureX )
+		self.locationDepartureY = preferences.FloatPreference().getFromValue( 'Location Departure Y (mm):', - 40.0 )
+		self.archive.append( self.locationDepartureY )
+		self.locationDepartureZ = preferences.FloatPreference().getFromValue( 'Location Departure Z (mm):', 50.0 )
+		self.archive.append( self.locationDepartureZ )
+		self.locationWipeX = preferences.FloatPreference().getFromValue( 'Location Wipe X (mm):', - 70.0 )
+		self.archive.append( self.locationWipeX )
+		self.locationWipeY = preferences.FloatPreference().getFromValue( 'Location Wipe Y (mm):', - 70.0 )
+		self.archive.append( self.locationWipeY )
+		self.locationWipeZ = preferences.FloatPreference().getFromValue( 'Location Wipe Z (mm):', 50.0 )
+		self.archive.append( self.locationWipeZ )
+		self.nozzleWipePeriod = preferences.IntPreference().getFromValue( 'Nozzle Wipe Period (layers):', 3 )
+		self.archive.append( self.nozzleWipePeriod )
+		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		self.executeTitle = 'Nozzle Wipe'
+		self.filenamePreferences = preferences.getPreferencesFilePath( 'nozzle_wipe.csv' )
+		self.filenameHelp = 'skeinforge_tools.nozzle_wipe.html'
+		self.saveTitle = 'Save Preferences'
+		self.title = 'Nozzle Wipe Preferences'
+
+	def execute( self ):
+		"Nozzle wipe button has been clicked."
+		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
+		for filename in filenames:
+			writeOutput( filename )
+
+
 class NozzleWipeSkein:
 	"A class to nozzle wipe a skein of extrusions."
 	def __init__( self ):
@@ -169,9 +213,7 @@ class NozzleWipeSkein:
 
 	def addWipeTravel( self, splitLine ):
 		"Add the wipe travel gcode."
-		indexOfF = gcodec.indexOfStartingWithSecond( "F", splitLine )
-		if indexOfF > 0:
-			self.feedrateMinute = float( splitLine[ indexOfF ][ 1 : ] )
+		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		self.highestZ = max( self.highestZ, location.z )
 		if not self.shouldWipe:
@@ -182,18 +224,7 @@ class NozzleWipeSkein:
 		if self.oldLocation != None:
 			self.addHop( self.oldLocation, self.locationArrival )
 		self.addLine( self.getLinearMoveWithFeedrate( self.feedrateMinute, self.locationArrival ) )
-		arrivalWipeDistance = self.locationArrival.distance( self.locationWipe )
-		feedrateOverThree = 0.33333 * self.feedrateMinute
-		if arrivalWipeDistance > 2.0 * self.extrusionWidth:
-			alongWay = self.extrusionWidth / arrivalWipeDistance
-			justBeforeWipeLocation = euclidean.getIntermediateLocation( alongWay, self.locationWipe, self.locationArrival )
-			self.addLine( self.getLinearMoveWithFeedrate( feedrateOverThree, justBeforeWipeLocation ) )
 		self.addLine( self.getLinearMoveWithFeedrate( self.feedrateMinute, self.locationWipe ) )
-		wipeDepartureDistance = self.locationWipe.distance( self.locationDeparture )
-		if wipeDepartureDistance > 2.0 * self.extrusionWidth:
-			alongWay = self.extrusionWidth / wipeDepartureDistance
-			justAfterWipeLocation = euclidean.getIntermediateLocation( alongWay, self.locationWipe, self.locationDeparture )
-			self.addLine( self.getLinearMoveWithFeedrate( feedrateOverThree, justAfterWipeLocation ) )
 		self.addLine( self.getLinearMoveWithFeedrate( self.feedrateMinute, self.locationDeparture ) )
 		self.addHop( self.locationDeparture, location )
 		if self.extruderActive:
@@ -252,50 +283,6 @@ class NozzleWipeSkein:
 		elif firstWord == 'M103':
 			self.extruderActive = False
 		self.addLine( line )
-
-
-class NozzleWipePreferences:
-	"A class to handle the nozzle wipe preferences."
-	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
-		#Set the default preferences.
-		self.archive = []
-		self.activateNozzleWipe = preferences.BooleanPreference().getFromValue( 'Activate Nozzle Wipe', False )
-		self.archive.append( self.activateNozzleWipe )
-		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Nozzle Wiped', '' )
-		self.archive.append( self.filenameInput )
-		self.locationArrivalX = preferences.FloatPreference().getFromValue( 'Location Arrival X (mm):', - 70.0 )
-		self.archive.append( self.locationArrivalX )
-		self.locationArrivalY = preferences.FloatPreference().getFromValue( 'Location Arrival Y (mm):', - 50.0 )
-		self.archive.append( self.locationArrivalY )
-		self.locationArrivalZ = preferences.FloatPreference().getFromValue( 'Location Arrival Z (mm):', 50.0 )
-		self.archive.append( self.locationArrivalZ )
-		self.locationDepartureX = preferences.FloatPreference().getFromValue( 'Location Departure X (mm):', - 70.0 )
-		self.archive.append( self.locationDepartureX )
-		self.locationDepartureY = preferences.FloatPreference().getFromValue( 'Location Departure Y (mm):', - 40.0 )
-		self.archive.append( self.locationDepartureY )
-		self.locationDepartureZ = preferences.FloatPreference().getFromValue( 'Location Departure Z (mm):', 50.0 )
-		self.archive.append( self.locationDepartureZ )
-		self.locationWipeX = preferences.FloatPreference().getFromValue( 'Location Wipe X (mm):', - 70.0 )
-		self.archive.append( self.locationWipeX )
-		self.locationWipeY = preferences.FloatPreference().getFromValue( 'Location Wipe Y (mm):', - 70.0 )
-		self.archive.append( self.locationWipeY )
-		self.locationWipeZ = preferences.FloatPreference().getFromValue( 'Location Wipe Z (mm):', 50.0 )
-		self.archive.append( self.locationWipeZ )
-		self.nozzleWipePeriod = preferences.IntPreference().getFromValue( 'Nozzle Wipe Period (layers):', 3 )
-		self.archive.append( self.nozzleWipePeriod )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.executeTitle = 'Nozzle Wipe'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'nozzle_wipe.csv' )
-		self.filenameHelp = 'skeinforge_tools.nozzle_wipe.html'
-		self.saveTitle = 'Save Preferences'
-		self.title = 'Nozzle Wipe Preferences'
-
-	def execute( self ):
-		"Nozzle wipe button has been clicked."
-		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
-		for filename in filenames:
-			writeOutput( filename )
 
 
 def main( hashtable = None ):

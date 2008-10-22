@@ -58,15 +58,20 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-#check loops for intersections with their own arounds
-#comb around, back
-#array_place
+#comb around
+#yet another overlap bug on level 4 of the screw holder
 #one direction for while, one direction narrow then wide, split to weave, hex fill, loop inside sparse fill or run along sparse infill, fill in one direction for a number of layers
-#distance option
-#change material
+#use slice format, carve & inset
+#bridge extrusion width
+#fillet travel and reversals
+#slice aoi xml
 #raft supports overhangs
+#change material
+#multiply
+#distance option
+#extrude loops
 #document gear script
-#email marcus about peek extruder, raft problem and gear script http://reprap.org/bin/view/Main/ExtruderImprovementsAndAlternatives
+#email marcus about peek extruder, raft offset problem and bridge extrusion width http://reprap.org/bin/view/Main/ExtruderImprovementsAndAlternatives
 #mosaic
 #transform
 #pick and place
@@ -104,13 +109,16 @@ def addAroundClosest( arounds, layerExtrusionWidth, paths, removedEndpoint ):
 	if closestDistanceSquared < 0.8 * layerExtrusionWidth * layerExtrusionWidth:
 		return
 	closestPointIndex = getWithLeastLength( closestPath, removedEndpointPoint )
+	pathJustAfter = closestPath[ closestPointIndex + 2 : ]
+	pathJustBefore = closestPath[ : closestPointIndex - 1 ]
+	otherPaths = paths[ : closestPathIndex ] + paths[ closestPathIndex + 1 : ] + [ pathJustAfter, pathJustBefore ]
+	if isIntersectingLoopsPaths( arounds, otherPaths, removedEndpointPoint, closestPath[ min( closestPointIndex, len( closestPath ) - 1 ) ] ):
+		return
 	if closestPointIndex == 0 or closestPointIndex == len( closestPath ):
 		closestPath.insert( closestPointIndex, removedEndpointPoint )
 		return
-	otherPaths = paths[ 0 : closestPathIndex ] + paths[ closestPathIndex + 1 : len( paths ) ]
 	if not isIntersectingLoopsPaths( arounds, otherPaths, removedEndpointPoint, closestPath[ closestPointIndex - 1 ] ):
-		if not isIntersectingLoopsPaths( arounds, otherPaths, removedEndpointPoint, closestPath[ closestPointIndex ] ):
-			closestPath.insert( closestPointIndex, removedEndpointPoint )
+		closestPath.insert( closestPointIndex, removedEndpointPoint )
 
 def addPath( extrusionWidth, fill, path, rotationPlaneAngle ):
 	"Add simplified path to fill."
@@ -179,6 +187,7 @@ def getExtraFillLoops( insideLoops, outsideLoop, radius ):
 	circleNodes = intercircle.getCircleNodesFromLoop( outsideLoop, greaterThanRadius )
 	for inside in insideLoops:
 		circleNodes += intercircle.getCircleNodesFromLoop( inside, greaterThanRadius )
+	#adding inside then outside avoids a weird crossing bug that I don't understand but was fixed anyways with normalize.
 	centers = intercircle.getCentersFromCircleNodes( circleNodes )
 	otherLoops = insideLoops + [ outsideLoop ]
 	for center in centers:
@@ -187,6 +196,7 @@ def getExtraFillLoops( insideLoops, outsideLoop, radius ):
 			if isPathAlwaysInsideLoop( outsideLoop, inset ):
 				if isPathAlwaysOutsideLoops( insideLoops, inset ):
 					if not euclidean.isLoopIntersectingLoops( inset, otherLoops ):
+						inset.reverse()
 						extraFillLoops.append( inset )
 	return extraFillLoops
 
@@ -324,6 +334,46 @@ def writeOutput( filename = '' ):
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to fill the file.' )
 
 
+class FillPreferences:
+	"A class to handle the fill preferences."
+	def __init__( self ):
+		"Set the default preferences, execute title & preferences filename."
+		#Set the default preferences.
+		self.diaphragmPeriod = preferences.IntPreference().getFromValue( 'Diaphragm Period (layers):', 999 )
+		self.diaphragmThickness = preferences.IntPreference().getFromValue( 'Diaphragm Thickness (layers):', 0 )
+		self.extraShellsAlternatingSolidLayer = preferences.IntPreference().getFromValue( 'Extra Shells on Alternating Solid Layer (layers):', 1 )
+		self.extraShellsBase = preferences.IntPreference().getFromValue( 'Extra Shells on Base (layers):', 0 )
+		self.extraShellsSparseLayer = preferences.IntPreference().getFromValue( 'Extra Shells on Sparse Layer (layers):', 1 )
+		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Filled', '' )
+		self.infillBeginRotation = preferences.FloatPreference().getFromValue( 'Infill Begin Rotation (degrees):', 45.0 )
+		self.infillDensity = preferences.FloatPreference().getFromValue( 'Infill Density (ratio):', 0.25 )
+		self.infillOddLayerExtraRotation = preferences.FloatPreference().getFromValue( 'Infill Odd Layer Extra Rotation (degrees):', 90.0 )
+		self.solidSurfaceThickness = preferences.IntPreference().getFromValue( 'Solid Surface Thickness (layers):', 3 )
+		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		self.archive = [
+			self.diaphragmPeriod,
+			self.diaphragmThickness,
+			self.extraShellsAlternatingSolidLayer,
+			self.extraShellsBase,
+			self.extraShellsSparseLayer,
+			self.filenameInput,
+			self.infillBeginRotation,
+			self.infillDensity,
+			self.infillOddLayerExtraRotation,
+			self.solidSurfaceThickness ]
+		self.executeTitle = 'Fill'
+		self.filenamePreferences = preferences.getPreferencesFilePath( 'fill.csv' )
+		self.filenameHelp = 'skeinforge_tools.fill.html'
+		self.saveTitle = 'Save Preferences'
+		self.title = 'Fill Preferences'
+
+	def execute( self ):
+		"Fill button has been clicked."
+		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
+		for filename in filenames:
+			writeOutput( filename )
+
+
 class FillSkein:
 	"A class to fill a skein of extrusions."
 	def __init__( self ):
@@ -344,6 +394,8 @@ class FillSkein:
 
 	def addFill( self, layerIndex ):
 		"Add fill to the slice layer."
+#		if layerIndex != 9:
+#			return
 		alreadyFilledArounds = []
 		arounds = []
 		back = - 999999999.0
@@ -393,16 +445,16 @@ class FillSkein:
 			alreadyFilledArounds.append( alreadyFilledLoop )
 			planeRotatedPerimeter = euclidean.getPathRoundZAxisByPlaneAngle( reverseRotationAroundZAngle, loop )
 			rotatedExtruderLoops.append( planeRotatedPerimeter )
+			arounds.append( planeRotatedPerimeter )
 			circleNodes = intercircle.getCircleNodesFromLoop( planeRotatedPerimeter, slightlyGreaterThanFill )
 			centers = intercircle.getCentersFromCircleNodes( circleNodes )
 			for center in centers:
 				alreadyFilledInset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, layerFillInset )
-				if euclidean.getMaximumSpan( alreadyFilledInset ) > muchGreaterThanLayerFillInset or euclidean.isWiddershins( alreadyFilledInset ):
+				if euclidean.getMaximumSpan( alreadyFilledInset ) > muchGreaterThanLayerFillInset:
 					alreadyFilledLoop.append( alreadyFilledInset )
 				around = intercircle.getSimplifiedInsetFromClockwiseLoop( center, aroundInset )
 				if euclidean.isPathInsideLoop( planeRotatedPerimeter, around ) == euclidean.isWiddershins( planeRotatedPerimeter ):
 					if euclidean.getMaximumSpan( alreadyFilledInset ) > muchGreaterThanLayerFillInset:
-						arounds.append( around )
 						for point in around:
 							back = max( back, point.y )
 							front = min( front, point.y )
@@ -437,14 +489,13 @@ class FillSkein:
 		endpoints.remove( otherEndpoint )
 		nextEndpoint = None
 		path = []
-		paths = []
+		paths = [ path ]
 		if len( endpoints ) > 1:
 			nextEndpoint = otherEndpoint.getNearestMiss( arounds, endpoints, layerExtrusionWidth, path, paths, stretchedXSegments )
 			if nextEndpoint != None:
 				if nextEndpoint.point.distance2( endpointFirst.point ) < nextEndpoint.point.distance2( otherEndpoint.point ):
 					endpointFirst = endpointFirst.otherEndpoint
 					otherEndpoint = endpointFirst.otherEndpoint
-		paths.append( path )
 		path.append( endpointFirst.point )
 		path.append( otherEndpoint.point )
 		while len( endpoints ) > 1:
@@ -619,45 +670,6 @@ class FillSkein:
 			rotatedLayer.boundaries.append( self.surroundingLoop.boundary )
 		elif firstWord == '(</surroundingLoop>':
 			self.surroundingLoop = None
-
-class FillPreferences:
-	"A class to handle the fill preferences."
-	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
-		#Set the default preferences.
-		self.diaphragmPeriod = preferences.IntPreference().getFromValue( 'Diaphragm Period (layers):', 999 )
-		self.diaphragmThickness = preferences.IntPreference().getFromValue( 'Diaphragm Thickness (layers):', 0 )
-		self.extraShellsAlternatingSolidLayer = preferences.IntPreference().getFromValue( 'Extra Shells on Alternating Solid Layer (layers):', 1 )
-		self.extraShellsBase = preferences.IntPreference().getFromValue( 'Extra Shells on Base (layers):', 0 )
-		self.extraShellsSparseLayer = preferences.IntPreference().getFromValue( 'Extra Shells on Sparse Layer (layers):', 1 )
-		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Filled', '' )
-		self.infillBeginRotation = preferences.FloatPreference().getFromValue( 'Infill Begin Rotation (degrees):', 45.0 )
-		self.infillDensity = preferences.FloatPreference().getFromValue( 'Infill Density (ratio):', 0.25 )
-		self.infillOddLayerExtraRotation = preferences.FloatPreference().getFromValue( 'Infill Odd Layer Extra Rotation (degrees):', 90.0 )
-		self.solidSurfaceThickness = preferences.IntPreference().getFromValue( 'Solid Surface Thickness (layers):', 3 )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.archive = [
-			self.diaphragmPeriod,
-			self.diaphragmThickness,
-			self.extraShellsAlternatingSolidLayer,
-			self.extraShellsBase,
-			self.extraShellsSparseLayer,
-			self.filenameInput,
-			self.infillBeginRotation,
-			self.infillDensity,
-			self.infillOddLayerExtraRotation,
-			self.solidSurfaceThickness ]
-		self.executeTitle = 'Fill'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'fill.csv' )
-		self.filenameHelp = 'skeinforge_tools.fill.html'
-		self.saveTitle = 'Save Preferences'
-		self.title = 'Fill Preferences'
-
-	def execute( self ):
-		"Fill button has been clicked."
-		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
-		for filename in filenames:
-			writeOutput( filename )
 
 
 class RotatedLayer:

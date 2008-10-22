@@ -185,6 +185,88 @@ def writeOutput( filename = '' ):
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to raft the file.' )
 
 
+class RaftPreferences:
+	"A class to handle the raft preferences."
+	def __init__( self ):
+		"Set the default preferences, execute title & preferences filename."
+		materialName = material.getSelectedMaterial()
+		#Set the default preferences.
+		self.archive = []
+		self.activateRaft = preferences.BooleanPreference().getFromValue( 'Activate Raft, Elevate Nozzle, Orbit and Set Altitude:', True )
+		self.archive.append( self.activateRaft )
+		self.baseInfillDensity = preferences.FloatPreference().getFromValue( 'Base Infill Density (ratio):', 0.5 )
+		self.archive.append( self.baseInfillDensity )
+		self.baseLayerHeightOverExtrusionHeight = preferences.FloatPreference().getFromValue( 'Base Layer Height over Extrusion Height:', 2.0 )
+		self.archive.append( self.baseLayerHeightOverExtrusionHeight )
+		self.baseLayers = preferences.IntPreference().getFromValue( 'Base Layers (integer):', 1 )
+		self.archive.append( self.baseLayers )
+		self.baseNozzleLiftOverHalfBaseExtrusionHeight = preferences.FloatPreference().getFromValue( 'Base Nozzle Lift over Half Base Extrusion Height (ratio):', 0.75 )
+		self.archive.append( self.baseNozzleLiftOverHalfBaseExtrusionHeight )
+		self.bottomAltitude = preferences.FloatPreference().getFromValue( 'Bottom Altitude:', 0.0 )
+		self.archive.append( self.bottomAltitude )
+		self.feedratePerSecond = preferences.FloatPreference().getFromValue( 'Feedrate (mm/s):', 16.0 )
+		self.archive.append( self.feedratePerSecond )
+		flowrateRadio = []
+		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Rafted', '' )
+		self.archive.append( self.filenameInput )
+		self.flowrateDoNotAddFlowratePreference = preferences.RadioLabel().getFromRadioLabel( 'Do Not Add Flowrate', 'Flowrate Choice:', flowrateRadio, False )
+		self.archive.append( self.flowrateDoNotAddFlowratePreference )
+		self.flowrateMetricPreference = preferences.Radio().getFromRadio( 'Metric', flowrateRadio, False )
+		self.archive.append( self.flowrateMetricPreference )
+		self.flowratePWMPreference = preferences.Radio().getFromRadio( 'PWM Setting', flowrateRadio, True )
+		self.archive.append( self.flowratePWMPreference )
+		self.flowratePWMSetting = preferences.FloatPreference().getFromValue( 'Flowrate PWM Setting (if PWM Setting is Chosen):', 210.0 )
+		self.archive.append( self.flowratePWMSetting )
+		self.infillOverhang = preferences.FloatPreference().getFromValue( 'Infill Overhang (ratio):', 0.1 )
+		self.archive.append( self.infillOverhang )
+		self.interfaceInfillDensity = preferences.FloatPreference().getFromValue( 'Interface Infill Density (ratio):', 0.5 )
+		self.archive.append( self.interfaceInfillDensity )
+		self.interfaceLayerHeightOverExtrusionHeight = preferences.FloatPreference().getFromValue( 'Interface Layer Height over Extrusion Height:', 1.0 )
+		self.archive.append( self.interfaceLayerHeightOverExtrusionHeight )
+		self.interfaceLayers = preferences.IntPreference().getFromValue( 'Interface Layers (integer):', 2 )
+		self.archive.append( self.interfaceLayers )
+		self.interfaceNozzleLiftOverHalfInterfaceExtrusionHeight = preferences.FloatPreference().getFromValue( 'Interface Nozzle Lift over Half Interface Extrusion Height (ratio):', 1.0 )
+		self.archive.append( self.interfaceNozzleLiftOverHalfInterfaceExtrusionHeight )
+		self.material = preferences.LabelDisplay().getFromName( 'Material: ' + materialName )
+		self.archive.append( self.material )
+		self.operatingNozzleLiftOverHalfExtrusionHeight = preferences.FloatPreference().getFromValue( 'Operating Nozzle Lift over Half Extrusion Height (ratio):', 1.0 )
+		self.archive.append( self.operatingNozzleLiftOverHalfExtrusionHeight )
+		self.orbitalFeedrateOverOperatingFeedrate = preferences.FloatPreference().getFromValue( 'Orbital Feedrate over Operating Feedrate (ratio):', 0.5 )
+		self.archive.append( self.orbitalFeedrateOverOperatingFeedrate )
+		self.raftOutsetRadiusOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Raft Outset Radius over Extrusion Width (ratio):', 15.0 )
+		self.archive.append( self.raftOutsetRadiusOverExtrusionWidth )
+		self.temperatureChangeTimeRaft = preferences.FloatPreference().getFromValue( 'Temperature Change Time of Raft (seconds):', 120.0 )
+		self.archive.append( self.temperatureChangeTimeRaft )
+		self.temperatureChangeTimeFirstLayerOutline = preferences.FloatPreference().getFromValue( 'Temperature Change Time of First Layer Outline (seconds):', 120.0 )
+		self.archive.append( self.temperatureChangeTimeFirstLayerOutline )
+		self.temperatureChangeTimeFirstLayerWithin = preferences.FloatPreference().getFromValue( 'Temperature Change Time of First Layer Within (seconds):', 120.0 )
+		self.archive.append( self.temperatureChangeTimeFirstLayerWithin )
+		self.temperatureChangeTimeNextLayers = preferences.FloatPreference().getFromValue( 'Temperature Change Time of Next Layers (seconds):', 120.0 )
+		self.archive.append( self.temperatureChangeTimeNextLayers )
+		self.temperatureRaft = preferences.FloatPreference().getFromValue( 'Temperature of Raft (Celcius):', 200.0 )
+		self.archive.append( self.temperatureRaft )
+		self.temperatureShapeFirstLayerOutline = preferences.FloatPreference().getFromValue( 'Temperature of Shape First Layer Outline (Celcius):', 220.0 )
+		self.archive.append( self.temperatureShapeFirstLayerOutline )
+		self.temperatureShapeFirstLayerWithin = preferences.FloatPreference().getFromValue( 'Temperature of Shape First Layer Within (Celcius):', 195.0 )
+		self.archive.append( self.temperatureShapeFirstLayerWithin )
+		self.temperatureShapeNextLayers = preferences.FloatPreference().getFromValue( 'Temperature of Shape Next Layers (Celcius):', 230.0 )
+		self.archive.append( self.temperatureShapeNextLayers )
+		self.turnExtruderOnEarly = preferences.BooleanPreference().getFromValue( 'Turn Extruder On Early:', False )
+		self.archive.append( self.turnExtruderOnEarly )
+		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		self.executeTitle = 'Raft'
+		self.filenamePreferences = preferences.getPreferencesFilePath( 'raft_' + materialName + '.csv' )
+		self.filenameHelp = 'skeinforge_tools.raft.html'
+		self.saveTitle = 'Save Preferences'
+		self.title = 'Raft Preferences'
+
+	def execute( self ):
+		"Raft button has been clicked."
+		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
+		for filename in filenames:
+			writeOutput( filename )
+
+
 class RaftSkein:
 	"A class to raft a skein of extrusions."
 	def __init__( self ):
@@ -462,88 +544,6 @@ class RaftSkein:
 				layerIndex += 1
 				if layerIndex > 1:
 					return
-
-
-class RaftPreferences:
-	"A class to handle the raft preferences."
-	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
-		materialName = material.getSelectedMaterial()
-		#Set the default preferences.
-		self.archive = []
-		self.activateRaft = preferences.BooleanPreference().getFromValue( 'Activate Raft, Elevate Nozzle, Orbit and Set Altitude:', True )
-		self.archive.append( self.activateRaft )
-		self.baseInfillDensity = preferences.FloatPreference().getFromValue( 'Base Infill Density (ratio):', 0.5 )
-		self.archive.append( self.baseInfillDensity )
-		self.baseLayerHeightOverExtrusionHeight = preferences.FloatPreference().getFromValue( 'Base Layer Height over Extrusion Height:', 2.0 )
-		self.archive.append( self.baseLayerHeightOverExtrusionHeight )
-		self.baseLayers = preferences.IntPreference().getFromValue( 'Base Layers (integer):', 1 )
-		self.archive.append( self.baseLayers )
-		self.baseNozzleLiftOverHalfBaseExtrusionHeight = preferences.FloatPreference().getFromValue( 'Base Nozzle Lift over Half Base Extrusion Height (ratio):', 0.75 )
-		self.archive.append( self.baseNozzleLiftOverHalfBaseExtrusionHeight )
-		self.bottomAltitude = preferences.FloatPreference().getFromValue( 'Bottom Altitude:', 0.0 )
-		self.archive.append( self.bottomAltitude )
-		self.feedratePerSecond = preferences.FloatPreference().getFromValue( 'Feedrate (mm/s):', 16.0 )
-		self.archive.append( self.feedratePerSecond )
-		flowrateRadio = []
-		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Rafted', '' )
-		self.archive.append( self.filenameInput )
-		self.flowrateDoNotAddFlowratePreference = preferences.RadioLabel().getFromRadioLabel( 'Do Not Add Flowrate', 'Flowrate Choice:', flowrateRadio, False )
-		self.archive.append( self.flowrateDoNotAddFlowratePreference )
-		self.flowrateMetricPreference = preferences.Radio().getFromRadio( 'Metric', flowrateRadio, False )
-		self.archive.append( self.flowrateMetricPreference )
-		self.flowratePWMPreference = preferences.Radio().getFromRadio( 'PWM Setting', flowrateRadio, True )
-		self.archive.append( self.flowratePWMPreference )
-		self.flowratePWMSetting = preferences.FloatPreference().getFromValue( 'Flowrate PWM Setting (if PWM Setting is Chosen):', 210.0 )
-		self.archive.append( self.flowratePWMSetting )
-		self.infillOverhang = preferences.FloatPreference().getFromValue( 'Infill Overhang (ratio):', 0.1 )
-		self.archive.append( self.infillOverhang )
-		self.interfaceInfillDensity = preferences.FloatPreference().getFromValue( 'Interface Infill Density (ratio):', 0.5 )
-		self.archive.append( self.interfaceInfillDensity )
-		self.interfaceLayerHeightOverExtrusionHeight = preferences.FloatPreference().getFromValue( 'Interface Layer Height over Extrusion Height:', 1.0 )
-		self.archive.append( self.interfaceLayerHeightOverExtrusionHeight )
-		self.interfaceLayers = preferences.IntPreference().getFromValue( 'Interface Layers (integer):', 2 )
-		self.archive.append( self.interfaceLayers )
-		self.interfaceNozzleLiftOverHalfInterfaceExtrusionHeight = preferences.FloatPreference().getFromValue( 'Interface Nozzle Lift over Half Interface Extrusion Height (ratio):', 1.0 )
-		self.archive.append( self.interfaceNozzleLiftOverHalfInterfaceExtrusionHeight )
-		self.material = preferences.LabelDisplay().getFromName( 'Material: ' + materialName )
-		self.archive.append( self.material )
-		self.operatingNozzleLiftOverHalfExtrusionHeight = preferences.FloatPreference().getFromValue( 'Operating Nozzle Lift over Half Extrusion Height (ratio):', 1.0 )
-		self.archive.append( self.operatingNozzleLiftOverHalfExtrusionHeight )
-		self.orbitalFeedrateOverOperatingFeedrate = preferences.FloatPreference().getFromValue( 'Orbital Feedrate over Operating Feedrate (ratio):', 0.5 )
-		self.archive.append( self.orbitalFeedrateOverOperatingFeedrate )
-		self.raftOutsetRadiusOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Raft Outset Radius over Extrusion Width (ratio):', 15.0 )
-		self.archive.append( self.raftOutsetRadiusOverExtrusionWidth )
-		self.temperatureChangeTimeRaft = preferences.FloatPreference().getFromValue( 'Temperature Change Time of Raft (seconds):', 120.0 )
-		self.archive.append( self.temperatureChangeTimeRaft )
-		self.temperatureChangeTimeFirstLayerOutline = preferences.FloatPreference().getFromValue( 'Temperature Change Time of First Layer Outline (seconds):', 120.0 )
-		self.archive.append( self.temperatureChangeTimeFirstLayerOutline )
-		self.temperatureChangeTimeFirstLayerWithin = preferences.FloatPreference().getFromValue( 'Temperature Change Time of First Layer Within (seconds):', 120.0 )
-		self.archive.append( self.temperatureChangeTimeFirstLayerWithin )
-		self.temperatureChangeTimeNextLayers = preferences.FloatPreference().getFromValue( 'Temperature Change Time of Next Layers (seconds):', 120.0 )
-		self.archive.append( self.temperatureChangeTimeNextLayers )
-		self.temperatureRaft = preferences.FloatPreference().getFromValue( 'Temperature of Raft (Celcius):', 200.0 )
-		self.archive.append( self.temperatureRaft )
-		self.temperatureShapeFirstLayerOutline = preferences.FloatPreference().getFromValue( 'Temperature of Shape First Layer Outline (Celcius):', 220.0 )
-		self.archive.append( self.temperatureShapeFirstLayerOutline )
-		self.temperatureShapeFirstLayerWithin = preferences.FloatPreference().getFromValue( 'Temperature of Shape First Layer Within (Celcius):', 195.0 )
-		self.archive.append( self.temperatureShapeFirstLayerWithin )
-		self.temperatureShapeNextLayers = preferences.FloatPreference().getFromValue( 'Temperature of Shape Next Layers (Celcius):', 230.0 )
-		self.archive.append( self.temperatureShapeNextLayers )
-		self.turnExtruderOnEarly = preferences.BooleanPreference().getFromValue( 'Turn Extruder On Early:', False )
-		self.archive.append( self.turnExtruderOnEarly )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.executeTitle = 'Raft'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'raft_' + materialName + '.csv' )
-		self.filenameHelp = 'skeinforge_tools.raft.html'
-		self.saveTitle = 'Save Preferences'
-		self.title = 'Raft Preferences'
-
-	def execute( self ):
-		"Raft button has been clicked."
-		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
-		for filename in filenames:
-			writeOutput( filename )
 
 
 def main():

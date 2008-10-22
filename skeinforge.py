@@ -120,7 +120,10 @@ http://reprap.svn.sourceforge.net/viewvc/reprap/trunk/users/hoeken/arduino/GCode
 For jogging, the Metalab group wrote their own exerciser, also in Processing:
 http://reprap.svn.sourceforge.net/viewvc/reprap/trunk/users/metalab/processing/GCode_Exerciser/
 
-The Metalab group adventures are described at:
+There Zach's replicatorG to send parse gcdoe and send it to the machine, at:
+http://replicat.org/
+
+The Metalab group has descriptions of skeinforge in action and their adventures are described at:
 http://reprap.soup.io/
 
 
@@ -171,7 +174,9 @@ I may be slow, but I get there in the end.
 
 Troubleshooting
 
-You can ask for skeinforge help by posting in the "How to Print Gcode from Host" thread at:
+If there's a bug, try downloading the very latest version because sometimes I update without posting.
+
+Then you can ask for skeinforge help by posting in the "How to Print Gcode from Host" thread at:
 http://forums.reprap.org/read.php?12,10772
 
 or send a private message through the forum software by going to my page at:
@@ -227,10 +232,11 @@ Kyle Corbitt <http://forums.reprap.org/profile.php?12,90>
 Marius Kintel <http://reprap.soup.io/>
 Nophead <http://www.blogger.com/profile/12801535866788103677>
 Reece.Arnott <http://forums.reprap.org/profile.php?12,152>
+Wade <http://forums.reprap.org/profile.php?12,489>
 
 Organizations:
 Art of Illusion <http://www.artofillusion.org/>"""
-__date__ = "$Date: 2008/21/08 $"
+__date__ = "$Date: 2008/21/11 $"
 __license__ = "GPL 3.0"
 
 

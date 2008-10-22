@@ -5,7 +5,18 @@ The default 'Activate Fillet' checkbox is on.  When it is on, the functions desc
 will not be called.
 
 Fillets rounds the corners slightly in a variety of ways.  This is to reduce corner blobbing and sudden extruder acceleration.
-The default radio button choice is 'Bevel'.  To run fillet, in a shell in the folder which fillet is in type:
+The 'Arc Point' method fillets the corners with an arc using the gcode point form.  The 'Arc Radius' method fillets with an arc
+using the gcode radius form.  The 'Arc Segment' method fillets corners with an arc composed of several segments.  The
+'Bevel' method bevels each corner.  The default radio button choice is 'Bevel'.
+
+The 'Corner Feedrate over Operating Feedrate' is the ratio of the feedrate in corners over the operating feedrate.  With a high
+value the extruder will move quickly in corners, accelerating quickly and leaving a thin extrusion.  With a low value, the
+extruder will move slowly in corners, accelerating gently and leaving a thick extrusion.  The default value is 1.0.  The 'Fillet
+Radius over Extrusion Width' ratio determines how much wide the fillet will be, the default is 0.35.  The 'Reversal Slowdown
+over Extrusion Width' ratio determines how far before a path reversal the extruder will slow down.  Some tools, like nozzle
+wipe, double back the path of the extruder and this option will add a slowdown point in that path so there won't be a sudden
+jerk at the end of the path.  The default value is 0.5 and if the value is less than 0.1 a slowdown will not be added.  To run
+fillet, in a shell in the folder which fillet is in type:
 > python fillet.py
 
 The following examples fillet the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder
@@ -280,46 +291,65 @@ class BevelSkein:
 		self.decimalPlacesCarried = 3
 		self.extruderActive = False
 		self.feedrateMinute = 960.0
-		self.halfExtrusionWidth = 0.2
-		self.layerHalfExtrusionWidth = self.halfExtrusionWidth
+		self.filletRadius = 0.2
+		self.layerFilletRadius = self.filletRadius
 		self.lineIndex = 0
 		self.lines = None
-		self.oldActiveLocation = None
 		self.oldLocation = None
 		self.output = cStringIO.StringIO()
 		self.shouldAddLine = True
 
-	def addFeedrateEnd( self ):
+	def addFeedrateEnd( self, feedrate ):
 		"Add the gcode feedrate and a newline to the output."
-		self.addLine(  ' F' + euclidean.getRoundedToThreePlaces( self.feedrateMinute ) )
+		self.addLine(  ' F' + self.getRounded( feedrate ) )
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
 		self.output.write( line + '\n' )
 
-	def addLinearMovePoint( self, point ):
+	def addLinearMovePoint( self, feedrate, point ):
 		"Add a gcode linear move, feedrate and newline to the output."
 		self.output.write( 'G1' )
 		self.addPoint( point )
-		self.addFeedrateEnd()
+		self.addFeedrateEnd( feedrate )
 
 	def addPoint( self, point ):
 		"Add a gcode point to the output."
 		self.output.write( " X%s Y%s Z%s" % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ) ) )
 
-	def getNextActive( self ):
-		"Get the next linear move where the extruder is still active.  Return none is none is found."
+	def getExtruderOffReversalPoint( self, afterSegment, beforeSegment, location ):
+		"If the extruder is off and the path is reversing, add intermediate slow points."
+		if self.reversalSlowdownDistance < 0.1:
+			return None
+		reversalBufferSlowdownDistance = self.reversalSlowdownDistance * 1.2
+		if afterSegment.length() < reversalBufferSlowdownDistance:
+			return None
+		if beforeSegment.length() < reversalBufferSlowdownDistance:
+			return None
+		afterSegmentNormalized = afterSegment.times( 1.0 / afterSegment.length() )
+		beforeSegmentNormalized = beforeSegment.times( 1.0 / beforeSegment.length() )
+		planeDot = euclidean.getPlaneDot( beforeSegmentNormalized, afterSegmentNormalized )
+		if self.extruderActive:
+			return None
+		if planeDot < 0.95:
+			return None
+		slowdownFeedrate = self.feedrateMinute * 0.333333333
+		self.shouldAddLine = False
+		beforePoint = euclidean.getPointPlusSegmentWithLength( self.reversalSlowdownDistance, location, beforeSegment )
+		self.addLinearMovePoint( self.feedrateMinute, beforePoint )
+		self.addLinearMovePoint( slowdownFeedrate, location )
+		afterPoint = euclidean.getPointPlusSegmentWithLength( self.reversalSlowdownDistance, location, afterSegment )
+		self.addLinearMovePoint( slowdownFeedrate, afterPoint )
+		return afterPoint
+
+	def getNextLocation( self ):
+		"Get the next linear move.  Return none is none is found."
 		for afterIndex in range( self.lineIndex + 1, len( self.lines ) ):
 			line = self.lines[ afterIndex ]
 			splitLine = line.split( ' ' )
-			firstWord = "";
-			if len( splitLine ) > 0:
-				firstWord = splitLine[ 0 ]
-			if firstWord == 'G1':
-				nextActive = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-				return nextActive
-			if firstWord == 'M103':
-				return None
+			if gcodec.getFirstWord( splitLine ) == 'G1':
+				nextLocation = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
+				return nextLocation
 		return None
 
 	def getRounded( self, number ):
@@ -330,17 +360,15 @@ class BevelSkein:
 		"Bevel a linear move."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
-		if not self.extruderActive:
-			return
-		if self.oldActiveLocation != None:
-			nextActive = self.getNextActive()
-			if nextActive != None:
-				self.shouldAddLine = False
-				location = self.splitPointGetAfter( location, nextActive, self.oldActiveLocation )
-		self.oldActiveLocation = location
+		if self.oldLocation != None:
+			nextLocation = self.getNextLocation()
+			if nextLocation != None:
+				location = self.splitPointGetAfter( location, nextLocation )
+		self.oldLocation = location
 
 	def parseGcode( self, filletPreferences, gcodeText ):
 		"Parse gcode text and store the bevel gcode."
+		self.cornerFeedrateOverOperatingFeedrate = filletPreferences.cornerFeedrateOverOperatingFeedrate.value
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.parseInitialization( filletPreferences )
 		for self.lineIndex in range( self.lineIndex, len( self.lines ) ):
@@ -352,11 +380,11 @@ class BevelSkein:
 		for self.lineIndex in range( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
-			firstWord = ''
-			if len( splitLine ) > 0:
-				firstWord = splitLine[ 0 ]
+			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == '(<extrusionWidth>':
-				self.halfExtrusionWidth = 0.5 * float( splitLine[ 1 ] ) * filletPreferences.filletRadiusOverHalfExtrusionWidth.value
+				extrusionWidth = float( splitLine[ 1 ] )
+				self.reversalSlowdownDistance = extrusionWidth * filletPreferences.reversalSlowdownDistanceOverExtrusionWidth.value
+				self.filletRadius = extrusionWidth * filletPreferences.filletRadiusOverExtrusionWidth.value
 			elif firstWord == '(<bridgeExtrusionWidthOverSolid>':
 				self.bridgeExtrusionWidthOverSolid = float( splitLine[ 1 ] )
 			elif firstWord == '(<decimalPlacesCarried>':
@@ -379,39 +407,36 @@ class BevelSkein:
 			self.extruderActive = True
 		if firstWord == 'M103':
 			self.extruderActive = False
-			self.oldActiveLocation = None
 		elif firstWord == '(<layerStart>':
-			self.layerHalfExtrusionWidth = self.halfExtrusionWidth
+			self.layerFilletRadius = self.filletRadius
 		elif firstWord == '(<bridgeLayer>':
-			self.layerHalfExtrusionWidth = self.halfExtrusionWidth * self.bridgeExtrusionWidthOverSolid
+			self.layerFilletRadius = self.filletRadius * self.bridgeExtrusionWidthOverSolid
 		if self.shouldAddLine:
 			self.addLine( line )
 
-	def splitPointGetAfter( self, location, nextActive, oldActiveLocation ):
+	def splitPointGetAfter( self, location, nextLocation ):
 		"Bevel a point and return the end of the bevel."
-		bevelLength = 0.5 * self.layerHalfExtrusionWidth
-		beforeSegment = oldActiveLocation.minus( location )
-		beforeSegmentLength = 0.5 * beforeSegment.length()
-		if beforeSegmentLength == 0.0:
-			self.shouldAddLine = True
+		bevelLength = 0.5 * self.layerFilletRadius
+		beforeSegment = self.oldLocation.minus( location )
+		halfBeforeSegmentLength = 0.5 * beforeSegment.length()
+		if halfBeforeSegmentLength <= 0.0:
 			return location
-		afterSegment = nextActive.minus( location )
+		afterSegment = nextLocation.minus( location )
 		afterSegmentExtension = 0.333 * afterSegment.length()
-		if afterSegmentExtension == 0.0:
-			self.shouldAddLine = True
+		if afterSegmentExtension <= 0.0:
 			return location
+		extruderOffReversalPoint = self.getExtruderOffReversalPoint( afterSegment, beforeSegment, location )
+		if extruderOffReversalPoint != None:
+			return extruderOffReversalPoint
 		bevelLength = min( afterSegmentExtension, bevelLength )
-		if beforeSegmentLength < bevelLength:
-			bevelLength = beforeSegmentLength
+		self.shouldAddLine = False
+		if halfBeforeSegmentLength < bevelLength:
+			bevelLength = halfBeforeSegmentLength
 		else:
 			beforePoint = euclidean.getPointPlusSegmentWithLength( bevelLength, location, beforeSegment )
-			self.addLinearMovePoint( beforePoint )
-#		print( "location, nextActive.." )
-#		print( location )
-#		print( nextActive )
-#		print( oldActiveLocation )
+			self.addLinearMovePoint( self.feedrateMinute * self.cornerFeedrateOverOperatingFeedrate, beforePoint )
 		afterPoint = euclidean.getPointPlusSegmentWithLength( bevelLength, location, afterSegment )
-		self.addLinearMovePoint( afterPoint )
+		self.addLinearMovePoint( self.feedrateMinute, afterPoint )
 		return afterPoint
 
 
@@ -426,29 +451,29 @@ class ArcSegmentSkein( BevelSkein ):
 		for step in range( 1, steps ):
 			beforeCenterSegment = euclidean.getRoundZAxisByPlaneAngle( stepPlaneAngle, beforeCenterSegment )
 			arcPoint = center.plus( beforeCenterSegment )
-			self.addLinearMovePoint( arcPoint )
-		self.addLinearMovePoint( afterPoint )
+			self.addLinearMovePoint( self.feedrateMinute * self.cornerFeedrateOverOperatingFeedrate, arcPoint )
+		self.addLinearMovePoint( self.feedrateMinute * self.cornerFeedrateOverOperatingFeedrate, afterPoint )
 
-	def splitPointGetAfter( self, location, nextActive, oldActiveLocation ):
+	def splitPointGetAfter( self, location, nextLocation ):
 		"Fillet a point into arc segments and return the end of the last segment."
-		afterSegment = nextActive.minus( location )
+		afterSegment = nextLocation.minus( location )
 		afterSegmentLength = afterSegment.length()
 		afterSegmentExtension = 0.5 * afterSegmentLength
 		if afterSegmentExtension == 0.0:
-			self.shouldAddLine = True
 			return location
-		beforeSegment = oldActiveLocation.minus( location )
+		beforeSegment = self.oldLocation.minus( location )
 		beforeSegmentLength = beforeSegment.length()
 		if beforeSegmentLength == 0.0:
-			self.shouldAddLine = True
 			return location
-		radius = self.layerHalfExtrusionWidth
+		radius = self.layerFilletRadius
 		afterSegmentNormalized = afterSegment.times( 1.0 / afterSegmentLength )
 		beforeSegmentNormalized = beforeSegment.times( 1.0 / beforeSegmentLength )
 		betweenCenterDotNormalized = afterSegmentNormalized.plus( beforeSegmentNormalized )
-		if betweenCenterDotNormalized.length() < 0.01 * self.layerHalfExtrusionWidth:
-			self.shouldAddLine = True
+		if betweenCenterDotNormalized.length() < 0.01 * self.layerFilletRadius:
 			return location
+		extruderOffReversalPoint = self.getExtruderOffReversalPoint( afterSegment, beforeSegment, location )
+		if extruderOffReversalPoint != None:
+			return extruderOffReversalPoint
 		betweenCenterDotNormalized.normalize()
 		beforeSegmentNormalizedWiddershins = euclidean.getRotatedWiddershinsQuarterAroundZAxis( beforeSegmentNormalized )
 		betweenAfterPlaneDot = abs( euclidean.getPlaneDot( betweenCenterDotNormalized, beforeSegmentNormalizedWiddershins ) )
@@ -457,12 +482,13 @@ class ArcSegmentSkein( BevelSkein ):
 		radiusOverBevelLength = radius / bevelLength
 		bevelLength = min( bevelLength, radius )
 		bevelLength = min( afterSegmentExtension, bevelLength )
-		beforePoint = oldActiveLocation
+		beforePoint = oldLocation
 		if beforeSegmentLength < bevelLength:
 			bevelLength = beforeSegmentLength
 		else:
 			beforePoint = euclidean.getPointPlusSegmentWithLength( bevelLength, location, beforeSegment )
-			self.addLinearMovePoint( beforePoint )
+			self.addLinearMovePoint( self.feedrateMinute, beforePoint )
+		self.shouldAddLine = False
 		afterPoint = euclidean.getPointPlusSegmentWithLength( bevelLength, location, afterSegment )
 		radius = bevelLength * radiusOverBevelLength
 		centerDotDistance = radius / betweenAfterPlaneDot
@@ -486,7 +512,7 @@ class ArcPointSkein( ArcSegmentSkein ):
 			self.output.write( 'G2' )
 		self.addPoint( afterPointMinusBefore )
 		self.addRelativeCenter( centerMinusBefore )
-		self.addFeedrateEnd()
+		self.addFeedrateEnd( self.feedrateMinute * self.cornerFeedrateOverOperatingFeedrate )
 
 	def addRelativeCenter( self, centerMinusBefore ):
 		"Add the relative center to a line of the arc point filleted skein."
@@ -519,10 +545,14 @@ class FilletPreferences:
 		self.archive.append( self.arcSegment )
 		self.bevel = preferences.Radio().getFromRadio( 'Bevel', filletRadio, True )
 		self.archive.append( self.bevel )
-		self.filletRadiusOverHalfExtrusionWidth = preferences.FloatPreference().getFromValue( 'Fillet Radius Over Half Extrusion Width (ratio):', 0.7 )
-		self.archive.append( self.filletRadiusOverHalfExtrusionWidth )
+		self.cornerFeedrateOverOperatingFeedrate = preferences.FloatPreference().getFromValue( 'Corner Feedrate over Operating Feedrate (ratio):', 1.0 )
+		self.archive.append( self.cornerFeedrateOverOperatingFeedrate )
+		self.filletRadiusOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Fillet Radius over Extrusion Width (ratio):', 0.35 )
+		self.archive.append( self.filletRadiusOverExtrusionWidth )
 		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Filleted', '' )
 		self.archive.append( self.filenameInput )
+		self.reversalSlowdownDistanceOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Reversal Slowdown Distance over Extrusion Width (ratio):', 0.5 )
+		self.archive.append( self.reversalSlowdownDistanceOverExtrusionWidth )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.executeTitle = 'Fillet'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'fillet.csv' )
