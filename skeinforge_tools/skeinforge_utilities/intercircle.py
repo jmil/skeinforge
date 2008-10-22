@@ -89,7 +89,7 @@ def addPointsFromSegment( points, radius, pointBegin, pointEnd ):
 	thresholdRadius = radius * 0.9 # a higher number would be faster but would leave bigger dangling loops.
 	thresholdDiameter = thresholdRadius * 2.0
 	segment = pointEnd.minus( pointBegin )
-	segmentLength = segment.length()
+	segmentLength = segment.lengthXYPlane()
 	extraCircles = int( math.floor( segmentLength / thresholdDiameter ) )
 	lengthIncrement = segmentLength / ( float( extraCircles ) + 1.0 )
 	if segmentLength == 0.0:
@@ -178,19 +178,14 @@ def getCircleNodesFromLoop( loop, radius ):
 	for pointIndex in range( len( loop ) ):
 		point = loop[ pointIndex ]
 		pointSecond = loop[ ( pointIndex + 1 ) % len( loop ) ]
-		if point == pointSecond:
-			print( 'This should never happen, point equals pointSecond in intercircle.' )
-			print( point )
-			print( pointSecond )
-			print( loop )
-		else:
-			points.append( point )
-			addPointsFromSegment( points, radius, point, pointSecond )
+		points.append( point )
+		addPointsFromSegment( points, radius, point, pointSecond )
 	return getCircleNodesFromPath( points, radius )
 
 def getCircleNodesFromPath( path, radius ):
 	"Get the circle nodes from a path."
 	circleNodes = []
+	path = euclidean.getAwayPath( path, 0.000001 * radius )
 	for point in path:
 		circleNodes.append( CircleNode().getFromCircleRadius( point, len( circleNodes ), radius ) )
 	return circleNodes
@@ -231,7 +226,7 @@ def getIntersectionAtInset( ahead, behind, inset ):
 	aheadMinusBehind = ahead.minus( behind )
 	aheadMinusBehind.scale( 0.5 )
 	rotatedClockwiseQuarter = euclidean.getRotatedClockwiseQuarterAroundZAxis( aheadMinusBehind )
-	rotatedClockwiseQuarter.scale( inset / rotatedClockwiseQuarter.length() )
+	rotatedClockwiseQuarter.scale( inset / rotatedClockwiseQuarter.lengthXYPlane() )
 	aheadMinusBehind.add( rotatedClockwiseQuarter )
 	aheadMinusBehind.add( behind )
 	return aheadMinusBehind
@@ -407,6 +402,11 @@ class CircleIntersection:
 				if widdershinsDot < smallestWiddershinsDot:
 					smallestWiddershinsDot = widdershinsDot
 					circleIntersectionAhead = circleIntersection
+		if circleIntersectionAhead == None:
+			print( 'this should never happen, circleIntersectionAhead in intercircle is None' )
+			print( self.circleNodeAhead.circle )
+			for circleIntersection in circleIntersections:
+				print( circleIntersection.circleNodeAhead.circle )
 		return circleIntersectionAhead
 
 	def getFromCircleNodes( self, circleNodeAhead, index, circleNodeBehind ):
@@ -418,9 +418,12 @@ class CircleIntersection:
 	def getPositionRelativeToBehind( self ):
 		aheadMinusBehind = self.circleNodeAhead.circle.minus( self.circleNodeBehind.circle )
 		aheadMinusBehind.scale( 0.5 )
-		halfChordWidth = math.sqrt( self.circleNodeAhead.radiusSquared - aheadMinusBehind.length2() )
+		halfChordWidth = math.sqrt( self.circleNodeAhead.radiusSquared - aheadMinusBehind.length2XYPlane() )
 		rotatedClockwiseQuarter = euclidean.getRotatedClockwiseQuarterAroundZAxis( aheadMinusBehind )
-		rotatedClockwiseQuarter.scale( halfChordWidth / rotatedClockwiseQuarter.length() )
+		if rotatedClockwiseQuarter.lengthXYPlane() == 0:
+			print( self.circleNodeAhead.circle )
+			print( self.circleNodeBehind.circle )
+		rotatedClockwiseQuarter.scale( halfChordWidth / rotatedClockwiseQuarter.lengthXYPlane() )
 		aheadMinusBehind.add( rotatedClockwiseQuarter )
 		return aheadMinusBehind
 
@@ -428,7 +431,7 @@ class CircleIntersection:
 		absolutePosition = self.getAbsolutePosition()
 		radiusSquared = self.circleNodeAhead.radiusSquared
 		for circleNode in circleNodes:
-			if circleNode.circle.distance2( absolutePosition ) < radiusSquared:
+			if circleNode.circle.distance2XYPlane( absolutePosition ) < radiusSquared:
 				if circleNode != self.circleNodeAhead and circleNode != self.circleNodeBehind:
 					return True
 		return False
@@ -457,4 +460,4 @@ class CircleNode:
 		return self
 
 	def isWithin( self, circle ):
-		return self.circle.distance2( circle ) < self.diameterSquared
+		return self.circle.distance2XYPlane( circle ) < self.diameterSquared

@@ -20,8 +20,11 @@ different&nbsp;place&nbsp;on&nbsp;each&nbsp;layer&nbsp;to&nbsp;prevent&nbsp;the&
 ratio&nbsp;of&nbsp;the&nbsp;amount&nbsp;before&nbsp;the&nbsp;start&nbsp;of&nbsp;the&nbsp;outer&nbsp;perimeter&nbsp;the&nbsp;extruder&nbsp;will&nbsp;be&nbsp;moved&nbsp;to.&nbsp;&nbsp;A&nbsp;high&nbsp;value&nbsp;means&nbsp;the&nbsp;extruder&nbsp;will<br>
 move&nbsp;way&nbsp;before&nbsp;the&nbsp;beginning&nbsp;of&nbsp;the&nbsp;perimeter&nbsp;and&nbsp;a&nbsp;low&nbsp;value&nbsp;means&nbsp;the&nbsp;extruder&nbsp;will&nbsp;be&nbsp;moved&nbsp;just&nbsp;before&nbsp;the&nbsp;beginning.<br>
 The&nbsp;"Jitter&nbsp;Over&nbsp;Extrusion&nbsp;Width&nbsp;(ratio)"&nbsp;is&nbsp;the&nbsp;ratio&nbsp;of&nbsp;the&nbsp;amount&nbsp;the&nbsp;loop&nbsp;ends&nbsp;will&nbsp;be&nbsp;jittered.&nbsp;&nbsp;A&nbsp;high&nbsp;value&nbsp;means&nbsp;the&nbsp;loops<br>
-will&nbsp;start&nbsp;all&nbsp;over&nbsp;the&nbsp;place&nbsp;and&nbsp;a&nbsp;low&nbsp;value&nbsp;means&nbsp;loops&nbsp;will&nbsp;start&nbsp;at&nbsp;roughly&nbsp;the&nbsp;same&nbsp;place&nbsp;on&nbsp;each&nbsp;layer.&nbsp;&nbsp;To&nbsp;run&nbsp;comb,&nbsp;in&nbsp;a<br>
-shell&nbsp;type:<br>
+will&nbsp;start&nbsp;all&nbsp;over&nbsp;the&nbsp;place&nbsp;and&nbsp;a&nbsp;low&nbsp;value&nbsp;means&nbsp;loops&nbsp;will&nbsp;start&nbsp;at&nbsp;roughly&nbsp;the&nbsp;same&nbsp;place&nbsp;on&nbsp;each&nbsp;layer.&nbsp;&nbsp;The&nbsp;'Minimum<br>
+Perimeter&nbsp;Departure&nbsp;Distance&nbsp;over&nbsp;Extrusion&nbsp;Width'&nbsp;is&nbsp;the&nbsp;ratio&nbsp;of&nbsp;the&nbsp;minimum&nbsp;distance&nbsp;that&nbsp;the&nbsp;extruder&nbsp;will&nbsp;travel&nbsp;and&nbsp;loop<br>
+before&nbsp;leaving&nbsp;an&nbsp;outer&nbsp;perimeter.&nbsp;&nbsp;A&nbsp;high&nbsp;value&nbsp;means&nbsp;the&nbsp;extruder&nbsp;will&nbsp;loop&nbsp;many&nbsp;times&nbsp;before&nbsp;leaving,&nbsp;so&nbsp;that&nbsp;the&nbsp;ooze&nbsp;will<br>
+finish&nbsp;within&nbsp;the&nbsp;perimeter,&nbsp;a&nbsp;low&nbsp;value&nbsp;means&nbsp;the&nbsp;extruder&nbsp;will&nbsp;not&nbsp;loop&nbsp;and&nbsp;a&nbsp;stringer&nbsp;might&nbsp;be&nbsp;created&nbsp;from&nbsp;the&nbsp;outer<br>
+perimeter.&nbsp;&nbsp;To&nbsp;run&nbsp;comb,&nbsp;in&nbsp;a&nbsp;shell&nbsp;type:<br>
 &gt;&nbsp;python&nbsp;comb.py<br>
 &nbsp;<br>
 The&nbsp;following&nbsp;examples&nbsp;comb&nbsp;the&nbsp;files&nbsp;Hollow&nbsp;Square.gcode&nbsp;&amp;&nbsp;Hollow&nbsp;Square.gts.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder<br>
@@ -135,9 +138,11 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 
 <dl><dt><a name="CombSkein-addLine"><strong>addLine</strong></a>(self, line)</dt><dd><tt>Add&nbsp;a&nbsp;line&nbsp;of&nbsp;text&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="CombSkein-addPathBeforeEnd"><strong>addPathBeforeEnd</strong></a>(self, loop)</dt><dd><tt>Add&nbsp;the&nbsp;path&nbsp;before&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;loop.</tt></dd></dl>
+<dl><dt><a name="CombSkein-addLoopsBeforeLeavingPerimeter"><strong>addLoopsBeforeLeavingPerimeter</strong></a>(self, aroundBetweenPath, insetPerimeter, perimeterCrossing)</dt><dd><tt>Add&nbsp;loops&nbsp;before&nbsp;leaving&nbsp;the&nbsp;first&nbsp;outer&nbsp;perimeter,&nbsp;in&nbsp;order&nbsp;to&nbsp;leave&nbsp;most&nbsp;of&nbsp;the&nbsp;ooze&nbsp;in&nbsp;the&nbsp;infill.</tt></dd></dl>
 
-<dl><dt><a name="CombSkein-addPathBetween"><strong>addPathBetween</strong></a>(self, betweenFirst, betweenSecond, loopFirst)</dt><dd><tt>Add&nbsp;a&nbsp;path&nbsp;between&nbsp;the&nbsp;perimeter&nbsp;and&nbsp;the&nbsp;fill.</tt></dd></dl>
+<dl><dt><a name="CombSkein-addPathBeforeEnd"><strong>addPathBeforeEnd</strong></a>(self, aroundBetweenPath, loop)</dt><dd><tt>Add&nbsp;the&nbsp;path&nbsp;before&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;loop.</tt></dd></dl>
+
+<dl><dt><a name="CombSkein-addPathBetween"><strong>addPathBetween</strong></a>(self, aroundBetweenPath, betweenFirst, betweenSecond, loopFirst)</dt><dd><tt>Add&nbsp;a&nbsp;path&nbsp;between&nbsp;the&nbsp;perimeter&nbsp;and&nbsp;the&nbsp;fill.</tt></dd></dl>
 
 <dl><dt><a name="CombSkein-addTailoredLoopPath"><strong>addTailoredLoopPath</strong></a>(self)</dt><dd><tt>Add&nbsp;a&nbsp;clipped&nbsp;and&nbsp;jittered&nbsp;loop&nbsp;path.</tt></dd></dl>
 
@@ -153,11 +158,9 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 
 <dl><dt><a name="CombSkein-initializeMoreParameters"><strong>initializeMoreParameters</strong></a>(self)</dt><dd><tt>Add&nbsp;a&nbsp;movement&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="CombSkein-insertPathsAroundBetween"><strong>insertPathsAroundBetween</strong></a>(self, location)</dt><dd><tt>Insert&nbsp;paths&nbsp;around&nbsp;and&nbsp;between&nbsp;the&nbsp;perimeter&nbsp;and&nbsp;the&nbsp;fill.</tt></dd></dl>
+<dl><dt><a name="CombSkein-insertPathsAroundBetween"><strong>insertPathsAroundBetween</strong></a>(self, aroundBetweenPath, location)</dt><dd><tt>Insert&nbsp;paths&nbsp;around&nbsp;and&nbsp;between&nbsp;the&nbsp;perimeter&nbsp;and&nbsp;the&nbsp;fill.</tt></dd></dl>
 
-<dl><dt><a name="CombSkein-insertPathsBetween"><strong>insertPathsBetween</strong></a>(self, nextBeginning, pathEnd)</dt><dd><tt>Insert&nbsp;paths&nbsp;between&nbsp;the&nbsp;perimeter&nbsp;and&nbsp;the&nbsp;fill.</tt></dd></dl>
-
-<dl><dt><a name="CombSkein-isClose"><strong>isClose</strong></a>(self, locationFirst, locationSecond)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;first&nbsp;location&nbsp;is&nbsp;close&nbsp;to&nbsp;the&nbsp;second&nbsp;location.</tt></dd></dl>
+<dl><dt><a name="CombSkein-insertPathsBetween"><strong>insertPathsBetween</strong></a>(self, aroundBetweenPath, nextBeginning, pathEnd)</dt><dd><tt>Insert&nbsp;paths&nbsp;between&nbsp;the&nbsp;perimeter&nbsp;and&nbsp;the&nbsp;fill.</tt></dd></dl>
 
 <dl><dt><a name="CombSkein-isNextExtruderOn"><strong>isNextExtruderOn</strong></a>(self)</dt><dd><tt>Determine&nbsp;if&nbsp;there&nbsp;is&nbsp;an&nbsp;extruder&nbsp;on&nbsp;command&nbsp;before&nbsp;a&nbsp;move&nbsp;command.</tt></dd></dl>
 

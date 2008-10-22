@@ -4,7 +4,7 @@ Fillet is a script to fillet or bevel the corners on a gcode file.
 The default 'Activate Fillet' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions
 will not be called.
 
-Fillets rounds the corners slightly in a variety of ways.  This is to reduce corner blobbing and sudden extruder acceleration.
+Fillet rounds the corners slightly in a variety of ways.  This is to reduce corner blobbing and sudden extruder acceleration.
 The 'Arc Point' method fillets the corners with an arc using the gcode point form.  The 'Arc Radius' method fillets with an arc
 using the gcode radius form.  The 'Arc Segment' method fillets corners with an arc composed of several segments.  The
 'Bevel' method bevels each corner.  The default radio button choice is 'Bevel'.

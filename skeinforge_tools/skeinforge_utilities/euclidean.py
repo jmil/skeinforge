@@ -108,7 +108,7 @@ def getAwayPath( path, radius ):
 	away = []
 	overlapDistanceSquared = 0.0001 * radius * radius
 	for pointIndex in range( len( path ) ):
-		if not isClose( overlapDistanceSquared, path, pointIndex ):
+		if not isCloseXYPlane( overlapDistanceSquared, path, pointIndex ):
 			point = path[ pointIndex ]
 			away.append( point )
 	return away
@@ -381,19 +381,19 @@ def getPathRoundZAxisByPlaneAngle( planeAngle, path ):
 		planeArray.append( getRoundZAxisByPlaneAngle( planeAngle, point ) )
 	return planeArray
 
-def getPathWithoutCloseSequentials( path, radius ):
-	"Get a path without points in a row which are too close too each other."
-	pathWithoutCloseSequentials = []
-	closeDistanceSquared = 0.0001 * radius * radius
-	lastPoint = None
-	for point in path:
-		if lastPoint == None:
-			pathWithoutCloseSequentials.append( point )
-		elif lastPoint.distance2( point ) > closeDistanceSquared:
-			pathWithoutCloseSequentials.append( point )
-		lastPoint = point
-	return pathWithoutCloseSequentials
-
+#def getPathWithoutCloseSequentials( path, radius ):
+#	"Get a path without points in a row which are too close too each other."
+#	pathWithoutCloseSequentials = []
+#	closeDistanceSquared = 0.0001 * radius * radius
+#	lastPoint = None
+#	for point in path:
+#		if lastPoint == None:
+#			pathWithoutCloseSequentials.append( point )
+#		elif lastPoint.distance2( point ) > closeDistanceSquared:
+#			pathWithoutCloseSequentials.append( point )
+#		lastPoint = point
+#	return pathWithoutCloseSequentials
+#
 def getPlaneDot( vec3First, vec3Second ):
 	"Get the dot product of the x and y components of a pair of Vec3s."
 	return vec3First.x * vec3Second.x + vec3First.y * vec3Second.y
@@ -614,11 +614,11 @@ def getZComponentCrossProduct( vec3First, vec3Second ):
 	"Get z component cross product of a pair of Vec3s."
 	return vec3First.x * vec3Second.y - vec3First.y * vec3Second.x
 
-def isClose( overlapDistanceSquared, loop, pointIndex ):
-	"Determine if the the point close to another point on the loop."
+def isCloseXYPlane( overlapDistanceSquared, loop, pointIndex ):
+	"Determine if the point is close to another point on the loop in the xy plane."
 	point = loop[ pointIndex ]
 	for overlapPoint in loop[ : pointIndex ]:
-		if overlapPoint.distance2( point ) < overlapDistanceSquared:
+		if overlapPoint.distance2XYPlane( point ) < overlapDistanceSquared:
 			return True
 	return False
 

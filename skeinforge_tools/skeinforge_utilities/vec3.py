@@ -72,21 +72,25 @@ class Vec3:
         self.z += another.z
 
     def distance( self, another ):
-        """Get the Euclidean distance between this vector and another one.
-
-        Keyword arguments:
-        another -- Vec3 whose distance to the original will be calculated"""
+        """Get the Euclidean distance between this vector and another one."""
         return math.sqrt( self.distance2( another ) )
 
-    def distance2( self, another ):
-        """Get the square of the Euclidean distance between this vector and another one.
+    def distanceXYPlane( self, another ):
+        """Get the Euclidean distance between this vector and another one in the xy plane."""
+        return math.sqrt( self.distance2XYPlane( another ) )
 
-        Keyword arguments:
-        another -- Vec3 whose squared distance to the original will be calculated"""
+    def distance2( self, another ):
+        """Get the square of the Euclidean distance between this vector and another one."""
         separationX = self.x - another.x
         separationY = self.y - another.y
         separationZ = self.z - another.z
         return separationX * separationX + separationY * separationY + separationZ * separationZ
+
+    def distance2XYPlane( self, another ):
+        """Get the square of the Euclidean distance between this vector and another one in the xy plane."""
+        separationX = self.x - another.x
+        separationY = self.y - another.y
+        return separationX * separationX + separationY * separationY
 
     def dot( self, another ):
         "Calculate the dot product of this vector with another one."
@@ -128,9 +132,17 @@ class Vec3:
         """Get the length of the Vec3."""
         return math.sqrt( self.length2() )
 
+    def lengthXYPlane( self ):
+        """Get the length of the Vec3."""
+        return math.sqrt( self.length2XYPlane() )
+
     def length2( self ):
         """Get the square of the length of the Vec3."""
         return self.x * self.x + self.y * self.y + self.z * self.z
+
+    def length2XYPlane( self ):
+        """Get the square of the length of the Vec3 in the xy plane."""
+        return self.x * self.x + self.y * self.y
 
     def minus( self, subtractVec3 ):
         """Get the difference between the Vec3 and another one.

@@ -15,7 +15,18 @@ The&nbsp;default&nbsp;'Activate&nbsp;Fillet'&nbsp;checkbox&nbsp;is&nbsp;on.&nbsp
 will&nbsp;not&nbsp;be&nbsp;called.<br>
 &nbsp;<br>
 Fillets&nbsp;rounds&nbsp;the&nbsp;corners&nbsp;slightly&nbsp;in&nbsp;a&nbsp;variety&nbsp;of&nbsp;ways.&nbsp;&nbsp;This&nbsp;is&nbsp;to&nbsp;reduce&nbsp;corner&nbsp;blobbing&nbsp;and&nbsp;sudden&nbsp;extruder&nbsp;acceleration.<br>
-The&nbsp;default&nbsp;radio&nbsp;button&nbsp;choice&nbsp;is&nbsp;'Bevel'.&nbsp;&nbsp;To&nbsp;run&nbsp;fillet,&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;fillet&nbsp;is&nbsp;in&nbsp;type:<br>
+The&nbsp;'Arc&nbsp;Point'&nbsp;method&nbsp;fillets&nbsp;the&nbsp;corners&nbsp;with&nbsp;an&nbsp;arc&nbsp;using&nbsp;the&nbsp;gcode&nbsp;point&nbsp;form.&nbsp;&nbsp;The&nbsp;'Arc&nbsp;Radius'&nbsp;method&nbsp;fillets&nbsp;with&nbsp;an&nbsp;arc<br>
+using&nbsp;the&nbsp;gcode&nbsp;radius&nbsp;form.&nbsp;&nbsp;The&nbsp;'Arc&nbsp;Segment'&nbsp;method&nbsp;fillets&nbsp;corners&nbsp;with&nbsp;an&nbsp;arc&nbsp;composed&nbsp;of&nbsp;several&nbsp;segments.&nbsp;&nbsp;The<br>
+'Bevel'&nbsp;method&nbsp;bevels&nbsp;each&nbsp;corner.&nbsp;&nbsp;The&nbsp;default&nbsp;radio&nbsp;button&nbsp;choice&nbsp;is&nbsp;'Bevel'.<br>
+&nbsp;<br>
+The&nbsp;'Corner&nbsp;Feedrate&nbsp;over&nbsp;Operating&nbsp;Feedrate'&nbsp;is&nbsp;the&nbsp;ratio&nbsp;of&nbsp;the&nbsp;feedrate&nbsp;in&nbsp;corners&nbsp;over&nbsp;the&nbsp;operating&nbsp;feedrate.&nbsp;&nbsp;With&nbsp;a&nbsp;high<br>
+value&nbsp;the&nbsp;extruder&nbsp;will&nbsp;move&nbsp;quickly&nbsp;in&nbsp;corners,&nbsp;accelerating&nbsp;quickly&nbsp;and&nbsp;leaving&nbsp;a&nbsp;thin&nbsp;extrusion.&nbsp;&nbsp;With&nbsp;a&nbsp;low&nbsp;value,&nbsp;the<br>
+extruder&nbsp;will&nbsp;move&nbsp;slowly&nbsp;in&nbsp;corners,&nbsp;accelerating&nbsp;gently&nbsp;and&nbsp;leaving&nbsp;a&nbsp;thick&nbsp;extrusion.&nbsp;&nbsp;The&nbsp;default&nbsp;value&nbsp;is&nbsp;1.0.&nbsp;&nbsp;The&nbsp;'Fillet<br>
+Radius&nbsp;over&nbsp;Extrusion&nbsp;Width'&nbsp;ratio&nbsp;determines&nbsp;how&nbsp;much&nbsp;wide&nbsp;the&nbsp;fillet&nbsp;will&nbsp;be,&nbsp;the&nbsp;default&nbsp;is&nbsp;0.35.&nbsp;&nbsp;The&nbsp;'Reversal&nbsp;Slowdown<br>
+over&nbsp;Extrusion&nbsp;Width'&nbsp;ratio&nbsp;determines&nbsp;how&nbsp;far&nbsp;before&nbsp;a&nbsp;path&nbsp;reversal&nbsp;the&nbsp;extruder&nbsp;will&nbsp;slow&nbsp;down.&nbsp;&nbsp;Some&nbsp;tools,&nbsp;like&nbsp;nozzle<br>
+wipe,&nbsp;double&nbsp;back&nbsp;the&nbsp;path&nbsp;of&nbsp;the&nbsp;extruder&nbsp;and&nbsp;this&nbsp;option&nbsp;will&nbsp;add&nbsp;a&nbsp;slowdown&nbsp;point&nbsp;in&nbsp;that&nbsp;path&nbsp;so&nbsp;there&nbsp;won't&nbsp;be&nbsp;a&nbsp;sudden<br>
+jerk&nbsp;at&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;path.&nbsp;&nbsp;The&nbsp;default&nbsp;value&nbsp;is&nbsp;0.5&nbsp;and&nbsp;if&nbsp;the&nbsp;value&nbsp;is&nbsp;less&nbsp;than&nbsp;0.1&nbsp;a&nbsp;slowdown&nbsp;will&nbsp;not&nbsp;be&nbsp;added.&nbsp;&nbsp;To&nbsp;run<br>
+fillet,&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;fillet&nbsp;is&nbsp;in&nbsp;type:<br>
 &gt;&nbsp;python&nbsp;fillet.py<br>
 &nbsp;<br>
 The&nbsp;following&nbsp;examples&nbsp;fillet&nbsp;the&nbsp;files&nbsp;Hollow&nbsp;Square.gcode&nbsp;&amp;&nbsp;Hollow&nbsp;Square.gts.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder<br>
@@ -185,21 +196,23 @@ Methods defined here:<br>
 
 <hr>
 Methods inherited from <a href="skeinforge_tools.fillet.html#ArcSegmentSkein">ArcSegmentSkein</a>:<br>
-<dl><dt><a name="ArcPointSkein-splitPointGetAfter"><strong>splitPointGetAfter</strong></a>(self, location, nextActive, oldActiveLocation)</dt><dd><tt>Fillet&nbsp;a&nbsp;point&nbsp;into&nbsp;arc&nbsp;segments&nbsp;and&nbsp;return&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;last&nbsp;segment.</tt></dd></dl>
+<dl><dt><a name="ArcPointSkein-splitPointGetAfter"><strong>splitPointGetAfter</strong></a>(self, location, nextLocation)</dt><dd><tt>Fillet&nbsp;a&nbsp;point&nbsp;into&nbsp;arc&nbsp;segments&nbsp;and&nbsp;return&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;last&nbsp;segment.</tt></dd></dl>
 
 <hr>
 Methods inherited from <a href="skeinforge_tools.fillet.html#BevelSkein">BevelSkein</a>:<br>
 <dl><dt><a name="ArcPointSkein-__init__"><strong>__init__</strong></a>(self)</dt></dl>
 
-<dl><dt><a name="ArcPointSkein-addFeedrateEnd"><strong>addFeedrateEnd</strong></a>(self)</dt><dd><tt>Add&nbsp;the&nbsp;gcode&nbsp;feedrate&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
+<dl><dt><a name="ArcPointSkein-addFeedrateEnd"><strong>addFeedrateEnd</strong></a>(self, feedrate)</dt><dd><tt>Add&nbsp;the&nbsp;gcode&nbsp;feedrate&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
 <dl><dt><a name="ArcPointSkein-addLine"><strong>addLine</strong></a>(self, line)</dt><dd><tt>Add&nbsp;a&nbsp;line&nbsp;of&nbsp;text&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="ArcPointSkein-addLinearMovePoint"><strong>addLinearMovePoint</strong></a>(self, point)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move,&nbsp;feedrate&nbsp;and&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
+<dl><dt><a name="ArcPointSkein-addLinearMovePoint"><strong>addLinearMovePoint</strong></a>(self, feedrate, point)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move,&nbsp;feedrate&nbsp;and&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
 <dl><dt><a name="ArcPointSkein-addPoint"><strong>addPoint</strong></a>(self, point)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;point&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="ArcPointSkein-getNextActive"><strong>getNextActive</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;next&nbsp;linear&nbsp;move&nbsp;where&nbsp;the&nbsp;extruder&nbsp;is&nbsp;still&nbsp;active.&nbsp;&nbsp;Return&nbsp;none&nbsp;is&nbsp;none&nbsp;is&nbsp;found.</tt></dd></dl>
+<dl><dt><a name="ArcPointSkein-getExtruderOffReversalPoint"><strong>getExtruderOffReversalPoint</strong></a>(self, afterSegment, beforeSegment, location)</dt><dd><tt>If&nbsp;the&nbsp;extruder&nbsp;is&nbsp;off&nbsp;and&nbsp;the&nbsp;path&nbsp;is&nbsp;reversing,&nbsp;add&nbsp;intermediate&nbsp;slow&nbsp;points.</tt></dd></dl>
+
+<dl><dt><a name="ArcPointSkein-getNextLocation"><strong>getNextLocation</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;next&nbsp;linear&nbsp;move.&nbsp;&nbsp;Return&nbsp;none&nbsp;is&nbsp;none&nbsp;is&nbsp;found.</tt></dd></dl>
 
 <dl><dt><a name="ArcPointSkein-getRounded"><strong>getRounded</strong></a>(self, number)</dt><dd><tt>Get&nbsp;number&nbsp;rounded&nbsp;to&nbsp;the&nbsp;number&nbsp;of&nbsp;carried&nbsp;decimal&nbsp;places&nbsp;as&nbsp;a&nbsp;string.</tt></dd></dl>
 
@@ -236,21 +249,23 @@ Methods inherited from <a href="skeinforge_tools.fillet.html#ArcPointSkein">ArcP
 
 <hr>
 Methods inherited from <a href="skeinforge_tools.fillet.html#ArcSegmentSkein">ArcSegmentSkein</a>:<br>
-<dl><dt><a name="ArcRadiusSkein-splitPointGetAfter"><strong>splitPointGetAfter</strong></a>(self, location, nextActive, oldActiveLocation)</dt><dd><tt>Fillet&nbsp;a&nbsp;point&nbsp;into&nbsp;arc&nbsp;segments&nbsp;and&nbsp;return&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;last&nbsp;segment.</tt></dd></dl>
+<dl><dt><a name="ArcRadiusSkein-splitPointGetAfter"><strong>splitPointGetAfter</strong></a>(self, location, nextLocation)</dt><dd><tt>Fillet&nbsp;a&nbsp;point&nbsp;into&nbsp;arc&nbsp;segments&nbsp;and&nbsp;return&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;last&nbsp;segment.</tt></dd></dl>
 
 <hr>
 Methods inherited from <a href="skeinforge_tools.fillet.html#BevelSkein">BevelSkein</a>:<br>
 <dl><dt><a name="ArcRadiusSkein-__init__"><strong>__init__</strong></a>(self)</dt></dl>
 
-<dl><dt><a name="ArcRadiusSkein-addFeedrateEnd"><strong>addFeedrateEnd</strong></a>(self)</dt><dd><tt>Add&nbsp;the&nbsp;gcode&nbsp;feedrate&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
+<dl><dt><a name="ArcRadiusSkein-addFeedrateEnd"><strong>addFeedrateEnd</strong></a>(self, feedrate)</dt><dd><tt>Add&nbsp;the&nbsp;gcode&nbsp;feedrate&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
 <dl><dt><a name="ArcRadiusSkein-addLine"><strong>addLine</strong></a>(self, line)</dt><dd><tt>Add&nbsp;a&nbsp;line&nbsp;of&nbsp;text&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="ArcRadiusSkein-addLinearMovePoint"><strong>addLinearMovePoint</strong></a>(self, point)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move,&nbsp;feedrate&nbsp;and&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
+<dl><dt><a name="ArcRadiusSkein-addLinearMovePoint"><strong>addLinearMovePoint</strong></a>(self, feedrate, point)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move,&nbsp;feedrate&nbsp;and&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
 <dl><dt><a name="ArcRadiusSkein-addPoint"><strong>addPoint</strong></a>(self, point)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;point&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="ArcRadiusSkein-getNextActive"><strong>getNextActive</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;next&nbsp;linear&nbsp;move&nbsp;where&nbsp;the&nbsp;extruder&nbsp;is&nbsp;still&nbsp;active.&nbsp;&nbsp;Return&nbsp;none&nbsp;is&nbsp;none&nbsp;is&nbsp;found.</tt></dd></dl>
+<dl><dt><a name="ArcRadiusSkein-getExtruderOffReversalPoint"><strong>getExtruderOffReversalPoint</strong></a>(self, afterSegment, beforeSegment, location)</dt><dd><tt>If&nbsp;the&nbsp;extruder&nbsp;is&nbsp;off&nbsp;and&nbsp;the&nbsp;path&nbsp;is&nbsp;reversing,&nbsp;add&nbsp;intermediate&nbsp;slow&nbsp;points.</tt></dd></dl>
+
+<dl><dt><a name="ArcRadiusSkein-getNextLocation"><strong>getNextLocation</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;next&nbsp;linear&nbsp;move.&nbsp;&nbsp;Return&nbsp;none&nbsp;is&nbsp;none&nbsp;is&nbsp;found.</tt></dd></dl>
 
 <dl><dt><a name="ArcRadiusSkein-getRounded"><strong>getRounded</strong></a>(self, number)</dt><dd><tt>Get&nbsp;number&nbsp;rounded&nbsp;to&nbsp;the&nbsp;number&nbsp;of&nbsp;carried&nbsp;decimal&nbsp;places&nbsp;as&nbsp;a&nbsp;string.</tt></dd></dl>
 
@@ -274,21 +289,23 @@ Methods inherited from <a href="skeinforge_tools.fillet.html#BevelSkein">BevelSk
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="ArcSegmentSkein-addArc"><strong>addArc</strong></a>(self, afterCenterDifferenceAngle, afterPoint, beforeCenterSegment, beforePoint, center)</dt><dd><tt>Add&nbsp;arc&nbsp;segments&nbsp;to&nbsp;the&nbsp;filleted&nbsp;skein.</tt></dd></dl>
 
-<dl><dt><a name="ArcSegmentSkein-splitPointGetAfter"><strong>splitPointGetAfter</strong></a>(self, location, nextActive, oldActiveLocation)</dt><dd><tt>Fillet&nbsp;a&nbsp;point&nbsp;into&nbsp;arc&nbsp;segments&nbsp;and&nbsp;return&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;last&nbsp;segment.</tt></dd></dl>
+<dl><dt><a name="ArcSegmentSkein-splitPointGetAfter"><strong>splitPointGetAfter</strong></a>(self, location, nextLocation)</dt><dd><tt>Fillet&nbsp;a&nbsp;point&nbsp;into&nbsp;arc&nbsp;segments&nbsp;and&nbsp;return&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;last&nbsp;segment.</tt></dd></dl>
 
 <hr>
 Methods inherited from <a href="skeinforge_tools.fillet.html#BevelSkein">BevelSkein</a>:<br>
 <dl><dt><a name="ArcSegmentSkein-__init__"><strong>__init__</strong></a>(self)</dt></dl>
 
-<dl><dt><a name="ArcSegmentSkein-addFeedrateEnd"><strong>addFeedrateEnd</strong></a>(self)</dt><dd><tt>Add&nbsp;the&nbsp;gcode&nbsp;feedrate&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
+<dl><dt><a name="ArcSegmentSkein-addFeedrateEnd"><strong>addFeedrateEnd</strong></a>(self, feedrate)</dt><dd><tt>Add&nbsp;the&nbsp;gcode&nbsp;feedrate&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
 <dl><dt><a name="ArcSegmentSkein-addLine"><strong>addLine</strong></a>(self, line)</dt><dd><tt>Add&nbsp;a&nbsp;line&nbsp;of&nbsp;text&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="ArcSegmentSkein-addLinearMovePoint"><strong>addLinearMovePoint</strong></a>(self, point)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move,&nbsp;feedrate&nbsp;and&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
+<dl><dt><a name="ArcSegmentSkein-addLinearMovePoint"><strong>addLinearMovePoint</strong></a>(self, feedrate, point)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move,&nbsp;feedrate&nbsp;and&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
 <dl><dt><a name="ArcSegmentSkein-addPoint"><strong>addPoint</strong></a>(self, point)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;point&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="ArcSegmentSkein-getNextActive"><strong>getNextActive</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;next&nbsp;linear&nbsp;move&nbsp;where&nbsp;the&nbsp;extruder&nbsp;is&nbsp;still&nbsp;active.&nbsp;&nbsp;Return&nbsp;none&nbsp;is&nbsp;none&nbsp;is&nbsp;found.</tt></dd></dl>
+<dl><dt><a name="ArcSegmentSkein-getExtruderOffReversalPoint"><strong>getExtruderOffReversalPoint</strong></a>(self, afterSegment, beforeSegment, location)</dt><dd><tt>If&nbsp;the&nbsp;extruder&nbsp;is&nbsp;off&nbsp;and&nbsp;the&nbsp;path&nbsp;is&nbsp;reversing,&nbsp;add&nbsp;intermediate&nbsp;slow&nbsp;points.</tt></dd></dl>
+
+<dl><dt><a name="ArcSegmentSkein-getNextLocation"><strong>getNextLocation</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;next&nbsp;linear&nbsp;move.&nbsp;&nbsp;Return&nbsp;none&nbsp;is&nbsp;none&nbsp;is&nbsp;found.</tt></dd></dl>
 
 <dl><dt><a name="ArcSegmentSkein-getRounded"><strong>getRounded</strong></a>(self, number)</dt><dd><tt>Get&nbsp;number&nbsp;rounded&nbsp;to&nbsp;the&nbsp;number&nbsp;of&nbsp;carried&nbsp;decimal&nbsp;places&nbsp;as&nbsp;a&nbsp;string.</tt></dd></dl>
 
@@ -312,15 +329,17 @@ Methods inherited from <a href="skeinforge_tools.fillet.html#BevelSkein">BevelSk
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="BevelSkein-__init__"><strong>__init__</strong></a>(self)</dt></dl>
 
-<dl><dt><a name="BevelSkein-addFeedrateEnd"><strong>addFeedrateEnd</strong></a>(self)</dt><dd><tt>Add&nbsp;the&nbsp;gcode&nbsp;feedrate&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
+<dl><dt><a name="BevelSkein-addFeedrateEnd"><strong>addFeedrateEnd</strong></a>(self, feedrate)</dt><dd><tt>Add&nbsp;the&nbsp;gcode&nbsp;feedrate&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
 <dl><dt><a name="BevelSkein-addLine"><strong>addLine</strong></a>(self, line)</dt><dd><tt>Add&nbsp;a&nbsp;line&nbsp;of&nbsp;text&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="BevelSkein-addLinearMovePoint"><strong>addLinearMovePoint</strong></a>(self, point)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move,&nbsp;feedrate&nbsp;and&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
+<dl><dt><a name="BevelSkein-addLinearMovePoint"><strong>addLinearMovePoint</strong></a>(self, feedrate, point)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move,&nbsp;feedrate&nbsp;and&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
 <dl><dt><a name="BevelSkein-addPoint"><strong>addPoint</strong></a>(self, point)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;point&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="BevelSkein-getNextActive"><strong>getNextActive</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;next&nbsp;linear&nbsp;move&nbsp;where&nbsp;the&nbsp;extruder&nbsp;is&nbsp;still&nbsp;active.&nbsp;&nbsp;Return&nbsp;none&nbsp;is&nbsp;none&nbsp;is&nbsp;found.</tt></dd></dl>
+<dl><dt><a name="BevelSkein-getExtruderOffReversalPoint"><strong>getExtruderOffReversalPoint</strong></a>(self, afterSegment, beforeSegment, location)</dt><dd><tt>If&nbsp;the&nbsp;extruder&nbsp;is&nbsp;off&nbsp;and&nbsp;the&nbsp;path&nbsp;is&nbsp;reversing,&nbsp;add&nbsp;intermediate&nbsp;slow&nbsp;points.</tt></dd></dl>
+
+<dl><dt><a name="BevelSkein-getNextLocation"><strong>getNextLocation</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;next&nbsp;linear&nbsp;move.&nbsp;&nbsp;Return&nbsp;none&nbsp;is&nbsp;none&nbsp;is&nbsp;found.</tt></dd></dl>
 
 <dl><dt><a name="BevelSkein-getRounded"><strong>getRounded</strong></a>(self, number)</dt><dd><tt>Get&nbsp;number&nbsp;rounded&nbsp;to&nbsp;the&nbsp;number&nbsp;of&nbsp;carried&nbsp;decimal&nbsp;places&nbsp;as&nbsp;a&nbsp;string.</tt></dd></dl>
 
@@ -332,7 +351,7 @@ Methods inherited from <a href="skeinforge_tools.fillet.html#BevelSkein">BevelSk
 
 <dl><dt><a name="BevelSkein-parseLine"><strong>parseLine</strong></a>(self, line)</dt><dd><tt>Parse&nbsp;a&nbsp;gcode&nbsp;line&nbsp;and&nbsp;add&nbsp;it&nbsp;to&nbsp;the&nbsp;bevel&nbsp;gcode.</tt></dd></dl>
 
-<dl><dt><a name="BevelSkein-splitPointGetAfter"><strong>splitPointGetAfter</strong></a>(self, location, nextActive, oldActiveLocation)</dt><dd><tt>Bevel&nbsp;a&nbsp;point&nbsp;and&nbsp;return&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;bevel.</tt></dd></dl>
+<dl><dt><a name="BevelSkein-splitPointGetAfter"><strong>splitPointGetAfter</strong></a>(self, location, nextLocation)</dt><dd><tt>Bevel&nbsp;a&nbsp;point&nbsp;and&nbsp;return&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;bevel.</tt></dd></dl>
 
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">

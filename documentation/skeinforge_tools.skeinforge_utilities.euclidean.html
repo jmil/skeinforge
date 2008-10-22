@@ -136,6 +136,7 @@ subtractFromVec3&nbsp;--&nbsp;Vec3&nbsp;whose&nbsp;angle&nbsp;will&nbsp;be&nbsp;
 subtractVec3&nbsp;--&nbsp;Vec3&nbsp;whose&nbsp;angle&nbsp;will&nbsp;be&nbsp;subtracted</tt></dd></dl>
  <dl><dt><a name="-getAroundLoop"><strong>getAroundLoop</strong></a>(begin, end, loop)</dt><dd><tt>Get&nbsp;an&nbsp;arc&nbsp;around&nbsp;a&nbsp;loop.</tt></dd></dl>
  <dl><dt><a name="-getAwayPath"><strong>getAwayPath</strong></a>(path, radius)</dt><dd><tt>Get&nbsp;a&nbsp;loop&nbsp;with&nbsp;only&nbsp;the&nbsp;points&nbsp;that&nbsp;are&nbsp;far&nbsp;enough&nbsp;away&nbsp;from&nbsp;each&nbsp;other.</tt></dd></dl>
+ <dl><dt><a name="-getClippedAtEndLoopPath"><strong>getClippedAtEndLoopPath</strong></a>(clip, loopPath)</dt><dd><tt>Get&nbsp;a&nbsp;clipped&nbsp;loop&nbsp;path.</tt></dd></dl>
  <dl><dt><a name="-getClippedLoopPath"><strong>getClippedLoopPath</strong></a>(clip, loopPath)</dt><dd><tt>Get&nbsp;a&nbsp;clipped&nbsp;loop&nbsp;path.</tt></dd></dl>
  <dl><dt><a name="-getComplexCrossProduct"><strong>getComplexCrossProduct</strong></a>(firstComplex, secondComplex)</dt><dd><tt>Get&nbsp;z&nbsp;component&nbsp;cross&nbsp;product&nbsp;of&nbsp;a&nbsp;pair&nbsp;of&nbsp;complexes.</tt></dd></dl>
  <dl><dt><a name="-getComplexDot"><strong>getComplexDot</strong></a>(firstComplex, secondComplex)</dt><dd><tt>Get&nbsp;the&nbsp;dot&nbsp;product&nbsp;of&nbsp;a&nbsp;pair&nbsp;of&nbsp;complexes.</tt></dd></dl>
@@ -163,6 +164,7 @@ subtractVec3&nbsp;--&nbsp;Vec3&nbsp;whose&nbsp;angle&nbsp;will&nbsp;be&nbsp;subt
 Keyword&nbsp;arguments:<br>
 planeAngle&nbsp;-&nbsp;plane&nbsp;angle&nbsp;of&nbsp;the&nbsp;rotation<br>
 path&nbsp;-&nbsp;Vec3&nbsp;array&nbsp;whose&nbsp;rotation&nbsp;will&nbsp;be&nbsp;returned</tt></dd></dl>
+ <dl><dt><a name="-getPathWithoutCloseSequentials"><strong>getPathWithoutCloseSequentials</strong></a>(path, radius)</dt><dd><tt>Get&nbsp;a&nbsp;path&nbsp;without&nbsp;points&nbsp;in&nbsp;a&nbsp;row&nbsp;which&nbsp;are&nbsp;too&nbsp;close&nbsp;too&nbsp;each&nbsp;other.</tt></dd></dl>
  <dl><dt><a name="-getPlaneDot"><strong>getPlaneDot</strong></a>(vec3First, vec3Second)</dt><dd><tt>Get&nbsp;the&nbsp;dot&nbsp;product&nbsp;of&nbsp;the&nbsp;x&nbsp;and&nbsp;y&nbsp;components&nbsp;of&nbsp;a&nbsp;pair&nbsp;of&nbsp;Vec3s.</tt></dd></dl>
  <dl><dt><a name="-getPlaneDotPlusOne"><strong>getPlaneDotPlusOne</strong></a>(vec3First, vec3Second)</dt><dd><tt>Get&nbsp;the&nbsp;dot&nbsp;product&nbsp;plus&nbsp;one&nbsp;of&nbsp;the&nbsp;x&nbsp;and&nbsp;y&nbsp;components&nbsp;of&nbsp;a&nbsp;pair&nbsp;of&nbsp;Vec3s.</tt></dd></dl>
  <dl><dt><a name="-getPointMaximum"><strong>getPointMaximum</strong></a>(firstPoint, secondPoint)</dt><dd><tt>Get&nbsp;a&nbsp;point&nbsp;with&nbsp;each&nbsp;component&nbsp;the&nbsp;maximum&nbsp;of&nbsp;the&nbsp;respective&nbsp;components&nbsp;of&nbsp;a&nbsp;pair&nbsp;of&nbsp;Vec3s.</tt></dd></dl>

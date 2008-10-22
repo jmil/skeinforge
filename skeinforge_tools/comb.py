@@ -217,7 +217,7 @@ class CombSkein:
 			if len( self.getBetweens() ) > 0:
 				aroundBetweenPath = []
 				self.insertPathsAroundBetween( aroundBetweenPath, location )
-				aroundBetweenPath = euclidean.getPathWithoutCloseSequentials( aroundBetweenPath, self.extrusionWidth )
+				aroundBetweenPath = euclidean.getAwayPath( aroundBetweenPath, self.extrusionWidth )
 				for point in aroundBetweenPath:
 					self.addGcodeMovement( point )
 		self.oldLocation = location
@@ -253,7 +253,9 @@ class CombSkein:
 		beginningPoint = loop[ 0 ]
 		closestInset = None
 		closestDistanceSquaredIndex = complex( 999999999999999999.0, - 1 )
+		loop = euclidean.getAwayPath( loop, self.extrusionWidth )
 		circleNodes = intercircle.getCircleNodesFromLoop( loop, self.layerFillInset )
+		centers = []
 		centers = intercircle.getCentersFromCircleNodes( circleNodes )
 		for center in centers:
 			inset = intercircle.getInsetFromClockwiseLoop( center, halfFillInset )
@@ -570,17 +572,18 @@ class CombSkein:
 		if firstWord == 'G1':
 			if self.isPerimeter:
 				location = gcodec.getLocationFromSplitLine( None, splitLine )
-				if self.perimeter == None:
-					self.perimeter = []
-				self.perimeter.append( location )
-				self.pointTable[ str( location ) ] = self.perimeter
+#				if self.perimeter == None:
+#					self.perimeter = []
+#				self.perimeter.append( location )
+#				self.pointTable[ str( location ) ] = self.perimeter
+				self.pointTable[ str( location ) ] = self.boundaryLoop
 		elif firstWord == 'M103':
 			self.boundaryLoop = None
-			if self.perimeter != None:
-				if len( self.perimeter ) > 2:
-					if self.perimeter[ 0 ] == self.perimeter[ - 1 ]:
-						del self.perimeter[ - 1 ]
-				self.perimeter = None
+#			if self.perimeter != None:
+#				if len( self.perimeter ) > 2:
+#					if self.perimeter[ 0 ] == self.perimeter[ - 1 ]:
+#						del self.perimeter[ - 1 ]
+#				self.perimeter = None
 			self.isPerimeter = False
 		elif firstWord == '(<boundaryPoint>':
 			location = gcodec.getLocationFromSplitLine( None, splitLine )
@@ -588,7 +591,7 @@ class CombSkein:
 		elif firstWord == '(<layerStart>':
 			self.boundaryLoop = None
 			self.layer = None
-			self.perimeter = None
+#			self.perimeter = None
 			self.oldZ = float( splitLine[ 1 ] )
 		elif firstWord == '(<perimeter>':
 			self.isPerimeter = True
