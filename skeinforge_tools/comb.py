@@ -89,6 +89,7 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
+#patched over falling tower comb bug if location.z < self.getBetweens()[ 0 ][ 0 ].z + 0.5 * self.extrusionWidth, but a real solution would be nice
 #maybe use 2d everywhere in case there is movement across layers
 def getCombChainGcode( filename, gcodeText, combPreferences = None ):
 	"Comb a gcode linear move text.  Chain comb the gcode if it is not already combed."
@@ -200,8 +201,7 @@ class CombSkein:
 		if len( thread ) < 2:
 			return
 		self.addLine( 'M101' )
-		for point in thread[ 1 : ]:
-			self.addGcodeMovement( point )
+		self.addGcodePath( thread[ 1 : ] )
 
 	def addGcodeMovement( self, point ):
 		"Add a movement to the output."
@@ -210,16 +210,21 @@ class CombSkein:
 		else:
 			self.addLine( "G1 X%s Y%s Z%s F%s" % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ), self.getRounded( self.feedrateMinute ) ) )
 
+	def addGcodePath( self, path ):
+		"Add a gcode path, without modifying the extruder, to the output."
+		for point in path:
+			self.addGcodeMovement( point )
+
 	def addIfTravel( self, splitLine ):
 		"Add travel move around loops if this the extruder is off."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		if not self.extruderActive and self.oldLocation != None:
 			if len( self.getBetweens() ) > 0:
-				aroundBetweenPath = []
-				self.insertPathsAroundBetween( aroundBetweenPath, location )
-				aroundBetweenPath = euclidean.getAwayPath( aroundBetweenPath, self.extrusionWidth )
-				for point in aroundBetweenPath:
-					self.addGcodeMovement( point )
+				if location.z < self.getBetweens()[ 0 ][ 0 ].z + 0.5 * self.extrusionWidth:
+					aroundBetweenPath = []
+					self.insertPathsAroundBetween( aroundBetweenPath, location )
+					aroundBetweenPath = euclidean.getAwayPath( aroundBetweenPath, self.extrusionWidth )
+					self.addGcodePath( aroundBetweenPath )
 		self.oldLocation = location
 
 	def addLine( self, line ):
@@ -245,12 +250,11 @@ class CombSkein:
 			totalDistance += loopLength
 		aroundBetweenPath.append( perimeterCrossing )
 
-	def addPathBeforeEnd( self, aroundBetweenPath, loop ):
+	def addPathBeforeEnd( self, aroundBetweenPath, location, loop ):
 		"Add the path before the end of the loop."
 		halfFillInset = 0.5 * self.layerFillInset
 		if self.arrivalInsetFollowDistance < halfFillInset:
 			return
-		beginningPoint = loop[ 0 ]
 		closestInset = None
 		closestDistanceSquaredIndex = complex( 999999999999999999.0, - 1 )
 		loop = euclidean.getAwayPath( loop, self.extrusionWidth )
@@ -261,15 +265,18 @@ class CombSkein:
 			inset = intercircle.getInsetFromClockwiseLoop( center, halfFillInset )
 			if euclidean.isLargeSameDirection( inset, center, self.layerFillInset ):
 				if euclidean.isPathInsideLoop( loop, inset ) == euclidean.isWiddershins( loop ):
-					distanceSquaredIndex = euclidean.getNearestDistanceSquaredIndex( beginningPoint, inset )
+					distanceSquaredIndex = euclidean.getNearestDistanceSquaredIndex( location, inset )
 					if distanceSquaredIndex.real < closestDistanceSquaredIndex.real:
 						closestInset = inset
 						closestDistanceSquaredIndex = distanceSquaredIndex
 		if closestInset == None:
 			return
+		extrusionHalfWidthSquared = 0.25 * self.extrusionWidth * self.extrusionWidth
+		closestInset = euclidean.getLoopStartingNearest( extrusionHalfWidthSquared, location, closestInset )
 		if euclidean.getPolygonLength( closestInset ) < 0.2 * self.arrivalInsetFollowDistance:
 			return
 		closestInset.append( closestInset[ 0 ] )
+		closestInset = euclidean.getSimplifiedPath( closestInset, self.extrusionWidth )
 		closestInset.reverse()
 		pathBeforeArrival = euclidean.getClippedAtEndLoopPath( self.arrivalInsetFollowDistance, closestInset )
 		pointBeforeArrival = pathBeforeArrival[ - 1 ]
@@ -422,7 +429,7 @@ class CombSkein:
 		pathEnd = self.getOutloopLocation( self.oldLocation )
 		self.insertPathsBetween( aroundBetweenPath, nextBeginning, pathEnd )
 		if outerPerimeter != None:
-			self.addPathBeforeEnd( aroundBetweenPath, outerPerimeter )
+			self.addPathBeforeEnd( aroundBetweenPath, location, outerPerimeter )
 
 	def insertPathsBetween( self, aroundBetweenPath, nextBeginning, pathEnd ):
 		"Insert paths between the perimeter and the fill."
@@ -435,8 +442,7 @@ class CombSkein:
 		pathEndRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, pathEnd )
 		nextBeginningRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, nextBeginning )
 		y = pathEndRotated.y
-		z = pathEndRotated.z
-		for betweenIndex in range( len( self.getBetweens() ) ):
+		for betweenIndex in xrange( len( self.getBetweens() ) ):
 			between = self.getBetweens()[ betweenIndex ]
 			betweenRotated = euclidean.getPathRoundZAxisByPlaneAngle( segmentYMirror, between )
 			euclidean.addXIntersections( betweenRotated, betweenIndex, switchX, y )
@@ -451,6 +457,7 @@ class CombSkein:
 			betweenXFirst = betweenX[ betweenXIndex ]
 			betweenXSecond = betweenX[ betweenXIndex + 1 ]
 			loopFirst = self.getBetweens()[ betweenXFirst.index ]
+			z = loopFirst[ 0 ].z
 			betweenFirst = euclidean.getRoundZAxisByPlaneAngle( segmentXY, Vec3( betweenXFirst.x, y, z ) )
 			betweenSecond = euclidean.getRoundZAxisByPlaneAngle( segmentXY, Vec3( betweenXSecond.x, y, z ) )
 			if betweenXSecond.index == betweenXFirst.index:

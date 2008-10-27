@@ -58,8 +58,6 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-#comb around
-#yet another overlap bug on level 4 of the screw holder
 #one direction for while, one direction narrow then wide, split to weave, hex fill, loop inside sparse fill or run along sparse infill, fill in one direction for a number of layers
 #use slice format, carve & inset
 #bridge extrusion width
@@ -89,12 +87,10 @@ __license__ = "GPL 3.0"
 #multiple heads around edge
 #angle shape for overhang extrusions
 #free fabricator
-def addAroundClosest( arounds, layerExtrusionWidth, paths, removedEndpoint ):
+def addAroundClosest( arounds, layerExtrusionWidth, paths, removedEndpointPoint ):
 	"Add the closest removed endpoint to the path, with minimal twisting."
-	removedEndpointPoint = removedEndpoint.point
 	closestDistanceSquared = 999999999999999999.0
 	closestPathIndex = None
-	shortestPathLength = 999999999999999999.0
 	for pathIndex in range( len( paths ) ):
 		path = paths[ pathIndex ]
 		for pointIndex in range( len( path ) ):
@@ -105,9 +101,9 @@ def addAroundClosest( arounds, layerExtrusionWidth, paths, removedEndpoint ):
 				closestPathIndex = pathIndex
 	if closestPathIndex == None:
 		return
-	closestPath = paths[ closestPathIndex ]
 	if closestDistanceSquared < 0.8 * layerExtrusionWidth * layerExtrusionWidth:
 		return
+	closestPath = paths[ closestPathIndex ]
 	closestPointIndex = getWithLeastLength( closestPath, removedEndpointPoint )
 	pathJustAfter = closestPath[ closestPointIndex + 2 : ]
 	pathJustBefore = closestPath[ : closestPointIndex - 1 ]
@@ -120,28 +116,73 @@ def addAroundClosest( arounds, layerExtrusionWidth, paths, removedEndpoint ):
 	if not isIntersectingLoopsPaths( arounds, otherPaths, removedEndpointPoint, closestPath[ closestPointIndex - 1 ] ):
 		closestPath.insert( closestPointIndex, removedEndpointPoint )
 
+def addAroundGridPoint( arounds, gridPoint, gridRadius, layerExtrusionRadius, paths ):
+	"Add the path around the grid point."
+	closestPathIndex = None
+	segmentFirstY = gridPoint.y - gridRadius
+	segmentSecondY = gridPoint.y + gridRadius
+	yIntersectionPaths = []
+	for pathIndex in range( len( paths ) ):
+		path = paths[ pathIndex ]
+		for pointIndex in xrange( len( path ) - 1 ):
+			pointFirst = path[ pointIndex ]
+			pointSecond = path[ pointIndex + 1 ]
+			yIntersection = getYIntersectionInsideYSegment( segmentFirstY, segmentSecondY, pointFirst, pointSecond, gridPoint.x )
+			if yIntersection != None:
+				yIntersectionPath = YIntersectionPath( path, pointIndex, yIntersection )
+				yIntersectionPath.yMinusCenter = yIntersection - gridPoint.y
+				yIntersectionPaths.append( yIntersectionPath )
+	yIntersectionPaths.sort( compareDistanceFromCenter )
+	if len( yIntersectionPaths ) < 1:
+		return
+	secondIntersectionPath = None
+	beforeFirst = yIntersectionPaths[ 0 ].yMinusCenter < 0.0
+	yIntersectionPathIndex = 1
+	while yIntersectionPathIndex < len( yIntersectionPaths ):
+		yIntersectionPath = yIntersectionPaths[ yIntersectionPathIndex ]
+		beforeSecond = yIntersectionPath.yMinusCenter < 0.0
+		if beforeFirst != beforeSecond:
+			secondIntersectionPath = yIntersectionPath
+			yIntersectionPathIndex += len( yIntersectionPaths )
+		yIntersectionPathIndex += 1
+	if secondIntersectionPath == None:
+		yIntersectionPaths[ 0 ].path.insert( yIntersectionPaths[ 0 ].pointIndex + 1, gridPoint )
+		return
+	if not beforeFirst:
+		layerExtrusionRadius = - layerExtrusionRadius
+	gridPointYFirst = Vec3( gridPoint.x, gridPoint.y - layerExtrusionRadius, gridPoint.z )
+	gridPointYSecond = Vec3( gridPoint.x, gridPoint.y + layerExtrusionRadius, gridPoint.z )
+	firstPointIndexPlusOne = yIntersectionPaths[ 0 ].pointIndex + 1
+	yIntersectionPaths[ 0 ].path.insert( firstPointIndexPlusOne, gridPointYFirst )
+	secondPointIndexPlusOne = secondIntersectionPath.pointIndex + 1
+	if yIntersectionPaths[ 0 ].path == secondIntersectionPath.path:
+		if secondPointIndexPlusOne > firstPointIndexPlusOne:
+			secondPointIndexPlusOne += 1
+	secondIntersectionPath.path.insert( secondPointIndexPlusOne, gridPointYSecond )
+
 def addPath( extrusionWidth, fill, path, rotationPlaneAngle ):
 	"Add simplified path to fill."
 	planeRotated = euclidean.getPathRoundZAxisByPlaneAngle( rotationPlaneAngle, euclidean.getSimplifiedPath( path, extrusionWidth ) )
 	fill.append( planeRotated )
 
-def addSparseEndpoints( doubleExtrusionWidth, endpoints, fillLine, horizontalSegments, infillDensity, removedEndpoints, surroundingXIntersections ):
+def addSparseEndpoints( doubleExtrusionWidth, endpoints, fillLine, horizontalSegments, infillDensity, removedEndpoints, solidSurfaceThickness, surroundingXIntersections ):
 	"Add sparse endpoints."
 	horizontalEndpoints = horizontalSegments[ fillLine ]
 	for segment in horizontalEndpoints:
-		addSparseEndpointsFromSegment( doubleExtrusionWidth, endpoints, fillLine, horizontalSegments, infillDensity, removedEndpoints, segment, surroundingXIntersections )
+		addSparseEndpointsFromSegment( doubleExtrusionWidth, endpoints, fillLine, horizontalSegments, infillDensity, removedEndpoints, segment, solidSurfaceThickness, surroundingXIntersections )
 
-def addSparseEndpointsFromSegment( doubleExtrusionWidth, endpoints, fillLine, horizontalSegments, infillDensity, removedEndpoints, segment, surroundingXIntersections ):
+def addSparseEndpointsFromSegment( doubleExtrusionWidth, endpoints, fillLine, horizontalSegments, infillDensity, removedEndpoints, segment, solidSurfaceThickness, surroundingXIntersections ):
 	"Add sparse endpoints from a segment."
 	endpointFirstPoint = segment[ 0 ].point
 	endpointSecondPoint = segment[ 1 ].point
-	shouldFill = fillLine < 1 or fillLine >= len( horizontalSegments ) - 1 or surroundingXIntersections == None
+	if fillLine < 1 or fillLine >= len( horizontalSegments ) - 1 or surroundingXIntersections == None:
+		endpoints += segment
+		return
 	if infillDensity > 0.0:
 		if int( round( round( fillLine * infillDensity ) / infillDensity ) ) == fillLine:
-			shouldFill = True
+			endpoints += segment
+			return
 	if endpointFirstPoint.distance( endpointSecondPoint ) < doubleExtrusionWidth:
-		shouldFill = True
-	if shouldFill:
 		endpoints += segment
 		return
 	if not isSegmentAround( horizontalSegments[ fillLine - 1 ], segment ):
@@ -150,13 +191,26 @@ def addSparseEndpointsFromSegment( doubleExtrusionWidth, endpoints, fillLine, ho
 	if not isSegmentAround( horizontalSegments[ fillLine + 1 ], segment ):
 		endpoints += segment
 		return
-	for surroundingIndex in range( 0, len( surroundingXIntersections ), 2 ):
+	if solidSurfaceThickness == 0:
+		removedEndpoints += segment
+		return
+	for surroundingIndex in xrange( 0, len( surroundingXIntersections ), 2 ):
 		surroundingXFirst = surroundingXIntersections[ surroundingIndex ]
 		surroundingXSecond = surroundingXIntersections[ surroundingIndex + 1 ]
 		if euclidean.isSegmentCompletelyInX( segment, surroundingXFirst, surroundingXSecond ):
 			removedEndpoints += segment
 			return
 	endpoints += segment
+
+def compareDistanceFromCenter( self, other ):
+	"Get comparison in order to sort y intersections in ascending order of distance from the center."
+	distanceFromCenter = abs( self.yMinusCenter )
+	distanceFromCenterOther = abs( other.yMinusCenter )
+	if distanceFromCenter > distanceFromCenterOther:
+		return 1
+	if distanceFromCenter < distanceFromCenterOther:
+		return - 1
+	return 0
 
 def createFillForSurroundings( surroundingLoops ):
 	"Create extra fill loops for surrounding loops."
@@ -227,7 +281,7 @@ def getHorizontalSegments( fillLoops, alreadyFilledArounds, y ):
 	euclidean.addXIntersectionsFromLoopLists( alreadyFilledArounds, solidXIntersectionList, y )
 	return euclidean.getSegmentsFromIntersections( solidXIntersectionList, y, fillLoops[ 0 ][ 0 ].z )
 
-def getSurroundingXIntersections( alreadyFilledSize, doubleSolidSurfaceThickness, surroundingSlices, y ):
+def getSurroundingXIntersections( doubleSolidSurfaceThickness, surroundingSlices, y ):
 	"Get x intersections from surrounding layers."
 	if len( surroundingSlices ) < doubleSolidSurfaceThickness:
 		return None
@@ -259,6 +313,25 @@ def getWithLeastLength( path, point ):
 			shortestPathLength = concatenationLength
 			shortestPointIndex = pointIndex
 	return shortestPointIndex
+
+def getYIntersection( firstPoint, secondPoint, x ):
+	"Get where the line crosses x."
+	secondMinusFirst = secondPoint.minus( firstPoint )
+	xMinusFirst = x - firstPoint.x
+	return xMinusFirst / secondMinusFirst.x * secondMinusFirst.y + firstPoint.y
+
+def getYIntersectionInsideYSegment( segmentFirstY, segmentSecondY, vector3First, vector3Second, x ):
+	"Get the y intersection inside the y segment if it does, else none."
+	isXAboveFirst = x > vector3First.x
+	isXAboveSecond = x > vector3Second.x
+	if isXAboveFirst == isXAboveSecond:
+		return None
+	yIntersection = getYIntersection( vector3First, vector3Second, x )
+	if yIntersection <= min( segmentFirstY, segmentSecondY ):
+		return None
+	if yIntersection < max( segmentFirstY, segmentSecondY ):
+		return yIntersection
+	return None
 
 def isIntersectingLoopsPaths( loops, paths, pointBegin, pointEnd ):
 	"Determine if the segment between the first and second point is intersecting the loop list."
@@ -339,28 +412,33 @@ class FillPreferences:
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences filename."
 		#Set the default preferences.
-		self.diaphragmPeriod = preferences.IntPreference().getFromValue( 'Diaphragm Period (layers):', 999 )
+		self.archive = []
+		self.diaphragmPeriod = preferences.IntPreference().getFromValue( 'Diaphragm Period (layers):', 999999 )
+		self.archive.append( self.diaphragmPeriod )
 		self.diaphragmThickness = preferences.IntPreference().getFromValue( 'Diaphragm Thickness (layers):', 0 )
+		self.archive.append( self.diaphragmThickness )
 		self.extraShellsAlternatingSolidLayer = preferences.IntPreference().getFromValue( 'Extra Shells on Alternating Solid Layer (layers):', 1 )
+		self.archive.append( self.extraShellsAlternatingSolidLayer )
 		self.extraShellsBase = preferences.IntPreference().getFromValue( 'Extra Shells on Base (layers):', 0 )
+		self.archive.append( self.extraShellsBase )
 		self.extraShellsSparseLayer = preferences.IntPreference().getFromValue( 'Extra Shells on Sparse Layer (layers):', 1 )
+		self.archive.append( self.extraShellsSparseLayer )
 		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Filled', '' )
+		self.archive.append( self.filenameInput )
 		self.infillBeginRotation = preferences.FloatPreference().getFromValue( 'Infill Begin Rotation (degrees):', 45.0 )
+		self.archive.append( self.infillBeginRotation )
 		self.infillDensity = preferences.FloatPreference().getFromValue( 'Infill Density (ratio):', 0.25 )
+		self.archive.append( self.infillDensity )
 		self.infillOddLayerExtraRotation = preferences.FloatPreference().getFromValue( 'Infill Odd Layer Extra Rotation (degrees):', 90.0 )
+		self.archive.append( self.infillOddLayerExtraRotation )
+#		infillPatternRadio = []
+#		self.infillPatternGrid = preferences.RadioLabel().getFromRadioLabel( 'Grid', 'Infill Pattern:', infillPatternRadio, False )
+#		self.archive.append( self.infillPatternGrid )
+#		self.infillPatternLine = preferences.Radio().getFromRadio( 'Line', infillPatternRadio, True )
+#		self.archive.append( self.infillPatternLine )
 		self.solidSurfaceThickness = preferences.IntPreference().getFromValue( 'Solid Surface Thickness (layers):', 3 )
+		self.archive.append( self.solidSurfaceThickness )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.archive = [
-			self.diaphragmPeriod,
-			self.diaphragmThickness,
-			self.extraShellsAlternatingSolidLayer,
-			self.extraShellsBase,
-			self.extraShellsSparseLayer,
-			self.filenameInput,
-			self.infillBeginRotation,
-			self.infillDensity,
-			self.infillOddLayerExtraRotation,
-			self.solidSurfaceThickness ]
 		self.executeTitle = 'Fill'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'fill.csv' )
 		self.filenameHelp = 'skeinforge_tools.fill.html'
@@ -401,7 +479,8 @@ class FillSkein:
 		back = - 999999999.0
 		layerExtrusionWidth = self.extrusionWidth
 		layerFillInset = self.fillInset
-		self.addLine( '(<layerStart> ' + str( self.rotatedLayers[ layerIndex ].surroundingLoops[ 0 ].boundary[ 0 ].z ) + ' )' ) # Indicate that a new layer is starting.
+		z = self.rotatedLayers[ layerIndex ].surroundingLoops[ 0 ].boundary[ 0 ].z
+		self.addLine( '(<layerStart> %s )' % z ) # Indicate that a new layer is starting.
 		if self.rotatedLayers[ layerIndex ].rotation != None:
 			layerExtrusionWidth = self.extrusionWidth * self.bridgeExtrusionWidthOverSolid
 			layerFillInset = self.fillInset * self.bridgeExtrusionWidthOverSolid
@@ -445,27 +524,27 @@ class FillSkein:
 			alreadyFilledArounds.append( alreadyFilledLoop )
 			planeRotatedPerimeter = euclidean.getPathRoundZAxisByPlaneAngle( reverseRotationAroundZAngle, loop )
 			rotatedExtruderLoops.append( planeRotatedPerimeter )
-			arounds.append( planeRotatedPerimeter )
+#			arounds.append( planeRotatedPerimeter )
 			circleNodes = intercircle.getCircleNodesFromLoop( planeRotatedPerimeter, slightlyGreaterThanFill )
 			centers = intercircle.getCentersFromCircleNodes( circleNodes )
 			for center in centers:
 				alreadyFilledInset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, layerFillInset )
 				if euclidean.getMaximumSpan( alreadyFilledInset ) > muchGreaterThanLayerFillInset:
 					alreadyFilledLoop.append( alreadyFilledInset )
-				around = intercircle.getSimplifiedInsetFromClockwiseLoop( center, aroundInset )
-				if euclidean.isPathInsideLoop( planeRotatedPerimeter, around ) == euclidean.isWiddershins( planeRotatedPerimeter ):
-					if euclidean.getMaximumSpan( alreadyFilledInset ) > muchGreaterThanLayerFillInset:
+					around = intercircle.getSimplifiedInsetFromClockwiseLoop( center, aroundInset )
+					if euclidean.isPathInsideLoop( planeRotatedPerimeter, around ) == euclidean.isWiddershins( planeRotatedPerimeter ):
+						arounds.append( around )
 						for point in around:
 							back = max( back, point.y )
 							front = min( front, point.y )
+		front = math.ceil( front / layerExtrusionWidth ) * layerExtrusionWidth
 		fillWidth = back - front
-		numberOfIntervals = int( math.floor( fillWidth / layerExtrusionWidth ) )
-		fillRemainder = fillWidth - float( numberOfIntervals ) * layerExtrusionWidth
-		halfFillRemainder = 0.5 * fillRemainder
-		back -= halfFillRemainder
-		front += halfFillRemainder
+		numberOfLines = int( math.ceil( fillWidth / layerExtrusionWidth ) )
+#		fillRemainder = fillWidth - float( numberOfIntervals ) * layerExtrusionWidth
+#		halfFillRemainder = 0.5 * fillRemainder
+#		front += halfFillRemainder
 		horizontalSegments = []
-		for fillLine in range( numberOfIntervals + 1 ):
+		for fillLine in xrange( numberOfLines ):
 			y = front + float( fillLine ) * layerExtrusionWidth
 			lineSegments = getHorizontalSegments( rotatedExtruderLoops, alreadyFilledArounds, y )
 			horizontalSegments.append( lineSegments )
@@ -473,8 +552,8 @@ class FillSkein:
 		for fillLine in range( len( horizontalSegments ) ):
 			y = front + float( fillLine ) * layerExtrusionWidth
 			horizontalEndpoints = horizontalSegments[ fillLine ]
-			surroundingXIntersections = getSurroundingXIntersections( len( alreadyFilledArounds ), self.doubleSolidSurfaceThickness, surroundingSlices, y )
-			addSparseEndpoints( doubleExtrusionWidth, endpoints, fillLine, horizontalSegments, self.infillDensity, removedEndpoints, surroundingXIntersections )
+			surroundingXIntersections = getSurroundingXIntersections( self.doubleSolidSurfaceThickness, surroundingSlices, y )
+			addSparseEndpoints( doubleExtrusionWidth, endpoints, fillLine, horizontalSegments, self.infillDensity, removedEndpoints, self.solidSurfaceThickness, surroundingXIntersections )
 		if len( endpoints ) < 1:
 			euclidean.addToThreadsRemoveFromSurroundings( self.oldOrderedLocation, surroundingLoops, self )
 			return
@@ -513,8 +592,11 @@ class FillSkein:
 				paths.append( path )
 			path.append( otherEndpoint.point )
 			endpoints.remove( otherEndpoint )
+#		if self.fillPreferences.infillPatternGrid.value:
+#			self.addGrid( arounds, fillLoops, layerExtrusionWidth, paths, reverseRotationAroundZAngle, z )
 		for removedEndpoint in removedEndpoints:
-			addAroundClosest( arounds, layerExtrusionWidth, paths, removedEndpoint )
+			removedEndpointPoint = removedEndpoint.point
+			addAroundClosest( arounds, layerExtrusionWidth, paths, removedEndpointPoint )
 		for path in paths:
 			addPath( layerFillInset, fill, path, layerRotationAroundZAngle )
 		euclidean.transferPathsToSurroundingLoops( fill, surroundingLoops )
@@ -536,6 +618,65 @@ class FillSkein:
 	def addGcodeMovement( self, point ):
 		"Add a movement to the output."
 		self.addLine( "G1 X%s Y%s Z%s" % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ) ) )
+
+	def addGrid( self, arounds, fillLoops, layerExtrusionWidth, paths, reverseRotationAroundZAngle, z ):
+		"Add a grid to the infill."
+		alreadyFilledArounds = []
+		back = - 999999999.0
+		front = - back
+		layerExtrusionRadius = 0.5 * layerExtrusionWidth
+		gridInset = 2.0 * self.extrusionWidth
+		muchGreaterThanLayerFillInset = 1.5 * gridInset
+		rotatedExtruderLoops = []
+		slightlyGreaterThanFill = 1.01 * gridInset
+		for loop in fillLoops:
+			alreadyFilledLoop = []
+			alreadyFilledArounds.append( alreadyFilledLoop )
+			planeRotatedPerimeter = euclidean.getPathRoundZAxisByPlaneAngle( reverseRotationAroundZAngle, loop )
+			rotatedExtruderLoops.append( planeRotatedPerimeter )
+			circleNodes = intercircle.getCircleNodesFromLoop( planeRotatedPerimeter, slightlyGreaterThanFill )
+			centers = intercircle.getCentersFromCircleNodes( circleNodes )
+			for center in centers:
+				alreadyFilledInset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, gridInset )
+				if euclidean.getMaximumSpan( alreadyFilledInset ) > muchGreaterThanLayerFillInset:
+					alreadyFilledLoop.append( alreadyFilledInset )
+					if euclidean.isPathInsideLoop( planeRotatedPerimeter, alreadyFilledInset ) == euclidean.isWiddershins( planeRotatedPerimeter ):
+						for point in alreadyFilledInset:
+							back = max( back, point.y )
+							front = min( front, point.y )
+		gridRadius = self.extrusionWidth / self.infillDensity
+		gridWidth = 2.0 * gridRadius
+		front = math.ceil( front / gridRadius ) * gridRadius
+		fillWidth = back - front
+		numberOfLines = int( math.ceil( fillWidth / gridRadius ) )
+		horizontalSegments = []
+		print(front  )
+		for fillLine in xrange( numberOfLines ):
+			y = front + float( fillLine ) * gridRadius
+			lineSegments = getHorizontalSegments( rotatedExtruderLoops, alreadyFilledArounds, y )
+			horizontalSegments.append( lineSegments )
+		for horizontalSegment in horizontalSegments:
+			for lineSegment in horizontalSegment:
+				endpointFirst = lineSegment[ 0 ]
+				endpointSecond = lineSegment[ 1 ]
+				begin = min( endpointFirst.point.x, endpointSecond.point.x )
+				end = max( endpointFirst.point.x, endpointSecond.point.x )
+				y = endpointFirst.point.y
+				offset = 0.0
+				if round( y / gridRadius ) % 2 == 1:
+					offset = gridRadius
+				self.addGridLineSegments( arounds, begin, end, layerExtrusionRadius, offset, gridWidth, paths, y, z )
+
+	def addGridLineSegments( self, arounds, begin, end, layerExtrusionRadius, offset, period, paths, y, z ):
+		"Add the segments of one line of a grid to the infill."
+		if period == 0.0:
+			return
+		gridX = offset - period * math.floor( ( offset - begin ) / period )
+#		gridX = offset
+		while gridX < end:
+			gridPoint = Vec3( gridX, y, z )
+			addAroundGridPoint( arounds, gridPoint, 5.87 * self.extrusionWidth, layerExtrusionRadius, paths )
+			gridX += period
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
@@ -656,7 +797,7 @@ class FillSkein:
 		elif firstWord == '(<bridgeDirection>':
 			secondWordWithoutBrackets = splitLine[ 1 ].replace( '(', '' ).replace( ')', '' )
 			self.getRotatedLayer().rotation = complex( secondWordWithoutBrackets )
-		elif firstWord == '(<extruderShutDown>':
+		elif firstWord == '(</extrusionStart>':
 			self.shutdownLineIndex = lineIndex
 		elif firstWord == '(<layerStart>':
 			self.rotatedLayer = None
@@ -696,6 +837,19 @@ class StretchedXSegment:
 		self.xMinimum = min( firstX, secondX ) - stretch
 		self.y = y
 		return self
+
+
+class YIntersectionPath:
+	"A class to hold the y intersection position, the loop which it intersected and the point index of the loop which it intersected."
+	def __init__( self, path, pointIndex, y ):
+		"Initialize from the path, point index, and y."
+		self.path = path
+		self.pointIndex = pointIndex
+		self.y = y
+
+	def __repr__( self ):
+		"Get the string representation of this y intersection."
+		return '%s, %s, %s' % ( self.path, self.pointIndex, self.y )
 
 
 def main( hashtable = None ):

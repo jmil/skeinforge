@@ -376,7 +376,7 @@ class TowerSkein:
 		elif firstWord == '(<boundaryPoint>':
 			location = gcodec.getLocationFromSplitLine( None, splitLine )
 			self.surroundingLoop.boundary.append( location )
-		elif firstWord == '(<extruderShutDown>':
+		elif firstWord == '(</extrusionStart>':
 			self.shutdownLineIndex = lineIndex
 		elif firstWord == '(<layerStart>':
 			self.beforeExtrusionLines = []

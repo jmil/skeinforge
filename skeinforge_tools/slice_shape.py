@@ -375,7 +375,7 @@ def getSharedFace( firstEdge, faces, secondEdge ):
 def getSliceGcode( filename, slicePreferences = None ):
 	"Slice a shape file."
 	triangleMesh = None
-	if filename[ - 4 : ] == '.gts':
+	if filename[ - 4 : ].lower() == '.gts':
 		triangleMesh = triangle_mesh.TriangleMesh().getFromGNUTriangulatedSurfaceText( gcodec.getFileText( filename ) )
 	else:
 		triangleMesh = import_translator.getTriangleMesh( filename )
@@ -460,6 +460,56 @@ def writeOutput( filename = '' ):
 	print( 'The sliced file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
 	analyze.writeOutput( suffixFilename, sliceGcode )
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to slice the file.' )
+
+
+class SlicePreferences:
+	"A class to handle the slice preferences."
+	def __init__( self ):
+		"Set the default preferences, execute title & preferences filename."
+		#Set the default preferences.
+		self.archive = []
+		self.extrusionDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Diameter (mm):', 0.6 )
+		self.archive.append( self.extrusionDiameter )
+		self.extrusionDiameterOverPrecision = preferences.FloatPreference().getFromValue( 'Extrusion Diameter Over Precision (ratio):', 10.0 )
+		self.archive.append( self.extrusionDiameterOverPrecision )
+		self.extrusionHeightOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Height Over Diameter (ratio):', 0.67 )
+		self.archive.append( self.extrusionHeightOverDiameter )
+		self.extrusionPerimeterWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Perimeter Width Over Diameter (ratio):', 1.2 )
+		self.archive.append( self.extrusionPerimeterWidthOverDiameter )
+		self.extrusionWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Width Over Diameter (ratio):', 1.0 )
+		self.archive.append( self.extrusionWidthOverDiameter )
+		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorFileTypeTuples(), 'Open File to be Sliced', '' )
+		self.archive.append( self.filenameInput )
+		self.importCoarseness = preferences.FloatPreference().getFromValue( 'Import Coarseness (ratio):', 1.0 )
+		self.archive.append( self.importCoarseness )
+		importRadio = []
+		self.correct = preferences.RadioLabel().getFromRadioLabel( 'Correct Mesh', 'Mesh Type:', importRadio, True )
+		self.archive.append( self.correct )
+		self.unproven = preferences.Radio().getFromRadio( 'Unproven Mesh', importRadio, False )
+		self.archive.append( self.unproven )
+		self.infillBridgeWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Infill Bridge Width Over Thickness (ratio):', 1.0 )
+		self.archive.append( self.infillBridgeWidthOverDiameter )
+		self.infillDirectionBridge = preferences.BooleanPreference().getFromValue( 'Infill in Direction of Bridges', True )
+		self.archive.append( self.infillDirectionBridge )
+		self.infillPerimeterOverlap = preferences.FloatPreference().getFromValue( 'Infill Perimeter Overlap (ratio):', 0.1 )
+		self.archive.append( self.infillPerimeterOverlap )
+		infillRadio = []
+		self.perimeterInfillPreference = preferences.RadioLabel().getFromRadioLabel( 'Calculate Overlap from Perimeter and Infill', 'Infill Perimeter Overlap Method of Calculation:', infillRadio, True )
+		self.archive.append( self.perimeterInfillPreference )
+		self.perimeterPreference = preferences.Radio().getFromRadio( 'Calculate Overlap from Perimeter Only', infillRadio, False )
+		self.archive.append( self.perimeterPreference )
+		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		self.executeTitle = 'Slice'
+		self.filenamePreferences = preferences.getPreferencesFilePath( 'slice_shape.csv' )
+		self.filenameHelp = 'skeinforge_tools.slice_shape.html'
+		self.saveTitle = 'Save Preferences'
+		self.title = 'Slice Preferences'
+
+	def execute( self ):
+		"Slice button has been clicked."
+		filenames = polyfile.getFileOrDirectoryTypes( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
+		for filename in filenames:
+			writeOutput( filename )
 
 
 class SliceSkein:
@@ -597,7 +647,7 @@ class SliceSkein:
 
 	def addShutdownToOutput( self ):
 		"Add shutdown gcode to the output."
-		self.addLine( '(<extruderShutDown> )' ) # GCode formatted comment
+		self.addLine( '(</extrusionStart> )' ) # GCode formatted comment
 		self.addLine( 'M103' ) # Turn extruder motor off.
 		self.addLine( 'M104 S0' ) # Turn extruder heater off.
 #		self.addLine( 'M30' ) # End gcode program.
@@ -751,56 +801,6 @@ class SliceSkein:
 		while z < self.layerTop:
 			z = self.getZAddExtruderPaths( z )
 		self.addShutdownToOutput()
-
-
-class SlicePreferences:
-	"A class to handle the slice preferences."
-	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
-		#Set the default preferences.
-		self.archive = []
-		self.extrusionDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Diameter (mm):', 0.6 )
-		self.archive.append( self.extrusionDiameter )
-		self.extrusionDiameterOverPrecision = preferences.FloatPreference().getFromValue( 'Extrusion Diameter Over Precision (ratio):', 10.0 )
-		self.archive.append( self.extrusionDiameterOverPrecision )
-		self.extrusionHeightOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Height Over Diameter (ratio):', 0.67 )
-		self.archive.append( self.extrusionHeightOverDiameter )
-		self.extrusionPerimeterWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Perimeter Width Over Diameter (ratio):', 1.2 )
-		self.archive.append( self.extrusionPerimeterWidthOverDiameter )
-		self.extrusionWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Width Over Diameter (ratio):', 1.0 )
-		self.archive.append( self.extrusionWidthOverDiameter )
-		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorFileTypeTuples(), 'Open File to be Sliced', '' )
-		self.archive.append( self.filenameInput )
-		self.importCoarseness = preferences.FloatPreference().getFromValue( 'Import Coarseness (ratio):', 1.0 )
-		self.archive.append( self.importCoarseness )
-		importRadio = []
-		self.correct = preferences.RadioLabel().getFromRadioLabel( 'Correct Mesh', 'Mesh Type:', importRadio, True )
-		self.archive.append( self.correct )
-		self.unproven = preferences.Radio().getFromRadio( 'Unproven Mesh', importRadio,False  )
-		self.archive.append( self.unproven )
-		self.infillBridgeWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Infill Bridge Width Over Thickness (ratio):', 1.0 )
-		self.archive.append( self.infillBridgeWidthOverDiameter )
-		self.infillDirectionBridge = preferences.BooleanPreference().getFromValue( 'Infill in Direction of Bridges', True )
-		self.archive.append( self.infillDirectionBridge )
-		self.infillPerimeterOverlap = preferences.FloatPreference().getFromValue( 'Infill Perimeter Overlap (ratio):', 0.1 )
-		self.archive.append( self.infillPerimeterOverlap )
-		infillRadio = []
-		self.perimeterInfillPreference = preferences.RadioLabel().getFromRadioLabel( 'Calculate Overlap from Perimeter and Infill', 'Infill Perimeter Overlap Method of Calculation:', infillRadio, True )
-		self.archive.append( self.perimeterInfillPreference )
-		self.perimeterPreference = preferences.Radio().getFromRadio( 'Calculate Overlap from Perimeter Only', infillRadio, False )
-		self.archive.append( self.perimeterPreference )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.executeTitle = 'Slice'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'slice_shape.csv' )
-		self.filenameHelp = 'skeinforge_tools.slice_shape.html'
-		self.saveTitle = 'Save Preferences'
-		self.title = 'Slice Preferences'
-
-	def execute( self ):
-		"Slice button has been clicked."
-		filenames = polyfile.getFileOrDirectoryTypes( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
-		for filename in filenames:
-			writeOutput( filename )
 
 
 def main():

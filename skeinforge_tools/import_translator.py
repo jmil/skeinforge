@@ -98,7 +98,7 @@ def getTriangleMesh( filename ):
 	importPluginFilenames = getImportPluginFilenames()
 	for importPluginFilename in importPluginFilenames:
 		fileTypeDot = '.' + importPluginFilename
-		if filename[ - len( fileTypeDot ) : ] == fileTypeDot:
+		if filename[ - len( fileTypeDot ) : ].lower() == fileTypeDot:
 			pluginModule = gcodec.getModule( importPluginFilename, 'import_plugins', __file__ )
 			if pluginModule != None:
 				return pluginModule.getTriangleMesh( filename )
