@@ -1,9 +1,9 @@
 """
 Gcode_small is an export plugin to remove the comments and the redundant z and feedrate parameters from a gcode file.
 
-An export plugin is a script in the export_plugins folder which has the functions getOuput and writeOutput.  It is meant to be run
-from the export tool.  To ensure that the plugin works on platforms which do not handle file capitalization properly, give the plugin
-a lower case name.
+An export plugin is a script in the export_plugins folder which has the functions getOuput, isArchivable and writeOutput.  It is
+meant to be run from the export tool.  To ensure that the plugin works on platforms which do not handle file capitalization
+properly, give the plugin a lower case name.
 
 The getOuput function of this script takes a gcode text and returns that text without comments and redundant z and feedrate
 parameters.  The writeOutput function of this script takes a gcode text and writes that text without comments and redundant z
@@ -24,7 +24,7 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 def getOutput( gcodeText ):
-	"""Get the exported version of a gcode file.  This function and writeOutput are the only necessary functions in a skeinforge export plugin.
+	"""Get the exported version of a gcode file.  This function, isArchivable and writeOutput are the only necessary functions in a skeinforge export plugin.
 	If this plugin writes an output than should not be printed, an empty string should be returned."""
 	skein = GcodeSmallSkein()
 	skein.parseGcode( gcodeText )
@@ -56,6 +56,10 @@ def indexOfStartingWithSecond( letter, splitLine ):
 			return wordIndex
 	return - 1
 
+def isArchivable():
+	"Return whether or not this plugin is archivable."
+	return False
+
 def writeFileText( filename, fileText ):
 	"Write a text to a file."
 	try:
@@ -66,7 +70,7 @@ def writeFileText( filename, fileText ):
 		print( 'The file ' + filename + ' can not be written to.' )
 
 def writeOutput( filename, gcodeText ):
-	"Write the exported version of a gcode file.  This function and getOutput are the only necessary functions in a skeinforge export plugin."
+	"Write the exported version of a gcode file.  This function, getOutput and isArchivable are the only necessary functions in a skeinforge export plugin."
 	output = getOutput( gcodeText )
 	writeFileText( filename, output )
 	print( 'The exported file is saved as ' + getSummarizedFilename( filename ) )

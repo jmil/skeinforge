@@ -249,12 +249,26 @@ class DisplayToolButton:
 		return self.name.lower()
 
 	def setToDisplay( self ):
-		"Do nothing because the add listbox selection is not archivable."
+		"Do nothing because the display tool button is not archivable."
 		pass
 
 	def writeToArchiveWriter( self, archiveWriter ):
-		"Do nothing because the add listbox selection is not archivable."
+		"Do nothing because the display tool button is not archivable."
 		pass
+
+
+class DisplayToolButtonBesidePrevious( DisplayToolButton ):
+	"A class to display the tool preferences dialog beside the previous preference dialog element."
+	def addToDialog( self, preferencesDialog ):
+		"Add this to the dialog."
+		withSpaces = self.name.lower().replace( '_', ' ' )
+		words = withSpaces.split( ' ' )
+		capitalizedStrings = []
+		for word in words:
+			capitalizedStrings.append( word.capitalize() )
+		capitalizedName = ' '.join( capitalizedStrings )
+		self.displayButton = Tkinter.Button( preferencesDialog.master, text = capitalizedName, command = self.displayTool )
+		self.displayButton.grid( row = preferencesDialog.row - 1, column = 2, columnspan = 2 )
 
 
 class Filename( BooleanPreference ):
@@ -291,8 +305,12 @@ class Filename( BooleanPreference ):
 		"Get the file types with the file type of the filename moved to the front of the list."
 		basename = os.path.basename( self.value )
 		splitFile = basename.split( '.' )
+		allReadables = []
+		for fileType in self.fileTypes:
+			allReadable = ( ( 'All Readable', fileType[ 1 ] ) )
+			allReadables.append( allReadable )
 		if len( splitFile ) < 1:
-			return self.fileTypes
+			return self.fileTypes + allReadables
 		baseExtension = splitFile[ - 1 ]
 		for fileType in self.fileTypes:
 			fileExtension = fileType[ 1 ].split( '.' )[ - 1 ]
@@ -300,7 +318,7 @@ class Filename( BooleanPreference ):
 				filenameFirstTypes = self.fileTypes[ : ]
 				filenameFirstTypes.remove( fileType )
 				return [ fileType ] + filenameFirstTypes
-		return self.fileTypes
+		return self.fileTypes + allReadables
 
 	def setToDisplay( self ):
 		"Pass."
@@ -447,7 +465,7 @@ class Radio( BooleanPreference ):
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
 		self.radiobutton = Tkinter.Radiobutton( preferencesDialog.master, command = self.clickRadio, text = self.name, value = preferencesDialog.row, variable = self.getIntVar() )
-		self.radiobutton.grid( row = preferencesDialog.row, columnspan = 4, sticky = Tkinter.W )
+		self.radiobutton.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky = Tkinter.W )
 		self.setDisplayState( preferencesDialog.row )
 		preferencesDialog.row += 1
 
@@ -489,40 +507,13 @@ class RadioCapitalized( Radio ):
 			capitalizedStrings.append( word.capitalize() )
 		capitalizedName = ' '.join( capitalizedStrings )
 		self.radiobutton = Tkinter.Radiobutton( preferencesDialog.master, command = self.clickRadio, text = capitalizedName, value = preferencesDialog.row, variable = self.getIntVar() )
-		self.radiobutton.grid( row = preferencesDialog.row, columnspan = 4, sticky = Tkinter.W )
+		self.radiobutton.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky = Tkinter.W )
 		self.setDisplayState( preferencesDialog.row )
 		preferencesDialog.row += 1
 
 	def getLowerName( self ):
 		"Get the lower case name."
 		return self.name.lower()
-
-#deprecated
-class RadioLabel( Radio ):
-	"A class to display, read & write a boolean with associated radio button."
-	def addToDialog( self, preferencesDialog ):
-		"Add this to the dialog."
-		Tkinter.Label( preferencesDialog.master, text = self.labelText ).grid( row = preferencesDialog.row, column = 0, columnspan = 4, sticky = Tkinter.W )
-		self.radiobutton = Tkinter.Radiobutton( preferencesDialog.master, command = self.clickRadio, text = self.name, value = preferencesDialog.row, variable = self.getIntVar() )
-		self.radiobutton.grid( row = preferencesDialog.row + 1, columnspan = 4, sticky = Tkinter.W )
-		self.setDisplayState( preferencesDialog.row )
-		preferencesDialog.row += 2
-
-	def getFromRadioLabel( self, name, labelText, radio, value ):
-		"Initialize."
-		self.getFromRadio( name, radio, value )
-		self.labelText = labelText
-		return self
-
-	def getIntVar( self ):
-		"Get the IntVar for this radio button group."
-		if len( self.radio ) == 0:
-			self.radio.append( Tkinter.IntVar() )
-		return self.radio[ 0 ]
-
-	def setToDisplay( self ):
-		"Set the boolean to the checkbox."
-		self.value = ( self.getIntVar().get() == self.radiobutton[ 'value' ] )
 
 
 class StringPreference( BooleanPreference ):

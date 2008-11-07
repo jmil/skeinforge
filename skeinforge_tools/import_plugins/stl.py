@@ -103,7 +103,13 @@ def getTriangleMesh( filename = '' ):
 		return None
 	triangleMesh = triangle_mesh.TriangleMesh()
 	vertexIndexTable = {}
-	if ( stlData[ : 5 ] == 'solid' ):
+	binarySolidworksHeaderErrorString = 'solid binary STL from Solid Edge, Unigraphics Solutions Inc.'
+	binarySolidworksHeaderError = stlData[ : len( binarySolidworksHeaderErrorString ) ] == binarySolidworksHeaderErrorString
+	if binarySolidworksHeaderError:
+		print( 'The solidworks file has the incorrect header:' )
+		print( binarySolidworksHeaderErrorString )
+		print( 'A binary stl should never start with the word "solid".  Because this error is common the file is been parsed as binary regardless.' )
+	if ( stlData[ : 5 ] == 'solid' and not binarySolidworksHeaderError ):
 		addFacesGivenText( stlData, triangleMesh, vertexIndexTable )
 	else:
 		addFacesGivenBinary( stlData, triangleMesh, vertexIndexTable )

@@ -2,9 +2,16 @@
 Slice shape is a script to slice a GNU Triangulated Surface file.
 
 Slice slices a GNU Triangulated Surface file into gcode extrusion layers.  The 'Extrusion Diameter' is the diameter of the extrusion at the
-default extruder speed, this is the most important slice preference.  The 'Extrusion Density' is the density of the extruded shape over the
-density of the filament.  The 'Extrusion Width Over Thickness' ratio is the ratio of the extrusion width over the layer thickness.  A ratio of
-one means the extrusion is a circle, a typical ratio of 1.5 means the extrusion is a wide oval.
+default extruder speed, this is the most important slice preference.  The 'Extrusion Height over Diameter' is the ratio of the extrusion
+height over the extrusion diameter.  The 'Extrusion Width over Diameter' ratio is the ratio of the extrusion width over the extrusion
+diameter.  A ratio of one means the extrusion is a circle, a typical ratio of 1.5 means the extrusion is a wide oval.  These values should
+be measured from a test extrusion line.
+
+The extrusion fill density ratio is the area of the extrusion diameter over the extrusion width over the extrusion height.  Assuming the
+extrusion diameter is correct, a high value means the filament will be packed tightly, and the object will be almost as dense as the
+filament.  If the value is too high, there could be too little room for the filament, and the extruder will end up plowing through the extra
+filament.  A low value means the filaments will be far away from each other, the object will be leaky and light.  The value with the
+default extrusion preferences is around 0.82.
 
 Rarely changed preferences are Import Coarseness, Mesh Type, Infill Bridge Width Over Thickness & Infill in Direction
 of Bridges.  When the triangle mesh has holes in it, slice switches over to a slow algorithm that spans gaps in the mesh.  The higher the
@@ -14,6 +21,8 @@ the algorithm that spans gaps.  If the Mesh Type preference is Unproven, slice w
 problem with the gap spanning algothm is that it will span gaps, even if there actually is a gap in the model.  Infill bridge width
 over thickness ratio is the ratio of the extrusion width over the layer thickness on a bridge layer.  If the infill in direction of bridges
 preference is chosen, the infill will be in the direction of bridges across gaps, so that the fill will be able to span a bridge easier.
+
+If the "Start at Home" preference is selected, the G28 gcode will be added at the beginning of the file.
 
 When slice is generating the code, if there is a file start.txt, it will add that to the very beginning of the gcode. After it has added some
 initialization code and just before it adds the extrusion gcode, it will add the file endofthebeginning.txt if it exists. At the very end, it will
@@ -284,13 +293,13 @@ def getOverhangDirection( belowOutsetLoops, segmentBegin, segmentEnd ):
 	segmentEnd = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, segmentEnd )
 	solidXIntersectionList = []
 	y = segmentBegin.y
-	solidXIntersectionList.append( euclidean.XIntersection().getFromIndexX( - 1.0, segmentBegin.x ) )
-	solidXIntersectionList.append( euclidean.XIntersection().getFromIndexX( - 1.0, segmentEnd.x ) )
+	solidXIntersectionList.append( euclidean.XIntersectionIndex( - 1.0, segmentBegin.x ) )
+	solidXIntersectionList.append( euclidean.XIntersectionIndex( - 1.0, segmentEnd.x ) )
 	for belowLoopIndex in range( len( belowOutsetLoops ) ):
 		belowLoop = belowOutsetLoops[ belowLoopIndex ]
 		rotatedOutset = euclidean.getPathRoundZAxisByPlaneAngle( segmentYMirror, belowLoop )
-		euclidean.addXIntersections( rotatedOutset, belowLoopIndex, solidXIntersectionList, y )
-	overhangingSegments = euclidean.getSegmentsFromIntersections( solidXIntersectionList, y, segmentBegin.z )
+		euclidean.addXIntersectionIndexes( rotatedOutset, belowLoopIndex, solidXIntersectionList, y )
+	overhangingSegments = euclidean.getSegmentsFromXIntersectionIndexes( solidXIntersectionList, y, segmentBegin.z )
 	overhangDirection = complex()
 	for overhangingSegment in overhangingSegments:
 		overhangDirection += getDoubledRoundZ( overhangingSegment, normalizedSegment )
@@ -353,10 +362,10 @@ def getSegmentsFromPoints( loopLists, pointBegin, pointEnd ):
 			rotatedLoop = euclidean.getPathRoundZAxisByPlaneAngle( segmentYMirror, loop )
 			rotatedLoopList.append( rotatedLoop )
 	xIntersectionList = []
-	xIntersectionList.append( euclidean.XIntersection().getFromIndexX( - 1, pointBeginRotated.x ) )
-	xIntersectionList.append( euclidean.XIntersection().getFromIndexX( - 1, pointEndRotated.x ) )
-	euclidean.addXIntersectionsFromLoopLists( rotatedLoopLists, xIntersectionList, pointBeginRotated.y )
-	segments = euclidean.getSegmentsFromIntersections( xIntersectionList, pointBeginRotated.y, pointBegin.z )
+	xIntersectionList.append( euclidean.XIntersectionIndex( - 1, pointBeginRotated.x ) )
+	xIntersectionList.append( euclidean.XIntersectionIndex( - 1, pointEndRotated.x ) )
+	euclidean.addXIntersectionIndexesFromLoopLists( rotatedLoopLists, xIntersectionList, pointBeginRotated.y )
+	segments = euclidean.getSegmentsFromXIntersectionIndexes( xIntersectionList, pointBeginRotated.y, pointBegin.z )
 	for segment in segments:
 		endpointBegin = segment[ 0 ]
 		endpointBegin.point = euclidean.getRoundZAxisByPlaneAngle( normalizedSegment, endpointBegin.point )
@@ -468,36 +477,42 @@ class SlicePreferences:
 		"Set the default preferences, execute title & preferences filename."
 		#Set the default preferences.
 		self.archive = []
-		self.extrusionDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Diameter (mm):', 0.6 )
+		self.extrusionDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Diameter (mm):', 0.5 )
 		self.archive.append( self.extrusionDiameter )
 		self.extrusionDiameterOverPrecision = preferences.FloatPreference().getFromValue( 'Extrusion Diameter Over Precision (ratio):', 10.0 )
 		self.archive.append( self.extrusionDiameterOverPrecision )
-		self.extrusionHeightOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Height Over Diameter (ratio):', 0.67 )
+		self.extrusionHeightOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Height Over Diameter (ratio):', 0.8 )
 		self.archive.append( self.extrusionHeightOverDiameter )
-		self.extrusionPerimeterWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Perimeter Width Over Diameter (ratio):', 1.2 )
+		self.extrusionPerimeterWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Perimeter Width Over Diameter (ratio):', 1.44 )
 		self.archive.append( self.extrusionPerimeterWidthOverDiameter )
-		self.extrusionWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Width Over Diameter (ratio):', 1.0 )
+		self.extrusionWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Extrusion Width Over Diameter (ratio):', 1.2 )
 		self.archive.append( self.extrusionWidthOverDiameter )
 		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorFileTypeTuples(), 'Open File to be Sliced', '' )
 		self.archive.append( self.filenameInput )
 		self.importCoarseness = preferences.FloatPreference().getFromValue( 'Import Coarseness (ratio):', 1.0 )
 		self.archive.append( self.importCoarseness )
+		self.meshTypeLabel = preferences.LabelDisplay().getFromName( 'Mesh Type: ' )
+		self.archive.append( self.meshTypeLabel )
 		importRadio = []
-		self.correct = preferences.RadioLabel().getFromRadioLabel( 'Correct Mesh', 'Mesh Type:', importRadio, True )
+		self.correct = preferences.Radio().getFromRadio( 'Correct Mesh', importRadio, True )
 		self.archive.append( self.correct )
 		self.unproven = preferences.Radio().getFromRadio( 'Unproven Mesh', importRadio, False )
 		self.archive.append( self.unproven )
-		self.infillBridgeWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Infill Bridge Width Over Thickness (ratio):', 1.0 )
+		self.infillBridgeWidthOverDiameter = preferences.FloatPreference().getFromValue( 'Infill Bridge Width Over Thickness (ratio):', 1.2 )
 		self.archive.append( self.infillBridgeWidthOverDiameter )
 		self.infillDirectionBridge = preferences.BooleanPreference().getFromValue( 'Infill in Direction of Bridges', True )
 		self.archive.append( self.infillDirectionBridge )
 		self.infillPerimeterOverlap = preferences.FloatPreference().getFromValue( 'Infill Perimeter Overlap (ratio):', 0.1 )
 		self.archive.append( self.infillPerimeterOverlap )
+		self.infillPerimeterOverlapMethodOfCalculationLabel = preferences.LabelDisplay().getFromName( 'Infill Perimeter Overlap Method of Calculation: ' )
+		self.archive.append( self.infillPerimeterOverlapMethodOfCalculationLabel )
 		infillRadio = []
-		self.perimeterInfillPreference = preferences.RadioLabel().getFromRadioLabel( 'Calculate Overlap from Perimeter and Infill', 'Infill Perimeter Overlap Method of Calculation:', infillRadio, True )
+		self.perimeterInfillPreference = preferences.Radio().getFromRadio( 'Calculate Overlap from Perimeter and Infill', infillRadio, True )
 		self.archive.append( self.perimeterInfillPreference )
 		self.perimeterPreference = preferences.Radio().getFromRadio( 'Calculate Overlap from Perimeter Only', infillRadio, False )
 		self.archive.append( self.perimeterPreference )
+		self.startAtHome = preferences.BooleanPreference().getFromValue( 'Start at Home', True )
+		self.archive.append( self.startAtHome )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.executeTitle = 'Slice'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'slice_shape.csv' )
@@ -624,7 +639,8 @@ class SliceSkein:
 		self.addLine( '(<extruderInitialization> )' ) # GCode formatted comment
 		self.addLine( 'G21' ) # Set units to mm.
 		self.addLine( 'G90' ) # Set positioning to absolute.
-		self.addLine( 'G28' ) # Start at home.
+		if self.slicePreferences.startAtHome.value:
+			self.addLine( 'G28' ) # Start at home.
 		self.addLine( 'M103' ) # Turn extruder off.
 		self.addLine( 'M105' ) # Custom code for temperature reading.
 		self.addFromUpperLowerFile( 'EndOfTheBeginning.txt' ) # Add a second start file if it exists.
@@ -639,7 +655,7 @@ class SliceSkein:
 		self.addLine( '(<procedureDone> slice_shape )' ) # The skein has been sliced.
 		self.addLine( '(<extrusionStart> )' ) # Initialization is finished, extrusion is starting.
 		circleArea = self.extrusionDiameter * self.extrusionDiameter * math.pi / 4.0
-		print( 'The extrusion fill density ratio is ' + euclidean.getRoundedToThreePlaces( self.extrusionWidth * self.extrusionHeight / circleArea ) )
+		print( 'The extrusion fill density ratio is ' + euclidean.getRoundedToThreePlaces( circleArea / self.extrusionWidth / self.extrusionHeight ) )
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."

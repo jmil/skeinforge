@@ -470,6 +470,15 @@ preferencesAddWidgetsWithStrings( widgets, widgetStrings, widgetVector );
 preferencesAddWidgetWithString( gnuSurfaceFilenameTextField, "GNU Triangulated Surface Filename:", widgetVector );
 preferencesRead( preferencesFilename, widgetVector );
 
+curvesMeshesInfo = getCurvesMeshesInfo();
+
+if ( curvesMeshesInfo.length < 1 ) {
+  print( "There is no triangle mesh in the scene, so nothing will be done." );
+  print( "It may be that there is a solid shape which is not a triangle mesh, in which case convert that shape to a triangle mesh." );
+
+  return;
+}
+
 dialog = new ComponentsDialog( window, "Export and/or Print Selection", widgets, widgetStrings );
 
 if ( !dialog.clickedOk() ) return;
@@ -487,13 +496,4 @@ if ( exportSelectionCheckbox.getState() ) {
 }
 
 preferencesWrite( preferencesFilename, widgetVector );
-curvesMeshesInfo = getCurvesMeshesInfo();
-
-if ( curvesMeshesInfo == null ) {
-  print( "There is no triangle mesh in the scene, so nothing will be done." );
-  print( "It may be that there is a solid shape which is not a triangle mesh, in which case convert that shape to a triangle mesh." );
-
-  return;
-}
-
 outputCurvesMeshes( curvesMeshesInfo );

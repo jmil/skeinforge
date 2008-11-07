@@ -15,8 +15,9 @@ extruder will move slowly in corners, accelerating gently and leaving a thick ex
 Radius over Extrusion Width' ratio determines how much wide the fillet will be, the default is 0.35.  The 'Reversal Slowdown
 over Extrusion Width' ratio determines how far before a path reversal the extruder will slow down.  Some tools, like nozzle
 wipe, double back the path of the extruder and this option will add a slowdown point in that path so there won't be a sudden
-jerk at the end of the path.  The default value is 0.5 and if the value is less than 0.1 a slowdown will not be added.  To run
-fillet, in a shell in the folder which fillet is in type:
+jerk at the end of the path.  The default value is 0.5 and if the value is less than 0.1 a slowdown will not be added.  If
+'Use Intermediate Feedrate in Corners' is chosen, the feedrate entering the corner will be the average of the old feedrate and
+the new feedrate, the default is true.  To run fillet, in a shell in the folder which fillet is in type:
 > python fillet.py
 
 The following examples fillet the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder
@@ -295,6 +296,7 @@ class BevelSkein:
 		self.layerFilletRadius = self.filletRadius
 		self.lineIndex = 0
 		self.lines = None
+		self.oldFeedrateMinute = None
 		self.oldLocation = None
 		self.output = cStringIO.StringIO()
 		self.shouldAddLine = True
@@ -316,6 +318,14 @@ class BevelSkein:
 	def addPoint( self, point ):
 		"Add a gcode point to the output."
 		self.output.write( " X%s Y%s Z%s" % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ) ) )
+
+	def getCornerFeedrate( self ):
+		"Get the corner feedrate, which may be based on the intermediate feedrate."
+		feedrateMinute = self.feedrateMinute
+		if self.filletPreferences.useIntermediateFeedrateInCorners.value:
+			if self.oldFeedrateMinute != None:
+				feedrateMinute = 0.5 * ( self.oldFeedrateMinute + self.feedrateMinute )
+		return feedrateMinute * self.cornerFeedrateOverOperatingFeedrate
 
 	def getExtruderOffReversalPoint( self, afterSegment, beforeSegment, location ):
 		"If the extruder is off and the path is reversing, add intermediate slow points."
@@ -365,11 +375,13 @@ class BevelSkein:
 			if nextLocation != None:
 				location = self.splitPointGetAfter( location, nextLocation )
 		self.oldLocation = location
+		self.oldFeedrateMinute = self.feedrateMinute
 
 	def parseGcode( self, filletPreferences, gcodeText ):
 		"Parse gcode text and store the bevel gcode."
 		self.cornerFeedrateOverOperatingFeedrate = filletPreferences.cornerFeedrateOverOperatingFeedrate.value
 		self.lines = gcodec.getTextLines( gcodeText )
+		self.filletPreferences = filletPreferences
 		self.parseInitialization( filletPreferences )
 		for self.lineIndex in range( self.lineIndex, len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
@@ -434,7 +446,7 @@ class BevelSkein:
 			bevelLength = halfBeforeSegmentLength
 		else:
 			beforePoint = euclidean.getPointPlusSegmentWithLength( bevelLength, location, beforeSegment )
-			self.addLinearMovePoint( self.feedrateMinute * self.cornerFeedrateOverOperatingFeedrate, beforePoint )
+			self.addLinearMovePoint( self.getCornerFeedrate(), beforePoint )
 		afterPoint = euclidean.getPointPlusSegmentWithLength( bevelLength, location, afterSegment )
 		self.addLinearMovePoint( self.feedrateMinute, afterPoint )
 		return afterPoint
@@ -451,8 +463,8 @@ class ArcSegmentSkein( BevelSkein ):
 		for step in range( 1, steps ):
 			beforeCenterSegment = euclidean.getRoundZAxisByPlaneAngle( stepPlaneAngle, beforeCenterSegment )
 			arcPoint = center.plus( beforeCenterSegment )
-			self.addLinearMovePoint( self.feedrateMinute * self.cornerFeedrateOverOperatingFeedrate, arcPoint )
-		self.addLinearMovePoint( self.feedrateMinute * self.cornerFeedrateOverOperatingFeedrate, afterPoint )
+			self.addLinearMovePoint( self.getCornerFeedrate(), arcPoint )
+		self.addLinearMovePoint( self.getCornerFeedrate(), afterPoint )
 
 	def splitPointGetAfter( self, location, nextLocation ):
 		"Fillet a point into arc segments and return the end of the last segment."
@@ -512,7 +524,7 @@ class ArcPointSkein( ArcSegmentSkein ):
 			self.output.write( 'G2' )
 		self.addPoint( afterPointMinusBefore )
 		self.addRelativeCenter( centerMinusBefore )
-		self.addFeedrateEnd( self.feedrateMinute * self.cornerFeedrateOverOperatingFeedrate )
+		self.addFeedrateEnd( self.getCornerFeedrate() )
 
 	def addRelativeCenter( self, centerMinusBefore ):
 		"Add the relative center to a line of the arc point filleted skein."
@@ -536,8 +548,10 @@ class FilletPreferences:
 		self.archive = []
 		self.activateFillet = preferences.BooleanPreference().getFromValue( 'Activate Fillet', True )
 		self.archive.append( self.activateFillet )
+		self.filletProcedureChoiceLabel = preferences.LabelDisplay().getFromName( 'Fillet Procedure Choice: ' )
+		self.archive.append( self.filletProcedureChoiceLabel )
 		filletRadio = []
-		self.arcPoint = preferences.RadioLabel().getFromRadioLabel( 'Arc Point', 'Fillet Procedure Choice:', filletRadio, False )
+		self.arcPoint = preferences.Radio().getFromRadio( 'Arc Point', filletRadio, False )
 		self.archive.append( self.arcPoint )
 		self.arcRadius = preferences.Radio().getFromRadio( 'Arc Radius', filletRadio, False )
 		self.archive.append( self.arcRadius )
@@ -553,6 +567,8 @@ class FilletPreferences:
 		self.archive.append( self.filenameInput )
 		self.reversalSlowdownDistanceOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Reversal Slowdown Distance over Extrusion Width (ratio):', 0.5 )
 		self.archive.append( self.reversalSlowdownDistanceOverExtrusionWidth )
+		self.useIntermediateFeedrateInCorners = preferences.BooleanPreference().getFromValue( 'Use Intermediate Feedrate in Corners', True )
+		self.archive.append( self.useIntermediateFeedrateInCorners )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.executeTitle = 'Fillet'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'fillet.csv' )

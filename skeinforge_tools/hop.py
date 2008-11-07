@@ -124,6 +124,34 @@ def writeOutput( filename = '' ):
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to hop the file.' )
 
 
+class HopPreferences:
+	"A class to handle the hop preferences."
+	def __init__( self ):
+		"Set the default preferences, execute title & preferences filename."
+		#Set the default preferences.
+		self.archive = []
+		self.activateHop = preferences.BooleanPreference().getFromValue( 'Activate Hop', False )
+		self.archive.append( self.activateHop )
+		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Hopped', '' )
+		self.archive.append( self.filenameInput )
+		self.hopOverExtrusionHeight = preferences.FloatPreference().getFromValue( 'Hop Over Extrusion Height (ratio):', 1.0 )
+		self.archive.append( self.hopOverExtrusionHeight )
+		self.minimumHopAngle = preferences.FloatPreference().getFromValue( 'Minimum Hop Angle (degrees):', 20.0 )
+		self.archive.append( self.minimumHopAngle )
+		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		self.executeTitle = 'Hop'
+		self.filenamePreferences = preferences.getPreferencesFilePath( 'hop.csv' )
+		self.filenameHelp = 'skeinforge_tools.hop.html'
+		self.saveTitle = 'Save Preferences'
+		self.title = 'Hop Preferences'
+
+	def execute( self ):
+		"Hop button has been clicked."
+		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
+		for filename in filenames:
+			writeOutput( filename )
+
+
 class HopSkein:
 	"A class to hop a skein of extrusions."
 	def __init__( self ):
@@ -241,34 +269,6 @@ class HopSkein:
 			self.layerHopHeight = self.hopHeight * self.bridgeExtrusionWidthOverSolid
 			self.layerHopDistance = self.layerHopHeight / self.minimumSlope
 		self.addLine( line )
-
-
-class HopPreferences:
-	"A class to handle the hop preferences."
-	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
-		#Set the default preferences.
-		self.archive = []
-		self.activateHop = preferences.BooleanPreference().getFromValue( 'Activate Hop', False )
-		self.archive.append( self.activateHop )
-		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Hopped', '' )
-		self.archive.append( self.filenameInput )
-		self.hopOverExtrusionHeight = preferences.FloatPreference().getFromValue( 'Hop Over Extrusion Height (ratio):', 1.0 )
-		self.archive.append( self.hopOverExtrusionHeight )
-		self.minimumHopAngle = preferences.FloatPreference().getFromValue( 'Minimum Hop Angle (degrees):', 20.0 )
-		self.archive.append( self.minimumHopAngle )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.executeTitle = 'Hop'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'hop.csv' )
-		self.filenameHelp = 'skeinforge_tools.hop.html'
-		self.saveTitle = 'Save Preferences'
-		self.title = 'Hop Preferences'
-
-	def execute( self ):
-		"Hop button has been clicked."
-		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
-		for filename in filenames:
-			writeOutput( filename )
 
 
 def main( hashtable = None ):

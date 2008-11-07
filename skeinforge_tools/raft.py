@@ -206,10 +206,12 @@ class RaftPreferences:
 		self.archive.append( self.bottomAltitude )
 		self.feedratePerSecond = preferences.FloatPreference().getFromValue( 'Feedrate (mm/s):', 16.0 )
 		self.archive.append( self.feedratePerSecond )
-		flowrateRadio = []
 		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Rafted', '' )
 		self.archive.append( self.filenameInput )
-		self.flowrateDoNotAddFlowratePreference = preferences.RadioLabel().getFromRadioLabel( 'Do Not Add Flowrate', 'Flowrate Choice:', flowrateRadio, False )
+		flowrateRadio = []
+		self.flowrateChoiceLabel = preferences.LabelDisplay().getFromName( 'Flowrate Choice: ' )
+		self.archive.append( self.flowrateChoiceLabel )
+		self.flowrateDoNotAddFlowratePreference = preferences.Radio().getFromRadio( 'Do Not Add Flowrate', flowrateRadio, False )
 		self.archive.append( self.flowrateDoNotAddFlowratePreference )
 		self.flowrateMetricPreference = preferences.Radio().getFromRadio( 'Metric', flowrateRadio, False )
 		self.archive.append( self.flowrateMetricPreference )
@@ -276,6 +278,7 @@ class RaftSkein:
 		self.cornerLow = Vec3( 999999999.0, 999999999.0, 999999999.0 )
 		self.decimalPlacesCarried = 3
 		self.extrusionDiameter = 0.6
+		self.extrusionStart = True
 		self.extrusionTop = 0.0
 		self.extrusionWidth = 0.6
 		self.feedratePerSecond = 16.0
@@ -504,13 +507,16 @@ class RaftSkein:
 			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':
-			line = self.getRaftedLine( splitLine )
+			if self.extrusionStart:
+				line = self.getRaftedLine( splitLine )
 		elif firstWord == 'M101':
 			if self.isStartupEarly:
 				self.isStartupEarly = False
 				return
 		elif firstWord == '(<boundaryPoint>':
 			self.boundaryLoop.append( gcodec.getLocationFromSplitLine( None, splitLine ) )
+		elif firstWord == '(</extrusionStart>':
+			self.extrusionStart = False
 		elif firstWord == '(<layerStart>':
 			self.layerIndex += 1
 			if self.operatingJump != None:

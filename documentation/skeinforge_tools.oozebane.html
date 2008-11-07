@@ -145,8 +145,6 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 
 <dl><dt><a name="OozebaneSkein-addShutSlowDownLine"><strong>addShutSlowDownLine</strong></a>(self, splitLine)</dt><dd><tt>Add&nbsp;the&nbsp;shutdown&nbsp;and&nbsp;slowdown&nbsp;lines.</tt></dd></dl>
 
-<dl><dt><a name="OozebaneSkein-addStartupLine"><strong>addStartupLine</strong></a>(self, distanceThreadBeginning, splitLine)</dt><dd><tt>Add&nbsp;the&nbsp;startup&nbsp;line.</tt></dd></dl>
-
 <dl><dt><a name="OozebaneSkein-getAddAfterStartupLines"><strong>getAddAfterStartupLines</strong></a>(self, line)</dt><dd><tt>Get&nbsp;and&nbsp;/&nbsp;or&nbsp;add&nbsp;after&nbsp;the&nbsp;startup&nbsp;lines.</tt></dd></dl>
 
 <dl><dt><a name="OozebaneSkein-getAddBeforeStartupLines"><strong>getAddBeforeStartupLines</strong></a>(self, line)</dt><dd><tt>Get&nbsp;and&nbsp;/&nbsp;or&nbsp;add&nbsp;before&nbsp;the&nbsp;startup&nbsp;lines.</tt></dd></dl>
@@ -171,13 +169,15 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 
 <dl><dt><a name="OozebaneSkein-getShutdownFlowRateMultiplier"><strong>getShutdownFlowRateMultiplier</strong></a>(self, along)</dt><dd><tt>Get&nbsp;the&nbsp;shut&nbsp;down&nbsp;flow&nbsp;rate&nbsp;multipler.</tt></dd></dl>
 
-<dl><dt><a name="OozebaneSkein-getStartupFlowRateMultiplier"><strong>getStartupFlowRateMultiplier</strong></a>(self, along)</dt><dd><tt>Get&nbsp;the&nbsp;startup&nbsp;flow&nbsp;rate&nbsp;multipler.</tt></dd></dl>
+<dl><dt><a name="OozebaneSkein-getStartupFlowRateMultiplier"><strong>getStartupFlowRateMultiplier</strong></a>(self, along, numberOfDistances)</dt><dd><tt>Get&nbsp;the&nbsp;startup&nbsp;flow&nbsp;rate&nbsp;multipler.</tt></dd></dl>
+
+<dl><dt><a name="OozebaneSkein-isAddStartupLine"><strong>isAddStartupLine</strong></a>(self, distanceThreadBeginning, splitLine)</dt><dd><tt>Add&nbsp;the&nbsp;startup&nbsp;line.</tt></dd></dl>
 
 <dl><dt><a name="OozebaneSkein-isClose"><strong>isClose</strong></a>(self, locationFirst, locationSecond)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;first&nbsp;location&nbsp;is&nbsp;close&nbsp;to&nbsp;the&nbsp;second&nbsp;location.</tt></dd></dl>
 
 <dl><dt><a name="OozebaneSkein-isDistanceAfterThreadBeginningGreater"><strong>isDistanceAfterThreadBeginningGreater</strong></a>(self)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;distance&nbsp;after&nbsp;the&nbsp;thread&nbsp;beginning&nbsp;is&nbsp;greater&nbsp;than&nbsp;the&nbsp;step&nbsp;index&nbsp;after&nbsp;startup&nbsp;distance.</tt></dd></dl>
 
-<dl><dt><a name="OozebaneSkein-isJustBeforeStart"><strong>isJustBeforeStart</strong></a>(self)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;first&nbsp;location&nbsp;is&nbsp;close&nbsp;to&nbsp;the&nbsp;second&nbsp;location.</tt></dd></dl>
+<dl><dt><a name="OozebaneSkein-isJustBeforeStart"><strong>isJustBeforeStart</strong></a>(self)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;extruder&nbsp;is&nbsp;just&nbsp;before&nbsp;the&nbsp;thread&nbsp;start.</tt></dd></dl>
 
 <dl><dt><a name="OozebaneSkein-isNextExtruderOn"><strong>isNextExtruderOn</strong></a>(self)</dt><dd><tt>Determine&nbsp;if&nbsp;there&nbsp;is&nbsp;an&nbsp;extruder&nbsp;on&nbsp;command&nbsp;before&nbsp;a&nbsp;move&nbsp;command.</tt></dd></dl>
 
@@ -186,6 +186,8 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 <dl><dt><a name="OozebaneSkein-parseInitialization"><strong>parseInitialization</strong></a>(self, oozebanePreferences)</dt><dd><tt>Parse&nbsp;gcode&nbsp;initialization&nbsp;and&nbsp;store&nbsp;the&nbsp;parameters.</tt></dd></dl>
 
 <dl><dt><a name="OozebaneSkein-parseLine"><strong>parseLine</strong></a>(self, line)</dt><dd><tt>Parse&nbsp;a&nbsp;gcode&nbsp;line&nbsp;and&nbsp;add&nbsp;it&nbsp;to&nbsp;the&nbsp;bevel&nbsp;gcode.</tt></dd></dl>
+
+<dl><dt><a name="OozebaneSkein-setAfterStartupFlowRates"><strong>setAfterStartupFlowRates</strong></a>(self, afterStartupRatio)</dt><dd><tt>Set&nbsp;the&nbsp;after&nbsp;startup&nbsp;flow&nbsp;rates.</tt></dd></dl>
 
 <dl><dt><a name="OozebaneSkein-setEarlyStartupDistance"><strong>setEarlyStartupDistance</strong></a>(self, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;early&nbsp;startup&nbsp;distance.</tt></dd></dl>
 

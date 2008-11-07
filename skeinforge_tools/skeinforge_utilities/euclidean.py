@@ -61,7 +61,7 @@ def addToThreadsRemoveFromSurroundings( oldOrderedLocation, surroundingLoops, sk
 	while len( surroundingLoops ) > 0:
 		getTransferClosestSurroundingLoop( oldOrderedLocation, surroundingLoops, skein )
 
-def addXIntersections( loop, solidIndex, xIntersectionList, y ):
+def addXIntersectionIndexes( loop, solidIndex, xIntersectionIndexList, y ):
 	"Add the x intersections for a loop."
 	for pointIndex in range( len( loop ) ):
 		pointFirst = loop[ pointIndex ]
@@ -70,19 +70,19 @@ def addXIntersections( loop, solidIndex, xIntersectionList, y ):
 		isYAboveSecond = y > pointSecond.y
 		if isYAboveFirst != isYAboveSecond:
 			xIntersection = getXIntersection( pointFirst, pointSecond, y )
-			xIntersectionList.append( XIntersection().getFromIndexX( solidIndex, xIntersection ) )
+			xIntersectionIndexList.append( XIntersectionIndex( solidIndex, xIntersection ) )
 
-def addXIntersectionsFromLoops( loops, solidIndex, xIntersectionList, y ):
+def addXIntersectionIndexesFromLoops( loops, solidIndex, xIntersectionIndexList, y ):
 	"Add the x intersections for the loops."
 	for loop in loops:
-		addXIntersections( loop, solidIndex, xIntersectionList, y )
+		addXIntersectionIndexes( loop, solidIndex, xIntersectionIndexList, y )
 
-def addXIntersectionsFromLoopLists( loopLists, solidXIntersectionList, y ):
+def addXIntersectionIndexesFromLoopLists( loopLists, xIntersectionIndexList, y ):
 	"Add the x intersections for the loop lists."
 	for loopListIndex in range( len( loopLists ) ):
 		loopList = loopLists[ loopListIndex ]
 		for loop in loopList:
-			addXIntersections( loop, loopListIndex, solidXIntersectionList, y )
+			addXIntersectionIndexes( loop, loopListIndex, xIntersectionIndexList, y )
 
 def getAngleAroundZAxisDifference( subtractFromVec3, subtractVec3 ):
 	"""Get the angle around the Z axis difference between a pair of Vec3s.
@@ -508,28 +508,19 @@ def getSegmentFromPoints( begin, end ):
 	endpointFirst.getFromOtherPoint( endpointSecond, begin )
 	return ( endpointFirst, endpointSecond )
 
-def getSegmentsFromIntersections( solidXIntersectionList, y, z ):
-	"Get endpoint segments from the intersections."
+def getSegmentsFromXIntersections( xIntersections, y, z ):
+	"Get endpoint segments from the x intersections."
 	segments = []
-	xIntersectionList = []
-	fill = False
-	solid = False
-	solidTable = {}
-	solidXIntersectionList.sort()
-	for solidX in solidXIntersectionList:
-		if solidX.index >= 0:
-			toggleHashtable( solidTable, solidX.index, "" )
-		else:
-			fill = not fill
-		oldSolid = solid
-		solid = ( len( solidTable ) == 0 and fill )
-		if oldSolid != solid:
-			xIntersectionList.append( solidX.x )
-	for xIntersectionIndex in range( 0, len( xIntersectionList ), 2 ):
-		firstX = xIntersectionList[ xIntersectionIndex ]
-		secondX = xIntersectionList[ xIntersectionIndex + 1 ]
+	for xIntersectionIndex in range( 0, len( xIntersections ), 2 ):
+		firstX = xIntersections[ xIntersectionIndex ]
+		secondX = xIntersections[ xIntersectionIndex + 1 ]
 		segments.append( getSegmentFromPoints( Vec3( firstX, y, z ), Vec3( secondX, y, z ) ) )
 	return segments
+
+def getSegmentsFromXIntersectionIndexes( xIntersectionIndexList, y, z ):
+	"Get endpoint segments from the x intersection indexes."
+	xIntersections = getXIntersectionsFromIntersections( xIntersectionIndexList, y, z )
+	return getSegmentsFromXIntersections( xIntersections, y, z )
 
 def getSimplifiedLoop( loop, radius ):
 	"Get loop with points inside the channel removed."
@@ -601,6 +592,24 @@ def getXIntersection( firstPoint, secondPoint, y ):
 	secondMinusFirst = secondPoint.minus( firstPoint )
 	yMinusFirst = y - firstPoint.y
 	return yMinusFirst / secondMinusFirst.y * secondMinusFirst.x + firstPoint.x
+
+def getXIntersectionsFromIntersections( xIntersectionIndexList, y, z ):
+	"Get x intersections from the x intersection index list."
+	xIntersections = []
+	fill = False
+	solid = False
+	solidTable = {}
+	xIntersectionIndexList.sort()
+	for solidX in xIntersectionIndexList:
+		if solidX.index >= 0:
+			toggleHashtable( solidTable, solidX.index, "" )
+		else:
+			fill = not fill
+		oldSolid = solid
+		solid = ( len( solidTable ) == 0 and fill )
+		if oldSolid != solid:
+			xIntersections.append( solidX.x )
+	return xIntersections
 
 def getWiddershinsDot( vec3First, vec3Second ):
 	"Get the magintude of the positive dot product plus one of the x and y components of a pair of Vec3s, with the reversed sign of the cross product."
@@ -946,8 +955,12 @@ class SurroundingLoop:
 		self.paths = getTransferredPaths( paths, self.boundary )
 
 
-class XIntersection:
-	"A class to hold the x intersection position and the number of the loop which intersected."
+class XIntersectionIndex:
+	"A class to hold the x intersection position and the index of the loop which intersected."
+	def __init__( self, index, x ):
+		self.index = index
+		self.x = x
+
 	def __cmp__( self, other ):
 		"Get comparison in order to sort x intersections in ascending order of x."
 		if self.x > other.x:
@@ -959,10 +972,3 @@ class XIntersection:
 	def __repr__( self ):
 		"Get the string representation of this x intersection."
 		return '%s, %s' % ( self.index, self.x )
-
-	def getFromIndexX( self, index, x ):
-		"Get the bounding loop from a path."
-		self.index = index
-		self.x = x
-		return self
-

@@ -49,9 +49,6 @@ If you want python and Tkinter together on all platforms and don't mind filling 
 from Active State at:
 http://www.activestate.com/Products/activepython/feature_list.mhtml
 
-To run gifscene you need the Python Imaging Library, which can be downloaded from:
-http://www.pythonware.com/products/pil/
-
 Skeinforge imports Stereolithography (.stl) files or GNU Triangulated Surface (.gts) files.  The import plugin for STL files is
 experimental and if it doesn't work, an indirect way to import an STL file is by turning it into a GTS file is by using the Export GNU
 Triangulated Surface script at:
@@ -148,8 +145,14 @@ http://www.mozilla.com/firefox/
 A good triangle surface format is the GNU Triangulated Surface format, which is supported by Mesh Viewer and described at:
 http://gts.sourceforge.net/reference/gts-surfaces.html#GTS-SURFACE-WRITE
 
+You can export GTS files from Art of Illusion with the Export GNU Triangulated Surface.bsh script in the Art of Illusion Scripts
+folder.
+
 STL is an inferior triangle surface format, described at:
 http://en.wikipedia.org/wiki/STL_(file_format)
+
+If you're using an STL file and you can't even slice it, try converting it to a GNU Triangulated Surface file in Art of Illusion.  If
+it still doesn't slice, then follow the advice in the troubleshooting section.
 
 
 
@@ -266,11 +269,11 @@ class SkeinforgePreferences:
 		self.skeinforgeLabel = preferences.LabelDisplay().getFromName( 'Open Preferences: ' )
 		self.archive.append( self.skeinforgeLabel )
 		skeinforgePluginFilenames = getSkeinforgeToolFilenames()
-		self.skeinforgePlugins = []
+		self.skeinforgeDisplayToolButtons = []
 		for skeinforgePluginFilename in skeinforgePluginFilenames:
-			skeinforgePlugin = preferences.DisplayToolButton().getFromFolderName( 'skeinforge_tools', __file__, skeinforgePluginFilename )
-			self.skeinforgePlugins.append( skeinforgePlugin )
-		self.archive += self.skeinforgePlugins
+			skeinforgeDisplayToolButton = preferences.DisplayToolButton().getFromFolderName( 'skeinforge_tools', __file__, skeinforgePluginFilename )
+			self.skeinforgeDisplayToolButtons.append( skeinforgeDisplayToolButton )
+		self.archive += self.skeinforgeDisplayToolButtons
 		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Skeinforged', '' )
 		self.archive.append( self.filenameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.

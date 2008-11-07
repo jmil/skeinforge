@@ -115,19 +115,74 @@ def writeOutput( filename = '' ):
 	exportChainGcode = getExportGcode( gcodeText, exportPreferences )
 	pluginModule = None
 	selectedPlugin = getSelectedPlugin( exportPreferences )
-	if selectedPlugin != None:
-		pluginModule = gcodec.getModule( selectedPlugin.name, 'export_plugins', __file__ )
-		if pluginModule != None:
-			exportChainGcode = pluginModule.getOutput( exportChainGcode )
-	if exportPreferences.alsoSendOutputTo.value != '':
-		exec( 'print >> ' + exportPreferences.alsoSendOutputTo.value + ', exportChainGcode' )
 	if selectedPlugin == None:
 		gcodec.writeFileText( suffixFilename, exportChainGcode )
 		print( 'The exported file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
 	else:
+		pluginModule = gcodec.getModule( selectedPlugin.name, 'export_plugins', __file__ )
 		if pluginModule != None:
 			pluginModule.writeOutput( suffixFilename, exportChainGcode )
+	if exportPreferences.alsoSendOutputTo.value != '':
+		alsoSendOutputToGcode = exportChainGcode
+		if pluginModule != None:
+			alsoSendOutputToGcode = pluginModule.getOutput( exportChainGcode )
+		exec( 'print >> ' + exportPreferences.alsoSendOutputTo.value + ', alsoSendOutputToGcode' )
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to export the file.' )
+
+
+class ExportPreferences:
+	"A class to handle the export preferences."
+	def __init__( self ):
+		"Set the default preferences, execute title & preferences filename."
+		#Set the default preferences.
+		self.archive = []
+		self.activateExport = preferences.BooleanPreference().getFromValue( 'Activate Export', True )
+		self.archive.append( self.activateExport )
+		self.alsoSendOutputTo = preferences.StringPreference().getFromValue( 'Also Send Output To:', '' )
+		self.archive.append( self.alsoSendOutputTo )
+		self.deleteComments = preferences.BooleanPreference().getFromValue( 'Delete Comments', True )
+		self.archive.append( self.deleteComments )
+		self.deleteM110GcodeLine = preferences.BooleanPreference().getFromValue( 'Delete M110 Gcode Line', True )
+		self.archive.append( self.deleteM110GcodeLine )
+		exportPluginFilenames = gcodec.getPluginFilenames( 'export_plugins', __file__ )
+		self.exportLabel = preferences.LabelDisplay().getFromName( 'Export Operations: ' )
+		self.archive.append( self.exportLabel )
+		self.exportOperations = []
+		self.exportPlugins = []
+		exportRadio = []
+		self.doNotChangeOutput = preferences.RadioCapitalized().getFromRadio( 'Do Not Change Output', exportRadio, True )
+		for exportPluginFilename in exportPluginFilenames:
+			exportPlugin = preferences.RadioCapitalized().getFromRadio( exportPluginFilename, exportRadio, False )
+			self.exportPlugins.append( exportPlugin )
+		self.exportOperations = [ self.doNotChangeOutput ]
+		self.exportOperations += self.exportPlugins
+		self.exportOperations.sort( key = preferences.RadioCapitalized.getLowerName )
+		self.exportOperationsButtons = []
+		for exportOperation in self.exportOperations:
+			self.exportOperationsButtons.append( exportOperation )
+			if exportOperation != self.doNotChangeOutput:
+				pluginModule = gcodec.getModule( exportOperation.name, 'export_plugins', __file__ )
+				if pluginModule != None:
+					if pluginModule.isArchivable():
+						displayToolButtonBesidePrevious = preferences.DisplayToolButtonBesidePrevious().getFromFolderName( 'export_plugins', __file__, exportOperation.name )
+						self.exportOperationsButtons.append( displayToolButtonBesidePrevious )
+		self.archive += self.exportOperationsButtons
+		self.fileExtension = preferences.StringPreference().getFromValue( 'File Extension:', 'gcode' )
+		self.archive.append( self.fileExtension )
+		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Exported', '' )
+		self.archive.append( self.filenameInput )
+		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		self.executeTitle = 'Export'
+		self.filenamePreferences = preferences.getPreferencesFilePath( 'export.csv' )
+		self.filenameHelp = 'skeinforge_tools.export.html'
+		self.saveTitle = 'Save Preferences'
+		self.title = 'Export Preferences'
+
+	def execute( self ):
+		"Export button has been clicked."
+		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
+		for filename in filenames:
+			writeOutput( filename )
 
 
 class ExportSkein:
@@ -185,55 +240,6 @@ class ExportSkein:
 		line = self.getLineWithTruncatedNumber( 'J', line )
 		line = self.getLineWithTruncatedNumber( 'R', line )
 		self.addLine( line )
-
-
-class ExportPreferences:
-	"A class to handle the export preferences."
-	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
-		#Set the default preferences.
-		self.archive = []
-		self.activateExport = preferences.BooleanPreference().getFromValue( 'Activate Export', True )
-		self.archive.append( self.activateExport )
-		self.alsoSendOutputTo = preferences.StringPreference().getFromValue( 'Also Send Output To:', '' )
-		self.archive.append( self.alsoSendOutputTo )
-		self.deleteComments = preferences.BooleanPreference().getFromValue( 'Delete Comments', True )
-		self.archive.append( self.deleteComments )
-		self.deleteM110GcodeLine = preferences.BooleanPreference().getFromValue( 'Delete M110 Gcode Line', True )
-		self.archive.append( self.deleteM110GcodeLine )
-		exportPluginFilenames = gcodec.getPluginFilenames( 'export_plugins', __file__ )
-		self.exportLabel = preferences.LabelDisplay().getFromName( 'Export Operations: ' )
-		self.archive.append( self.exportLabel )
-		self.exportOperations = []
-		self.exportPlugins = []
-		exportRadio = []
-		self.doNotChangeOutput = preferences.RadioCapitalized().getFromRadio( 'Do Not Change Output', exportRadio, True )
-		for exportPluginFilename in exportPluginFilenames:
-			exportPlugin = preferences.RadioCapitalized().getFromRadio( exportPluginFilename, exportRadio, False )
-			if exportPluginFilename == 'gcode_only':
-				self.doNotChangeOutput.value = False
-				exportPlugin.value = True
-			self.exportPlugins.append( exportPlugin )
-		self.exportOperations = [ self.doNotChangeOutput ]
-		self.exportOperations += self.exportPlugins
-		self.exportOperations.sort( key = preferences.RadioCapitalized.getLowerName )
-		self.archive += self.exportOperations
-		self.fileExtension = preferences.StringPreference().getFromValue( 'File Extension:', 'gcode' )
-		self.archive.append( self.fileExtension )
-		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Exported', '' )
-		self.archive.append( self.filenameInput )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.executeTitle = 'Export'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'export.csv' )
-		self.filenameHelp = 'skeinforge_tools.export.html'
-		self.saveTitle = 'Save Preferences'
-		self.title = 'Export Preferences'
-
-	def execute( self ):
-		"Export button has been clicked."
-		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
-		for filename in filenames:
-			writeOutput( filename )
 
 
 def main( hashtable = None ):

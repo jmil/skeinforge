@@ -188,7 +188,16 @@ class TowerSkein:
 		if len( thread ) > 0:
 			firstPoint = thread[ 0 ]
 			if firstPoint.z + self.halfExtrusionHeight < self.oldZ:
-				self.addGcodeMovement( Vec3( firstPoint.x, firstPoint.y, self.oldZ ) )
+				highPoint = Vec3( firstPoint.x, firstPoint.y, self.oldZ )
+				if self.oldLocation != None:
+					complexToPoint = firstPoint.dropAxis( 2 ) - self.oldLocation.dropAxis( 2 )
+					toPointLength = abs( complexToPoint )
+					if toPointLength > 0.0:
+						truncatedLength = max( 0.5 * toPointLength, toPointLength - self.extrusionWidth )
+						complexToPointTruncated = complexToPoint * truncatedLength / toPointLength
+						toPointTruncated = Vec3( complexToPointTruncated.real, complexToPointTruncated.imag, 0.0 )
+						highPoint = self.oldLocation.plus( toPointTruncated )
+				self.addGcodeMovement( highPoint )
 			self.addGcodeMovement( firstPoint )
 			self.oldZ = firstPoint.z
 		else:

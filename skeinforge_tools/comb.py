@@ -187,6 +187,7 @@ class CombSkein:
 		self.layerZ = None
 		self.lineIndex = 0
 		self.lines = None
+		self.nextLayerZ = None
 		self.oldZ = None
 		self.perimeter = None
 		self.pointTable = {}
@@ -220,11 +221,10 @@ class CombSkein:
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		if not self.extruderActive and self.oldLocation != None:
 			if len( self.getBetweens() ) > 0:
-				if location.z < self.getBetweens()[ 0 ][ 0 ].z + 0.5 * self.extrusionWidth:
-					aroundBetweenPath = []
-					self.insertPathsAroundBetween( aroundBetweenPath, location )
-					aroundBetweenPath = euclidean.getAwayPath( aroundBetweenPath, self.extrusionWidth )
-					self.addGcodePath( aroundBetweenPath )
+				aroundBetweenPath = []
+				self.insertPathsAroundBetween( aroundBetweenPath, location )
+				aroundBetweenPath = euclidean.getAwayPath( aroundBetweenPath, self.extrusionWidth )
+				self.addGcodePath( aroundBetweenPath )
 		self.oldLocation = location
 
 	def addLine( self, line ):
@@ -445,7 +445,7 @@ class CombSkein:
 		for betweenIndex in xrange( len( self.getBetweens() ) ):
 			between = self.getBetweens()[ betweenIndex ]
 			betweenRotated = euclidean.getPathRoundZAxisByPlaneAngle( segmentYMirror, between )
-			euclidean.addXIntersections( betweenRotated, betweenIndex, switchX, y )
+			euclidean.addXIntersectionIndexes( betweenRotated, betweenIndex, switchX, y )
 		switchX.sort()
 		maximumX = max( pathEndRotated.x, nextBeginningRotated.x )
 		minimumX = min( pathEndRotated.x, nextBeginningRotated.x )
@@ -521,6 +521,7 @@ class CombSkein:
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':
 			self.addIfTravel( splitLine )
+			self.layerZ = self.nextLayerZ
 		elif firstWord == 'M101':
 			self.extruderActive = True
 		elif firstWord == 'M103':
@@ -529,7 +530,9 @@ class CombSkein:
 			self.layerFillInset = self.fillInset * self.bridgeExtrusionWidthOverSolid
 		elif firstWord == '(<layerStart>':
 			self.layerFillInset = self.fillInset
-			self.layerZ = float( splitLine[ 1 ] )
+			self.nextLayerZ = float( splitLine[ 1 ] )
+			if self.layerZ == None:
+				self.layerZ = self.nextLayerZ
 		self.addLine( line )
 
 	def parseGcode( self, combPreferences, gcodeText ):

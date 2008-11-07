@@ -82,11 +82,15 @@ class PolyfilePreferences:
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences filename."
 		#Set the default preferences.
+		self.archive = []
+		self.directoryOrFileChoiceLabel = preferences.LabelDisplay().getFromName( 'Directory or File Choice: ' )
+		self.archive.append( self.directoryOrFileChoiceLabel )
 		directoryRadio = []
-		self.directoryPreference = preferences.RadioLabel().getFromRadioLabel( 'Execute All Unmodified Files in a Directory', 'Polyfile Choice:', directoryRadio, False )
+		self.directoryPreference = preferences.Radio().getFromRadio( 'Execute All Unmodified Files in a Directory', directoryRadio, False )
+		self.archive.append( self.directoryPreference )
 		self.filePreference = preferences.Radio().getFromRadio( 'Execute File', directoryRadio, True )
+		self.archive.append( self.filePreference )
 		#Create the archive, title of the dialog & preferences filename.
-		self.archive = [ self.directoryPreference, self.filePreference ]
 		self.executeTitle = None
 		self.filenameHelp = 'skeinforge_tools.polyfile.html'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'polyfile.csv' )
