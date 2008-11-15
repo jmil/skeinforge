@@ -287,7 +287,7 @@ class Filename( BooleanPreference ):
 			else:
 				initialDirectory = "."
 			filename = tkFileDialog.askopenfilename( filetypes = self.getFilenameFirstTypes(), initialdir = initialDirectory, initialfile = os.path.basename( summarized ), title = self.name )
-			if ( str( filename ) == '()' ):
+			if ( str( filename ) == '()' or str( filename ) == '' ):
 				self.wasCancelled = True
 			else:
 				self.value = filename
@@ -317,7 +317,7 @@ class Filename( BooleanPreference ):
 			if fileExtension == baseExtension:
 				filenameFirstTypes = self.fileTypes[ : ]
 				filenameFirstTypes.remove( fileType )
-				return [ fileType ] + filenameFirstTypes
+				return [ fileType ] + filenameFirstTypes + allReadables
 		return self.fileTypes + allReadables
 
 	def setToDisplay( self ):

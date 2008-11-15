@@ -43,6 +43,83 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
+def addLoopToPixelTable( loop, pixelTable, width ):
+	"Add loop to the pixel table."
+	for pointIndex in xrange( len( loop ) ):
+		pointBegin = loop[ pointIndex ]
+		pointEnd = loop[ ( pointIndex + 1 ) % len( loop ) ]
+		addSegmentToPixelTable( pointBegin.dropAxis( 2 ), pointEnd.dropAxis( 2 ), pixelTable, 0, width )
+
+def addPixelToPixelTable( pixelTable, pointComplex ):
+	"Add pixel to the pixel table."
+	xStep = int( round( pointComplex.real ) )
+	yStep = int( round( pointComplex.imag ) )
+	stepKey = ( xStep, yStep )
+	pixelTable[ stepKey ] = None
+
+def addPixelToPixelTableWithSteepness( isSteep, pixelTable, pointComplex ):
+	"Add pixels to the pixel table with steepness."
+	if isSteep:
+		addPixelToPixelTable( pixelTable, complex( pointComplex.imag, pointComplex.real ) )
+	else:
+		addPixelToPixelTable( pixelTable, pointComplex )
+
+def addPointToPath( path, pixelTable, point, width ):
+	"Add a point to a path and the pixel table."
+	path.append( point )
+	if len( path ) < 2:
+		return
+	pointComplex = point.dropAxis( 2 )
+	beginComplex = path[ len( path ) - 2 ].dropAxis( 2 )
+	addSegmentToPixelTable( beginComplex, pointComplex, pixelTable, 0, width )
+
+def addSegmentToPixelTable( beginComplex, endComplex, pixelTable, shortenDistance, width ):
+	"Add line segment to the pixel table."
+	if abs( beginComplex - endComplex ) <= 0.0:
+		return
+	beginComplex /= width
+	endComplex /= width
+	deltaX = endComplex.real - beginComplex.real
+	deltaY = endComplex.imag - beginComplex.imag
+	isSteep = abs( deltaY ) > abs( deltaX )
+	if isSteep:
+		beginComplex = complex( beginComplex.imag, beginComplex.real )
+		endComplex = complex( endComplex.imag, endComplex.real )
+	if beginComplex.real > endComplex.real:
+		newBeginComplex = endComplex
+		endComplex = beginComplex
+		beginComplex = newBeginComplex
+	deltaX = endComplex.real - beginComplex.real
+	deltaY = endComplex.imag - beginComplex.imag
+	gradient = deltaY / deltaX
+	xEnd = round( beginComplex.real )
+	yEnd = beginComplex.imag + gradient * ( xEnd - beginComplex.real )
+	xGap = getReverseFloatPart( beginComplex.real + 0.5 )
+	beginPixel = complex( xEnd, math.floor( yEnd ) )
+	if shortenDistance < 1:
+		addPixelToPixelTableWithSteepness( isSteep, pixelTable, beginPixel )
+		addPixelToPixelTableWithSteepness( isSteep, pixelTable, complex( beginPixel.real, beginPixel.imag + 1 ) )
+	intersectionY = yEnd + gradient
+	xEnd = round( endComplex.real )
+	yEnd = endComplex.imag + gradient * ( xEnd - endComplex.real )
+	xGap = getReverseFloatPart( endComplex.real + 0.5 )
+	endPixel = complex( xEnd, math.floor( yEnd ) )
+	if shortenDistance < 1:
+		addPixelToPixelTableWithSteepness( isSteep, pixelTable, endPixel )
+		addPixelToPixelTableWithSteepness( isSteep, pixelTable, complex( endPixel.real, endPixel.imag + 1 ) )
+	beginStep = int( round( beginPixel.real ) ) + 1
+	endStep = int( round( endPixel.real ) )
+	if shortenDistance > 0:
+		shortenDistanceMinusOne = shortenDistance - 1
+		beginStep += shortenDistanceMinusOne
+		endStep -= shortenDistanceMinusOne
+		intersectionY += gradient * float( shortenDistanceMinusOne )
+	for x in xrange( beginStep, endStep ):
+		addPixelToPixelTableWithSteepness( isSteep, pixelTable, complex( float( x ), math.floor( intersectionY ) ) )
+		addPixelToPixelTableWithSteepness( isSteep, pixelTable, complex( float( x ), math.floor( intersectionY + 1.0 ) ) )
+		intersectionY += gradient
+		x += 1
+
 def addSurroundingLoopBeginning( loop, skein ):
 	"Add surrounding loop beginning to gcode output."
 	skein.addLine( '(<surroundingLoop> )' )
@@ -218,6 +295,10 @@ def getFillOfSurroundings( surroundingLoops ):
 	for surroundingLoop in surroundingLoops:
 		fillSurroundings += surroundingLoop.getFillLoops()
 	return fillSurroundings
+
+def getFloatPart( number ):
+	"Get the float part of the number."
+	return number - math.floor( number )
 
 def getHalfSimplifiedLoop( loop, radius, remainder ):
 	"Get the loop with half of the points inside the channel removed."
@@ -440,6 +521,10 @@ def getPolygonLength( polygon ):
 		secondPoint  = polygon[ ( pointIndex + 1 ) % len( polygon ) ]
 		polygonLength += point.distance( secondPoint )
 	return polygonLength
+
+def getReverseFloatPart( number ):
+	"Get the reverse float part of the number."
+	return 1.0 - getFloatPart( number )
 
 def getRotatedClockwiseQuarterAroundZAxis( vector3 ):
 	"Get vector3 rotated a quarter clockwise turn around Z axis."
@@ -703,6 +788,15 @@ def isPathInsideLoops( loops, path ):
 			return True
 	return False
 
+def isPixelTableIntersecting( bigTable, littleTable, maskTable = {} ):
+	"Add path to the pixel table."
+	littleTableKeys = littleTable.keys()
+	for littleTableKey in littleTableKeys:
+		if littleTableKey not in maskTable:
+			if littleTableKey in bigTable:
+				return True
+	return False
+
 """
 #later see if this version of isPathInsideLoops should be used
 def isPathInsideLoops( loops, path ):
@@ -757,6 +851,13 @@ def isXSegmentIntersectingPaths( paths, segmentFirstX, segmentSecondX, segmentYM
 			if isLineIntersectingInsideXSegment( segmentFirstX, segmentSecondX, pointFirst, pointSecond, y ):
 				return True
 	return False
+
+def removePixelTableFromPixelTable( pixelTableToBeRemoved, pixelTableToBeRemovedFrom ):
+	"Remove pixel from the pixel table."
+	pixelTableToBeRemovedKeys = pixelTableToBeRemoved.keys()
+	for pixelTableToBeRemovedKey in pixelTableToBeRemovedKeys:
+		if pixelTableToBeRemovedKey in pixelTableToBeRemovedFrom:
+			del pixelTableToBeRemovedFrom[ pixelTableToBeRemovedKey ]
 
 def toggleHashtable( hashtable, key, value ):
 	"Toggle a hashtable between having and not having a key."
@@ -849,50 +950,35 @@ class Endpoint:
 				nearestEndpoint = endpoint
 		return nearestEndpoint
 
-	def getNearestMiss( self, arounds, endpoints, extrusionWidth, path, paths, stretchedXSegments ):
+	def getNearestMiss( self, endpoints, path, pixelTable, width ):
 		"Get the nearest endpoint which the segment to that endpoint misses the other extrusions."
-		smallestDistanceSquared = 999999999999999999.0
+		smallestDistance = 9999999999.0
 		nearestMiss = None
 		penultimateMinusPoint = complex( 0.0, 0.0 )
+		pointComplex = self.point.dropAxis( 2 )
 		if len( path ) > 1:
-			penultimateMinusPoint = path[ - 2 ].dropAxis( 2 ) - self.point.dropAxis( 2 )
+			penultimateMinusPoint = path[ - 2 ].dropAxis( 2 ) - pointComplex
 			if abs( penultimateMinusPoint ) > 0.0:
 				penultimateMinusPoint /= abs( penultimateMinusPoint )
 		for endpoint in endpoints:
-			segment = endpoint.point.minus( self.point )
-			normalizedSegment = segment.dropAxis( 2 )
+			endpointPointComplex = endpoint.point.dropAxis( 2 )
+			normalizedSegment = endpointPointComplex - pointComplex
 			normalizedSegmentLength = abs( normalizedSegment )
 			if normalizedSegmentLength > 0.0:
-				normalizedSegment /= normalizedSegmentLength
-				segmentYMirror = complex( normalizedSegment.real, - normalizedSegment.imag )
-				segmentFirstPoint = getRoundZAxisByPlaneAngle( segmentYMirror, self.point )
-				segmentSecondPoint = getRoundZAxisByPlaneAngle( segmentYMirror, endpoint.point )
-				distanceSquared = self.point.distance2( endpoint.point )
-				if distanceSquared < smallestDistanceSquared:
-					if getComplexDot( penultimateMinusPoint, normalizedSegment ) < 0.95:
-						if not isLoopListIntersectingInsideXSegment( arounds, segmentFirstPoint.x, segmentSecondPoint.x, segmentYMirror, segmentFirstPoint.y ):
-							if not self.isPointIntersectingSegments( extrusionWidth, endpoint.point, paths, segmentYMirror, stretchedXSegments ):
-								smallestDistanceSquared = distanceSquared
-								nearestMiss = endpoint
+				if normalizedSegmentLength < smallestDistance:
+					normalizedSegment /= normalizedSegmentLength
+					if getComplexDot( penultimateMinusPoint, normalizedSegment ) < 0.9:
+						segmentTable = {}
+						addSegmentToPixelTable( endpointPointComplex, pointComplex, segmentTable, 2, width )
+						if not isPixelTableIntersecting( pixelTable, segmentTable ):
+							smallestDistance = normalizedSegmentLength
+							nearestMiss = endpoint
 			else:
 				print( 'This should never happen, the endpoints are touching' )
 				print( endpoint )
 				print( path )
 		return nearestMiss
 
-	def isPointIntersectingSegments( self, extrusionWidth, inputPoint, paths, segmentYMirror, stretchedXSegments ):
-		"Determine if the segment to the point is crossing a stretched x segment."
-		segment = inputPoint.minus( self.point )
-		alongSegmentLength = min( 0.333 * segment.length(), 0.2 * extrusionWidth ) #later find a more reliable way of avoiding an overlap
-		segment.scale( alongSegmentLength / segment.length() )
-		pointBegin = self.point.plus( segment )
-		pointEnd = inputPoint.minus( segment )
-		for stretchedXSegment in stretchedXSegments:
-			if isLineIntersectingInsideXSegment( stretchedXSegment.xMinimum, stretchedXSegment.xMaximum, pointBegin, pointEnd, stretchedXSegment.y ):
-				return True
-		pointBeginRotated = getRoundZAxisByPlaneAngle( segmentYMirror, pointBegin )
-		pointEndRotated = getRoundZAxisByPlaneAngle( segmentYMirror, pointEnd )
-		return isXSegmentIntersectingPaths( paths, pointBeginRotated.x, pointEndRotated.x, segmentYMirror, pointBeginRotated.y )
 
 class SurroundingLoop:
 	"A loop that surrounds paths."

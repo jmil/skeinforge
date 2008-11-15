@@ -244,6 +244,38 @@ class LineIteratorForward:
 		raise StopIteration, "You've reached the end of the line."
 
 
+class StretchPreferences:
+	"A class to handle the stretch preferences."
+	def __init__( self ):
+		"Set the default preferences, execute title & preferences filename."
+		#Set the default preferences.
+		self.archive = []
+		self.activateStretch = preferences.BooleanPreference().getFromValue( 'Activate Stretch', True )
+		self.archive.append( self.activateStretch )
+		self.loopStretchOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Loop Stretch Over Extrusion Width (ratio):', 0.15 )
+		self.archive.append( self.loopStretchOverExtrusionWidth )
+		self.pathStretchOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Path Stretch Over Extrusion Width (ratio):', 0.0 )
+		self.archive.append( self.pathStretchOverExtrusionWidth )
+		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Stretched', '' )
+		self.archive.append( self.filenameInput )
+		self.stretchFromDistanceOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Stretch From Distance Over Extrusion Width (ratio):', 2.0 )
+		self.archive.append( self.stretchFromDistanceOverExtrusionWidth )
+		self.perimeterStretchOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Perimeter Maximum Stretch Over Extrusion Width (ratio):', 0.3 )
+		self.archive.append( self.perimeterStretchOverExtrusionWidth )
+		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		self.executeTitle = 'Stretch'
+		self.filenamePreferences = preferences.getPreferencesFilePath( 'stretch.csv' )
+		self.filenameHelp = 'skeinforge_tools.stretch.html'
+		self.saveTitle = 'Save Preferences'
+		self.title = 'Stretch Preferences'
+
+	def execute( self ):
+		"Stretch button has been clicked."
+		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
+		for filename in filenames:
+			writeOutput( filename )
+
+
 class StretchSkein:
 	"A class to stretch a skein of extrusions."
 	def __init__( self ):
@@ -323,12 +355,12 @@ class StretchSkein:
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
 		if self.oldLocation != None:
-			if self.extruderActive:
+			if self.extruderActive and self.threadMaximumAbsoluteStretch > 0.0:
 				self.addStretchesBeforePoint( location )
 		self.oldLocation = location
-		if self.extruderActive:
+		if self.extruderActive and self.threadMaximumAbsoluteStretch > 0.0:
 			return self.getStretchedLineFromIndexLocation( self.lineIndex - 1, self.lineIndex + 1, location )
-		if self.isJustBeforeExtrusion():
+		if self.isJustBeforeExtrusion() and self.threadMaximumAbsoluteStretch > 0.0:
 			return self.getStretchedLineFromIndexLocation( self.lineIndex - 1, self.lineIndex + 1, location )
 		return self.lines[ self.lineIndex ]
 
@@ -380,7 +412,8 @@ class StretchSkein:
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
 			elif firstWord == '(<extrusionWidth>':
 				extrusionWidth = float( splitLine[ 1 ] )
-				self.maximumAbsoluteStretch = self.extrusionWidth * self.stretchPreferences.stretchOverExtrusionWidth.value
+				self.loopMaximumAbsoluteStretch = self.extrusionWidth * self.stretchPreferences.loopStretchOverExtrusionWidth.value
+				self.pathAbsoluteStretch = self.extrusionWidth * self.stretchPreferences.pathStretchOverExtrusionWidth.value
 				self.perimeterMaximumAbsoluteStretch = self.extrusionWidth * self.stretchPreferences.perimeterStretchOverExtrusionWidth.value
 				self.stretchFromDistance = self.stretchPreferences.stretchFromDistanceOverExtrusionWidth.value * extrusionWidth
 			elif firstWord == '(<extrusionStart>':
@@ -403,49 +436,20 @@ class StretchSkein:
 			self.isLoop = False
 			self.threadMaximumAbsoluteStretch = self.layerMaximumAbsoluteStretch
 		elif firstWord == '(<bridgeLayer>':
-			self.layerMaximumAbsoluteStretch = self.maximumAbsoluteStretch * self.bridgeExtrusionWidthOverSolid
+			self.layerMaximumAbsoluteStretch = self.pathAbsoluteStretch * self.bridgeExtrusionWidthOverSolid
 			self.layerStretchFromDistance= self.stretchFromDistance * self.bridgeExtrusionWidthOverSolid
 			self.threadMaximumAbsoluteStretch = self.layerMaximumAbsoluteStretch
 		elif firstWord == '(<layerStart>':
-			self.layerMaximumAbsoluteStretch = self.maximumAbsoluteStretch
+			self.layerMaximumAbsoluteStretch = self.pathAbsoluteStretch
 			self.layerStretchFromDistance = self.stretchFromDistance
 			self.threadMaximumAbsoluteStretch = self.layerMaximumAbsoluteStretch
 		elif firstWord == '(<loop>':
 			self.isLoop = True
+			self.threadMaximumAbsoluteStretch = self.loopMaximumAbsoluteStretch
 		elif firstWord == '(<perimeter>':
 			self.isLoop = True
 			self.threadMaximumAbsoluteStretch = self.perimeterMaximumAbsoluteStretch
 		self.addLine( line )
-
-
-class StretchPreferences:
-	"A class to handle the stretch preferences."
-	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
-		#Set the default preferences.
-		self.archive = []
-		self.activateStretch = preferences.BooleanPreference().getFromValue( 'Activate Stretch', True )
-		self.archive.append( self.activateStretch )
-		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Stretched', '' )
-		self.archive.append( self.filenameInput )
-		self.stretchFromDistanceOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Stretch From Distance Over Extrusion Width (ratio):', 2.0 )
-		self.archive.append( self.stretchFromDistanceOverExtrusionWidth )
-		self.stretchOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Maximum Stretch Over Extrusion Width (ratio):', 0.1 )
-		self.archive.append( self.stretchOverExtrusionWidth )
-		self.perimeterStretchOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Perimeter Maximum Stretch Over Extrusion Width (ratio):', 0.2 )
-		self.archive.append( self.perimeterStretchOverExtrusionWidth )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.executeTitle = 'Stretch'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'stretch.csv' )
-		self.filenameHelp = 'skeinforge_tools.stretch.html'
-		self.saveTitle = 'Save Preferences'
-		self.title = 'Stretch Preferences'
-
-	def execute( self ):
-		"Stretch button has been clicked."
-		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
-		for filename in filenames:
-			writeOutput( filename )
 
 
 def main( hashtable = None ):

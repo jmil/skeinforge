@@ -17,6 +17,11 @@ preference is the ratio of the maximum distance before the thread starts that th
 the default is 2.0.  The longer the extruder has been off, the sooner the extruder will turn back on, the ratio is one minus one over e
 to the power of the distance the extruder has been off over the "Early Startup Distance Constant Over Extrusion Width".
 
+The "Minimum Distance for Early Startup over Extrusion Width" ratio is the minimum distance that the extruder has to be off before
+the thread begins over the extrusion width for the early start up feature to activate.  The "Minimum Distance for Early Shutdown
+over Extrusion Width" ratio is the minimum distance that the extruder has to be off after the thread end over the extrusion width for
+the early shutdown feature to activate.
+
 After oozebane turns the extruder on, it slows the feedrate down where the thread starts.  Then it speeds it up in steps so in theory
 the thread will remain at roughly the same thickness from the beginning.
 
@@ -158,6 +163,8 @@ class OozebanePreferences:
 		self.archive.append( self.filenameInput )
 		self.minimumDistanceForEarlyStartupOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Minimum Distance for Early Startup over Extrusion Width (ratio):', 10.0 )
 		self.archive.append( self.minimumDistanceForEarlyStartupOverExtrusionWidth )
+		self.minimumDistanceForEarlyShutdownOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Minimum Distance for Early Shutdown over Extrusion Width (ratio):', 10.0 )
+		self.archive.append( self.minimumDistanceForEarlyShutdownOverExtrusionWidth )
 		self.slowdownStartupSteps = preferences.IntPreference().getFromValue( 'Slowdown Startup Steps (positive integer):', 5 )
 		self.archive.append( self.slowdownStartupSteps )
 		self.shutdownDistanceOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Shutdown Distance over Extrusion Width (ratio):', 2.0 )
@@ -180,8 +187,6 @@ class OozebaneSkein:
 	"A class to oozebane a skein of extrusions."
 	def __init__( self ):
 		self.decimalPlacesCarried = 3
-		self.earlyShutdownDistances = []
-		self.earlyShutdownFlowRates = []
 		self.earlyStartupDistance = None
 		self.extruderActive = False
 		self.extruderInactiveLongEnough= False
@@ -222,7 +227,7 @@ class OozebaneSkein:
 
 	def addShutSlowDownLine( self, splitLine ):
 		"Add the shutdown and slowdown lines."
-		distanceThreadEnd = self.getDistanceThreadEnd()
+		distanceThreadEnd = self.getDistanceToThreadEnd()
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		segment = self.oldLocation.minus( location )
 		segmentLength = segment.length()
@@ -245,12 +250,13 @@ class OozebaneSkein:
 			self.addAfterStartupLine( splitLine )
 		if self.startupStepIndex >= len( self.afterStartupDistances ):
 			return line
+		self.startupStepIndex = len( self.afterStartupDistances )
 		feedrate = self.feedrateMinute * self.getStartupFlowRateMultiplier( self.getDistanceAfterThreadBeginning() / self.afterStartupDistance, len( self.afterStartupDistances ) )
 		return self.getLinearMoveWithFeedrateSplitLine( feedrate, splitLine )
 
 	def getAddBeforeStartupLines( self, line ):
 		"Get and / or add before the startup lines."
-		distanceThreadBeginning = self.getDistanceThreadBeginning()
+		distanceThreadBeginning = self.getDistanceToThreadBeginning()
 		splitLine = line.split()
 		if distanceThreadBeginning == None:
 			return line
@@ -268,13 +274,14 @@ class OozebaneSkein:
 
 	def getAddShutSlowDownLines( self, line ):
 		"Get and / or add the shutdown and slowdown lines."
-		distanceThreadEnd = self.getDistanceThreadEnd()
+		distanceThreadEnd = self.getDistanceToThreadEnd()
 		splitLine = line.split()
-		while self.getDistanceThreadEnd() != None:
+		while self.getDistanceToThreadEnd() != None:
 			self.addShutSlowDownLine( splitLine )
 		if distanceThreadEnd != None:
 			if distanceThreadEnd > 0.0:
-				shutdownLine = self.getLinearMoveWithFeedrateSplitLine( self.feedrateMinute * self.getShutdownFlowRateMultiplier( 1.0 - distanceThreadEnd / self.earlyShutdownDistance ), splitLine )
+				feedrate = self.feedrateMinute * self.getShutdownFlowRateMultiplier( 1.0 - distanceThreadEnd / self.earlyShutdownDistance, len( self.earlyShutdownDistances ) )
+				shutdownLine = self.getLinearMoveWithFeedrateSplitLine( feedrate, splitLine )
 				if self.isShutdownNeeded:
 					self.addLineSetShutdowns( shutdownLine )
 					return 'M103'
@@ -302,15 +309,43 @@ class OozebaneSkein:
 				extruderOnReached = True
 		return None
 
-	def getDistanceThreadBeginning( self ):
+	def getDistanceToThreadBeginning( self ):
 		"Get the distance to the beginning of the thread."
 		if self.earlyStartupDistance == None:
 			return None
 		return self.getDistanceToWord( self.earlyStartupDistance,  'M101' )
 
-	def getDistanceThreadEnd( self ):
+	def getDistanceToThreadBeginningAfterThreadEnd( self, remainingDistance ):
+		"Get the distance to the thread beginning after the end of this thread."
+		extruderOnReached = False
+		line = self.lines[ self.lineIndex ]
+		splitLine = line.split()
+		lastThreadLocation = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
+		threadEndReached = False
+		totalDistance = 0.0
+		for afterIndex in xrange( self.lineIndex + 1, len( self.lines ) ):
+			line = self.lines[ afterIndex ]
+			splitLine = line.split()
+			firstWord = gcodec.getFirstWord( splitLine )
+			if firstWord == 'G1':
+				location = gcodec.getLocationFromSplitLine( lastThreadLocation, splitLine )
+				distanceToLastThreadLocation = location.distance( lastThreadLocation )
+				lastThreadLocation = location
+				if threadEndReached:
+					totalDistance += distanceToLastThreadLocation
+					if totalDistance >= remainingDistance:
+						return None
+					if extruderOnReached:
+						return totalDistance
+			elif firstWord == 'M101':
+				extruderOnReached = True
+			elif firstWord == 'M103':
+				threadEndReached = True
+		return None
+
+	def getDistanceToThreadEnd( self ):
 		"Get the distance to the end of the thread."
-		if self.shutdownStepIndex >= self.slowdownStartupSteps:
+		if self.shutdownStepIndex >= len( self.earlyShutdownDistances ):
 			return None
 		return self.getDistanceToWord( self.earlyShutdownDistances[ self.shutdownStepIndex ],  'M103' )
 
@@ -326,7 +361,8 @@ class OozebaneSkein:
 			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == 'G1':
 				location = gcodec.getLocationFromSplitLine( lastThreadLocation, splitLine )
-				totalDistance += location.distance( lastThreadLocation )
+				distanceToLastThreadLocation = location.distance( lastThreadLocation )
+				totalDistance += distanceToLastThreadLocation
 				lastThreadLocation = location
 				if totalDistance >= remainingDistance:
 					return None
@@ -353,7 +389,7 @@ class OozebaneSkein:
 			return self.getAddAfterStartupLines( line )
 		if self.extruderInactiveLongEnough:
 			return self.getAddBeforeStartupLines( line )
-		if self.shutdownStepIndex < self.slowdownStartupSteps:
+		if self.shutdownStepIndex < len( self.earlyShutdownDistances ):
 			return self.getAddShutSlowDownLines( line )
 		if self.isJustBeforeStart():
 			return self.getLinearMoveWithFeedrateSplitLine( self.feedrateMinute * self.afterStartupFlowRate, splitLine )
@@ -363,12 +399,12 @@ class OozebaneSkein:
 		"Get number rounded to the number of carried decimal places as a string."
 		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
 
-	def getShutdownFlowRateMultiplier( self, along ):
+	def getShutdownFlowRateMultiplier( self, along, numberOfDistances ):
 		"Get the shut down flow rate multipler."
-		if self.slowdownStartupSteps <= 0:
+		if numberOfDistances <= 0:
 			return 1.0
-		along = min( along, float( self.slowdownStartupSteps - 1 ) / float( self.slowdownStartupSteps ) )
-		return 1.0 - 0.5 / float( self.slowdownStartupSteps ) - along
+		along = min( along, float( numberOfDistances - 1 ) / float( numberOfDistances ) )
+		return 1.0 - 0.5 / float( numberOfDistances ) - along
 
 	def getStartupFlowRateMultiplier( self, along, numberOfDistances ):
 		"Get the startup flow rate multipler."
@@ -396,6 +432,8 @@ class OozebaneSkein:
 	def isDistanceAfterThreadBeginningGreater( self ):
 		"Determine if the distance after the thread beginning is greater than the step index after startup distance."
 		if self.startupStepIndex >= len( self.afterStartupDistances ):
+			return False
+		if not self.isNextExtruderOn():
 			return False
 		return self.getDistanceAfterThreadBeginning() > self.afterStartupDistances[ self.startupStepIndex ]
 
@@ -462,16 +500,22 @@ class OozebaneSkein:
 		elif firstWord == 'M101':
 			self.extruderActive = True
 			self.extruderInactiveLongEnough = False
-			if self.getDistanceThreadEnd() == None:
-				self.isShutdownNeeded = True
-				self.shutdownStepIndex = 0
+			if self.getDistanceToWord( self.earlyShutdownDistance,  'M103' ) == None:
+				distanceToThreadBeginning = self.getDistanceToThreadBeginningAfterThreadEnd( self.minimumDistanceForEarlyShutdown )
+				if distanceToThreadBeginning == None:
+					self.setEarlyShutdownFlowRates( 1.0 )
+				else:
+					self.setEarlyShutdownFlowRates( distanceToThreadBeginning / self.minimumDistanceForEarlyShutdown )
+				if len( self.earlyShutdownDistances ) > 0:
+					self.isShutdownNeeded = True
+					self.shutdownStepIndex = 0
 			if self.isStartupEarly:
 				self.isStartupEarly = False
 				return
 		elif firstWord == 'M103':
 			self.extruderActive = False
 			self.shutdownStepIndex = 999999999
-			if self.getDistanceThreadBeginning() == None:
+			if self.getDistanceToThreadBeginning() == None:
 				self.extruderInactiveLongEnough = True
 			self.earlyStartupDistance = None
 			if self.isShutdownEarly:
@@ -524,17 +568,26 @@ class OozebaneSkein:
 	def setExtrusionWidth( self, oozebanePreferences ):
 		"Set the extrusion width."
 		self.closeSquared = 0.01 * self.extrusionWidth * self.extrusionWidth
-		self.earlyShutdownDistance = oozebanePreferences.shutdownDistanceOverExtrusionWidth.value * self.extrusionWidth
 		self.earlyStartupMaximumDistance = oozebanePreferences.earlyStartupMaximumDistanceOverExtrusionWidth.value * self.extrusionWidth
 		self.earlyStartupDistanceConstant = oozebanePreferences.earlyStartupDistanceConstantOverExtrusionWidth.value * self.extrusionWidth
 		self.minimumDistanceForEarlyStartup = oozebanePreferences.minimumDistanceForEarlyStartupOverExtrusionWidth.value * self.extrusionWidth
-		self.slowdownStartupSteps = max( 0, oozebanePreferences.slowdownStartupSteps.value )
-		for stepIndex in xrange( self.slowdownStartupSteps ):
-			downMiddleWay = self.getShutdownFlowRateMultiplier( stepIndex / float( self.slowdownStartupSteps ) )
-			downWay = 1.0 - stepIndex / float( self.slowdownStartupSteps )
+		self.minimumDistanceForEarlyShutdown = oozebanePreferences.minimumDistanceForEarlyShutdownOverExtrusionWidth.value * self.extrusionWidth
+		self.setEarlyShutdownFlowRates( 1.0 )
+		self.setAfterStartupFlowRates( 1.0 )
+
+	def setEarlyShutdownFlowRates( self, earlyShutdownRatio ):
+		"Set the extrusion width."
+		earlyShutdownRatio = min( 1.0, earlyShutdownRatio )
+		earlyShutdownRatio = max( 0.0, earlyShutdownRatio )
+		self.earlyShutdownDistance = earlyShutdownRatio * self.oozebanePreferences.shutdownDistanceOverExtrusionWidth.value * self.extrusionWidth
+		self.earlyShutdownDistances = []
+		self.earlyShutdownFlowRates = []
+		earlyShutdownSteps = max( 0, int( math.floor( earlyShutdownRatio * float( self.oozebanePreferences.slowdownStartupSteps.value ) ) ) )
+		for stepIndex in xrange( earlyShutdownSteps ):
+			downMiddleWay = self.getShutdownFlowRateMultiplier( stepIndex / float( earlyShutdownSteps ), earlyShutdownSteps )
+			downWay = 1.0 - stepIndex / float( earlyShutdownSteps )
 			self.earlyShutdownFlowRates.append( downMiddleWay )
 			self.earlyShutdownDistances.append( downWay * self.earlyShutdownDistance )
-		self.setAfterStartupFlowRates( 1.0 )
 
 
 def main( hashtable = None ):
