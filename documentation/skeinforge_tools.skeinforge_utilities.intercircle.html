@@ -108,7 +108,7 @@
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><dl><dt><a name="-addCircleIntersectionLoop"><strong>addCircleIntersectionLoop</strong></a>(circleIntersectionPath, circleIntersections)</dt><dd><tt>Add&nbsp;a&nbsp;circle&nbsp;intersection&nbsp;loop.</tt></dd></dl>
- <dl><dt><a name="-addOperatingOrbits"><strong>addOperatingOrbits</strong></a>(operatingJump, skein, temperatureChangeTime)</dt><dd><tt>Add&nbsp;the&nbsp;orbits&nbsp;before&nbsp;the&nbsp;operating&nbsp;layers.</tt></dd></dl>
+ <dl><dt><a name="-addOperatingOrbits"><strong>addOperatingOrbits</strong></a>(boundaryLoops, operatingJump, skein, temperatureChangeTime)</dt><dd><tt>Add&nbsp;the&nbsp;orbits&nbsp;before&nbsp;the&nbsp;operating&nbsp;layers.</tt></dd></dl>
  <dl><dt><a name="-addOrbits"><strong>addOrbits</strong></a>(loop, skein, temperatureChangeTime)</dt><dd><tt>Add&nbsp;orbits&nbsp;with&nbsp;the&nbsp;extruder&nbsp;off.</tt></dd></dl>
  <dl><dt><a name="-addPointsFromSegment"><strong>addPointsFromSegment</strong></a>(points, radius, pointBegin, pointEnd)</dt><dd><tt>Add&nbsp;points&nbsp;between&nbsp;the&nbsp;endpoints&nbsp;of&nbsp;a&nbsp;segment.</tt></dd></dl>
  <dl><dt><a name="-getCentersFromCircleNodes"><strong>getCentersFromCircleNodes</strong></a>(circleNodes)</dt><dd><tt>Get&nbsp;the&nbsp;centers&nbsp;of&nbsp;the&nbsp;circle&nbsp;intersection&nbsp;loops&nbsp;from&nbsp;circle&nbsp;nodes.</tt></dd></dl>
@@ -122,12 +122,14 @@
  <dl><dt><a name="-getCircleNodesFromPath"><strong>getCircleNodesFromPath</strong></a>(path, radius)</dt><dd><tt>Get&nbsp;the&nbsp;circle&nbsp;nodes&nbsp;from&nbsp;a&nbsp;path.</tt></dd></dl>
  <dl><dt><a name="-getInsetFromClockwiseLoop"><strong>getInsetFromClockwiseLoop</strong></a>(loop, radius)</dt><dd><tt>Get&nbsp;loop&nbsp;inset&nbsp;from&nbsp;clockwise&nbsp;loop,&nbsp;out&nbsp;from&nbsp;widdershins&nbsp;loop.</tt></dd></dl>
  <dl><dt><a name="-getInsetFromClockwiseTriple"><strong>getInsetFromClockwiseTriple</strong></a>(aheadAbsolute, behindAbsolute, center, radius)</dt><dd><tt>Get&nbsp;loop&nbsp;inset&nbsp;from&nbsp;clockwise&nbsp;triple,&nbsp;out&nbsp;from&nbsp;widdershins&nbsp;loop.</tt></dd></dl>
+ <dl><dt><a name="-getInsetLoops"><strong>getInsetLoops</strong></a>(inset, loops)</dt><dd><tt>Get&nbsp;the&nbsp;inset&nbsp;loops.</tt></dd></dl>
  <dl><dt><a name="-getIntersectionAtInset"><strong>getIntersectionAtInset</strong></a>(ahead, behind, inset)</dt><dd><tt>Get&nbsp;circle&nbsp;intersection&nbsp;loop&nbsp;at&nbsp;inset&nbsp;from&nbsp;segment.</tt></dd></dl>
  <dl><dt><a name="-getLoopsFromLoopsDirection"><strong>getLoopsFromLoopsDirection</strong></a>(isWiddershins, loops)</dt><dd><tt>Get&nbsp;the&nbsp;loops&nbsp;going&nbsp;round&nbsp;in&nbsp;a&nbsp;given&nbsp;direction.</tt></dd></dl>
  <dl><dt><a name="-getSimplifiedInsetFromClockwiseLoop"><strong>getSimplifiedInsetFromClockwiseLoop</strong></a>(loop, radius)</dt><dd><tt>Get&nbsp;loop&nbsp;inset&nbsp;from&nbsp;clockwise&nbsp;loop,&nbsp;out&nbsp;from&nbsp;widdershins&nbsp;loop.</tt></dd></dl>
  <dl><dt><a name="-getWithoutIntersections"><strong>getWithoutIntersections</strong></a>(loop)</dt><dd><tt>Get&nbsp;loop&nbsp;without&nbsp;intersections.</tt></dd></dl>
  <dl><dt><a name="-isLoopIntersectingLoop"><strong>isLoopIntersectingLoop</strong></a>(anotherLoop, loop)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;a&nbsp;loop&nbsp;is&nbsp;intersecting&nbsp;another&nbsp;loop.</tt></dd></dl>
  <dl><dt><a name="-removeIntersection"><strong>removeIntersection</strong></a>(loop)</dt><dd><tt>Get&nbsp;loop&nbsp;without&nbsp;the&nbsp;first&nbsp;intersection.</tt></dd></dl>
+ <dl><dt><a name="-setZAccordingToOperatingJump"><strong>setZAccordingToOperatingJump</strong></a>(loop, operatingJump)</dt><dd><tt>Set&nbsp;of&nbsp;the&nbsp;loop&nbsp;to&nbsp;the&nbsp;first&nbsp;point,&nbsp;increasing&nbsp;by&nbsp;the&nbsp;operating&nbsp;jump&nbsp;if&nbsp;it&nbsp;exists.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">

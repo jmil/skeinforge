@@ -179,12 +179,14 @@ Troubleshooting
 
 If there's a bug, try downloading the very latest version because sometimes I update without posting.
 
-Then you can ask for skeinforge help by posting in the "How to Print Gcode from Host" thread at:
-http://forums.reprap.org/read.php?12,10772
-
-or send a private message through the forum software by going to my page at:
+Then you can ask for skeinforge help by sending a private message through the forum software by going to my page at:
 http://forums.reprap.org/profile.php?12,488
 
+or posting in the "How to Print Gcode from Host" thread at:
+http://forums.reprap.org/read.php?12,10772
+
+When asking for help please include your object and your zipped skeinforge preferences.  The skeinforge preferences are in
+the .skeinforge folder in your home directory.
 
 
 Examples

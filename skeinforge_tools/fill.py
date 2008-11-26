@@ -132,33 +132,6 @@ __license__ = "GPL 3.0"
 #multiple heads around edge
 #angle shape for overhang extrusions
 #free fabricator
-def addAroundClosest( aroundPixelTable, layerExtrusionWidth, paths, removedEndpointPoint, width ):
-	"Add the closest removed endpoint to the path, with minimal twisting."
-	closestDistanceSquared = 999999999999999999.0
-	closestPathIndex = None
-	for pathIndex in range( len( paths ) ):
-		path = paths[ pathIndex ]
-		for pointIndex in range( len( path ) ):
-			point = path[ pointIndex ]
-			distanceSquared = point.distance2( removedEndpointPoint )
-			if distanceSquared < closestDistanceSquared:
-				closestDistanceSquared = distanceSquared
-				closestPathIndex = pathIndex
-	if closestPathIndex == None:
-		return
-	if closestDistanceSquared < 0.8 * layerExtrusionWidth * layerExtrusionWidth:
-		return
-	closestPath = paths[ closestPathIndex ]
-	closestPointIndex = getWithLeastLength( closestPath, removedEndpointPoint )
-	if closestPointIndex > 0 and closestPointIndex < len( closestPath ):
-		pointBeginComplex = closestPath[ closestPointIndex - 1 ].dropAxis( 2 )
-		pointEndComplex = closestPath[ closestPointIndex ].dropAxis( 2 )
-		removedEndpointPointComplex = removedEndpointPoint.dropAxis( 2 )
-		if isSharpCorner( pointBeginComplex, removedEndpointPointComplex, pointEndComplex ):
-			addSidePoint( aroundPixelTable, closestPath, closestPointIndex, layerExtrusionWidth, pointBeginComplex, pointEndComplex, removedEndpointPoint, width )
-			return
-	if isAddedPointOnPathFree( closestPath, aroundPixelTable, removedEndpointPoint, closestPointIndex, width ):
-		addPointOnPath( closestPath, aroundPixelTable, removedEndpointPoint, closestPointIndex, width )
 
 def addAroundGridPoint( arounds, gridPoint, gridPointInsetX, gridPointInsetY, gridPoints, gridSearchRadius, isBothOrNone, isDoubleJunction, isJunctionWide, paths, pixelTable, width ):
 	"Add the path around the grid point."
@@ -214,11 +187,6 @@ def addAroundGridPoint( arounds, gridPoint, gridPointInsetX, gridPointInsetY, gr
 	yCloseToCenterPaths.sort( comparePointIndexDescending )
 	insertGridPointPairs( arounds, gridPoint, gridPointInsetX, gridPoints, yCloseToCenterPaths[ 0 ], yCloseToCenterPaths[ 1 ], isBothOrNone, isJunctionWide, paths, pixelTable, width )
 
-def addHorizontalXIntersectionIndexes( fillLoops, alreadyFilledArounds, xIntersectionIndexList, y ):
-	"Add horizontal x intersection indexes inside loops."
-	euclidean.addXIntersectionIndexesFromLoops( fillLoops, - 1, xIntersectionIndexList, y )
-	euclidean.addXIntersectionIndexesFromLoopLists( alreadyFilledArounds, xIntersectionIndexList, y )
-
 def addPath( extrusionWidth, fill, path, rotationPlaneAngle ):
 	"Add simplified path to fill."
 	planeRotated = euclidean.getPathRoundZAxisByPlaneAngle( rotationPlaneAngle, euclidean.getSimplifiedPath( path, extrusionWidth ) )
@@ -232,65 +200,15 @@ def addPointOnPath( path, pixelTable, point, pointIndex, width ):
 		segmentTable = {}
 		beginComplex = path[ pointIndexMinusOne ].dropAxis( 2 )
 		endComplex = path[ pointIndex ].dropAxis( 2 )
-		euclidean.addSegmentToPixelTable( beginComplex, endComplex, segmentTable, 0, width )
+		euclidean.addSegmentToPixelTable( beginComplex, endComplex, segmentTable, 0, 0, width )
 		euclidean.removePixelTableFromPixelTable( segmentTable, pixelTable )
 	if pointIndexMinusOne >= 0:
 		beginComplex = path[ pointIndexMinusOne ].dropAxis( 2 )
-		euclidean.addSegmentToPixelTable( beginComplex, pointComplex, pixelTable, 0, width )
+		euclidean.addSegmentToPixelTable( beginComplex, pointComplex, pixelTable, 0, 0, width )
 	if pointIndex < len( path ):
 		endComplex = path[ pointIndex ].dropAxis( 2 )
-		euclidean.addSegmentToPixelTable( pointComplex, endComplex, pixelTable, 0, width )
+		euclidean.addSegmentToPixelTable( pointComplex, endComplex, pixelTable, 0, 0, width )
 	path.insert( pointIndex, point )
-
-def addSidePoint( aroundPixelTable, closestPath, closestPointIndex, layerExtrusionWidth, pointBeginComplex, pointEndComplex, removedEndpointPoint, width ):
-	"Add side point along with the closest removed endpoint to the path, with minimal twisting."
-	removedEndpointPointComplex = removedEndpointPoint.dropAxis( 2 )
-	closestComplex = pointBeginComplex
-	farthestComplex = pointEndComplex
-	removedMinusClosest = removedEndpointPointComplex - pointBeginComplex
-	removedMinusClosestLength = abs( removedMinusClosest )
-	if removedMinusClosestLength <= 0.0:
-		return
-	removedMinusOther = removedEndpointPointComplex - pointEndComplex
-	removedMinusOtherLength = abs( removedMinusOther )
-	if removedMinusOtherLength <= 0.0:
-		return
-	insertPointAfter = None
-	insertPointBefore = None
-	if removedMinusOtherLength < removedMinusClosestLength:
-		closestComplex = pointEndComplex
-		farthestComplex = pointBeginComplex
-		removedMinusClosest = removedMinusOther
-		removedMinusClosestLength = removedMinusOtherLength
-		insertPointBefore = removedEndpointPoint
-	else:
-		insertPointAfter = removedEndpointPoint
-	removedMinusClosestNormalized = removedMinusClosest / removedMinusClosestLength
-	perpendicularComplex = removedMinusClosestNormalized * complex( 0.0, layerExtrusionWidth )
-	sidePointComplex = removedEndpointPointComplex + perpendicularComplex
-	#extra check in case the line to the side point somehow slips by the line to the perpendicular
-	sidePointOtherComplex = removedEndpointPointComplex - perpendicularComplex
-	if abs( sidePointComplex -  farthestComplex ) > abs( sidePointOtherComplex -  farthestComplex ):
-		perpendicularComplex = - perpendicularComplex
-		sidePointComplex = sidePointOtherComplex
-	maskTable = {}
-	closestSegmentTable = {}
-	toPerpendicularTable = {}
-	euclidean.addSegmentToPixelTable( pointBeginComplex, pointEndComplex, maskTable, 1, width )
-	euclidean.addSegmentToPixelTable( closestComplex, removedEndpointPointComplex, closestSegmentTable, 0, width )
-	euclidean.addSegmentToPixelTable( farthestComplex, sidePointComplex, toPerpendicularTable, 2, width )
-	if euclidean.isPixelTableIntersecting( aroundPixelTable, toPerpendicularTable, maskTable ) or euclidean.isPixelTableIntersecting( closestSegmentTable, toPerpendicularTable, maskTable ):
-		sidePointComplex = removedEndpointPointComplex - perpendicularComplex
-		toPerpendicularTable = {}
-		euclidean.addSegmentToPixelTable( farthestComplex, sidePointComplex, toPerpendicularTable, 2, width )
-		if euclidean.isPixelTableIntersecting( aroundPixelTable, toPerpendicularTable, maskTable ) or euclidean.isPixelTableIntersecting( closestSegmentTable, toPerpendicularTable, maskTable ):
-			return
-	sidePoint = Vec3( sidePointComplex.real, sidePointComplex.imag, removedEndpointPoint.z )
-	if insertPointBefore != None:
-		closestPath.insert( closestPointIndex, insertPointBefore )
-	closestPath.insert( closestPointIndex, sidePoint )
-	if insertPointAfter != None:
-		closestPath.insert( closestPointIndex, insertPointAfter )
 
 def addShortenedLineSegment( lineSegment, shortenDistance, shortenedSegments ):
 	"Add shortened line segment."
@@ -442,11 +360,26 @@ def getFillGcode( gcodeText, fillPreferences = None ):
 	skein.parseGcode( fillPreferences, gcodeText )
 	return skein.output.getvalue()
 
-def getHorizontalSegments( fillLoops, alreadyFilledArounds, y ):
+def getHorizontalSegmentsFromLoopLists( fillLoops, alreadyFilledArounds, y ):
 	"Get horizontal segments inside loops."
 	xIntersectionIndexList = []
-	addHorizontalXIntersectionIndexes( fillLoops, alreadyFilledArounds, xIntersectionIndexList, y )
+	euclidean.addXIntersectionIndexesFromLoops( fillLoops, - 1, xIntersectionIndexList, y )
+	euclidean.addXIntersectionIndexesFromLoopLists( alreadyFilledArounds, xIntersectionIndexList, y )
 	return euclidean.getSegmentsFromXIntersectionIndexes( xIntersectionIndexList, y, fillLoops[ 0 ][ 0 ].z )
+
+def getIntersectionOfXIntersectionIndexes( totalSolidSurfaceThickness, xIntersectionIndexList ):
+	"Get x intersections from surrounding layers."
+	xIntersectionList = []
+	solidTable = {}
+	solid = False
+	xIntersectionIndexList.sort()
+	for xIntersectionIndex in xIntersectionIndexList:
+		euclidean.toggleHashtable( solidTable, xIntersectionIndex.index, "" )
+		oldSolid = solid
+		solid = len( solidTable ) >= totalSolidSurfaceThickness
+		if oldSolid != solid:
+			xIntersectionList.append( xIntersectionIndex.x )
+	return xIntersectionList
 
 def getNonIntersectingGridPointLine( arounds, gridPointInsetX, isJunctionWide, paths, pixelTable, yIntersectionPath, width ):
 	"Get the points around the grid point that is junction wide that do not intersect."
@@ -480,21 +413,7 @@ def getSurroundingXIntersections( doubleSolidSurfaceThickness, surroundingSlices
 	addSurroundingXIntersectionIndexes( surroundingSlices, xIntersectionIndexList, y )
 	if len( surroundingSlices ) < doubleSolidSurfaceThickness:
 		return None
-	return getSurroundingXIntersectionsFromXIntersectionIndexes( doubleSolidSurfaceThickness, xIntersectionIndexList, y )
-
-def getSurroundingXIntersectionsFromXIntersectionIndexes( totalSolidSurfaceThickness, xIntersectionIndexList, y ):
-	"Get x intersections from surrounding layers."
-	xIntersectionList = []
-	solidTable = {}
-	solid = False
-	xIntersectionIndexList.sort()
-	for xIntersectionIndex in xIntersectionIndexList:
-		euclidean.toggleHashtable( solidTable, xIntersectionIndex.index, "" )
-		oldSolid = solid
-		solid = len( solidTable ) >= totalSolidSurfaceThickness
-		if oldSolid != solid:
-			xIntersectionList.append( xIntersectionIndex.x )
-	return xIntersectionList
+	return getIntersectionOfXIntersectionIndexes( doubleSolidSurfaceThickness, xIntersectionIndexList )
 
 def getWithLeastLength( path, point ):
 	"Insert a point into a path, at the index at which the path would be shortest."
@@ -610,9 +529,9 @@ def isAddedPointOnPathFree( path, pixelTable, point, pointIndex, width ):
 		beginComplex = path[ pointIndexMinusOne ].dropAxis( 2 )
 		if pointIndex < len( path ):
 			endComplex = path[ pointIndex ].dropAxis( 2 )
-			euclidean.addSegmentToPixelTable( beginComplex, endComplex, maskTable, 0, width )
+			euclidean.addSegmentToPixelTable( beginComplex, endComplex, maskTable, 0, 0, width )
 		segmentTable = {}
-		euclidean.addSegmentToPixelTable( pointComplex, beginComplex, segmentTable, 2, width )
+		euclidean.addSegmentToPixelTable( pointComplex, beginComplex, segmentTable, 0, 3, width )
 		if euclidean.isPixelTableIntersecting( pixelTable, segmentTable, maskTable ):
 			return False
 	if pointIndex < len( path ):
@@ -620,9 +539,9 @@ def isAddedPointOnPathFree( path, pixelTable, point, pointIndex, width ):
 		beginComplex = path[ pointIndex ].dropAxis( 2 )
 		if pointIndexMinusOne >= 0:
 			endComplex = path[ pointIndexMinusOne ].dropAxis( 2 )
-			euclidean.addSegmentToPixelTable( beginComplex, endComplex, maskTable, 0, width )
+			euclidean.addSegmentToPixelTable( beginComplex, endComplex, maskTable, 0, 0, width )
 		segmentTable = {}
-		euclidean.addSegmentToPixelTable( pointComplex, beginComplex, segmentTable, 2, width )
+		euclidean.addSegmentToPixelTable( pointComplex, beginComplex, segmentTable, 0, 3, width )
 		if euclidean.isPixelTableIntersecting( pixelTable, segmentTable, maskTable ):
 			return False
 	return True
@@ -663,6 +582,29 @@ def isPerimeterPathInSurroundLoops( surroundingLoops ):
 			return True
 	return False
 
+def isPointAddedAroundClosest( aroundPixelTable, layerExtrusionWidth, paths, removedEndpointPoint, width ):
+	"Add the closest removed endpoint to the path, with minimal twisting."
+	closestDistanceSquared = 999999999999999999.0
+	closestPathIndex = None
+	for pathIndex in range( len( paths ) ):
+		path = paths[ pathIndex ]
+		for pointIndex in range( len( path ) ):
+			point = path[ pointIndex ]
+			distanceSquared = point.distance2( removedEndpointPoint )
+			if distanceSquared < closestDistanceSquared:
+				closestDistanceSquared = distanceSquared
+				closestPathIndex = pathIndex
+	if closestPathIndex == None:
+		return
+	if closestDistanceSquared < 0.8 * layerExtrusionWidth * layerExtrusionWidth:
+		return
+	closestPath = paths[ closestPathIndex ]
+	closestPointIndex = getWithLeastLength( closestPath, removedEndpointPoint )
+	if isAddedPointOnPathFree( closestPath, aroundPixelTable, removedEndpointPoint, closestPointIndex, width ):
+		addPointOnPath( closestPath, aroundPixelTable, removedEndpointPoint, closestPointIndex, width )
+		return True
+	return isSidePointAdded( aroundPixelTable, closestPath, closestPointIndex, layerExtrusionWidth, removedEndpointPoint, width )
+
 def isSegmentAround( aroundSegments, segment ):
 	"Determine if there is another segment around."
 	for aroundSegment in aroundSegments:
@@ -699,6 +641,69 @@ def isSharpCorner( beginComplex, centerComplex, endComplex ):
 	centerBeginComplex /= centerBeginLength
 	centerEndComplex /= centerEndLength
 	return euclidean.getComplexDot( centerBeginComplex, centerEndComplex ) > 0.9
+
+def isSidePointAdded( aroundPixelTable, closestPath, closestPointIndex, layerExtrusionWidth, removedEndpointPoint, width ):
+	"Add side point along with the closest removed endpoint to the path, with minimal twisting."
+	if closestPointIndex <= 0 or closestPointIndex >= len( closestPath ):
+		return False
+	pointBeginComplex = closestPath[ closestPointIndex - 1 ].dropAxis( 2 )
+	pointEndComplex = closestPath[ closestPointIndex ].dropAxis( 2 )
+	removedEndpointPointComplex = removedEndpointPoint.dropAxis( 2 )
+	closestComplex = pointBeginComplex
+	farthestComplex = pointEndComplex
+	removedMinusClosest = removedEndpointPointComplex - pointBeginComplex
+	removedMinusClosestLength = abs( removedMinusClosest )
+	if removedMinusClosestLength <= 0.0:
+		return False
+	removedMinusOther = removedEndpointPointComplex - pointEndComplex
+	removedMinusOtherLength = abs( removedMinusOther )
+	if removedMinusOtherLength <= 0.0:
+		return False
+	insertPointAfter = None
+	insertPointBefore = None
+	if removedMinusOtherLength < removedMinusClosestLength:
+		closestComplex = pointEndComplex
+		farthestComplex = pointBeginComplex
+		removedMinusClosest = removedMinusOther
+		removedMinusClosestLength = removedMinusOtherLength
+		insertPointBefore = removedEndpointPoint
+	else:
+		insertPointAfter = removedEndpointPoint
+	removedMinusClosestNormalized = removedMinusClosest / removedMinusClosestLength
+	perpendicularComplex = removedMinusClosestNormalized * complex( 0.0, layerExtrusionWidth )
+	sidePointComplex = removedEndpointPointComplex + perpendicularComplex
+	#extra check in case the line to the side point somehow slips by the line to the perpendicular
+	sidePointOtherComplex = removedEndpointPointComplex - perpendicularComplex
+	if abs( sidePointComplex -  farthestComplex ) > abs( sidePointOtherComplex -  farthestComplex ):
+		perpendicularComplex = - perpendicularComplex
+		sidePointComplex = sidePointOtherComplex
+	maskTable = {}
+	closestSegmentTable = {}
+	toPerpendicularTable = {}
+	euclidean.addSegmentToPixelTable( pointBeginComplex, pointEndComplex, maskTable, 1, 1, width )
+	euclidean.addSegmentToPixelTable( closestComplex, removedEndpointPointComplex, closestSegmentTable, 0, 0, width )
+	euclidean.addSegmentToPixelTable( sidePointComplex, farthestComplex, toPerpendicularTable, 0, 3, width )
+	if euclidean.isPixelTableIntersecting( aroundPixelTable, toPerpendicularTable, maskTable ) or euclidean.isPixelTableIntersecting( closestSegmentTable, toPerpendicularTable, maskTable ):
+		sidePointComplex = removedEndpointPointComplex - perpendicularComplex
+		toPerpendicularTable = {}
+		euclidean.addSegmentToPixelTable( sidePointComplex, farthestComplex, toPerpendicularTable, 0, 3, width )
+		if euclidean.isPixelTableIntersecting( aroundPixelTable, toPerpendicularTable, maskTable ) or euclidean.isPixelTableIntersecting( closestSegmentTable, toPerpendicularTable, maskTable ):
+			return False
+	sidePoint = Vec3( sidePointComplex.real, sidePointComplex.imag, removedEndpointPoint.z )
+	if insertPointBefore != None:
+		addPointOnPath( closestPath, aroundPixelTable, insertPointBefore, closestPointIndex, width )
+	addPointOnPath( closestPath, aroundPixelTable, sidePoint, closestPointIndex, width )
+	if insertPointAfter != None:
+		addPointOnPath( closestPath, aroundPixelTable, insertPointAfter, closestPointIndex, width )
+	return True
+
+def removeEndpoints( aroundPixelTable, layerExtrusionWidth, paths, removedEndpoints, aroundWidth ):
+	"Remove endpoints which are added to the path."
+	for removedEndpointIndex in xrange( len( removedEndpoints ) - 1, - 1, - 1 ):
+		removedEndpoint = removedEndpoints[ removedEndpointIndex ]
+		removedEndpointPoint = removedEndpoint.point
+		if isPointAddedAroundClosest( aroundPixelTable, layerExtrusionWidth, paths, removedEndpointPoint, aroundWidth ):
+			removedEndpoints.remove( removedEndpoint )
 
 def setIsOutside( yCloseToCenterPath, yIntersectionPaths ):
 	"Determine if the yCloseToCenterPath is outside."
@@ -814,7 +819,6 @@ class FillSkein:
 #			return
 		alreadyFilledArounds = []
 		arounds = []
-		back = - 999999999.0
 		layerExtrusionWidth = self.extrusionWidth
 		layerFillInset = self.fillInset
 		z = self.rotatedLayers[ layerIndex ].surroundingLoops[ 0 ].boundary[ 0 ].z
@@ -828,9 +832,8 @@ class FillSkein:
 		muchGreaterThanLayerFillInset = 2.5 * layerFillInset
 		endpoints = []
 		fill = []
-		aroundInset = 0.7 * layerFillInset
-		aroundWidth = 0.25 * aroundInset
-		front = - back
+		aroundInset = 0.4 * layerFillInset
+		aroundWidth = 0.3 * aroundInset
 		layerInfillSolidity = self.infillSolidity
 		self.isDoubleJunction = True
 		self.isJunctionWide = True
@@ -887,12 +890,11 @@ class FillSkein:
 					around = intercircle.getSimplifiedInsetFromClockwiseLoop( center, aroundInset )
 					if euclidean.isPathInsideLoop( planeRotatedPerimeter, around ) == euclidean.isWiddershins( planeRotatedPerimeter ):
 						arounds.append( around )
-						for point in around:
-							back = max( back, point.y )
-							front = min( front, point.y )
 		if len( arounds ) < 1:
 			euclidean.addToThreadsRemoveFromSurroundings( self.oldOrderedLocation, surroundingLoops, self )
 			return
+		back = euclidean.getBackOfLoops( arounds )
+		front = euclidean.getFrontOfLoops( arounds )
 		area = self.getSliceArea( layerIndex )
 		if area > 0.0:
 			areaChange = 1.0
@@ -907,7 +909,7 @@ class FillSkein:
 		horizontalSegments = []
 		for fillLine in xrange( numberOfLines ):
 			y = front + float( fillLine ) * layerExtrusionWidth
-			lineSegments = getHorizontalSegments( rotatedExtruderLoops, alreadyFilledArounds, y )
+			lineSegments = getHorizontalSegmentsFromLoopLists( rotatedExtruderLoops, alreadyFilledArounds, y )
 			horizontalSegments.append( lineSegments )
 		removedEndpoints = []
 		for fillLine in range( len( horizontalSegments ) ):
@@ -918,44 +920,13 @@ class FillSkein:
 		if len( endpoints ) < 1:
 			euclidean.addToThreadsRemoveFromSurroundings( self.oldOrderedLocation, surroundingLoops, self )
 			return
-		for beginningEndpoint in endpoints[ : : 2 ]:
-			beginningPoint = beginningEndpoint.point
-			euclidean.addSegmentToPixelTable( beginningPoint.dropAxis( 2 ), beginningEndpoint.otherEndpoint.point.dropAxis( 2 ), aroundPixelTable, 0, aroundWidth )
-		endpointFirst = endpoints[ 0 ]
-		endpoints.remove( endpointFirst )
-		otherEndpoint = endpointFirst.otherEndpoint
-		endpoints.remove( otherEndpoint )
-		nextEndpoint = None
-		path = []
-		paths = [ path ]
-		if len( endpoints ) > 1:
-			nextEndpoint = otherEndpoint.getNearestMiss( endpoints, path, aroundPixelTable, aroundWidth )
-			if nextEndpoint != None:
-				if nextEndpoint.point.distance2( endpointFirst.point ) < nextEndpoint.point.distance2( otherEndpoint.point ):
-					endpointFirst = endpointFirst.otherEndpoint
-					otherEndpoint = endpointFirst.otherEndpoint
-		euclidean.addPointToPath( path, aroundPixelTable, endpointFirst.point, aroundWidth )
-		euclidean.addPointToPath( path, aroundPixelTable, otherEndpoint.point, aroundWidth )
-		while len( endpoints ) > 1:
-			nextEndpoint = otherEndpoint.getNearestMiss( endpoints, path, aroundPixelTable, aroundWidth )
-			if nextEndpoint == None:
-				path = []
-				paths.append( path )
-				nextEndpoint = otherEndpoint.getNearestEndpoint( endpoints )
-			euclidean.addPointToPath( path, aroundPixelTable, nextEndpoint.point, aroundWidth )
-			endpoints.remove( nextEndpoint )
-			otherEndpoint = nextEndpoint.otherEndpoint
-			hop = nextEndpoint.getHop( layerFillInset, path )
-			if hop != None:
-				path = [ hop ]
-				paths.append( path )
-			euclidean.addPointToPath( path, aroundPixelTable, otherEndpoint.point, aroundWidth )
-			endpoints.remove( otherEndpoint )
+		paths = euclidean.getPathsFromEndpoints( endpoints, layerFillInset, aroundPixelTable, aroundWidth )
 		if not self.fillPreferences.infillPatternLine.value:
 			self.addGrid( alreadyFilledArounds, arounds, fillLoops, gridPointInsetX, paths, aroundPixelTable, aroundWidth, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingSlices, z )
-		for removedEndpoint in removedEndpoints:
-			removedEndpointPoint = removedEndpoint.point
-			addAroundClosest( aroundPixelTable, layerExtrusionWidth, paths, removedEndpointPoint, aroundWidth )
+		oldRemovedEndpointLength = len( removedEndpoints ) + 1
+		while oldRemovedEndpointLength - len( removedEndpoints ) > 0:
+			oldRemovedEndpointLength = len( removedEndpoints )
+			removeEndpoints( aroundPixelTable, layerExtrusionWidth, paths, removedEndpoints, aroundWidth )
 		for path in paths:
 			addPath( layerFillInset, fill, path, layerRotationAroundZAngle )
 		euclidean.transferPathsToSurroundingLoops( fill, surroundingLoops )
@@ -1095,7 +1066,7 @@ class FillSkein:
 		horizontalSegments = []
 		for fillLine in xrange( numberOfLines ):
 			y = front + float( fillLine ) * self.gridRadius
-			lineSegments = getHorizontalSegments( gridRotatedExtruderLoops, gridAlreadyFilledArounds, y )
+			lineSegments = getHorizontalSegmentsFromLoopLists( gridRotatedExtruderLoops, gridAlreadyFilledArounds, y )
 			shortenedSegments = []
 			for lineSegment in lineSegments:
 				addShortenedLineSegment( lineSegment, self.interiorExtrusionWidth, shortenedSegments )
@@ -1153,7 +1124,7 @@ class FillSkein:
 		"Is the point inside the line segments of the loops."
 		if self.solidSurfaceThickness <= 0:
 			return True
-		lineSegments = getHorizontalSegments( rotatedExtruderLoops, alreadyFilledArounds, gridPoint.y )
+		lineSegments = getHorizontalSegmentsFromLoopLists( rotatedExtruderLoops, alreadyFilledArounds, gridPoint.y )
 		surroundingXIntersections = getSurroundingXIntersections( self.doubleSolidSurfaceThickness, surroundingSlices, gridPoint.y )
 		for lineSegment in lineSegments:
 			if isSegmentCompletelyInAnIntersection( lineSegment, surroundingXIntersections ):

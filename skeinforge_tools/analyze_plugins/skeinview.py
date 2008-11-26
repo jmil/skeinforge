@@ -3,7 +3,8 @@ Skeinview is a script to display each layer of a gcode file.
 
 The default 'Activate Skeinview' checkbox is on.  When it is on, the functions described below will work when called from the
 skeinforge toolchain, when it is off, the functions will not be called from the toolchain.  The functions will still be called, whether
-or not the 'Activate Skeinview' checkbox is on, when skeinview is run directly.
+or not the 'Activate Skeinview' checkbox is on, when skeinview is run directly.  Skeinview crashes when it reads gcode
+without comments.
 
 If "Go Around Extruder Off Travel" is selected, the display will include the travel when the extruder is off, which means it will
 include the nozzle wipe path if any.  The "Pixels over Extrusion Width" preference is the scale of the image, the higher the
@@ -78,7 +79,7 @@ def displaySkeinviewFileGivenText( gcodeText, skeinviewPreferences = None ):
 		preferences.readPreferences( skeinviewPreferences )
 	skein = SkeinviewSkein()
 	skein.parseGcode( gcodeText, skeinviewPreferences )
-	SkeinWindow( skein.scaleSize, skein.skeinPanes )
+	SkeinWindow( skein.arrowType, skein.scaleSize, skein.skeinPanes )
 
 def skeinviewFile( filename = '' ):
 	"Skeinview a gcode file.  If no filename is specified, skeinview the first gcode file in this folder that is not modified."
@@ -103,15 +104,16 @@ def writeOutput( filename, gcodeText = '' ):
 
 class ColoredLine:
 	"A colored line."
-	def __init__( self, colorName, complexBegin, complexEnd ):
+	def __init__( self, colorName, complexBegin, complexEnd, width ):
 		"Set the color name and corners."
 		self.colorName = colorName
 		self.complexBegin = complexBegin
 		self.complexEnd = complexEnd
+		self.width = width
 	
 	def __repr__( self ):
 		"Get the string representation of this colored line."
-		return '%s, %s, %s' % ( self.colorName, self.complexBegin, self.complexEnd )
+		return '%s, %s, %s, %s' % ( self.colorName, self.complexBegin, self.complexEnd, self.width )
 
 
 class SkeinviewPreferences:
@@ -122,6 +124,8 @@ class SkeinviewPreferences:
 		self.archive = []
 		self.activateSkeinview = preferences.BooleanPreference().getFromValue( 'Activate Skeinview', True )
 		self.archive.append( self.activateSkeinview )
+		self.drawArrows = preferences.BooleanPreference().getFromValue( 'Draw Arrows', True )
+		self.archive.append( self.drawArrows )
 		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Skeinview', '' )
 		self.archive.append( self.filenameInput )
 		self.goAroundExtruderOffTravel = preferences.BooleanPreference().getFromValue( 'Go Around Extruder Off Travel', False )
@@ -156,20 +160,22 @@ class SkeinviewSkein:
 		beginningComplex = complex( self.oldLocation.x, self.cornerImaginaryTotal - self.oldLocation.y )
 		endComplex = complex( location.x, self.cornerImaginaryTotal - location.y )
 		colorName = 'gray'
+		width = 1
 		if self.extruderActive:
 			colorName = self.colorNames[ self.extrusionNumber % len( self.colorNames ) ]
-		else:
-			splitLine = nextLine.split( ' ' )
-			firstWord = ''
-			if len( splitLine ) > 0:
-				firstWord = splitLine[ 0 ]
-			if firstWord != 'G1':
-				segment = endComplex - beginningComplex
-				segmentLength = abs( segment )
-				if segmentLength > 0.0:
-					truncation = 0.3 * min( segmentLength, self.extrusionWidth )
-					endComplex -= segment / segmentLength * truncation
-		coloredLine = ColoredLine( colorName, self.scale * beginningComplex - self.marginCornerLow, self.scale * endComplex - self.marginCornerLow )
+			width = 2
+#		else:
+#			splitLine = nextLine.split( ' ' )
+#			firstWord = ''
+#			if len( splitLine ) > 0:
+#				firstWord = splitLine[ 0 ]
+#			if firstWord != 'G1':
+#				segment = endComplex - beginningComplex
+#				segmentLength = abs( segment )
+#				if segmentLength > 0.0:
+#					truncation = 0.3 * min( segmentLength, self.extrusionWidth )
+#					endComplex -= segment / segmentLength * truncation
+		coloredLine = ColoredLine( colorName, self.scale * beginningComplex - self.marginCornerLow, self.scale * endComplex - self.marginCornerLow, width )
 		self.skeinPane.append( coloredLine )
 
 	def initializeActiveLocation( self ):
@@ -208,6 +214,9 @@ class SkeinviewSkein:
 
 	def parseGcode( self, gcodeText, skeinviewPreferences ):
 		"Parse gcode text and store the vector output."
+		self.arrowType = None
+		if skeinviewPreferences.drawArrows.value:
+			self.arrowType = 'last'
 		self.initializeActiveLocation()
 		self.cornerHigh = Vec3( - 999999999.0, - 999999999.0, - 999999999.0 )
 		self.cornerLow = Vec3( 999999999.0, 999999999.0, 999999999.0 )
@@ -254,7 +263,8 @@ class SkeinviewSkein:
 
 
 class SkeinWindow:
-	def __init__( self, size, skeinPanes ):
+	def __init__( self, arrowType, size, skeinPanes ):
+		self.arrowType = arrowType
 		self.index = 0
 		self.skeinPanes = skeinPanes
 		self.root = preferences.Tkinter.Tk()
@@ -306,7 +316,9 @@ class SkeinWindow:
 		skeinPane = self.skeinPanes[ self.index ]
 		self.canvas.delete( preferences.Tkinter.ALL )
 		for coloredLine in skeinPane:
-			self.canvas.create_line( coloredLine.complexBegin.real, coloredLine.complexBegin.imag, coloredLine.complexEnd.real, coloredLine.complexEnd.imag, fill = coloredLine.colorName )
+			complexBegin = coloredLine.complexBegin
+			complexEnd = coloredLine.complexEnd
+			self.canvas.create_line( complexBegin.real, complexBegin.imag, complexEnd.real, complexEnd.imag, fill = coloredLine.colorName, arrow = self.arrowType, width = coloredLine.width )
 		if self.index < len( self.skeinPanes ) - 1:
 			self.up_button.config( state = preferences.Tkinter.NORMAL )
 		else:

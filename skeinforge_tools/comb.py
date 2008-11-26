@@ -340,6 +340,8 @@ class CombSkein:
 		"Set betweens for the layer."
 		if self.layerZ in self.betweenTable:
 			return self.betweenTable[ self.layerZ ]
+		if self.layerZ not in self.layerTable:
+			return []
 		halfFillInset = 0.5 * self.layerFillInset
 		betweens = []
 		for boundaryLoop in self.layerTable[ self.layerZ ]:

@@ -502,7 +502,7 @@ class SlicePreferences:
 		self.archive.append( self.infillBridgeWidthOverDiameter )
 		self.infillDirectionBridge = preferences.BooleanPreference().getFromValue( 'Infill in Direction of Bridges', True )
 		self.archive.append( self.infillDirectionBridge )
-		self.infillPerimeterOverlap = preferences.FloatPreference().getFromValue( 'Infill Perimeter Overlap (ratio):', 0.1 )
+		self.infillPerimeterOverlap = preferences.FloatPreference().getFromValue( 'Infill Perimeter Overlap (ratio):', 0.05 )
 		self.archive.append( self.infillPerimeterOverlap )
 		self.infillPerimeterOverlapMethodOfCalculationLabel = preferences.LabelDisplay().getFromName( 'Infill Perimeter Overlap Method of Calculation: ' )
 		self.archive.append( self.infillPerimeterOverlapMethodOfCalculationLabel )
@@ -798,9 +798,9 @@ class SliceSkein:
 		self.extrusionPerimeterWidth = slicePreferences.extrusionPerimeterWidthOverDiameter.value * self.extrusionDiameter
 		self.extrusionWidth = slicePreferences.extrusionWidthOverDiameter.value * self.extrusionDiameter
 		self.halfExtrusionPerimeterWidth = 0.5 * self.extrusionPerimeterWidth
-		self.fillInset = self.halfExtrusionPerimeterWidth * ( 2.0 - slicePreferences.infillPerimeterOverlap.value )
+		self.fillInset = self.extrusionPerimeterWidth - self.extrusionPerimeterWidth * slicePreferences.infillPerimeterOverlap.value
 		if slicePreferences.perimeterInfillPreference.value:
-			self.fillInset = self.halfExtrusionPerimeterWidth + 0.5 * self.extrusionWidth * ( 1.0 - slicePreferences.infillPerimeterOverlap.value )
+			self.fillInset = self.halfExtrusionPerimeterWidth + 0.5 * self.extrusionWidth - self.extrusionWidth * slicePreferences.infillPerimeterOverlap.value
 		self.bridgeextrusionHeight = self.extrusionHeight * slicePreferences.extrusionWidthOverDiameter.value / slicePreferences.infillBridgeWidthOverDiameter.value
 		self.halfThickness = 0.5 * self.extrusionHeight
 		self.zZoneLayers = 99

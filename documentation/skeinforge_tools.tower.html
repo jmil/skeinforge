@@ -27,17 +27,17 @@ values&nbsp;for&nbsp;the&nbsp;cone&nbsp;angle&nbsp;range&nbsp;between&nbsp;zero&
 shape&nbsp;is,&nbsp;generally&nbsp;the&nbsp;extruder&nbsp;will&nbsp;stay&nbsp;in&nbsp;the&nbsp;region&nbsp;for&nbsp;only&nbsp;a&nbsp;few&nbsp;layers&nbsp;before&nbsp;a&nbsp;collision&nbsp;is&nbsp;detected&nbsp;with&nbsp;the&nbsp;wide&nbsp;cone.<br>
 The&nbsp;default&nbsp;angle&nbsp;is&nbsp;sixty&nbsp;degrees.<br>
 &nbsp;<br>
-The&nbsp;"Tower&nbsp;Start&nbsp;Layer"&nbsp;is&nbsp;the&nbsp;layer&nbsp;which&nbsp;the&nbsp;script&nbsp;starts&nbsp;extruding&nbsp;towers.&nbsp;&nbsp;It&nbsp;is&nbsp;best&nbsp;to&nbsp;not&nbsp;tower&nbsp;at&nbsp;least&nbsp;the&nbsp;first&nbsp;layer<br>
-because&nbsp;the&nbsp;temperature&nbsp;of&nbsp;the&nbsp;first&nbsp;layer&nbsp;should&nbsp;sometimes&nbsp;be&nbsp;different&nbsp;than&nbsp;that&nbsp;of&nbsp;the&nbsp;other&nbsp;layers.&nbsp;&nbsp;The&nbsp;default&nbsp;preference&nbsp;is<br>
-three.&nbsp;&nbsp;To&nbsp;run&nbsp;tower,&nbsp;in&nbsp;a&nbsp;shell&nbsp;type:<br>
+The&nbsp;"Tower&nbsp;Start&nbsp;Layer"&nbsp;is&nbsp;the&nbsp;layer&nbsp;which&nbsp;the&nbsp;script&nbsp;starts&nbsp;extruding&nbsp;towers,&nbsp;after&nbsp;the&nbsp;last&nbsp;raft&nbsp;layer&nbsp;which&nbsp;does&nbsp;not&nbsp;have<br>
+support&nbsp;material.&nbsp;&nbsp;It&nbsp;is&nbsp;best&nbsp;to&nbsp;not&nbsp;tower&nbsp;at&nbsp;least&nbsp;the&nbsp;first&nbsp;layer&nbsp;because&nbsp;the&nbsp;temperature&nbsp;of&nbsp;the&nbsp;first&nbsp;layer&nbsp;should&nbsp;sometimes&nbsp;be<br>
+different&nbsp;than&nbsp;that&nbsp;of&nbsp;the&nbsp;other&nbsp;layers.&nbsp;&nbsp;The&nbsp;default&nbsp;preference&nbsp;is&nbsp;one.&nbsp;&nbsp;To&nbsp;run&nbsp;tower,&nbsp;in&nbsp;a&nbsp;shell&nbsp;type:<br>
 &gt;&nbsp;python&nbsp;tower.py<br>
 &nbsp;<br>
 The&nbsp;following&nbsp;examples&nbsp;tower&nbsp;the&nbsp;files&nbsp;Hollow&nbsp;Square.gcode&nbsp;&amp;&nbsp;Hollow&nbsp;Square.gts.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder<br>
 which&nbsp;contains&nbsp;Hollow&nbsp;Square.gcode,&nbsp;Hollow&nbsp;Square.gts&nbsp;and&nbsp;tower.py.&nbsp;&nbsp;The&nbsp;tower&nbsp;function&nbsp;will&nbsp;tower&nbsp;if&nbsp;'Maximum&nbsp;Tower&nbsp;Layers'&nbsp;is<br>
 greater&nbsp;than&nbsp;zero,&nbsp;which&nbsp;can&nbsp;be&nbsp;set&nbsp;in&nbsp;the&nbsp;dialog&nbsp;or&nbsp;by&nbsp;changing&nbsp;the&nbsp;preferences&nbsp;file&nbsp;'tower.csv'&nbsp;with&nbsp;a&nbsp;text&nbsp;editor&nbsp;or&nbsp;a&nbsp;spreadsheet<br>
 program&nbsp;set&nbsp;to&nbsp;separate&nbsp;tabs.&nbsp;&nbsp;The&nbsp;functions&nbsp;writeOutput&nbsp;and&nbsp;getTowerChainGcode&nbsp;check&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text&nbsp;has&nbsp;been&nbsp;towered,<br>
-if&nbsp;not&nbsp;they&nbsp;call&nbsp;the&nbsp;getFillChainGcode&nbsp;in&nbsp;fill.py&nbsp;to&nbsp;fill&nbsp;the&nbsp;text;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;filled&nbsp;text,&nbsp;then&nbsp;they&nbsp;tower.&nbsp;&nbsp;Pictures&nbsp;of&nbsp;towering&nbsp;in<br>
-action&nbsp;are&nbsp;available&nbsp;from&nbsp;the&nbsp;Metalab&nbsp;blog&nbsp;at:<br>
+if&nbsp;not&nbsp;they&nbsp;call&nbsp;the&nbsp;getRaftChainGcode&nbsp;in&nbsp;raft.py&nbsp;to&nbsp;raft&nbsp;the&nbsp;text;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;rafted&nbsp;text,&nbsp;then&nbsp;they&nbsp;tower.&nbsp;&nbsp;Pictures&nbsp;of<br>
+towering&nbsp;in&nbsp;action&nbsp;are&nbsp;available&nbsp;from&nbsp;the&nbsp;Metalab&nbsp;blog&nbsp;at:<br>
 <a href="http://reprap.soup.io/?search=towering">http://reprap.soup.io/?search=towering</a><br>
 &nbsp;<br>
 &nbsp;<br>
@@ -89,13 +89,13 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 <a href="skeinforge_tools.analyze.html">skeinforge_tools.analyze</a><br>
 <a href="cStringIO.html">cStringIO</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.euclidean.html">skeinforge_tools.skeinforge_utilities.euclidean</a><br>
-</td><td width="25%" valign=top><a href="skeinforge_tools.fill.html">skeinforge_tools.fill</a><br>
-<a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
+</td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
 <a href="skeinforge_tools.import_translator.html">skeinforge_tools.import_translator</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.intercircle.html">skeinforge_tools.skeinforge_utilities.intercircle</a><br>
-</td><td width="25%" valign=top><a href="math.html">math</a><br>
-<a href="skeinforge_tools.polyfile.html">skeinforge_tools.polyfile</a><br>
+<a href="math.html">math</a><br>
+</td><td width="25%" valign=top><a href="skeinforge_tools.polyfile.html">skeinforge_tools.polyfile</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.preferences.html">skeinforge_tools.skeinforge_utilities.preferences</a><br>
+<a href="skeinforge_tools.raft.html">skeinforge_tools.raft</a><br>
 <a href="sys.html">sys</a><br>
 </td><td width="25%" valign=top><a href="time.html">time</a><br>
 </td></tr></table></td></tr></table><p>
@@ -178,6 +178,8 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 
 <dl><dt><a name="TowerSkein-isInsideRemovedOutsideCone"><strong>isInsideRemovedOutsideCone</strong></a>(self, island, removedBoundingLoop, untilLayerIndex)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;island&nbsp;is&nbsp;entirely&nbsp;inside&nbsp;the&nbsp;removed&nbsp;bounding&nbsp;loop&nbsp;and&nbsp;outside&nbsp;the&nbsp;collision&nbsp;cone&nbsp;of&nbsp;the&nbsp;remaining&nbsp;islands.</tt></dd></dl>
 
+<dl><dt><a name="TowerSkein-isThereAnOperatingLayerLine"><strong>isThereAnOperatingLayerLine</strong></a>(self)</dt><dd><tt>Parse&nbsp;gcode&nbsp;until&nbsp;the&nbsp;operating&nbsp;layer&nbsp;if&nbsp;there&nbsp;is&nbsp;one.</tt></dd></dl>
+
 <dl><dt><a name="TowerSkein-linearMove"><strong>linearMove</strong></a>(self, splitLine)</dt><dd><tt>Add&nbsp;a&nbsp;linear&nbsp;move&nbsp;to&nbsp;the&nbsp;loop.</tt></dd></dl>
 
 <dl><dt><a name="TowerSkein-parseGcode"><strong>parseGcode</strong></a>(self, gcodeText, towerPreferences)</dt><dd><tt>Parse&nbsp;gcode&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;tower&nbsp;gcode.</tt></dd></dl>
@@ -185,6 +187,8 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 <dl><dt><a name="TowerSkein-parseInitialization"><strong>parseInitialization</strong></a>(self)</dt><dd><tt>Parse&nbsp;gcode&nbsp;initialization&nbsp;and&nbsp;store&nbsp;the&nbsp;parameters.</tt></dd></dl>
 
 <dl><dt><a name="TowerSkein-parseLine"><strong>parseLine</strong></a>(self, lineIndex)</dt><dd><tt>Parse&nbsp;a&nbsp;gcode&nbsp;line.</tt></dd></dl>
+
+<dl><dt><a name="TowerSkein-parseUntilOperatingLayer"><strong>parseUntilOperatingLayer</strong></a>(self)</dt><dd><tt>Parse&nbsp;gcode&nbsp;until&nbsp;the&nbsp;operating&nbsp;layer&nbsp;if&nbsp;there&nbsp;is&nbsp;one.</tt></dd></dl>
 
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">

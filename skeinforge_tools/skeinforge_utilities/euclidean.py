@@ -48,7 +48,7 @@ def addLoopToPixelTable( loop, pixelTable, width ):
 	for pointIndex in xrange( len( loop ) ):
 		pointBegin = loop[ pointIndex ]
 		pointEnd = loop[ ( pointIndex + 1 ) % len( loop ) ]
-		addSegmentToPixelTable( pointBegin.dropAxis( 2 ), pointEnd.dropAxis( 2 ), pixelTable, 0, width )
+		addSegmentToPixelTable( pointBegin.dropAxis( 2 ), pointEnd.dropAxis( 2 ), pixelTable, 0, 0, width )
 
 def addPixelToPixelTable( pixelTable, pointComplex ):
 	"Add pixel to the pixel table."
@@ -71,9 +71,9 @@ def addPointToPath( path, pixelTable, point, width ):
 		return
 	pointComplex = point.dropAxis( 2 )
 	beginComplex = path[ len( path ) - 2 ].dropAxis( 2 )
-	addSegmentToPixelTable( beginComplex, pointComplex, pixelTable, 0, width )
+	addSegmentToPixelTable( beginComplex, pointComplex, pixelTable, 0, 0, width )
 
-def addSegmentToPixelTable( beginComplex, endComplex, pixelTable, shortenDistance, width ):
+def addSegmentToPixelTable( beginComplex, endComplex, pixelTable, shortenDistanceBegin, shortenDistanceEnd, width ):
 	"Add line segment to the pixel table."
 	if abs( beginComplex - endComplex ) <= 0.0:
 		return
@@ -96,7 +96,7 @@ def addSegmentToPixelTable( beginComplex, endComplex, pixelTable, shortenDistanc
 	yEnd = beginComplex.imag + gradient * ( xEnd - beginComplex.real )
 	xGap = getReverseFloatPart( beginComplex.real + 0.5 )
 	beginPixel = complex( xEnd, math.floor( yEnd ) )
-	if shortenDistance < 1:
+	if shortenDistanceBegin < 1:
 		addPixelToPixelTableWithSteepness( isSteep, pixelTable, beginPixel )
 		addPixelToPixelTableWithSteepness( isSteep, pixelTable, complex( beginPixel.real, beginPixel.imag + 1 ) )
 	intersectionY = yEnd + gradient
@@ -104,16 +104,17 @@ def addSegmentToPixelTable( beginComplex, endComplex, pixelTable, shortenDistanc
 	yEnd = endComplex.imag + gradient * ( xEnd - endComplex.real )
 	xGap = getReverseFloatPart( endComplex.real + 0.5 )
 	endPixel = complex( xEnd, math.floor( yEnd ) )
-	if shortenDistance < 1:
+	if shortenDistanceEnd < 1:
 		addPixelToPixelTableWithSteepness( isSteep, pixelTable, endPixel )
 		addPixelToPixelTableWithSteepness( isSteep, pixelTable, complex( endPixel.real, endPixel.imag + 1 ) )
 	beginStep = int( round( beginPixel.real ) ) + 1
 	endStep = int( round( endPixel.real ) )
-	if shortenDistance > 0:
-		shortenDistanceMinusOne = shortenDistance - 1
-		beginStep += shortenDistanceMinusOne
-		endStep -= shortenDistanceMinusOne
-		intersectionY += gradient * float( shortenDistanceMinusOne )
+	if shortenDistanceBegin > 1:
+		shortenDistanceBeginMinusOne = shortenDistanceBegin - 1
+		beginStep += shortenDistanceBeginMinusOne
+		intersectionY += gradient * float( shortenDistanceBeginMinusOne )
+	if shortenDistanceEnd > 1:
+		endStep -= shortenDistanceEnd - 1
 	for x in xrange( beginStep, endStep ):
 		addPixelToPixelTableWithSteepness( isSteep, pixelTable, complex( float( x ), math.floor( intersectionY ) ) )
 		addPixelToPixelTableWithSteepness( isSteep, pixelTable, complex( float( x ), math.floor( intersectionY + 1.0 ) ) )
@@ -189,6 +190,17 @@ def getAwayPath( path, radius ):
 			point = path[ pointIndex ]
 			away.append( point )
 	return away
+
+def getBackOfLoops( loops ):
+	"Get the back of the loops."
+	negativeFloat = - 999999999.75342341
+	back = negativeFloat
+	for loop in loops:
+		for point in loop:
+			back = max( back, point.y )
+	if back == negativeFloat:
+		print( "This should never happen, there are no loops for getBackOfLoops in euclidean." )
+	return back
 
 def getClippedAtEndLoopPath( clip, loopPath ):
 	"Get a clipped loop path."
@@ -300,6 +312,17 @@ def getFloatPart( number ):
 	"Get the float part of the number."
 	return number - math.floor( number )
 
+def getFrontOfLoops( loops ):
+	"Get the front of the loops."
+	bigFloat = 999999999.196854654
+	front = bigFloat
+	for loop in loops:
+		for point in loop:
+			front = min( front, point.y )
+	if front == bigFloat:
+		print( "This should never happen, there are no loops for getFrontOfLoops in euclidean." )
+	return front
+
 def getHalfSimplifiedLoop( loop, radius, remainder ):
 	"Get the loop with half of the points inside the channel removed."
 	if len( loop ) < 2:
@@ -346,6 +369,17 @@ def getInsidesAddToOutsides( loops, outsides ):
 def getIntermediateLocation( alongWay, begin, end ):
 	"Get the intermediate location between begin and end."
 	return ( begin.times( 1.0 - alongWay ) ).plus( end.times( alongWay ) )
+
+def getLargestLoop( loops ):
+	"Get largest loop from loops."
+	largestArea = - 999999999.0
+	largestLoop = None
+	for loop in loops:
+		loopArea = abs( getPolygonArea( loop ) )
+		if loopArea > largestArea:
+			largestArea = loopArea
+			largestLoop = loop
+	return largestLoop
 
 def getLeftPoint( path ):
 	"Get the leftmost point in the path."
@@ -475,6 +509,44 @@ def getPathRoundZAxisByPlaneAngle( planeAngle, path ):
 #		lastPoint = point
 #	return pathWithoutCloseSequentials
 #
+
+def getPathsFromEndpoints( endpoints, fillInset, pixelTable, width ):
+	"Get paths from endpoints."
+	for beginningEndpoint in endpoints[ : : 2 ]:
+		beginningPoint = beginningEndpoint.point
+		addSegmentToPixelTable( beginningPoint.dropAxis( 2 ), beginningEndpoint.otherEndpoint.point.dropAxis( 2 ), pixelTable, 0, 0, width )
+	endpointFirst = endpoints[ 0 ]
+	endpoints.remove( endpointFirst )
+	otherEndpoint = endpointFirst.otherEndpoint
+	endpoints.remove( otherEndpoint )
+	nextEndpoint = None
+	path = []
+	paths = [ path ]
+	if len( endpoints ) > 1:
+		nextEndpoint = otherEndpoint.getNearestMiss( endpoints, path, pixelTable, width )
+		if nextEndpoint != None:
+			if nextEndpoint.point.distance2( endpointFirst.point ) < nextEndpoint.point.distance2( otherEndpoint.point ):
+				endpointFirst = endpointFirst.otherEndpoint
+				otherEndpoint = endpointFirst.otherEndpoint
+	addPointToPath( path, pixelTable, endpointFirst.point, width )
+	addPointToPath( path, pixelTable, otherEndpoint.point, width )
+	while len( endpoints ) > 1:
+		nextEndpoint = otherEndpoint.getNearestMiss( endpoints, path, pixelTable, width )
+		if nextEndpoint == None:
+			path = []
+			paths.append( path )
+			nextEndpoint = otherEndpoint.getNearestEndpoint( endpoints )
+		addPointToPath( path, pixelTable, nextEndpoint.point, width )
+		endpoints.remove( nextEndpoint )
+		otherEndpoint = nextEndpoint.otherEndpoint
+		hop = nextEndpoint.getHop( fillInset, path )
+		if hop != None:
+			path = [ hop ]
+			paths.append( path )
+		addPointToPath( path, pixelTable, otherEndpoint.point, width )
+		endpoints.remove( otherEndpoint )
+	return paths
+
 def getPlaneDot( vec3First, vec3Second ):
 	"Get the dot product of the x and y components of a pair of Vec3s."
 	return vec3First.x * vec3Second.x + vec3First.y * vec3Second.y
@@ -604,7 +676,7 @@ def getSegmentsFromXIntersections( xIntersections, y, z ):
 
 def getSegmentsFromXIntersectionIndexes( xIntersectionIndexList, y, z ):
 	"Get endpoint segments from the x intersection indexes."
-	xIntersections = getXIntersectionsFromIntersections( xIntersectionIndexList, y, z )
+	xIntersections = getXIntersectionsFromIntersections( xIntersectionIndexList )
 	return getSegmentsFromXIntersections( xIntersections, y, z )
 
 def getSimplifiedLoop( loop, radius ):
@@ -678,8 +750,8 @@ def getXIntersection( firstPoint, secondPoint, y ):
 	yMinusFirst = y - firstPoint.y
 	return yMinusFirst / secondMinusFirst.y * secondMinusFirst.x + firstPoint.x
 
-def getXIntersectionsFromIntersections( xIntersectionIndexList, y, z ):
-	"Get x intersections from the x intersection index list."
+def getXIntersectionsFromIntersections( xIntersectionIndexList ):
+	"Get x intersections from the x intersection index list, in other words subtract non negative intersections from negatives."
 	xIntersections = []
 	fill = False
 	solid = False
@@ -914,7 +986,7 @@ class Endpoint:
 		self.point = point
 		return self
 
-	def getHop( self, layerFillInset, path ):
+	def getHop( self, fillInset, path ):
 		"Get a hop away from the endpoint if the other endpoint is doubling back."
 		if len( path ) < 2:
 			return None
@@ -936,7 +1008,7 @@ class Endpoint:
 		normalizedSegmentLength = normalizedSegment.length()
 		absoluteCross = abs( getComplexCrossProduct( penultimateMinusPoint, normalizedComplexSegment ) )
 		reciprocalCross = 1.0 / max( absoluteCross, 0.01 )
-		alongWay = min( layerFillInset * reciprocalCross, normalizedSegmentLength )
+		alongWay = min( fillInset * reciprocalCross, normalizedSegmentLength )
 		return self.point.plus( normalizedSegment.times( alongWay / normalizedSegmentLength ) )
 
 	def getNearestEndpoint( self, endpoints ):
@@ -969,7 +1041,7 @@ class Endpoint:
 					normalizedSegment /= normalizedSegmentLength
 					if getComplexDot( penultimateMinusPoint, normalizedSegment ) < 0.9:
 						segmentTable = {}
-						addSegmentToPixelTable( endpointPointComplex, pointComplex, segmentTable, 2, width )
+						addSegmentToPixelTable( endpointPointComplex, pointComplex, segmentTable, 2, 2, width )
 						if not isPixelTableIntersecting( pixelTable, segmentTable ):
 							smallestDistance = normalizedSegmentLength
 							nearestMiss = endpoint

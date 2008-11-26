@@ -48,15 +48,15 @@ def addCircleIntersectionLoop( circleIntersectionPath, circleIntersections ):
 	for circleIntersection in circleIntersections:
 		print( circleIntersection )
 
-def addOperatingOrbits( operatingJump, skein, temperatureChangeTime ):
+def addOperatingOrbits( boundaryLoops, operatingJump, skein, temperatureChangeTime ):
 	"Add the orbits before the operating layers."
-	if len( skein.boundaryLoops ) < 1:
-		print( 'This should never happen, there are no boundary loops on the first layer.' )
+	if len( boundaryLoops ) < 1:
+		return
 	largestLength = - 999999999.0
 	largestLoop = None
 	perimeterOutset = 0.4 * skein.extrusionPerimeterWidth
 	greaterThanPerimeterOutset = 1.1 * perimeterOutset
-	for boundaryLoop in skein.boundaryLoops:
+	for boundaryLoop in boundaryLoops:
 		centers = getCentersFromLoopDirection( True, boundaryLoop, greaterThanPerimeterOutset )
 		for center in centers:
 			outset = getSimplifiedInsetFromClockwiseLoop( center, perimeterOutset )
@@ -65,11 +65,9 @@ def addOperatingOrbits( operatingJump, skein, temperatureChangeTime ):
 				if loopLength > largestLength:
 					largestLength = loopLength
 					largestLoop = outset
-	lastZ = largestLoop[ 0 ].z
-	if operatingJump != None:
-		lastZ += operatingJump
-	for point in largestLoop:
-		point.z = lastZ
+	if largestLoop == None:
+		return
+	setZAccordingToOperatingJump( largestLoop, operatingJump )
 	addOrbits( largestLoop, skein, temperatureChangeTime )
 
 def addOrbits( loop, skein, temperatureChangeTime ):
@@ -221,6 +219,24 @@ def getInsetFromClockwiseLoop( loop, radius ):
 		insetLoop.append( getInsetFromClockwiseTriple( aheadAbsolute, behindAbsolute, center, radius ) )
 	return insetLoop
 
+def getInsetLoops( inset, loops ):
+	"Get the inset loops."
+	absoluteInset = abs( inset )
+	insetLoops = []
+	slightlyGreaterThanInset = 1.1 * absoluteInset
+	muchGreaterThanLayerInset = 2.5 * absoluteInset
+	for loop in loops:
+		isInInsetDirection = euclidean.isWiddershins( loop )
+		if inset < 0.0:
+			isInInsetDirection = not isInInsetDirection
+		centers = getCentersFromLoopDirection( not isInInsetDirection, loop, slightlyGreaterThanInset )
+		for center in centers:
+			insetLoop = getSimplifiedInsetFromClockwiseLoop( center, absoluteInset )
+			if euclidean.getMaximumSpan( insetLoop ) > muchGreaterThanLayerInset:
+				if euclidean.isPathInsideLoop( loop, insetLoop ) == isInInsetDirection:
+					insetLoops.append( insetLoop )
+	return insetLoops
+
 def getIntersectionAtInset( ahead, behind, inset ):
 	"Get circle intersection loop at inset from segment."
 	aheadMinusBehind = ahead.minus( behind )
@@ -298,6 +314,16 @@ def removeIntersection( loop ):
 					loop[ ( pointIndex + len( loop ) - 1 ) % len( loop ) ] = intersectionPoint
 					del loop[ pointIndex ]
 					return
+
+def setZAccordingToOperatingJump( loop, operatingJump ):
+	"Set of the loop to the first point, increasing by the operating jump if it exists."
+	if len( loop ) < 1:
+		return
+	z = loop[ 0 ].z
+	if operatingJump != None:
+		z += operatingJump
+	for point in loop:
+		point.z = z
 
 
 class BoundingLoop:

@@ -17,7 +17,7 @@ To run cool, in a shell which cool is in type:
 The following examples cool the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the
 folder which contains Hollow Square.gcode, Hollow Square.gts and cool.py.  The cool function will cool if the 'Activate Cool'
 checkbox is on.  The functions writeOutput and getCoolChainGcode check to see if the text has been cooled, if not they
-call the getRaftChainGcode in raft.py to raft the text; once they have the rafted text, then they cool.
+call the getClipChainGcode in clip.py to clip the text; once they have the clipped text, then they cool.
 
 
 > python cool.py
@@ -82,9 +82,9 @@ from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
+from skeinforge_tools import clip
 from skeinforge_tools import import_translator
 from skeinforge_tools import polyfile
-from skeinforge_tools import raft
 import cStringIO
 import math
 import sys
@@ -99,8 +99,8 @@ __license__ = "GPL 3.0"
 def getCoolChainGcode( filename, gcodeText, coolPreferences = None ):
 	"Cool a gcode linear move text.  Chain cool the gcode if it is not already cooled."
 	gcodeText = gcodec.getGcodeFileText( filename, gcodeText )
-	if not gcodec.isProcedureDone( gcodeText, 'raft' ):
-		gcodeText = raft.getRaftChainGcode( filename, gcodeText )
+	if not gcodec.isProcedureDone( gcodeText, 'clip' ):
+		gcodeText = clip.getClipChainGcode( filename, gcodeText )
 	return getCoolGcode( gcodeText, coolPreferences )
 
 def getCoolGcode( gcodeText, coolPreferences = None ):
@@ -143,6 +143,7 @@ def writeOutput( filename = '' ):
 class CoolSkein:
 	"A class to cool a skein of extrusions."
 	def __init__( self ):
+		self.boundaryLoops = []
 		self.decimalPlacesCarried = 3
 		self.feedrateMinute = 960.0
 		self.highestZ = - 99999999.9
@@ -189,9 +190,7 @@ class CoolSkein:
 		for self.lineIndex in range( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
-			firstWord = ''
-			if len( splitLine ) > 0:
-				firstWord = splitLine[ 0 ]
+			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == '(<decimalPlacesCarried>':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
 				if coolPreferences.turnFanOnAtBeginning.value:
@@ -216,13 +215,12 @@ class CoolSkein:
 		elif firstWord == '(<boundaryPoint>':
 			self.boundaryLoop.append( gcodec.getLocationFromSplitLine( None, splitLine ) )
 		elif firstWord == '(<layerStart>':
+			remainingOrbitTime = coolPreferences.minimumLayerTime.value - self.layerTime
+			if remainingOrbitTime > 0.0:
+				intercircle.addOperatingOrbits( self.boundaryLoops, None, self, remainingOrbitTime )
 			self.boundaryLoops = []
 			self.highestZ = - 99999999.9
 			self.layerTime = 0.0
-		elif firstWord == '(<operatingLayerEnd>':
-			remainingOrbitTime = coolPreferences.minimumLayerTime.value - self.layerTime
-			if remainingOrbitTime > 0.0:
-				intercircle.addOperatingOrbits( None, self, remainingOrbitTime )
 		elif firstWord == '(<surroundingLoop>':
 			self.boundaryLoop = []
 			self.boundaryLoops.append( self.boundaryLoop )

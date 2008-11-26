@@ -17,17 +17,17 @@ values for the cone angle range between zero and ninety.  The higher the angle, 
 shape is, generally the extruder will stay in the region for only a few layers before a collision is detected with the wide cone.
 The default angle is sixty degrees.
 
-The "Tower Start Layer" is the layer which the script starts extruding towers.  It is best to not tower at least the first layer
-because the temperature of the first layer should sometimes be different than that of the other layers.  The default preference is
-three.  To run tower, in a shell type:
+The "Tower Start Layer" is the layer which the script starts extruding towers, after the last raft layer which does not have
+support material.  It is best to not tower at least the first layer because the temperature of the first layer should sometimes be
+different than that of the other layers.  The default preference is one.  To run tower, in a shell type:
 > python tower.py
 
 The following examples tower the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder
 which contains Hollow Square.gcode, Hollow Square.gts and tower.py.  The tower function will tower if 'Maximum Tower Layers' is
 greater than zero, which can be set in the dialog or by changing the preferences file 'tower.csv' with a text editor or a spreadsheet
 program set to separate tabs.  The functions writeOutput and getTowerChainGcode check to see if the text has been towered,
-if not they call the getFillChainGcode in fill.py to fill the text; once they have the filled text, then they tower.  Pictures of towering in
-action are available from the Metalab blog at:
+if not they call the getRaftChainGcode in raft.py to raft the text; once they have the rafted text, then they tower.  Pictures of
+towering in action are available from the Metalab blog at:
 http://reprap.soup.io/?search=towering
 
 
@@ -81,9 +81,9 @@ from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
-from skeinforge_tools import fill
 from skeinforge_tools import import_translator
 from skeinforge_tools import polyfile
+from skeinforge_tools import raft
 import cStringIO
 import math
 import sys
@@ -97,8 +97,8 @@ __license__ = "GPL 3.0"
 def getTowerChainGcode( filename, gcodeText, towerPreferences = None ):
 	"Tower a gcode linear move text.  Chain tower the gcode if it is not already towered."
 	gcodeText = gcodec.getGcodeFileText( filename, gcodeText )
-	if not gcodec.isProcedureDone( gcodeText, 'fill' ):
-		gcodeText = fill.getFillChainGcode( filename, gcodeText )
+	if not gcodec.isProcedureDone( gcodeText, 'raft' ):
+		gcodeText = raft.getRaftChainGcode( filename, gcodeText )
 	return getTowerGcode( gcodeText, towerPreferences )
 
 def getTowerGcode( gcodeText, towerPreferences = None ):
@@ -151,6 +151,50 @@ def writeOutput( filename = '' ):
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to tower the file.' )
 
 
+class ThreadLayer:
+	"A layer of loops and paths."
+	def __init__( self ):
+		"Thread layer constructor."
+		self.boundaries = []
+		self.loops = []
+		self.paths = []
+		self.surroundingLoops = []
+
+	def __repr__( self ):
+		"Get the string representation of this thread layer."
+		return '%s, %s, %s, %s' % ( self.boundaries, self.loops, self.paths, self.surroundingLoops )
+
+
+class TowerPreferences:
+	"A class to handle the tower preferences."
+	def __init__( self ):
+		"Set the default preferences, execute title & preferences filename."
+		#Set the default preferences.
+		self.archive = []
+		self.activateTower = preferences.BooleanPreference().getFromValue( 'Activate Tower', True )
+		self.archive.append( self.activateTower )
+		self.extruderPossibleCollisionConeAngle = preferences.FloatPreference().getFromValue( 'Extruder Possible Collision Cone Angle (degrees):', 60.0 )
+		self.archive.append( self.extruderPossibleCollisionConeAngle )
+		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Towered', '' )
+		self.archive.append( self.filenameInput )
+		self.maximumTowerHeight = preferences.IntPreference().getFromValue( 'Maximum Tower Height (layers):', 0 )
+		self.archive.append( self.maximumTowerHeight )
+		self.towerStartLayer = preferences.IntPreference().getFromValue( 'Tower Start Layer (integer):', 1 )
+		self.archive.append( self.towerStartLayer )
+		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		self.executeTitle = 'Tower'
+		self.filenamePreferences = preferences.getPreferencesFilePath( 'tower.csv' )
+		self.filenameHelp = 'skeinforge_tools.tower.html'
+		self.saveTitle = 'Save Preferences'
+		self.title = 'Tower Preferences'
+
+	def execute( self ):
+		"Tower button has been clicked."
+		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
+		for filename in filenames:
+			writeOutput( filename )
+
+
 class TowerSkein:
 	"A class to tower a skein of extrusions."
 	def __init__( self ):
@@ -158,6 +202,8 @@ class TowerSkein:
 		self.decimalPlacesCarried = 3
 		self.extruderActive = False
 		self.extrusionWidth = 0.6
+		self.feedrateMinute = 959.0
+		self.feedrateTable = {}
 		self.halfExtrusionHeight = 0.4
 		self.islandLayers = []
 		self.isLoop = False
@@ -211,7 +257,11 @@ class TowerSkein:
 
 	def addGcodeMovement( self, point ):
 		"Add a movement to the output."
-		self.addLine( "G1 X%s Y%s Z%s" % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ) ) )
+		if point in self.feedrateTable:
+			feedrateMinute = self.feedrateTable[ point ]
+			self.addLine( 'G1 X%s Y%s Z%s F%s' % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ), self.getRounded( feedrateMinute ) ) )
+			return
+		self.addLine( 'G1 X%s Y%s Z%s' % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ) ) )
 
 	def addIfTravel( self, splitLine ):
 		"Add travel move around loops if this the extruder is off."
@@ -246,6 +296,8 @@ class TowerSkein:
 	def addToExtrusion( self, location ):
 		"Add a location to the thread."
 		if self.oldLocation == None:
+			return
+		if self.threadLayer == None:
 			return
 		if self.surroundingLoop != None:
 			if self.isPerimeter:
@@ -324,9 +376,21 @@ class TowerSkein:
 					return False
 		return True
 
+	def isThereAnOperatingLayerLine( self ):
+		"Parse gcode until the operating layer if there is one."
+		for lineIndex in range( self.lineIndex, len( self.lines ) ):
+			line = self.lines[ lineIndex ]
+			splitLine = line.split()
+			firstWord = gcodec.getFirstWord( splitLine )
+			if firstWord == '(<operatingLayerEnd>':
+				return True
+		return False
+
 	def linearMove( self, splitLine ):
 		"Add a linear move to the loop."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
+		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
+		self.feedrateTable[ location ] = self.feedrateMinute
 		if self.extruderActive:
 			self.addToExtrusion( location )
 		self.oldLocation = location
@@ -337,6 +401,8 @@ class TowerSkein:
 		self.towerPreferences = towerPreferences
 		self.parseInitialization()
 		self.oldLocation = None
+		if self.isThereAnOperatingLayerLine():
+			self.parseUntilOperatingLayer()
 		for lineIndex in range( self.lineIndex, len( self.lines ) ):
 			self.parseLine( lineIndex )
 		for threadLayer in self.threadLayers:
@@ -351,9 +417,7 @@ class TowerSkein:
 		for self.lineIndex in range( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
-			firstWord = ''
-			if len( splitLine ) > 0:
-				firstWord = splitLine[ 0 ]
+			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == '(<extrusionStart>':
 				self.addLine( '(<procedureDone> tower )' )
 				self.addLine( line )
@@ -388,6 +452,9 @@ class TowerSkein:
 		elif firstWord == '(</extrusionStart>':
 			self.shutdownLineIndex = lineIndex
 		elif firstWord == '(<layerStart>':
+			if self.beforeExtrusionLines != None:
+				for beforeExtrusionLine in self.beforeExtrusionLines:
+					self.addLine( beforeExtrusionLine )
 			self.beforeExtrusionLines = []
 			self.threadLayer = None
 			self.thread = None
@@ -410,49 +477,15 @@ class TowerSkein:
 		if self.beforeExtrusionLines != None:
 			self.beforeExtrusionLines.append( line )
 
-
-class ThreadLayer:
-	"A layer of loops and paths."
-	def __init__( self ):
-		"Thread layer constructor."
-		self.boundaries = []
-		self.loops = []
-		self.paths = []
-		self.surroundingLoops = []
-
-	def __repr__( self ):
-		"Get the string representation of this thread layer."
-		return '%s, %s, %s' % ( self.rotation, self.surroundingLoops, self.boundaries )
-
-
-class TowerPreferences:
-	"A class to handle the tower preferences."
-	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
-		#Set the default preferences.
-		self.archive = []
-		self.activateTower = preferences.BooleanPreference().getFromValue( 'Activate Tower', True )
-		self.archive.append( self.activateTower )
-		self.extruderPossibleCollisionConeAngle = preferences.FloatPreference().getFromValue( 'Extruder Possible Collision Cone Angle (degrees):', 60.0 )
-		self.archive.append( self.extruderPossibleCollisionConeAngle )
-		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Towered', '' )
-		self.archive.append( self.filenameInput )
-		self.maximumTowerHeight = preferences.IntPreference().getFromValue( 'Maximum Tower Height (layers):', 0 )
-		self.archive.append( self.maximumTowerHeight )
-		self.towerStartLayer = preferences.IntPreference().getFromValue( 'Tower Start Layer (integer):', 3 )
-		self.archive.append( self.towerStartLayer )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.executeTitle = 'Tower'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'tower.csv' )
-		self.filenameHelp = 'skeinforge_tools.tower.html'
-		self.saveTitle = 'Save Preferences'
-		self.title = 'Tower Preferences'
-
-	def execute( self ):
-		"Tower button has been clicked."
-		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
-		for filename in filenames:
-			writeOutput( filename )
+	def parseUntilOperatingLayer( self ):
+		"Parse gcode until the operating layer if there is one."
+		for self.lineIndex in range( self.lineIndex, len( self.lines ) ):
+			line = self.lines[ self.lineIndex ]
+			splitLine = line.split()
+			firstWord = gcodec.getFirstWord( splitLine )
+			self.addLine( line )
+			if firstWord == '(<operatingLayerEnd>':
+				return
 
 
 def main( hashtable = None ):
