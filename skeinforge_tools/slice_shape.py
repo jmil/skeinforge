@@ -7,11 +7,11 @@ height over the extrusion diameter.  The 'Extrusion Width over Diameter' ratio i
 diameter.  A ratio of one means the extrusion is a circle, a typical ratio of 1.5 means the extrusion is a wide oval.  These values should
 be measured from a test extrusion line.
 
-The extrusion fill density ratio is the area of the extrusion diameter over the extrusion width over the extrusion height.  Assuming the
-extrusion diameter is correct, a high value means the filament will be packed tightly, and the object will be almost as dense as the
-filament.  If the value is too high, there could be too little room for the filament, and the extruder will end up plowing through the extra
-filament.  A low value means the filaments will be far away from each other, the object will be leaky and light.  The value with the
-default extrusion preferences is around 0.82.
+The extrusion fill density ratio that is printed to the console, ( it is not a parameter ) is the area of the extrusion diameter over the
+extrusion width over the extrusion height.  Assuming the extrusion diameter is correct, a high value means the filament will be packed
+tightly, and the object will be almost as dense as the filament.  If the value is too high, there could be too little room for the filament,
+and the extruder will end up plowing through the extra filament.  A low value means the filaments will be far away from each other, the
+object will be leaky and light.  The value with the default extrusion preferences is around 0.82.
 
 Rarely changed preferences are Import Coarseness, Mesh Type, Infill Bridge Width Over Thickness & Infill in Direction
 of Bridges.  When the triangle mesh has holes in it, slice switches over to a slow algorithm that spans gaps in the mesh.  The higher the
@@ -772,7 +772,7 @@ class SliceSkein:
 			halfWidth *= self.bridgeExtrusionWidth / self.extrusionWidth
 			slightlyGreaterThanExtrusionWIdth *= self.bridgeExtrusionWidth / self.extrusionWidth
 			self.addLine( '(<bridgeDirection> ' + str( bridgeDirection ) + ' )' ) # Indicate the bridge direction.
-			halfBridgeMinusLayer = 0.5 * ( self.bridgeextrusionHeight - self.extrusionHeight )
+			halfBridgeMinusLayer = 0.5 * ( self.bridgeExtrusionHeight - self.extrusionHeight )
 		allExtrudateLoops = []
 		for loop in loops:
 			extrudateLoops = self.getExtrudateLoops( halfWidth, loop )
@@ -785,7 +785,7 @@ class SliceSkein:
 		self.belowLoops = allExtrudateLoops
 		if bridgeDirection == None:
 			return z + self.extrusionHeight
-		return z + self.bridgeextrusionHeight
+		return z + self.bridgeExtrusionHeight
 
 	def parseTriangleMesh( self, slicePreferences, triangleMesh ):
 		"Parse gnu triangulated surface text and store the sliced gcode."
@@ -801,7 +801,7 @@ class SliceSkein:
 		self.fillInset = self.extrusionPerimeterWidth - self.extrusionPerimeterWidth * slicePreferences.infillPerimeterOverlap.value
 		if slicePreferences.perimeterInfillPreference.value:
 			self.fillInset = self.halfExtrusionPerimeterWidth + 0.5 * self.extrusionWidth - self.extrusionWidth * slicePreferences.infillPerimeterOverlap.value
-		self.bridgeextrusionHeight = self.extrusionHeight * slicePreferences.extrusionWidthOverDiameter.value / slicePreferences.infillBridgeWidthOverDiameter.value
+		self.bridgeExtrusionHeight = self.extrusionHeight * slicePreferences.extrusionWidthOverDiameter.value / slicePreferences.infillBridgeWidthOverDiameter.value
 		self.halfThickness = 0.5 * self.extrusionHeight
 		self.zZoneLayers = 99
 		self.zZoneInterval = self.extrusionHeight / self.zZoneLayers / 100.0

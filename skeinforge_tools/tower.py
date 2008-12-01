@@ -376,16 +376,6 @@ class TowerSkein:
 					return False
 		return True
 
-	def isThereAnOperatingLayerLine( self ):
-		"Parse gcode until the operating layer if there is one."
-		for lineIndex in range( self.lineIndex, len( self.lines ) ):
-			line = self.lines[ lineIndex ]
-			splitLine = line.split()
-			firstWord = gcodec.getFirstWord( splitLine )
-			if firstWord == '(<operatingLayerEnd>':
-				return True
-		return False
-
 	def linearMove( self, splitLine ):
 		"Add a linear move to the loop."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
@@ -401,7 +391,7 @@ class TowerSkein:
 		self.towerPreferences = towerPreferences
 		self.parseInitialization()
 		self.oldLocation = None
-		if self.isThereAnOperatingLayerLine():
+		if gcodec.isThereAFirstWord( '(<operatingLayerEnd>', self.lines, self.lineIndex ):
 			self.parseUntilOperatingLayer()
 		for lineIndex in range( self.lineIndex, len( self.lines ) ):
 			self.parseLine( lineIndex )

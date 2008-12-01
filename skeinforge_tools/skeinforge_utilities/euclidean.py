@@ -43,6 +43,15 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
+def addCircleToPixelTable( pixelTable, pointComplex ):
+	"Add pixel to the pixel table."
+	xStep = int( round( pointComplex.real ) )
+	yStep = int( round( pointComplex.imag ) )
+	for xCircleStep in xrange( xStep - 2, xStep + 3 ):
+		for yCircleStep in xrange( yStep - 2, yStep + 3 ):
+			stepKey = ( xCircleStep, yCircleStep )
+			pixelTable[ stepKey ] = None
+
 def addLoopToPixelTable( loop, pixelTable, width ):
 	"Add loop to the pixel table."
 	for pointIndex in xrange( len( loop ) ):
@@ -50,19 +59,24 @@ def addLoopToPixelTable( loop, pixelTable, width ):
 		pointEnd = loop[ ( pointIndex + 1 ) % len( loop ) ]
 		addSegmentToPixelTable( pointBegin.dropAxis( 2 ), pointEnd.dropAxis( 2 ), pixelTable, 0, 0, width )
 
-def addPixelToPixelTable( pixelTable, pointComplex ):
+def addPathToPixelTable( path, pixelTable, width ):
+	"Add path to the pixel table."
+	for pointIndex in xrange( len( path ) - 1 ):
+		pointBegin = path[ pointIndex ]
+		pointEnd = path[ pointIndex + 1 ]
+		addSegmentToPixelTable( pointBegin.dropAxis( 2 ), pointEnd.dropAxis( 2 ), pixelTable, 0, 0, width )
+
+def addPixelToPixelTable( pixelTable, x, y ):
 	"Add pixel to the pixel table."
-	xStep = int( round( pointComplex.real ) )
-	yStep = int( round( pointComplex.imag ) )
-	stepKey = ( xStep, yStep )
+	stepKey = 'x' + str( x ) + 'y' + str( y )
 	pixelTable[ stepKey ] = None
 
-def addPixelToPixelTableWithSteepness( isSteep, pixelTable, pointComplex ):
+def addPixelToPixelTableWithSteepness( isSteep, pixelTable, x, y ):
 	"Add pixels to the pixel table with steepness."
 	if isSteep:
-		addPixelToPixelTable( pixelTable, complex( pointComplex.imag, pointComplex.real ) )
+		addPixelToPixelTable( pixelTable, y, x )
 	else:
-		addPixelToPixelTable( pixelTable, pointComplex )
+		addPixelToPixelTable( pixelTable, x, y )
 
 def addPointToPath( path, pixelTable, point, width ):
 	"Add a point to a path and the pixel table."
@@ -70,7 +84,7 @@ def addPointToPath( path, pixelTable, point, width ):
 	if len( path ) < 2:
 		return
 	pointComplex = point.dropAxis( 2 )
-	beginComplex = path[ len( path ) - 2 ].dropAxis( 2 )
+	beginComplex = path[ - 2 ].dropAxis( 2 )
 	addSegmentToPixelTable( beginComplex, pointComplex, pixelTable, 0, 0, width )
 
 def addSegmentToPixelTable( beginComplex, endComplex, pixelTable, shortenDistanceBegin, shortenDistanceEnd, width ):
@@ -79,6 +93,18 @@ def addSegmentToPixelTable( beginComplex, endComplex, pixelTable, shortenDistanc
 		return
 	beginComplex /= width
 	endComplex /= width
+	if shortenDistanceBegin > 0.0:
+		endMinusBeginComplex = endComplex - beginComplex
+		endMinusBeginComplexLength = abs( endMinusBeginComplex )
+		if endMinusBeginComplexLength < shortenDistanceBegin:
+			return
+		beginComplex = beginComplex + endMinusBeginComplex * shortenDistanceBegin / endMinusBeginComplexLength
+	if shortenDistanceEnd > 0.0:
+		beginMinusEndComplex = beginComplex - endComplex
+		beginMinusEndComplexLength = abs( beginMinusEndComplex )
+		if beginMinusEndComplexLength < shortenDistanceEnd:
+			return
+		endComplex = endComplex + beginMinusEndComplex * shortenDistanceEnd / beginMinusEndComplexLength
 	deltaX = endComplex.real - beginComplex.real
 	deltaY = endComplex.imag - beginComplex.imag
 	isSteep = abs( deltaY ) > abs( deltaX )
@@ -92,34 +118,22 @@ def addSegmentToPixelTable( beginComplex, endComplex, pixelTable, shortenDistanc
 	deltaX = endComplex.real - beginComplex.real
 	deltaY = endComplex.imag - beginComplex.imag
 	gradient = deltaY / deltaX
-	xEnd = round( beginComplex.real )
+	xEnd = int( round( beginComplex.real ) )
 	yEnd = beginComplex.imag + gradient * ( xEnd - beginComplex.real )
 	xGap = getReverseFloatPart( beginComplex.real + 0.5 )
-	beginPixel = complex( xEnd, math.floor( yEnd ) )
-	if shortenDistanceBegin < 1:
-		addPixelToPixelTableWithSteepness( isSteep, pixelTable, beginPixel )
-		addPixelToPixelTableWithSteepness( isSteep, pixelTable, complex( beginPixel.real, beginPixel.imag + 1 ) )
+	beginStep = xEnd
+	addPixelToPixelTableWithSteepness( isSteep, pixelTable, xEnd, int( math.floor( yEnd ) ) )
+	addPixelToPixelTableWithSteepness( isSteep, pixelTable, xEnd, int( math.floor( yEnd ) ) + 1 )
 	intersectionY = yEnd + gradient
-	xEnd = round( endComplex.real )
+	xEnd = int( round( endComplex.real ) )
 	yEnd = endComplex.imag + gradient * ( xEnd - endComplex.real )
 	xGap = getReverseFloatPart( endComplex.real + 0.5 )
-	endPixel = complex( xEnd, math.floor( yEnd ) )
-	if shortenDistanceEnd < 1:
-		addPixelToPixelTableWithSteepness( isSteep, pixelTable, endPixel )
-		addPixelToPixelTableWithSteepness( isSteep, pixelTable, complex( endPixel.real, endPixel.imag + 1 ) )
-	beginStep = int( round( beginPixel.real ) ) + 1
-	endStep = int( round( endPixel.real ) )
-	if shortenDistanceBegin > 1:
-		shortenDistanceBeginMinusOne = shortenDistanceBegin - 1
-		beginStep += shortenDistanceBeginMinusOne
-		intersectionY += gradient * float( shortenDistanceBeginMinusOne )
-	if shortenDistanceEnd > 1:
-		endStep -= shortenDistanceEnd - 1
-	for x in xrange( beginStep, endStep ):
-		addPixelToPixelTableWithSteepness( isSteep, pixelTable, complex( float( x ), math.floor( intersectionY ) ) )
-		addPixelToPixelTableWithSteepness( isSteep, pixelTable, complex( float( x ), math.floor( intersectionY + 1.0 ) ) )
+	addPixelToPixelTableWithSteepness( isSteep, pixelTable,  xEnd, int( math.floor( yEnd ) ) )
+	addPixelToPixelTableWithSteepness( isSteep, pixelTable, xEnd, int( math.floor( yEnd ) ) + 1 )
+	for x in xrange( beginStep + 1, xEnd ):
+		addPixelToPixelTableWithSteepness( isSteep, pixelTable, x, int( math.floor( intersectionY ) ) )
+		addPixelToPixelTableWithSteepness( isSteep, pixelTable, x, int( math.floor( intersectionY ) ) + 1 )
 		intersectionY += gradient
-		x += 1
 
 def addSurroundingLoopBeginning( loop, skein ):
 	"Add surrounding loop beginning to gcode output."
@@ -512,9 +526,11 @@ def getPathRoundZAxisByPlaneAngle( planeAngle, path ):
 
 def getPathsFromEndpoints( endpoints, fillInset, pixelTable, width ):
 	"Get paths from endpoints."
+#	segmentTable = {}
 	for beginningEndpoint in endpoints[ : : 2 ]:
 		beginningPoint = beginningEndpoint.point
 		addSegmentToPixelTable( beginningPoint.dropAxis( 2 ), beginningEndpoint.otherEndpoint.point.dropAxis( 2 ), pixelTable, 0, 0, width )
+#		addSegmentToPixelTable( beginningPoint.dropAxis( 2 ), beginningEndpoint.otherEndpoint.point.dropAxis( 2 ), segmentTable, 0, 0, width )
 	endpointFirst = endpoints[ 0 ]
 	endpoints.remove( endpointFirst )
 	otherEndpoint = endpointFirst.otherEndpoint
@@ -545,6 +561,7 @@ def getPathsFromEndpoints( endpoints, fillInset, pixelTable, width ):
 			paths.append( path )
 		addPointToPath( path, pixelTable, otherEndpoint.point, width )
 		endpoints.remove( otherEndpoint )
+#	removePixelTableFromPixelTable( segmentTable, pixelTable )
 	return paths
 
 def getPlaneDot( vec3First, vec3Second ):
@@ -671,7 +688,8 @@ def getSegmentsFromXIntersections( xIntersections, y, z ):
 	for xIntersectionIndex in range( 0, len( xIntersections ), 2 ):
 		firstX = xIntersections[ xIntersectionIndex ]
 		secondX = xIntersections[ xIntersectionIndex + 1 ]
-		segments.append( getSegmentFromPoints( Vec3( firstX, y, z ), Vec3( secondX, y, z ) ) )
+		if firstX != secondX:
+			segments.append( getSegmentFromPoints( Vec3( firstX, y, z ), Vec3( secondX, y, z ) ) )
 	return segments
 
 def getSegmentsFromXIntersectionIndexes( xIntersectionIndexList, y, z ):

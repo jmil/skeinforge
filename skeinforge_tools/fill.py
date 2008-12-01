@@ -101,19 +101,19 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-#raft supports overhangs
-#pyramidal
+#slice infill density documentation, oozebane to handle minimum start up, add differential flow rates
 #multiply
-#use slice format, carve & inset
-#slice aoi xml
+#use slice format, carve & inset, slice aoi xml
 #bridge extrusion width
+#pyramidal
 #change material
-#skeinskin to view isometric surface
+#skeinedge
+#compartmentalize addOrbit
 #distance option?
 #document gear script
 #email marcus about bridge extrusion width http://reprap.org/bin/view/Main/ExtruderImprovementsAndAlternatives
 #mosaic
-#gang
+#gang, maybe from skeinedge?
 #transform
 #pick and place
 #stack
@@ -200,14 +200,14 @@ def addPointOnPath( path, pixelTable, point, pointIndex, width ):
 		segmentTable = {}
 		beginComplex = path[ pointIndexMinusOne ].dropAxis( 2 )
 		endComplex = path[ pointIndex ].dropAxis( 2 )
-		euclidean.addSegmentToPixelTable( beginComplex, endComplex, segmentTable, 0, 0, width )
+		euclidean.addSegmentToPixelTable( beginComplex, endComplex, segmentTable, 0.0, 0.0, width )
 		euclidean.removePixelTableFromPixelTable( segmentTable, pixelTable )
 	if pointIndexMinusOne >= 0:
 		beginComplex = path[ pointIndexMinusOne ].dropAxis( 2 )
-		euclidean.addSegmentToPixelTable( beginComplex, pointComplex, pixelTable, 0, 0, width )
+		euclidean.addSegmentToPixelTable( beginComplex, pointComplex, pixelTable, 0.0, 0.0, width )
 	if pointIndex < len( path ):
 		endComplex = path[ pointIndex ].dropAxis( 2 )
-		euclidean.addSegmentToPixelTable( pointComplex, endComplex, pixelTable, 0, 0, width )
+		euclidean.addSegmentToPixelTable( pointComplex, endComplex, pixelTable, 0.0, 0.0, width )
 	path.insert( pointIndex, point )
 
 def addShortenedLineSegment( lineSegment, shortenDistance, shortenedSegments ):
@@ -289,21 +289,21 @@ def comparePointIndexDescending( self, other ):
 		return 1
 	return 0
 
-def createFillForSurroundings( surroundingLoops ):
+def createFillForSurroundings( radius, surroundingLoops ):
 	"Create extra fill loops for surrounding loops."
 	for surroundingLoop in surroundingLoops:
-		createExtraFillLoops( surroundingLoop )
+		createExtraFillLoops( radius, surroundingLoop )
 
-def createExtraFillLoops( surroundingLoop ):
+def createExtraFillLoops( radius, surroundingLoop ):
 	"Create extra fill loops."
 	for innerSurrounding in surroundingLoop.innerSurroundings:
-		createFillForSurroundings( innerSurrounding.innerSurroundings )
+		createFillForSurroundings( radius, innerSurrounding.innerSurroundings )
 	outsides = []
 	insides = euclidean.getInsidesAddToOutsides( surroundingLoop.getFillLoops(), outsides )
 	allFillLoops = []
 	for outside in outsides:
 		transferredLoops = euclidean.getTransferredPaths( insides, outside )
-		allFillLoops += getExtraFillLoops( transferredLoops, outside, surroundingLoop.extrusionWidth )
+		allFillLoops += getExtraFillLoops( transferredLoops, outside, radius )
 	if len( allFillLoops ) > 0:
 		surroundingLoop.lastFillLoops = allFillLoops
 	surroundingLoop.extraLoops += allFillLoops
@@ -529,9 +529,9 @@ def isAddedPointOnPathFree( path, pixelTable, point, pointIndex, width ):
 		beginComplex = path[ pointIndexMinusOne ].dropAxis( 2 )
 		if pointIndex < len( path ):
 			endComplex = path[ pointIndex ].dropAxis( 2 )
-			euclidean.addSegmentToPixelTable( beginComplex, endComplex, maskTable, 0, 0, width )
+			euclidean.addSegmentToPixelTable( beginComplex, endComplex, maskTable, 0.0, 0.0, width )
 		segmentTable = {}
-		euclidean.addSegmentToPixelTable( pointComplex, beginComplex, segmentTable, 0, 3, width )
+		euclidean.addSegmentToPixelTable( pointComplex, beginComplex, segmentTable, 0.0, 3.0, width )
 		if euclidean.isPixelTableIntersecting( pixelTable, segmentTable, maskTable ):
 			return False
 	if pointIndex < len( path ):
@@ -539,9 +539,9 @@ def isAddedPointOnPathFree( path, pixelTable, point, pointIndex, width ):
 		beginComplex = path[ pointIndex ].dropAxis( 2 )
 		if pointIndexMinusOne >= 0:
 			endComplex = path[ pointIndexMinusOne ].dropAxis( 2 )
-			euclidean.addSegmentToPixelTable( beginComplex, endComplex, maskTable, 0, 0, width )
+			euclidean.addSegmentToPixelTable( beginComplex, endComplex, maskTable, 0.0, 0.0, width )
 		segmentTable = {}
-		euclidean.addSegmentToPixelTable( pointComplex, beginComplex, segmentTable, 0, 3, width )
+		euclidean.addSegmentToPixelTable( pointComplex, beginComplex, segmentTable, 0.0, 3.0, width )
 		if euclidean.isPixelTableIntersecting( pixelTable, segmentTable, maskTable ):
 			return False
 	return True
@@ -680,13 +680,13 @@ def isSidePointAdded( aroundPixelTable, closestPath, closestPointIndex, layerExt
 	maskTable = {}
 	closestSegmentTable = {}
 	toPerpendicularTable = {}
-	euclidean.addSegmentToPixelTable( pointBeginComplex, pointEndComplex, maskTable, 1, 1, width )
-	euclidean.addSegmentToPixelTable( closestComplex, removedEndpointPointComplex, closestSegmentTable, 0, 0, width )
-	euclidean.addSegmentToPixelTable( sidePointComplex, farthestComplex, toPerpendicularTable, 0, 3, width )
+	euclidean.addSegmentToPixelTable( pointBeginComplex, pointEndComplex, maskTable, 1.0, 1.0, width )
+	euclidean.addSegmentToPixelTable( closestComplex, removedEndpointPointComplex, closestSegmentTable, 0.0, 0.0, width )
+	euclidean.addSegmentToPixelTable( sidePointComplex, farthestComplex, toPerpendicularTable, 0.0, 3.0, width )
 	if euclidean.isPixelTableIntersecting( aroundPixelTable, toPerpendicularTable, maskTable ) or euclidean.isPixelTableIntersecting( closestSegmentTable, toPerpendicularTable, maskTable ):
 		sidePointComplex = removedEndpointPointComplex - perpendicularComplex
 		toPerpendicularTable = {}
-		euclidean.addSegmentToPixelTable( sidePointComplex, farthestComplex, toPerpendicularTable, 0, 3, width )
+		euclidean.addSegmentToPixelTable( sidePointComplex, farthestComplex, toPerpendicularTable, 0.0, 3.0, width )
 		if euclidean.isPixelTableIntersecting( aroundPixelTable, toPerpendicularTable, maskTable ) or euclidean.isPixelTableIntersecting( closestSegmentTable, toPerpendicularTable, maskTable ):
 			return False
 	sidePoint = Vec3( sidePointComplex.real, sidePointComplex.imag, removedEndpointPoint.z )
@@ -869,12 +869,12 @@ class FillSkein:
 		if isPerimeterPathInSurroundLoops( surroundingLoops ):
 			extraShells = 0
 		for extraShellIndex in range( extraShells ):
-			createFillForSurroundings( surroundingLoops )
+			radius = layerExtrusionWidth
+			if extraShellIndex == 0:
+				radius = 0.5  * ( layerExtrusionWidth + self.extrusionPerimeterWidth )
+			createFillForSurroundings( radius, surroundingLoops )
 		fillLoops = euclidean.getFillOfSurroundings( surroundingLoops )
 		aroundPixelTable = {}
-		pixelTable = {}
-		highLineTable = {}
-		pathPixelTable = {}
 		for loop in fillLoops:
 			alreadyFilledLoop = []
 			alreadyFilledArounds.append( alreadyFilledLoop )
@@ -1171,6 +1171,8 @@ class FillSkein:
 				self.bridgeExtrusionWidthOverSolid = float( splitLine[ 1 ] )
 			elif firstWord == '(<decimalPlacesCarried>':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
+			elif firstWord == '(<extrusionPerimeterWidth>':
+				self.extrusionPerimeterWidth = float( splitLine[ 1 ] )
 			elif firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
 				self.interiorExtrusionWidth = self.extrusionWidth / self.fillPreferences.interiorInfillDensityOverExteriorDensity.value
@@ -1181,7 +1183,7 @@ class FillSkein:
 			elif firstWord == '(<fillInset>':
 				self.fillInset = float( splitLine[ 1 ] )
 			self.addLine( line )
-
+ 
 	def parseLine( self, lineIndex ):
 		"Parse a gcode line and add it to the fill skein."
 		line = self.lines[ lineIndex ]

@@ -73,15 +73,13 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
-def getIntegerFromCharacterSplitLine( character, splitLine ):
+def getIntegerFromCharacterLengthLineOffset( character, offset, splitLine, stepLength ):
 	"Get the integer after the first occurence of the character in the split line."
 	lineFromCharacter = getStringFromCharacterSplitLine( character, splitLine )
 	if lineFromCharacter == None:
 		return 0
-	dotPosition = lineFromCharacter.find( '.' )
-	if dotPosition != - 1:
-		lineFromCharacter = lineFromCharacter[ : dotPosition ]
-	return int( lineFromCharacter )
+	floatValue = ( float( lineFromCharacter ) + offset ) / stepLength
+	return int( round( floatValue ) )
 
 def getIntegerFlagFromCharacterSplitLine( character, splitLine ):
 	"Get the integer flag after the first occurence of the character in the split line."
@@ -166,14 +164,22 @@ class Binary16BytePreferences:
 		self.archive = []
 		self.fileExtension = preferences.StringPreference().getFromValue( 'File Extension:', 'bin' )
 		self.archive.append( self.fileExtension )
-		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Converted to Binary 16 Byte', '' )
+		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Converted to Binary 16 Byte', '' )
 		self.archive.append( self.filenameInput )
+		self.feedrateStepLength = preferences.FloatPreference().getFromValue( 'Feedrate Step Length (millimeters/second)', 0.1 )
+		self.archive.append( self.feedrateStepLength )
 		self.xStepLength = preferences.FloatPreference().getFromValue( 'X Step Length (millimeters)', 0.1 )
 		self.archive.append( self.xStepLength )
 		self.yStepLength = preferences.FloatPreference().getFromValue( 'Y Step Length (millimeters)', 0.1 )
 		self.archive.append( self.yStepLength )
 		self.zStepLength = preferences.FloatPreference().getFromValue( 'Z Step Length (millimeters)', 0.01 )
 		self.archive.append( self.zStepLength )
+		self.xOffset = preferences.FloatPreference().getFromValue( 'X Offset (millimeters)', 0.0 )
+		self.archive.append( self.xOffset )
+		self.yOffset = preferences.FloatPreference().getFromValue( 'Y Offset (millimeters)', 0.0 )
+		self.archive.append( self.yOffset )
+		self.zOffset = preferences.FloatPreference().getFromValue( 'Z Offset (millimeters)', 0.0 )
+		self.archive.append( self.zOffset )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.executeTitle = 'Convert to Binary 16 Byte'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'binary_16_byte.csv' )
@@ -183,7 +189,7 @@ class Binary16BytePreferences:
 
 	def execute( self ):
 		"Convert to binary 16 byte button has been clicked."
-		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
+		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, [ '.gcode' ], self.filenameInput.wasCancelled )
 		for filename in filenames:
 			writeOutput( filename )
 
@@ -202,6 +208,7 @@ class Binary16ByteSkein:
 
 	def parseLine( self, line ):
 		"Parse a gcode line."
+		binary16BytePreferences = self.binary16BytePreferences
 		splitLine = line.split()
 		if len( splitLine ) < 1:
 			return
@@ -211,12 +218,12 @@ class Binary16ByteSkein:
 		firstLetter = firstWord[ 0 ]
 		if firstLetter == '(':
 			return
-		feedrateInteger = getIntegerFromCharacterSplitLine( 'F', splitLine )
-		iInteger = getIntegerFromCharacterSplitLine( 'I', splitLine )
-		jInteger = getIntegerFromCharacterSplitLine( 'J', splitLine )
-		xInteger = int( round( float( getIntegerFromCharacterSplitLine( 'X', splitLine ) ) / self.binary16BytePreferences.xStepLength.value ) )
-		yInteger = int( round( float( getIntegerFromCharacterSplitLine( 'Y', splitLine ) ) / self.binary16BytePreferences.yStepLength.value ) )
-		zInteger = int( round( float( getIntegerFromCharacterSplitLine( 'Z', splitLine ) ) / self.binary16BytePreferences.zStepLength.value ) )
+		feedrateInteger = getIntegerFromCharacterLengthLineOffset( 'F', 0.0, splitLine, binary16BytePreferences.feedrateStepLength.value )
+		iInteger = getIntegerFromCharacterLengthLineOffset( 'I', 0.0, splitLine, binary16BytePreferences.xStepLength.value )
+		jInteger = getIntegerFromCharacterLengthLineOffset( 'J', 0.0, splitLine, binary16BytePreferences.yStepLength.value )
+		xInteger = getIntegerFromCharacterLengthLineOffset( 'X', binary16BytePreferences.xOffset.value, splitLine, binary16BytePreferences.xStepLength.value )
+		yInteger = getIntegerFromCharacterLengthLineOffset( 'Y', binary16BytePreferences.yOffset.value, splitLine, binary16BytePreferences.yStepLength.value )
+		zInteger = getIntegerFromCharacterLengthLineOffset( 'Z', binary16BytePreferences.zOffset.value, splitLine, binary16BytePreferences.zStepLength.value )
 		sixteenByteStruct = Struct( 'cBhhhhhhBc' )
 #		print( 'xInteger' )
 #		print( xInteger )

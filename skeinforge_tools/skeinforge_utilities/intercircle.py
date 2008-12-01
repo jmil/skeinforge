@@ -84,6 +84,8 @@ def addOrbits( loop, skein, temperatureChangeTime ):
 
 def addPointsFromSegment( points, radius, pointBegin, pointEnd ):
 	"Add points between the endpoints of a segment."
+	if radius <= 0.0:
+		print( 'This should never happen, radius should never be zero or less in addPointsFromSegment in intercircle.' )
 	thresholdRadius = radius * 0.9 # a higher number would be faster but would leave bigger dangling loops.
 	thresholdDiameter = thresholdRadius * 2.0
 	segment = pointEnd.minus( pointBegin )
@@ -232,7 +234,7 @@ def getInsetLoops( inset, loops ):
 		centers = getCentersFromLoopDirection( not isInInsetDirection, loop, slightlyGreaterThanInset )
 		for center in centers:
 			insetLoop = getSimplifiedInsetFromClockwiseLoop( center, absoluteInset )
-			if euclidean.getMaximumSpan( insetLoop ) > muchGreaterThanLayerInset:
+			if euclidean.isLargeSameDirection( insetLoop, center, muchGreaterThanLayerInset ):
 				if euclidean.isPathInsideLoop( loop, insetLoop ) == isInInsetDirection:
 					insetLoops.append( insetLoop )
 	return insetLoops

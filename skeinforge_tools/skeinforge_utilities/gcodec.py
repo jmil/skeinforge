@@ -273,6 +273,15 @@ def isProcedureDone( gcodeText, procedure ):
 			return False
 	return False
 
+def isThereAFirstWord( firstWord, lines, startIndex ):
+	"Parse gcode until the first word if there is one."
+	for lineIndex in range( startIndex, len( lines ) ):
+		line = lines[ lineIndex ]
+		splitLine = line.split()
+		if firstWord == getFirstWord( splitLine ):
+			return True
+	return False
+
 def replaceWords( filenames, original, replacement ):
 	"Replace in files the original with the replacement."
 	print( original + ' is being replaced with ' + replacement + ' in the following files:' )

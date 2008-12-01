@@ -1,10 +1,10 @@
 """
-Raft is a script to create a reusable raft, elevate the nozzle and set the feedrate, flowrate and temperature.
+Raft is a script to create a reusable raft, elevate the nozzle and set the temperature.
 
 The default 'Activate Raft' checkbox is on.  When it is on, the functions described below will work, when it is off, the
-functions will not be called.  The raft script sets the feedrate, flowrate and temperature.  If the "Activate Raft, Elevate
-Nozzle, Orbit and Set Altitude" checkbox is checked, the script will also create a raft, elevate the nozzle, orbit and set the
-altitude of the bottom of the raft.
+functions will not be called.  The raft script sets the temperature.  If the "Activate Raft, Elevate Nozzle, Orbit and Set
+Altitude" checkbox is checked, the script will also create a raft, elevate the nozzle, orbit and set the altitude of the bottom
+of the raft.
 
 Raft is based on the Nophead's reusable raft, which has a base layer running one way, and a couple of perpendicular layers
 above.  Each set of layers can be set to a different temperature.  There is the option of having the extruder orbit the raft for a
@@ -32,15 +32,8 @@ The interface of the raft has equivalent preferences called "Interface Infill De
 "Interface Layer Height over Extrusion Height", "Interface Layers" and "Interface Nozzle Lift over Half Base Extrusion Height".
 The shape has the equivalent preference of called "Operating Nozzle Lift over Half Extrusion Height".
 
-The altitude that the bottom of the raft will be set to the "Bottom Altitude" preference.  The feedrate for the shape will be set
-to the 'Feedrate" preference.  The feedrate will be slower for raft layers which have thicker extrusions than the shape infill.
-
-The speed of the orbit compared to the operating extruder speed will be set to the 'Orbital Feedrate over Operating Feedrate'
-preference.
-
-In the "Flowrate Choice" radio button group, if "Do Not Add Flowrate" is selected then raft will not add a flowrate to the gcode
-output.  If "Metric" is selected, the flowrate in cubic millimeters per second will be added to the output.  If "PWM Setting" is
-selected, the value in the "Flowrate PWM Setting" field will be added to the output.
+The altitude that the bottom of the raft will be set to the "Bottom Altitude" preference.  The feedrate will be slower for raft
+layers which have thicker extrusions than the shape infill.
 
 The raft fills a rectangle whose size is the rectangle around the bottom layer of the shape expanded on each side by the
 "Raft Outset Radius over Extrusion Width" preference times the extrusion width, minus the "Infill Overhang" ratio times the
@@ -79,8 +72,8 @@ The following examples raft the files Hollow Square.gcode & Hollow Square.gts.  
 which contains Hollow Square.gcode, Hollow Square.gts and raft.py.  The raft function will raft if "Activate Raft, Elevate Nozzle,
 Orbit and Set Altitude" is true, which can be set in the dialog or by changing the preferences file 'raft.csv' with a text editor or a
 spreadsheet program set to separate tabs.  The functions writeOutput and getRaftChainGcode check to see if the text has
-been rafted, if not they call getFillChainGcode in fill.py to get filled gcode; once they have the filled text, then they raft.
-Pictures of rafting in action are available from the Metalab blog at:
+been rafted, if not they call getSpeedChainGcode in speed.py to get speeded gcode; once they have the speeded text, then
+they raft.  Pictures of rafting in action are available from the Metalab blog at:
 http://reprap.soup.io/?search=rafting
 
 
@@ -134,10 +127,10 @@ from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
-from skeinforge_tools import fill
 from skeinforge_tools import import_translator
 from skeinforge_tools import material
 from skeinforge_tools import polyfile
+from skeinforge_tools import speed
 import cStringIO
 import math
 import sys
@@ -214,8 +207,8 @@ def getJoinOfXIntersectionIndexes( xIntersectionIndexList ):
 def getRaftChainGcode( filename, gcodeText, raftPreferences = None ):
 	"Raft a gcode linear move text.  Chain raft the gcode if it is not already rafted."
 	gcodeText = gcodec.getGcodeFileText( filename, gcodeText )
-	if not gcodec.isProcedureDone( gcodeText, 'fill' ):
-		gcodeText = fill.getFillChainGcode( filename, gcodeText )
+	if not gcodec.isProcedureDone( gcodeText, 'speed' ):
+		gcodeText = speed.getSpeedChainGcode( filename, gcodeText )
 	return getRaftGcode( gcodeText, raftPreferences )
 
 def getRaftGcode( gcodeText, raftPreferences = None ):
@@ -276,7 +269,7 @@ def subtractFill( fillXIntersectionIndexTable, supportLayerTable ):
 		print( "This should never happen in subtractFill in raft, there are no segments in the first support layer table value." )
 		return
 	z = firstSegments[ 0 ][ 0 ].point.z
-	for supportLayerTableKey in supportLayerTable:
+	for supportLayerTableKey in supportLayerTableKeys:
 		xIntersectionIndexList = []
 		addXIntersectionsFromSegments( - 1, supportLayerTable[ supportLayerTableKey ], xIntersectionIndexList )
 		if supportLayerTableKey in fillXIntersectionIndexTable:
@@ -331,21 +324,8 @@ class RaftPreferences:
 		self.archive.append( self.baseNozzleLiftOverHalfBaseExtrusionHeight )
 		self.bottomAltitude = preferences.FloatPreference().getFromValue( 'Bottom Altitude:', 0.0 )
 		self.archive.append( self.bottomAltitude )
-		self.feedratePerSecond = preferences.FloatPreference().getFromValue( 'Feedrate (mm/s):', 16.0 )
-		self.archive.append( self.feedratePerSecond )
 		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Rafted', '' )
 		self.archive.append( self.filenameInput )
-		flowrateRadio = []
-		self.flowrateChoiceLabel = preferences.LabelDisplay().getFromName( 'Flowrate Choice: ' )
-		self.archive.append( self.flowrateChoiceLabel )
-		self.flowrateDoNotAddFlowratePreference = preferences.Radio().getFromRadio( 'Do Not Add Flowrate', flowrateRadio, False )
-		self.archive.append( self.flowrateDoNotAddFlowratePreference )
-		self.flowrateMetricPreference = preferences.Radio().getFromRadio( 'Metric', flowrateRadio, False )
-		self.archive.append( self.flowrateMetricPreference )
-		self.flowratePWMPreference = preferences.Radio().getFromRadio( 'PWM Setting', flowrateRadio, True )
-		self.archive.append( self.flowratePWMPreference )
-		self.flowratePWMSetting = preferences.FloatPreference().getFromValue( 'Flowrate PWM Setting (if PWM Setting is Chosen):', 210.0 )
-		self.archive.append( self.flowratePWMSetting )
 		self.infillOverhang = preferences.FloatPreference().getFromValue( 'Infill Overhang (ratio):', 0.1 )
 		self.archive.append( self.infillOverhang )
 		self.interfaceInfillDensity = preferences.FloatPreference().getFromValue( 'Interface Infill Density (ratio):', 0.5 )
@@ -360,8 +340,6 @@ class RaftPreferences:
 		self.archive.append( self.material )
 		self.operatingNozzleLiftOverHalfExtrusionHeight = preferences.FloatPreference().getFromValue( 'Operating Nozzle Lift over Half Extrusion Height (ratio):', 1.0 )
 		self.archive.append( self.operatingNozzleLiftOverHalfExtrusionHeight )
-		self.orbitalFeedrateOverOperatingFeedrate = preferences.FloatPreference().getFromValue( 'Orbital Feedrate over Operating Feedrate (ratio):', 0.5 )
-		self.archive.append( self.orbitalFeedrateOverOperatingFeedrate )
 		self.raftOutsetRadiusOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Raft Outset Radius over Extrusion Width (ratio):', 15.0 )
 		self.archive.append( self.raftOutsetRadiusOverExtrusionWidth )
 		self.supportInsetOverPerimeterExtrusionWidth = preferences.FloatPreference().getFromValue( 'Support Inset over Perimeter Extrusion Width (ratio):', 0.0 )
@@ -420,17 +398,15 @@ class RaftPreferences:
 class RaftSkein:
 	"A class to raft a skein of extrusions."
 	def __init__( self ):
-		self.boundaryLayers = None
-		self.boundaryLoop = None
+		self.boundaryLayers = []
 		self.cornerHigh = Vec3( - 999999999.0, - 999999999.0, - 999999999.0 )
 		self.cornerLow = Vec3( 999999999.0, 999999999.0, 999999999.0 )
 		self.decimalPlacesCarried = 3
-		self.extrusionDiameter = 0.6
 		self.extrusionHeight = 0.4
 		self.extrusionStart = True
 		self.extrusionTop = 0.0
 		self.extrusionWidth = 0.6
-		self.feedratePerSecond = 16.0
+		self.feedrateMinute = 961.0
 		self.interfaceStepsUntilEnd = []
 		self.isFirstLayerWithinTemperatureAdded = False
 		self.isStartupEarly = False
@@ -464,18 +440,7 @@ class RaftSkein:
 		if len( segments ) < 1:
 			print( 'This should never happen, the base layer has a size of zero.' )
 			return
-		self.addLayerFromSegments( self.feedratePerSecond / self.baseLayerHeightOverExtrusionHeight / self.baseLayerHeightOverExtrusionHeight, baseExtrusionHeight, segments, zCenter )
-
-	def addFlowrate( self ):
-		"Add flowrate line."
-		roundedFlowrate = euclidean.getRoundedToThreePlaces( math.pi * self.extrusionDiameter * self.extrusionDiameter / 4.0 * self.feedratePerSecond )
-		self.addLine( '(<flowrateCubicMillimetersPerSecond> ' + roundedFlowrate + ' )' )
-		if self.raftPreferences.flowrateDoNotAddFlowratePreference.value:
-			return
-		if self.raftPreferences.flowrateMetricPreference.value:
-			self.addLine( 'M108 S' + roundedFlowrate )
-			return
-		self.addLine( 'M108 S' + euclidean.getRoundedToThreePlaces( self.raftPreferences.flowratePWMSetting.value ) )
+		self.addLayerFromSegments( self.feedrateMinute / self.baseLayerHeightOverExtrusionHeight / self.baseLayerHeightOverExtrusionHeight, baseExtrusionHeight, segments, zCenter )
 
 	def addGcodeFromFeedrateThread( self, feedrateMinute, thread ):
 		"Add a thread to the output."
@@ -508,9 +473,9 @@ class RaftSkein:
 		if len( segments ) < 1:
 			print( 'This should never happen, the interface layer has a size of zero.' )
 			return
-		self.addLayerFromSegments( self.feedratePerSecond / self.interfaceLayerHeightOverExtrusionHeight / self.interfaceLayerHeightOverExtrusionHeight, interfaceExtrusionHeight, segments, zCenter )
+		self.addLayerFromSegments( self.feedrateMinute / self.interfaceLayerHeightOverExtrusionHeight / self.interfaceLayerHeightOverExtrusionHeight, interfaceExtrusionHeight, segments, zCenter )
 
-	def addLayerFromSegments( self, feedrateSecond, layerExtrusionHeight, segments, zCenter ):
+	def addLayerFromSegments( self, feedrateMinute, layerExtrusionHeight, segments, zCenter ):
 		"Add a layer from segments and raise the extrusion top."
 		firstSegment = segments[ 0 ]
 		nearestPoint = firstSegment[ 1 ].point
@@ -526,7 +491,7 @@ class RaftSkein:
 			nearestPoint = nextEndpoint.point
 			path.append( nearestPoint )
 		self.addLine( '(<layerStart> ' + self.getRounded( zCenter ) + ' )' ) # Indicate that a new layer is starting.
-		self.addGcodeFromFeedrateThread( 60.0 * feedrateSecond, path )
+		self.addGcodeFromFeedrateThread( feedrateMinute, path )
 		self.extrusionTop += layerExtrusionHeight
 
 	def addLine( self, line ):
@@ -589,7 +554,7 @@ class RaftSkein:
 		if len( supportLayer ) > 0:
 			z = supportLayer[ 0 ][ 0 ].z
 			rise = aboveZ - z
-		supportLayer = intercircle.getInsetLoops( - self.minimumSupportRatio * rise, supportLayer )
+		outsetSupportLayer = intercircle.getInsetLoops( - self.minimumSupportRatio * rise, supportLayer )
 		numberOfSubSteps = 10
 		subStepSize = self.interfaceStep / float( numberOfSubSteps )
 		for y in self.interfaceStepsUntilEnd:
@@ -598,7 +563,7 @@ class RaftSkein:
 				ySubStep = y + ( subStepIndex - numberOfSubSteps ) * subStepSize
 				xIntersectionIndexList = []
 				euclidean.addXIntersectionIndexesFromLoops( aboveLoops, - 1, xIntersectionIndexList, ySubStep )
-				euclidean.addXIntersectionIndexesFromLoops( supportLayer, 0, xIntersectionIndexList, ySubStep )
+				euclidean.addXIntersectionIndexesFromLoops( outsetSupportLayer, 0, xIntersectionIndexList, ySubStep )
 				xIntersections = euclidean.getXIntersectionsFromIntersections( xIntersectionIndexList )
 				for xIntersection in xIntersections:
 					xTotalIntersectionIndexList.append( euclidean.XIntersectionIndex( subStepIndex, xIntersection ) )
@@ -623,7 +588,7 @@ class RaftSkein:
 			for point in path:
 				if self.operatingJump != None:
 					point.z += self.operatingJump
-			self.addGcodeFromFeedrateThread( 777.777777777, path )
+			self.addGcodeFromFeedrateThread( self.feedrateMinute, path )
 		self.addTemperatureOrbits( segments, self.raftPreferences.temperatureShapeSupportedLayers, self.raftPreferences.temperatureChangeTimeSupportedLayers )
 
 	def addTemperature( self, temperature ):
@@ -723,6 +688,7 @@ class RaftSkein:
 	def getRaftedLine( self, splitLine ):
 		"Get elevated gcode line with operating feedrate."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
+		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
 		self.oldLocation = Vec3().getFromVec3( location )
 		if self.operatingJump != None:
 			location.z += self.operatingJump
@@ -731,7 +697,7 @@ class RaftSkein:
 			self.addTemperature( self.raftPreferences.temperatureShapeFirstLayerWithin.value )
 			if self.raftPreferences.addRaftElevateNozzleOrbitSetAltitude.value:
 				intercircle.addOperatingOrbits( self.boundaryLayers[ self.layerIndex ], self.operatingJump, self, self.raftPreferences.temperatureChangeTimeFirstLayerWithin.value )
-		return self.getGcodeFromFeedrateMovement( 60.0 * self.feedratePerSecond, location )
+		return self.getGcodeFromFeedrateMovement( self.feedrateMinute, location )
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
@@ -778,9 +744,7 @@ class RaftSkein:
 	def parseGcode( self, gcodeText, raftPreferences ):
 		"Parse gcode text and store the raft gcode."
 		self.raftPreferences = raftPreferences
-		self.feedratePerSecond = raftPreferences.feedratePerSecond.value
 		self.minimumSupportRatio = math.tan( math.radians( raftPreferences.supportMinimumAngle.value ) )
-		self.orbitalFeedratePerSecond = self.feedratePerSecond * raftPreferences.orbitalFeedrateOverOperatingFeedrate.value
 		self.raftOutsetRadius = self.raftPreferences.raftOutsetRadiusOverExtrusionWidth.value * self.extrusionWidth
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.parseInitialization()
@@ -801,9 +765,6 @@ class RaftSkein:
 			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == '(<decimalPlacesCarried>':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
-			elif firstWord == '(<extrusionDiameter>':
-				self.extrusionDiameter = float( splitLine[ 1 ] )
-				self.addFlowrate()
 			elif firstWord == '(<extrusionHeight>':
 				self.extrusionHeight = float( splitLine[ 1 ] )
 			elif firstWord == '(<extrusionPerimeterWidth>':
@@ -811,12 +772,15 @@ class RaftSkein:
 				self.supportOutset = self.extrusionPerimeterWidth - self.extrusionPerimeterWidth * self.raftPreferences.supportInsetOverPerimeterExtrusionWidth.value
 			elif firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
-				self.addLine( '(<orbitalFeedratePerSecond> %s )' % self.orbitalFeedratePerSecond )
 			elif firstWord == '(<extrusionStart>':
 				self.addLine( '(<procedureDone> raft )' )
 				self.addLine( line )
 				self.lineIndex += 1
 				return
+			elif firstWord == '(<feedrateMinute>':
+				self.feedrateMinute = float( splitLine[ 1 ] )
+			elif firstWord == '(<orbitalFeedratePerSecond>':
+				self.orbitalFeedratePerSecond = float( splitLine[ 1 ] )
 			self.addLine( line )
 
 	def parseLine( self, line ):
@@ -869,13 +833,10 @@ class RaftSkein:
 					boundaryLoops.append( boundaryLoop )
 				boundaryLoop.append( gcodec.getLocationFromSplitLine( None, splitLine ) )
 			elif firstWord == '(<layerStart>':
+				boundaryLoops = []
+				self.boundaryLayers.append( boundaryLoops )
+			elif firstWord == '(</surroundingLoop>':
 				boundaryLoop = None
-				boundaryLoops = None
-				if self.boundaryLayers == None:
-					self.boundaryLayers = []
-				if boundaryLoops == None:
-					boundaryLoops = []
-					self.boundaryLayers.append( boundaryLoops )
 		if self.raftPreferences.supportChoiceNoSupportMaterial.value:
 			return
 		if len( self.interfaceStepsUntilEnd ) < 1:

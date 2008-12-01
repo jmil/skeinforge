@@ -22,7 +22,7 @@ To run export, in a shell type:
 
 The following examples export the files Hollow Square.gts.  The examples are run in a terminal in the folder which contains
 Hollow Square.gts & export.py.  The function writeOutput checks to see if the text has been exported, if not they call
-getFilletChainGcode in fillet.py to fillet the text; once they have the filleted text, then it exports.
+getUnpauseChainGcode in unpause.py to unpause the text; once they have the unpaused text, then it exports.
 
 
 > python export.py
@@ -56,9 +56,9 @@ from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
-from skeinforge_tools import fillet
 from skeinforge_tools import import_translator
 from skeinforge_tools import polyfile
+from skeinforge_tools import unpause
 import cStringIO
 import os
 import sys
@@ -107,8 +107,8 @@ def writeOutput( filename = '' ):
 	print( 'File ' + gcodec.getSummarizedFilename( filename ) + ' is being chain exported.' )
 	suffixFilename = filename[ : filename.rfind( '.' ) ] + '_export.' + exportPreferences.fileExtension.value
 	gcodeText = gcodec.getGcodeFileText( filename, '' )
-	if not gcodec.isProcedureDone( gcodeText, 'fillet' ):
-		gcodeText = fillet.getFilletChainGcode( filename, gcodeText )
+	if not gcodec.isProcedureDone( gcodeText, 'unpause' ):
+		gcodeText = unpause.getUnpauseChainGcode( filename, gcodeText )
 	if gcodeText == '':
 		return
 	analyze.writeOutput( suffixFilename, gcodeText )

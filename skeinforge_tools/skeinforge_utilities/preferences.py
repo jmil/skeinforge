@@ -306,9 +306,10 @@ class Filename( BooleanPreference ):
 		basename = os.path.basename( self.value )
 		splitFile = basename.split( '.' )
 		allReadables = []
-		for fileType in self.fileTypes:
-			allReadable = ( ( 'All Readable', fileType[ 1 ] ) )
-			allReadables.append( allReadable )
+		if len( self.fileTypes ) > 1:
+			for fileType in self.fileTypes:
+				allReadable = ( ( 'All Readable', fileType[ 1 ] ) )
+				allReadables.append( allReadable )
 		if len( splitFile ) < 1:
 			return self.fileTypes + allReadables
 		baseExtension = splitFile[ - 1 ]
@@ -548,8 +549,9 @@ class PreferencesDialog:
 		frame = Tkinter.Frame( master )
 		for preference in displayPreferences.archive:
 			preference.addToDialog( self )
-		Tkinter.Label( master ).grid( row = self.row, column = 0 )
-		self.row += 1
+		if self.row < 30:
+			Tkinter.Label( master ).grid( row = self.row, column = 0 )
+			self.row += 1
 		cancelColor = 'black'
 		cancelTitle = 'Close'
 		if displayPreferences.saveTitle != None:

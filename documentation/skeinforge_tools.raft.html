@@ -9,12 +9,12 @@
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="skeinforge_tools.html"><font color="#ffffff">skeinforge_tools</font></a>.raft</strong></big></big> ($Date: 2008/21/04 $)</font></td
 ><td align=right valign=bottom
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/raft.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/raft.py</a></font></td></tr></table>
-    <p><tt>Raft&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;create&nbsp;a&nbsp;reusable&nbsp;raft,&nbsp;elevate&nbsp;the&nbsp;nozzle&nbsp;and&nbsp;set&nbsp;the&nbsp;feedrate,&nbsp;flowrate&nbsp;and&nbsp;temperature.<br>
+    <p><tt>Raft&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;create&nbsp;a&nbsp;reusable&nbsp;raft,&nbsp;elevate&nbsp;the&nbsp;nozzle&nbsp;and&nbsp;set&nbsp;the&nbsp;temperature.<br>
 &nbsp;<br>
 The&nbsp;default&nbsp;'Activate&nbsp;Raft'&nbsp;checkbox&nbsp;is&nbsp;on.&nbsp;&nbsp;When&nbsp;it&nbsp;is&nbsp;on,&nbsp;the&nbsp;functions&nbsp;described&nbsp;below&nbsp;will&nbsp;work,&nbsp;when&nbsp;it&nbsp;is&nbsp;off,&nbsp;the<br>
-functions&nbsp;will&nbsp;not&nbsp;be&nbsp;called.&nbsp;&nbsp;The&nbsp;raft&nbsp;script&nbsp;sets&nbsp;the&nbsp;feedrate,&nbsp;flowrate&nbsp;and&nbsp;temperature.&nbsp;&nbsp;If&nbsp;the&nbsp;"Activate&nbsp;Raft,&nbsp;Elevate<br>
-Nozzle,&nbsp;Orbit&nbsp;and&nbsp;Set&nbsp;Altitude"&nbsp;checkbox&nbsp;is&nbsp;checked,&nbsp;the&nbsp;script&nbsp;will&nbsp;also&nbsp;create&nbsp;a&nbsp;raft,&nbsp;elevate&nbsp;the&nbsp;nozzle,&nbsp;orbit&nbsp;and&nbsp;set&nbsp;the<br>
-altitude&nbsp;of&nbsp;the&nbsp;bottom&nbsp;of&nbsp;the&nbsp;raft.<br>
+functions&nbsp;will&nbsp;not&nbsp;be&nbsp;called.&nbsp;&nbsp;The&nbsp;raft&nbsp;script&nbsp;sets&nbsp;the&nbsp;temperature.&nbsp;&nbsp;If&nbsp;the&nbsp;"Activate&nbsp;Raft,&nbsp;Elevate&nbsp;Nozzle,&nbsp;Orbit&nbsp;and&nbsp;Set<br>
+Altitude"&nbsp;checkbox&nbsp;is&nbsp;checked,&nbsp;the&nbsp;script&nbsp;will&nbsp;also&nbsp;create&nbsp;a&nbsp;raft,&nbsp;elevate&nbsp;the&nbsp;nozzle,&nbsp;orbit&nbsp;and&nbsp;set&nbsp;the&nbsp;altitude&nbsp;of&nbsp;the&nbsp;bottom<br>
+of&nbsp;the&nbsp;raft.<br>
 &nbsp;<br>
 Raft&nbsp;is&nbsp;based&nbsp;on&nbsp;the&nbsp;Nophead's&nbsp;reusable&nbsp;raft,&nbsp;which&nbsp;has&nbsp;a&nbsp;base&nbsp;layer&nbsp;running&nbsp;one&nbsp;way,&nbsp;and&nbsp;a&nbsp;couple&nbsp;of&nbsp;perpendicular&nbsp;layers<br>
 above.&nbsp;&nbsp;Each&nbsp;set&nbsp;of&nbsp;layers&nbsp;can&nbsp;be&nbsp;set&nbsp;to&nbsp;a&nbsp;different&nbsp;temperature.&nbsp;&nbsp;There&nbsp;is&nbsp;the&nbsp;option&nbsp;of&nbsp;having&nbsp;the&nbsp;extruder&nbsp;orbit&nbsp;the&nbsp;raft&nbsp;for&nbsp;a<br>
@@ -42,15 +42,8 @@ The&nbsp;interface&nbsp;of&nbsp;the&nbsp;raft&nbsp;has&nbsp;equivalent&nbsp;pref
 "Interface&nbsp;Layer&nbsp;Height&nbsp;over&nbsp;Extrusion&nbsp;Height",&nbsp;"Interface&nbsp;Layers"&nbsp;and&nbsp;"Interface&nbsp;Nozzle&nbsp;Lift&nbsp;over&nbsp;Half&nbsp;Base&nbsp;Extrusion&nbsp;Height".<br>
 The&nbsp;shape&nbsp;has&nbsp;the&nbsp;equivalent&nbsp;preference&nbsp;of&nbsp;called&nbsp;"Operating&nbsp;Nozzle&nbsp;Lift&nbsp;over&nbsp;Half&nbsp;Extrusion&nbsp;Height".<br>
 &nbsp;<br>
-The&nbsp;altitude&nbsp;that&nbsp;the&nbsp;bottom&nbsp;of&nbsp;the&nbsp;raft&nbsp;will&nbsp;be&nbsp;set&nbsp;to&nbsp;the&nbsp;"Bottom&nbsp;Altitude"&nbsp;preference.&nbsp;&nbsp;The&nbsp;feedrate&nbsp;for&nbsp;the&nbsp;shape&nbsp;will&nbsp;be&nbsp;set<br>
-to&nbsp;the&nbsp;'Feedrate"&nbsp;preference.&nbsp;&nbsp;The&nbsp;feedrate&nbsp;will&nbsp;be&nbsp;slower&nbsp;for&nbsp;raft&nbsp;layers&nbsp;which&nbsp;have&nbsp;thicker&nbsp;extrusions&nbsp;than&nbsp;the&nbsp;shape&nbsp;infill.<br>
-&nbsp;<br>
-The&nbsp;speed&nbsp;of&nbsp;the&nbsp;orbit&nbsp;compared&nbsp;to&nbsp;the&nbsp;operating&nbsp;extruder&nbsp;speed&nbsp;will&nbsp;be&nbsp;set&nbsp;to&nbsp;the&nbsp;'Orbital&nbsp;Feedrate&nbsp;over&nbsp;Operating&nbsp;Feedrate'<br>
-preference.<br>
-&nbsp;<br>
-In&nbsp;the&nbsp;"Flowrate&nbsp;Choice"&nbsp;radio&nbsp;button&nbsp;group,&nbsp;if&nbsp;"Do&nbsp;Not&nbsp;Add&nbsp;Flowrate"&nbsp;is&nbsp;selected&nbsp;then&nbsp;raft&nbsp;will&nbsp;not&nbsp;add&nbsp;a&nbsp;flowrate&nbsp;to&nbsp;the&nbsp;gcode<br>
-output.&nbsp;&nbsp;If&nbsp;"Metric"&nbsp;is&nbsp;selected,&nbsp;the&nbsp;flowrate&nbsp;in&nbsp;cubic&nbsp;millimeters&nbsp;per&nbsp;second&nbsp;will&nbsp;be&nbsp;added&nbsp;to&nbsp;the&nbsp;output.&nbsp;&nbsp;If&nbsp;"PWM&nbsp;Setting"&nbsp;is<br>
-selected,&nbsp;the&nbsp;value&nbsp;in&nbsp;the&nbsp;"Flowrate&nbsp;PWM&nbsp;Setting"&nbsp;field&nbsp;will&nbsp;be&nbsp;added&nbsp;to&nbsp;the&nbsp;output.<br>
+The&nbsp;altitude&nbsp;that&nbsp;the&nbsp;bottom&nbsp;of&nbsp;the&nbsp;raft&nbsp;will&nbsp;be&nbsp;set&nbsp;to&nbsp;the&nbsp;"Bottom&nbsp;Altitude"&nbsp;preference.&nbsp;&nbsp;The&nbsp;feedrate&nbsp;will&nbsp;be&nbsp;slower&nbsp;for&nbsp;raft<br>
+layers&nbsp;which&nbsp;have&nbsp;thicker&nbsp;extrusions&nbsp;than&nbsp;the&nbsp;shape&nbsp;infill.<br>
 &nbsp;<br>
 The&nbsp;raft&nbsp;fills&nbsp;a&nbsp;rectangle&nbsp;whose&nbsp;size&nbsp;is&nbsp;the&nbsp;rectangle&nbsp;around&nbsp;the&nbsp;bottom&nbsp;layer&nbsp;of&nbsp;the&nbsp;shape&nbsp;expanded&nbsp;on&nbsp;each&nbsp;side&nbsp;by&nbsp;the<br>
 "Raft&nbsp;Outset&nbsp;Radius&nbsp;over&nbsp;Extrusion&nbsp;Width"&nbsp;preference&nbsp;times&nbsp;the&nbsp;extrusion&nbsp;width,&nbsp;minus&nbsp;the&nbsp;"Infill&nbsp;Overhang"&nbsp;ratio&nbsp;times&nbsp;the<br>
@@ -89,8 +82,8 @@ The&nbsp;following&nbsp;examples&nbsp;raft&nbsp;the&nbsp;files&nbsp;Hollow&nbsp;
 which&nbsp;contains&nbsp;Hollow&nbsp;Square.gcode,&nbsp;Hollow&nbsp;Square.gts&nbsp;and&nbsp;raft.py.&nbsp;&nbsp;The&nbsp;raft&nbsp;function&nbsp;will&nbsp;raft&nbsp;if&nbsp;"Activate&nbsp;Raft,&nbsp;Elevate&nbsp;Nozzle,<br>
 Orbit&nbsp;and&nbsp;Set&nbsp;Altitude"&nbsp;is&nbsp;true,&nbsp;which&nbsp;can&nbsp;be&nbsp;set&nbsp;in&nbsp;the&nbsp;dialog&nbsp;or&nbsp;by&nbsp;changing&nbsp;the&nbsp;preferences&nbsp;file&nbsp;'raft.csv'&nbsp;with&nbsp;a&nbsp;text&nbsp;editor&nbsp;or&nbsp;a<br>
 spreadsheet&nbsp;program&nbsp;set&nbsp;to&nbsp;separate&nbsp;tabs.&nbsp;&nbsp;The&nbsp;functions&nbsp;writeOutput&nbsp;and&nbsp;getRaftChainGcode&nbsp;check&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text&nbsp;has<br>
-been&nbsp;rafted,&nbsp;if&nbsp;not&nbsp;they&nbsp;call&nbsp;getFillChainGcode&nbsp;in&nbsp;fill.py&nbsp;to&nbsp;get&nbsp;filled&nbsp;gcode;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;filled&nbsp;text,&nbsp;then&nbsp;they&nbsp;raft.<br>
-Pictures&nbsp;of&nbsp;rafting&nbsp;in&nbsp;action&nbsp;are&nbsp;available&nbsp;from&nbsp;the&nbsp;Metalab&nbsp;blog&nbsp;at:<br>
+been&nbsp;rafted,&nbsp;if&nbsp;not&nbsp;they&nbsp;call&nbsp;getSpeedChainGcode&nbsp;in&nbsp;speed.py&nbsp;to&nbsp;get&nbsp;speeded&nbsp;gcode;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;speeded&nbsp;text,&nbsp;then<br>
+they&nbsp;raft.&nbsp;&nbsp;Pictures&nbsp;of&nbsp;rafting&nbsp;in&nbsp;action&nbsp;are&nbsp;available&nbsp;from&nbsp;the&nbsp;Metalab&nbsp;blog&nbsp;at:<br>
 <a href="http://reprap.soup.io/?search=rafting">http://reprap.soup.io/?search=rafting</a><br>
 &nbsp;<br>
 &nbsp;<br>
@@ -142,14 +135,14 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 <a href="skeinforge_tools.analyze.html">skeinforge_tools.analyze</a><br>
 <a href="cStringIO.html">cStringIO</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.euclidean.html">skeinforge_tools.skeinforge_utilities.euclidean</a><br>
-</td><td width="25%" valign=top><a href="skeinforge_tools.fill.html">skeinforge_tools.fill</a><br>
-<a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
+</td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
 <a href="skeinforge_tools.import_translator.html">skeinforge_tools.import_translator</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.intercircle.html">skeinforge_tools.skeinforge_utilities.intercircle</a><br>
-</td><td width="25%" valign=top><a href="skeinforge_tools.material.html">skeinforge_tools.material</a><br>
-<a href="math.html">math</a><br>
+<a href="skeinforge_tools.material.html">skeinforge_tools.material</a><br>
+</td><td width="25%" valign=top><a href="math.html">math</a><br>
 <a href="skeinforge_tools.polyfile.html">skeinforge_tools.polyfile</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.preferences.html">skeinforge_tools.skeinforge_utilities.preferences</a><br>
+<a href="skeinforge_tools.speed.html">skeinforge_tools.speed</a><br>
 </td><td width="25%" valign=top><a href="sys.html">sys</a><br>
 <a href="time.html">time</a><br>
 </td></tr></table></td></tr></table><p>
@@ -191,15 +184,13 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 
 <dl><dt><a name="RaftSkein-addBaseLayer"><strong>addBaseLayer</strong></a>(self, baseExtrusionWidth, baseStep, stepBegin, stepEnd)</dt><dd><tt>Add&nbsp;a&nbsp;base&nbsp;layer.</tt></dd></dl>
 
-<dl><dt><a name="RaftSkein-addFlowrate"><strong>addFlowrate</strong></a>(self)</dt><dd><tt>Add&nbsp;flowrate&nbsp;line.</tt></dd></dl>
-
 <dl><dt><a name="RaftSkein-addGcodeFromFeedrateMovement"><strong>addGcodeFromFeedrateMovement</strong></a>(self, feedrateMinute, point)</dt><dd><tt>Add&nbsp;a&nbsp;movement&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
 <dl><dt><a name="RaftSkein-addGcodeFromFeedrateThread"><strong>addGcodeFromFeedrateThread</strong></a>(self, feedrateMinute, thread)</dt><dd><tt>Add&nbsp;a&nbsp;thread&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
 <dl><dt><a name="RaftSkein-addInterfaceLayer"><strong>addInterfaceLayer</strong></a>(self)</dt><dd><tt>Add&nbsp;an&nbsp;interface&nbsp;layer.</tt></dd></dl>
 
-<dl><dt><a name="RaftSkein-addLayerFromSegments"><strong>addLayerFromSegments</strong></a>(self, feedrateSecond, layerExtrusionHeight, segments, zCenter)</dt><dd><tt>Add&nbsp;a&nbsp;layer&nbsp;from&nbsp;segments&nbsp;and&nbsp;raise&nbsp;the&nbsp;extrusion&nbsp;top.</tt></dd></dl>
+<dl><dt><a name="RaftSkein-addLayerFromSegments"><strong>addLayerFromSegments</strong></a>(self, feedrateMinute, layerExtrusionHeight, segments, zCenter)</dt><dd><tt>Add&nbsp;a&nbsp;layer&nbsp;from&nbsp;segments&nbsp;and&nbsp;raise&nbsp;the&nbsp;extrusion&nbsp;top.</tt></dd></dl>
 
 <dl><dt><a name="RaftSkein-addLine"><strong>addLine</strong></a>(self, line)</dt><dd><tt>Add&nbsp;a&nbsp;line&nbsp;of&nbsp;text&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
