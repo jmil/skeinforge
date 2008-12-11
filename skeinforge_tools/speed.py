@@ -17,7 +17,8 @@ The following examples speed the files Hollow Square.gcode & Hollow Square.gts. 
 folder which contains Hollow Square.gcode, Hollow Square.gts and speed.py.  The speed function will speed if "Activate
 Speed" is true, which can be set in the dialog or by changing the preferences file 'speed.csv' with a text editor or a spreadsheet
 program set to separate tabs.  The functions writeOutput and getSpeedChainGcode check to see if the text has been speeded,
-if not they call getFillChainGcode in fill.py to get filled gcode; once they have the filled text, then they speed.
+if not they call getMultiplyChainGcode in multiply.py to get multiplied gcode; once they have the multiplied text, then they
+speed.
 
 
 > python speed.py
@@ -70,9 +71,9 @@ from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
-from skeinforge_tools import fill
 from skeinforge_tools import import_translator
 from skeinforge_tools import material
+from skeinforge_tools import multiply
 from skeinforge_tools import polyfile
 import cStringIO
 import math
@@ -88,8 +89,8 @@ __license__ = "GPL 3.0"
 def getSpeedChainGcode( filename, gcodeText, speedPreferences = None ):
 	"Speed a gcode linear move text.  Chain speed the gcode if it is not already speeded."
 	gcodeText = gcodec.getGcodeFileText( filename, gcodeText )
-	if not gcodec.isProcedureDone( gcodeText, 'fill' ):
-		gcodeText = fill.getFillChainGcode( filename, gcodeText )
+	if not gcodec.isProcedureDone( gcodeText, 'multiply' ):
+		gcodeText = multiply.getMultiplyChainGcode( filename, gcodeText )
 	return getSpeedGcode( gcodeText, speedPreferences )
 
 def getSpeedGcode( gcodeText, speedPreferences = None ):
@@ -134,7 +135,6 @@ class SpeedPreferences:
 	"A class to handle the speed preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences filename."
-		materialName = material.getSelectedMaterial()
 		#Set the default preferences.
 		self.archive = []
 		self.activateSpeed = preferences.BooleanPreference().getFromValue( 'Activate Speed:', True )
@@ -158,7 +158,7 @@ class SpeedPreferences:
 		self.archive.append( self.orbitalFeedrateOverOperatingFeedrate )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.executeTitle = 'Speed'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'speed_' + materialName + '.csv' )
+		self.filenamePreferences = preferences.getPreferencesFilePath( 'speed.csv' )
 		self.filenameHelp = 'skeinforge_tools.speed.html'
 		self.saveTitle = 'Save Preferences'
 		self.title = 'Speed Preferences'

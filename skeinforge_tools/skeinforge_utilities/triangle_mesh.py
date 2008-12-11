@@ -112,7 +112,7 @@ class EdgePair:
 		"Get the string representation of this EdgePair."
 		return str( self.edgeIndexes )
 
-	def getFromIndexFirstSecond( self, edgeIndexes, edges ):
+	def getFromIndexesEdges( self, edgeIndexes, edges ):
 		"Initialize from edge indices."
 		self.edgeIndexes = edgeIndexes[ : ]
 		self.edgeIndexes.sort()

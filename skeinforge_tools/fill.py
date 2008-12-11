@@ -101,8 +101,8 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-#slice infill density documentation, oozebane to handle minimum start up, add differential flow rates
-#multiply
+#oozebane to handle minimum start up, add differential flow rates
+#user mcodes
 #use slice format, carve & inset, slice aoi xml
 #bridge extrusion width
 #pyramidal
@@ -984,7 +984,8 @@ class FillSkein:
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
-		self.output.write( line + "\n" )
+		if len( line ) > 0:
+			self.output.write( line + "\n" )
 
 	def addRemainingGridPoints( self, arounds, gridPointInsetX, gridPointInsetY, gridPoints, isBothOrNone, paths, pixelTable, width ):
 		for gridPointIndex in xrange( len( gridPoints ) - 1, - 1, - 1 ):

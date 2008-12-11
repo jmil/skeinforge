@@ -35,6 +35,17 @@ def createInitFile():
 	fileText = '__all__ = ' + str( getPythonFilenamesExceptInit() )
 	writeFileText( '__init__.py', fileText )
 
+def findWords( filenames, search ):
+	"Find in files the search."
+	print( search + ' is being searched for.' )
+	for filename in filenames:
+		fileText = getFileText( filename )
+		if fileText != '':
+			whereInText = fileText.find( search )
+			if whereInText != - 1:
+				print( filename )
+				print( whereInText )
+
 def getDoubleAfterFirstLetter( word ):
 	"""Get the double value of the word after the first letter.
 

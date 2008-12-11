@@ -100,19 +100,19 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/02/05 $"
 __license__ = "GPL 3.0"
 
-
 def addAlreadyFilledArounds( alreadyFilledArounds, loop, radius ):
 	"Add already filled loops around loop to alreadyFilledArounds."
 	alreadyFilledLoop = []
 	slightlyGreaterThanRadius = 1.01 * radius
 	muchGreaterThanRadius = 2.5 * radius
-	alreadyFilledArounds.append( alreadyFilledLoop )
-	circleNodes = intercircle.getCircleNodesFromLoop( loop, slightlyGreaterThanRadius )
-	centers = intercircle.getCentersFromCircleNodes( circleNodes )
+	circleNodes = intercircle.getCircleNodeComplexesFromLoopComplex( loop, slightlyGreaterThanRadius )
+	centers = intercircle.getCenterComplexesFromCircleNodeComplexes( circleNodes )
 	for center in centers:
-		alreadyFilledInset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, radius )
-		if euclidean.getMaximumSpan( alreadyFilledInset ) > muchGreaterThanRadius or euclidean.isWiddershins( alreadyFilledInset ):
+		alreadyFilledInset = intercircle.getSimplifiedInsetFromClockwiseLoopComplex( center, radius )
+		if euclidean.getLoopComplexMaximumSpan( alreadyFilledInset ) > muchGreaterThanRadius or euclidean.isPolygonComplexWiddershins( alreadyFilledInset ):
 			alreadyFilledLoop.append( alreadyFilledInset )
+	if len( alreadyFilledLoop ) > 0:
+		alreadyFilledArounds.append( alreadyFilledLoop )
 
 def addEdgePair( edgePairTable, edges, faceEdgeIndex, remainingEdgeIndex, remainingEdgeTable ):
 	"Add edge pair to the edge pair table."
@@ -120,31 +120,31 @@ def addEdgePair( edgePairTable, edges, faceEdgeIndex, remainingEdgeIndex, remain
 		return
 	if not faceEdgeIndex in remainingEdgeTable:
 		return
-	edgePair = EdgePair().getFromIndexesEdges( [ remainingEdgeIndex, faceEdgeIndex ], edges )
+	edgePair = triangle_mesh.EdgePair().getFromIndexesEdges( [ remainingEdgeIndex, faceEdgeIndex ], edges )
 	edgePairTable[ str( edgePair ) ] = edgePair
 
-def addPointsAtZ( edgePair, points, radius, vertices, z ):
-	"Add points on the segment between the edge intersections with z."
-	sliceIntersectionFirst = getSliceIntersectionFromEdge( edgePair.edges[ 0 ], vertices, z )
-	sliceIntersectionSecond = getSliceIntersectionFromEdge( edgePair.edges[ 1 ], vertices, z )
-	intercircle.addPointsFromSegment( points, radius, sliceIntersectionFirst, sliceIntersectionSecond )
+def addPointComplexesAtZ( edgePair, pointComplexes, radius, vertices, z ):
+	"Add point complexes on the segment between the edge intersections with z."
+	sliceIntersectionFirst = getSliceIntersectionComplexFromEdge( edgePair.edges[ 0 ], vertices, z )
+	sliceIntersectionSecond = getSliceIntersectionComplexFromEdge( edgePair.edges[ 1 ], vertices, z )
+	intercircle.addPointComplexesFromSegment( pointComplexes, radius, sliceIntersectionFirst, sliceIntersectionSecond )
 
-def addSegmentOutline( isThick, outlines, pointBegin, pointEnd, width ):
+def addSegmentOutlineComplex( isThick, outlines, pointBegin, pointEnd, width ):
 	"Add a diamond or hexagonal outline for a line segment."
 	exclusionWidth = 0.6 * width
 	slope = 0.3
 	if isThick:
 		slope = 3.0
 		exclusionWidth = 0.8 * width
-	segment = pointEnd.dropAxis( 2 ) - pointBegin.dropAxis( 2 )
+	segment = pointEnd - pointBegin
 	segmentLength = abs( segment )
 	if segmentLength == 0.0:
 		return
 	normalizedSegment = segment / segmentLength
 	outline = []
 	segmentYMirror = complex( normalizedSegment.real, - normalizedSegment.imag )
-	pointBeginRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, pointBegin )
-	pointEndRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, pointEnd )
+	pointBeginRotated = segmentYMirror * pointBegin
+	pointEndRotated = segmentYMirror * pointEnd
 	along = 0.01
 	alongLength = along * segmentLength
 	if alongLength > 0.1 * exclusionWidth:
@@ -152,33 +152,41 @@ def addSegmentOutline( isThick, outlines, pointBegin, pointEnd, width ):
 	alongEnd = 1.0 - along
 	remainingToHalf = 0.5 - along
 	alongToWidth = exclusionWidth / slope / segmentLength
-	pointBeginIntermediate = euclidean.getIntermediateLocation( along, pointBeginRotated, pointEndRotated )
-	pointEndIntermediate = euclidean.getIntermediateLocation( alongEnd, pointBeginRotated, pointEndRotated )
+	pointBeginIntermediate = euclidean.getIntermediateLocationComplex( along, pointBeginRotated, pointEndRotated )
+	pointEndIntermediate = euclidean.getIntermediateLocationComplex( alongEnd, pointBeginRotated, pointEndRotated )
 	outline.append( pointBeginIntermediate )
-	verticalWidth = Vec3( 0.0, exclusionWidth, 0.0 )
+	verticalWidth = complex( 0.0, exclusionWidth )
 	if alongToWidth > 0.9 * remainingToHalf:
-		verticalWidth = Vec3( 0.0, slope * remainingToHalf, 0.0 )
-		middle = ( pointBeginIntermediate.plus( pointEndIntermediate ) ).times( 0.5 )
-		middleDown = middle.minus( verticalWidth )
-		middleUp = middle.plus( verticalWidth )
+		verticalWidth = complex( 0.0, slope * remainingToHalf )
+		middle = ( pointBeginIntermediate + pointEndIntermediate ) * 0.5
+		middleDown = middle - verticalWidth
+		middleUp = middle + verticalWidth
 		outline.append( middleUp )
 		outline.append( pointEndIntermediate )
 		outline.append( middleDown )
 	else:
 		alongOutsideBegin = along + alongToWidth
 		alongOutsideEnd = alongEnd - alongToWidth
-		outsideBeginCenter = euclidean.getIntermediateLocation( alongOutsideBegin, pointBeginRotated, pointEndRotated )
-		outsideBeginCenterDown = outsideBeginCenter.minus( verticalWidth )
-		outsideBeginCenterUp = outsideBeginCenter.plus( verticalWidth )
-		outsideEndCenter = euclidean.getIntermediateLocation( alongOutsideEnd, pointBeginRotated, pointEndRotated )
-		outsideEndCenterDown = outsideEndCenter.minus( verticalWidth )
-		outsideEndCenterUp = outsideEndCenter.plus( verticalWidth )
+		outsideBeginCenter = euclidean.getIntermediateLocationComplex( alongOutsideBegin, pointBeginRotated, pointEndRotated )
+		outsideBeginCenterDown = outsideBeginCenter - verticalWidth
+		outsideBeginCenterUp = outsideBeginCenter + verticalWidth
+		outsideEndCenter = euclidean.getIntermediateLocationComplex( alongOutsideEnd, pointBeginRotated, pointEndRotated )
+		outsideEndCenterDown = outsideEndCenter - verticalWidth
+		outsideEndCenterUp = outsideEndCenter + verticalWidth
 		outline.append( outsideBeginCenterUp )
 		outline.append( outsideEndCenterUp )
 		outline.append( pointEndIntermediate )
 		outline.append( outsideEndCenterDown )
 		outline.append( outsideBeginCenterDown )
-	outlines.append( euclidean.getPathRoundZAxisByPlaneAngle( normalizedSegment, outline ) )
+	outlines.append( euclidean.getPointComplexesRoundZAxisByComplex( normalizedSegment, outline ) )
+
+def compareArea( loopArea, otherLoopArea ):
+	"Get comparison in order to sort loop areas in descending order of area."
+	if loopArea.area < otherLoopArea.area:
+		return 1
+	if loopArea.area > otherLoopArea.area:
+		return - 1
+	return 0
 
 def getCommonVertexIndex( edgeFirst, edgeSecond ):
 	"Get the vertex index that both edges have in common."
@@ -193,7 +201,7 @@ def getCommonVertexIndex( edgeFirst, edgeSecond ):
 def getDoubledRoundZ( overhangingSegment, segmentRoundZ ):
 	"Get doubled plane angle around z of the overhanging segment."
 	endpoint = overhangingSegment[ 0 ]
-	roundZ = endpoint.point.dropAxis( 2 ) - endpoint.otherEndpoint.point.dropAxis( 2 )
+	roundZ = endpoint.point - endpoint.otherEndpoint.point
 	roundZ *= segmentRoundZ
 	if abs( roundZ ) == 0.0:
 		return complex()
@@ -213,21 +221,11 @@ def getLoopsFromCorrectMesh( edges, faces, vertices, z ):
 			print( "Something will still be printed, but there is no guarantee that it will be the correct shape." )
 			print( 'Once the gcode is saved, you should check over the layer with a z of:' )
 			print( z )
-			return None
-	loops = []
-	pathIndexes = getPathIndexesAddPath( edges, faces, loops, remainingEdgeTable, vertices, z )
-	while pathIndexes != None:
-		pathIndexes = getPathIndexesAddPath( edges, faces, loops, remainingEdgeTable, vertices, z )
-	boundingLoops = []
-	for loop in loops:
-		boundingLoop = intercircle.BoundingLoop().getFromLoop( loop )
-		boundingLoop.area = abs( euclidean.getPolygonArea( loop ) )
-		boundingLoops.append( boundingLoop )
-	boundingLoops.sort()
-	sortedLoops = []
-	for boundingLoop in boundingLoops:
-		sortedLoops.append( boundingLoop.loop )
-	return sortedLoops
+			return []
+	loopComplexes = []
+	while isPathAdded( edges, faces, loopComplexes, remainingEdgeTable, vertices, z ):
+		pass
+	return loopComplexes
 #	untouchables = []
 #	for boundingLoop in boundingLoops:
 #		if not boundingLoop.isIntersectingList( untouchables ):
@@ -245,23 +243,22 @@ def getLoopsFromUnprovenMesh( edges, extrusionWidth, faces, vertices, slicePrefe
 	"Get loops from a slice of an unproven mesh."
 	edgePairTable = {}
 	importRadius = slicePreferences.importCoarseness.value * extrusionWidth
-	points = []
+	pointComplexes = []
 	remainingEdgeTable = getRemainingEdgeTable( edges, vertices, z )
 	remainingEdgeTableKeys = remainingEdgeTable.keys()
 	for remainingEdgeIndexKey in remainingEdgeTable:
 		edge = remainingEdgeTable[ remainingEdgeIndexKey ]
-		sliceIntersection = getSliceIntersectionFromEdge( edge, vertices, z )
-		points.append( sliceIntersection )
+		sliceIntersection = getSliceIntersectionComplexFromEdge( edge, vertices, z )
+		pointComplexes.append( sliceIntersection )
 		for edgeFaceIndex in edge.faceIndexes:
 			face = faces[ edgeFaceIndex ]
 			for edgeIndex in face.edgeIndexes:
 				addEdgePair( edgePairTable, edges, edgeIndex, remainingEdgeIndexKey, remainingEdgeTable )
 	for edgePairValue in edgePairTable.values():
-		addPointsAtZ( edgePairValue, points, importRadius, vertices, z )
-	path = euclidean.getAwayPath( points, importRadius )
-	circleNodes = intercircle.getCircleNodesFromPath( path, importRadius )
-	centers = intercircle.getCentersFromCircleNodes( circleNodes )
-	return intercircle.getLoopsFromLoopsDirection( True, centers )
+		addPointComplexesAtZ( edgePairValue, pointComplexes, importRadius, vertices, z )
+	circleNodeComplexes = intercircle.getCircleNodeComplexesFromPointComplexes( pointComplexes, importRadius )
+	centerComplexes = intercircle.getCenterComplexesFromCircleNodeComplexes( circleNodeComplexes )
+	return intercircle.getLoopComplexesFromLoopComplexesDirection( True, centerComplexes )
 
 def getLowestZoneIndex( zoneArray, z ):
 	"Get the lowest zone index."
@@ -285,55 +282,34 @@ def getNextEdgeIndexAroundZ( edge, faces, remainingEdgeTable ):
 
 def getOverhangDirection( belowOutsetLoops, segmentBegin, segmentEnd ):
 	"Add to span direction from the endpoint segments which overhang the layer below."
-	segment = segmentEnd.minus( segmentBegin )
-	normalizedSegment = complex( segment.x, segment.y )
-	normalizedSegment /= abs( normalizedSegment )
+	segment = segmentEnd - segmentBegin
+	normalizedSegment = euclidean.getNormalized( complex( segment.real, segment.imag ) )
 	segmentYMirror = complex( normalizedSegment.real, - normalizedSegment.imag )
-	segmentBegin = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, segmentBegin )
-	segmentEnd = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, segmentEnd )
+	segmentBegin = segmentYMirror * segmentBegin
+	segmentEnd = segmentYMirror * segmentEnd
 	solidXIntersectionList = []
-	y = segmentBegin.y
-	solidXIntersectionList.append( euclidean.XIntersectionIndex( - 1.0, segmentBegin.x ) )
-	solidXIntersectionList.append( euclidean.XIntersectionIndex( - 1.0, segmentEnd.x ) )
+	y = segmentBegin.imag
+	solidXIntersectionList.append( euclidean.XIntersectionIndex( - 1.0, segmentBegin.real ) )
+	solidXIntersectionList.append( euclidean.XIntersectionIndex( - 1.0, segmentEnd.real ) )
 	for belowLoopIndex in range( len( belowOutsetLoops ) ):
 		belowLoop = belowOutsetLoops[ belowLoopIndex ]
-		rotatedOutset = euclidean.getPathRoundZAxisByPlaneAngle( segmentYMirror, belowLoop )
-		euclidean.addXIntersectionIndexes( rotatedOutset, belowLoopIndex, solidXIntersectionList, y )
-	overhangingSegments = euclidean.getSegmentsFromXIntersectionIndexes( solidXIntersectionList, y, segmentBegin.z )
+		rotatedOutset = euclidean.getPointComplexesRoundZAxisByComplex( segmentYMirror, belowLoop )
+		euclidean.addXIntersectionIndexesFromComplexes( rotatedOutset, belowLoopIndex, solidXIntersectionList, y )
+	overhangingSegments = euclidean.getSegmentComplexesFromXIntersectionIndexes( solidXIntersectionList, y )
 	overhangDirection = complex()
 	for overhangingSegment in overhangingSegments:
 		overhangDirection += getDoubledRoundZ( overhangingSegment, normalizedSegment )
 	return overhangDirection
 
-def getPath( edges, pathIndexes, loop, z ):
+def getPathComplex( edges, pathIndexes, loop, z ):
 	"Get the path from the edge intersections."
-	path = []
+	pathComplex = []
 	for pathIndexIndex in range( len( pathIndexes ) ):
 		pathIndex = pathIndexes[ pathIndexIndex ]
 		edge = edges[ pathIndex ]
-		pathPoint = getSliceIntersectionFromEdge( edge, loop, z )
-		path.append( pathPoint )
-	return path
-
-def getPathIndexesAddPath( edges, faces, loops, remainingEdgeTable, vertices, z ):
-	"Get the path indexes around a triangle mesh slice and add the path to the loops."
-	if len( remainingEdgeTable ) < 1:
-		return None
-	pathIndexes = []
-	remainingEdgeIndexKey = remainingEdgeTable.keys()[ 0 ]
-	pathIndexes.append( remainingEdgeIndexKey )
-	del remainingEdgeTable[ remainingEdgeIndexKey ]
-	nextEdgeIndexAroundZ = getNextEdgeIndexAroundZ( edges[ remainingEdgeIndexKey ], faces, remainingEdgeTable )
-	while nextEdgeIndexAroundZ != - 1:
-		pathIndexes.append( nextEdgeIndexAroundZ )
-		del remainingEdgeTable[ nextEdgeIndexAroundZ ]
-		nextEdgeIndexAroundZ = getNextEdgeIndexAroundZ( edges[ nextEdgeIndexAroundZ ], faces, remainingEdgeTable )
-	if len( pathIndexes ) < 3:
-		print( "Dangling edges, will use intersecting circles to get import layer at height " + z.toString() )
-		del loops[ : ]
-		return None
-	loops.append( getPath( edges, pathIndexes, vertices, z ) )
-	return pathIndexes
+		sliceIntersection = getSliceIntersectionComplexFromEdge( edge, loop, z )
+		pathComplex.append( sliceIntersection )
+	return pathComplex
 
 def getRemainingEdgeTable( edges, vertices, z ):
 	"Get the remaining edge hashtable."
@@ -346,31 +322,31 @@ def getRemainingEdgeTable( edges, vertices, z ):
 
 def getSegmentsFromPoints( loopLists, pointBegin, pointEnd ):
 	"Get endpoint segments from the beginning and end of a line segment."
-	normalizedSegment = pointEnd.dropAxis( 2 ) - pointBegin.dropAxis( 2 )
+	normalizedSegment = pointEnd - pointBegin
 	normalizedSegmentLength = abs( normalizedSegment )
 	if normalizedSegmentLength == 0.0:
 		return
 	normalizedSegment /= normalizedSegmentLength
 	segmentYMirror = complex( normalizedSegment.real, - normalizedSegment.imag )
-	pointBeginRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, pointBegin )
-	pointEndRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, pointEnd )
+	pointBeginRotated = segmentYMirror * pointBegin
+	pointEndRotated = segmentYMirror * pointEnd
 	rotatedLoopLists = []
 	for loopList in loopLists:
 		rotatedLoopList = []
 		rotatedLoopLists.append( rotatedLoopList )
 		for loop in loopList:
-			rotatedLoop = euclidean.getPathRoundZAxisByPlaneAngle( segmentYMirror, loop )
+			rotatedLoop = euclidean.getPointComplexesRoundZAxisByComplex( segmentYMirror, loop )
 			rotatedLoopList.append( rotatedLoop )
 	xIntersectionList = []
-	xIntersectionList.append( euclidean.XIntersectionIndex( - 1, pointBeginRotated.x ) )
-	xIntersectionList.append( euclidean.XIntersectionIndex( - 1, pointEndRotated.x ) )
-	euclidean.addXIntersectionIndexesFromLoopLists( rotatedLoopLists, xIntersectionList, pointBeginRotated.y )
-	segments = euclidean.getSegmentsFromXIntersectionIndexes( xIntersectionList, pointBeginRotated.y, pointBegin.z )
+	xIntersectionList.append( euclidean.XIntersectionIndex( - 1, pointBeginRotated.real ) )
+	xIntersectionList.append( euclidean.XIntersectionIndex( - 1, pointEndRotated.real ) )
+	euclidean.addXIntersectionIndexesFromLoopListComplexes( rotatedLoopLists, xIntersectionList, pointBeginRotated.imag )
+	segments = euclidean.getSegmentComplexesFromXIntersectionIndexes( xIntersectionList, pointBeginRotated.imag )
 	for segment in segments:
 		endpointBegin = segment[ 0 ]
-		endpointBegin.point = euclidean.getRoundZAxisByPlaneAngle( normalizedSegment, endpointBegin.point )
+		endpointBegin.point = normalizedSegment * endpointBegin.point
 		endpointEnd = segment[ 1 ]
-		endpointEnd.point = euclidean.getRoundZAxisByPlaneAngle( normalizedSegment, endpointEnd.point )
+		endpointEnd.point = normalizedSegment * endpointEnd.point
 	return segments
 
 def getSharedFace( firstEdge, faces, secondEdge ):
@@ -397,32 +373,36 @@ def getSliceGcode( filename, slicePreferences = None ):
 	skein.parseTriangleMesh( slicePreferences, triangleMesh )
 	return skein.output.getvalue()
 
-def getSliceIntersectionFromEdge( edge, loop, z ):
-	"Get the point where the slice intersects the edge."
-	firstVertex = loop[ edge.vertexIndexes[ 0 ] ]
-	secondVertex = loop[ edge.vertexIndexes[ 1 ] ]
+#def getSliceIntersectionFromEdge( edge, vertices, z ):
+#	"Get the Vec3 where the slice intersects the edge."
+#	sliceIntersectionComplex = getSliceIntersectionComplexFromEdge( edge, vertices, z )
+#	return Vec3( sliceIntersectionComplex.real, sliceIntersectionComplex.imag, z )
+#
+def getSliceIntersectionComplexFromEdge( edge, vertices, z ):
+	"Get the complex where the slice intersects the edge."
+	firstVertex = vertices[ edge.vertexIndexes[ 0 ] ]
+	firstVertexComplex = firstVertex.dropAxis( 2 )
+	secondVertex = vertices[ edge.vertexIndexes[ 1 ] ]
+	secondVertexComplex = secondVertex.dropAxis( 2 )
 	zMinusFirst = z - firstVertex.z
 	up = secondVertex.z - firstVertex.z
-	sliceIntersection = secondVertex.minus( firstVertex )
-	sliceIntersection.scale( zMinusFirst / up )
-	sliceIntersection.add( firstVertex )
-	return sliceIntersection
+	return zMinusFirst * ( secondVertexComplex - firstVertexComplex ) / up + firstVertexComplex
 
 def isCloseToLast( paths, point, radius ):
 	"Determine if the point is close to the last point of the last path."
 	if len( paths ) < 1:
 		return False
 	lastPath = paths[ - 1 ]
-	return lastPath[ - 1 ].distance( point ) < radius
+	return abs( lastPath[ - 1 ] - point ) < radius
 
 def isIntersectingWithinList( loop, loopList ):
 	"Determine if the loop is intersecting or is within the loop list."
-	if euclidean.isLoopIntersectingLoops( loop, loopList ):
+	if euclidean.isLoopIntersectingLoopComplexes( loop, loopList ):
 		return True
 	totalNumberOfIntersections = 0
 	for otherLoop in loopList:
-		leftPoint = euclidean.getLeftPoint( otherLoop )
-		totalNumberOfIntersections += euclidean.getNumberOfIntersectionsToLeft( leftPoint, loop )
+		leftPoint = euclidean.getLeftPointComplex( otherLoop )
+		totalNumberOfIntersections += euclidean.getNumberOfIntersectionsToLeftComplex( leftPoint, loop )
 	return totalNumberOfIntersections % 2 == 1
 
 def isIntersectingWithinLists( loop, loopLists ):
@@ -438,10 +418,30 @@ def isIntersectingItself( loop, width ):
 	for pointIndex in xrange( len( loop ) ):
 		pointBegin = loop[ pointIndex ]
 		pointEnd = loop[ ( pointIndex + 1 ) % len( loop ) ]
-		if euclidean.isLineIntersectingLoops( outlines, pointBegin, pointEnd ):
+		if euclidean.isLineIntersectingLoopComplexes( outlines, pointBegin, pointEnd ):
 			return True
-		addSegmentOutline( False, outlines, pointBegin, pointEnd, width )
+		addSegmentOutlineComplex( False, outlines, pointBegin, pointEnd, width )
 	return False
+
+def isPathAdded( edges, faces, loopComplexes, remainingEdgeTable, vertices, z ):
+	"Get the path indexes around a triangle mesh slice and add the path to the flat loops."
+	if len( remainingEdgeTable ) < 1:
+		return False
+	pathIndexes = []
+	remainingEdgeIndexKey = remainingEdgeTable.keys()[ 0 ]
+	pathIndexes.append( remainingEdgeIndexKey )
+	del remainingEdgeTable[ remainingEdgeIndexKey ]
+	nextEdgeIndexAroundZ = getNextEdgeIndexAroundZ( edges[ remainingEdgeIndexKey ], faces, remainingEdgeTable )
+	while nextEdgeIndexAroundZ != - 1:
+		pathIndexes.append( nextEdgeIndexAroundZ )
+		del remainingEdgeTable[ nextEdgeIndexAroundZ ]
+		nextEdgeIndexAroundZ = getNextEdgeIndexAroundZ( edges[ nextEdgeIndexAroundZ ], faces, remainingEdgeTable )
+	if len( pathIndexes ) < 3:
+		print( "Dangling edges, will use intersecting circles to get import layer at height " + z.toString() )
+		del loopComplexes[ : ]
+		return False
+	loopComplexes.append( getPathComplex( edges, pathIndexes, vertices, z ) )
+	return True
 
 def isZInEdge( edge, vertices, z ):
 	"Determine if z is inside the edge."
@@ -469,6 +469,17 @@ def writeOutput( filename = '' ):
 	print( 'The sliced file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
 	analyze.writeOutput( suffixFilename, sliceGcode )
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to slice the file.' )
+
+
+class LoopArea:
+	"Complex loop with an area."
+	def __init__( self, loop ):
+		self.area = abs( euclidean.getPolygonComplexArea( loop ) )
+		self.loop = loop
+
+	def __repr__( self ):
+		"Get the string representation of this flat path."
+		return '%s, %s' % ( self.area, self.loop )
 
 
 class SlicePreferences:
@@ -561,7 +572,7 @@ class SliceSkein:
 		if lowerFilename in directory:
 			self.addFromFile( os.path.join( gcodeDirectoryPath, filename.lower() ) )
 
-	def addGcodeFromPerimeterPaths( self, isIntersectingSelf, loop, loopLists, radius ):
+	def addGcodeFromPerimeterPaths( self, isIntersectingSelf, loop, loopLists, radius, z ):
 		"Add the perimeter paths to the output."
 		segments = []
 		outlines = []
@@ -571,12 +582,12 @@ class SliceSkein:
 			pointBegin = loop[ pointIndex ]
 			pointEnd = loop[ ( pointIndex + 1 ) % len( loop ) ]
 			if isIntersectingSelf:
-				if euclidean.isLineIntersectingLoops( outlines, pointBegin, pointEnd ):
+				if euclidean.isLineIntersectingLoopComplexes( outlines, pointBegin, pointEnd ):
 					segments += getSegmentsFromPoints( allLoopLists, pointBegin, pointEnd )
 				else:
 					segments += getSegmentsFromPoints( loopLists, pointBegin, pointEnd )
-				addSegmentOutline( False, outlines, pointBegin, pointEnd, self.extrusionWidth )
-				addSegmentOutline( True, thickOutlines, pointBegin, pointEnd, self.extrusionWidth )
+				addSegmentOutlineComplex( False, outlines, pointBegin, pointEnd, self.extrusionWidth )
+				addSegmentOutlineComplex( True, thickOutlines, pointBegin, pointEnd, self.extrusionWidth )
 			else:
 				segments += getSegmentsFromPoints( loopLists, pointBegin, pointEnd )
 		perimeterPaths = []
@@ -591,40 +602,40 @@ class SliceSkein:
 		if len( perimeterPaths ) > 1:
 			firstPath = perimeterPaths[ 0 ]
 			lastPath = perimeterPaths[ - 1 ]
-			if lastPath[ - 1 ].distance( firstPath[ 0 ] ) < 0.1 * muchSmallerThanRadius:
+			if abs( lastPath[ - 1 ] - firstPath[ 0 ] ) < 0.1 * muchSmallerThanRadius:
 				connectedBeginning = lastPath[ : - 1 ] + firstPath
 				perimeterPaths[ 0 ] = connectedBeginning
 				perimeterPaths.remove( lastPath )
 		for perimeterPath in perimeterPaths:
-			self.addGcodeFromThread( perimeterPath )
+			self.addGcodeFromThreadZ( perimeterPath, z )
 
-	def addGcodeFromRemainingLoop( self, loop, loopLists, radius ):
+	def addGcodeFromRemainingLoop( self, loop, loopLists, radius, z ):
 		"Add the remainder of the loop which does not overlap the alreadyFilledArounds loops."
-		euclidean.addSurroundingLoopBeginning( loop, self )
+		euclidean.addSurroundingLoopComplexBeginning( loop, self, z )
 		isIntersectingSelf = isIntersectingItself( loop, self.extrusionWidth )
 		if isIntersectingWithinLists( loop, loopLists ) or isIntersectingSelf:
-			self.addGcodeFromPerimeterPaths( isIntersectingSelf, loop, loopLists, radius )
+			self.addGcodeFromPerimeterPaths( isIntersectingSelf, loop, loopLists, radius, z )
 		else:
 			self.addLine( '(<perimeter> )' ) # Indicate that a perimeter is beginning.
-			self.addGcodeFromThread( loop + [ loop[ 0 ] ] )
+			self.addGcodeFromThreadZ( loop + [ loop[ 0 ] ], z )
 		self.addLine( '(</surroundingLoop> )' )
 
-	def addGcodeFromThread( self, thread ):
+	def addGcodeFromThreadZ( self, thread, z ):
 		"Add a thread to the output."
 		if len( thread ) > 0:
-			self.addGcodeMovement( thread[ 0 ] )
+			self.addGcodeMovementZ( thread[ 0 ], z )
 		else:
 			print( "zero length vertex positions array which was skipped over, this should never happen" )
 		if len( thread ) < 2:
 			return
 		self.addLine( "M101" ) # Turn extruder on.
 		for point in thread[ 1 : ]:
-			self.addGcodeMovement( point )
+			self.addGcodeMovementZ( point, z )
 		self.addLine( "M103" ) # Turn extruder off.
 
-	def addGcodeMovement( self, point ):
+	def addGcodeMovementZ( self, point, z ):
 		"Add a movement to the output."
-		self.addLine( "G1 X%s Y%s Z%s" % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ) ) )
+		self.addLine( "G1 X%s Y%s Z%s" % ( self.getRounded( point.real ), self.getRounded( point.imag ), self.getRounded( z ) ) )
 
 	def addInitializationToOutput( self ):
 		"Add initialization gcode to the output."
@@ -688,10 +699,10 @@ class SliceSkein:
 		overhangInset = 1.25 * self.extrusionWidth
 		greaterThanOverhang = 1.1 * overhangInset
 		for loop in self.belowLoops:
-			centers = intercircle.getCentersFromLoopDirection( True, loop, greaterThanOverhang )
+			centers = intercircle.getCentersFromLoopComplexDirection( True, loop, greaterThanOverhang )
 			for center in centers:
-				outset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, overhangInset )
-				if euclidean.isLargeSameDirection( outset, center, self.extrusionWidth ):
+				outset = intercircle.getSimplifiedInsetFromClockwiseLoopComplex( center, overhangInset )
+				if euclidean.isLoopComplexLargeSameDirection( outset, center, self.extrusionWidth ):
 					belowOutsetLoops.append( outset )
 		bridgeDirection = complex()
 		for loop in layerLoops:
@@ -704,42 +715,47 @@ class SliceSkein:
 			bridgeDirection /= abs( bridgeDirection )
 			return cmath.sqrt( bridgeDirection )
 
-	def getExtrudateLoops( self, halfWidth, loop ):
+	def getExtrudateLoopComplexes( self, halfWidth, loop ):
 		"Get the inset extrudate loops from the loop."
 		slightlyGreaterThanHalfWIdth = 1.1 * halfWidth
 		muchGreaterThanHalfWIdth = 2.5 * halfWidth
 		extrudateLoops = []
-		circleNodes = intercircle.getCircleNodesFromLoop( loop, slightlyGreaterThanHalfWIdth )
-		centers = intercircle.getCentersFromCircleNodes( circleNodes )
+		circleNodes = intercircle.getCircleNodeComplexesFromLoopComplex( loop, slightlyGreaterThanHalfWIdth )
+		centers = intercircle.getCenterComplexesFromCircleNodeComplexes( circleNodes )
 		for center in centers:
-			extrudateLoop = intercircle.getSimplifiedInsetFromClockwiseLoop( center, halfWidth )
-			if euclidean.isLargeSameDirection( extrudateLoop, center, muchGreaterThanHalfWIdth ):
-				if euclidean.isPathInsideLoop( loop, extrudateLoop ) == euclidean.isWiddershins( loop ):
+			extrudateLoop = intercircle.getSimplifiedInsetFromClockwiseLoopComplex( center, halfWidth )
+			if euclidean.isLoopComplexLargeSameDirection( extrudateLoop, center, muchGreaterThanHalfWIdth ):
+				if euclidean.isPathInsideLoopComplex( loop, extrudateLoop ) == euclidean.isPolygonComplexWiddershins( loop ):
 					extrudateLoop.reverse()
 					extrudateLoops.append( extrudateLoop )
 		return extrudateLoops
 
 	def getLoopsFromMesh( self, z ):
 		"Get loops from a slice of a mesh."
-		loops = []
-		originalLoops = []
+		originalLoopComplexes = []
 		if self.slicePreferences.correct.value:
-			originalLoops = getLoopsFromCorrectMesh( self.triangleMesh.edges, self.triangleMesh.faces, self.triangleMesh.vertices, z )
-		if len( originalLoops ) < 1:
-			originalLoops = getLoopsFromUnprovenMesh( self.triangleMesh.edges, self.extrusionWidth, self.triangleMesh.faces, self.triangleMesh.vertices, self.slicePreferences, z )
-		for original in originalLoops:
-			loops.append( euclidean.getSimplifiedLoop( original, self.extrusionWidth ) )
-		for pathIndex in range( len( loops ) ):
-			loop = loops[ pathIndex ]
-			leftPoint = euclidean.getLeftPoint( loop )
+			originalLoopComplexes = getLoopsFromCorrectMesh( self.triangleMesh.edges, self.triangleMesh.faces, self.triangleMesh.vertices, z )
+		if len( originalLoopComplexes ) < 1:
+			originalLoopComplexes = getLoopsFromUnprovenMesh( self.triangleMesh.edges, self.extrusionWidth, self.triangleMesh.faces, self.triangleMesh.vertices, self.slicePreferences, z )
+		loopAreas = []
+		for loopComplex in originalLoopComplexes:
+			loopArea = LoopArea( loopComplex )
+			loopAreas.append( loopArea )
+		loopAreas.sort( compareArea )
+		loopComplexes = []
+		for loopArea in loopAreas:
+			loopComplexes.append( euclidean.getSimplifiedLoopComplex( loopArea.loop, self.extrusionWidth ) )
+		for loopIndex in range( len( loopComplexes ) ):
+			loopComplex = loopComplexes[ loopIndex ]
+			leftPointComplex = euclidean.getLeftPointComplex( loopComplex )
 			totalNumberOfIntersectionsToLeft = 0
-			for otherLoop in loops[ : pathIndex ] + loops[ pathIndex + 1 : ]:
-				totalNumberOfIntersectionsToLeft += euclidean.getNumberOfIntersectionsToLeft( leftPoint, otherLoop )
-			loopIsWiddershins = euclidean.isWiddershins( loop )
+			for otherLoopComplex in loopComplexes[ : loopIndex ] + loopComplexes[ loopIndex + 1 : ]:
+				totalNumberOfIntersectionsToLeft += euclidean.getNumberOfIntersectionsToLeftComplex( leftPointComplex, otherLoopComplex )
+			loopIsWiddershins = euclidean.isPolygonComplexWiddershins( loopComplex )
 			isEven = totalNumberOfIntersectionsToLeft % 2 == 0
 			if isEven != loopIsWiddershins:
-				loop.reverse()
-		return loops
+				loopComplex.reverse()
+		return loopComplexes
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
@@ -756,16 +772,16 @@ class SliceSkein:
 		zAround = float( halfAround ) * self.zZoneInterval
 		if lowestZoneIndex % 2 == 1:
 			zAround = - zAround
-		loops = self.getLoopsFromMesh( z + zAround )
+		loopComplexes = self.getLoopsFromMesh( z + zAround )
 		centers = []
 		extruderPaths = []
 		halfWidth = self.halfExtrusionPerimeterWidth
 		slightlyGreaterThanExtrusionWIdth = 1.1 * halfWidth
 		muchGreaterThanExtrusionWidth = 2.5 * self.extrusionWidth
-		allExtrudateLoops = []
-		for loop in loops:
-			allExtrudateLoops += self.getExtrudateLoops( halfWidth, loop )
-		bridgeDirection = self.getBridgeDirection( allExtrudateLoops )
+		allExtrudateLoopComplexes = []
+		for loopComplex in loopComplexes:
+			allExtrudateLoopComplexes += self.getExtrudateLoopComplexes( halfWidth, loopComplex )
+		bridgeDirection = self.getBridgeDirection( allExtrudateLoopComplexes )
 		self.addLine( '(<layerStart> ' + self.getRounded( z ) + ' )' ) # Indicate that a new layer is starting.
 		halfBridgeMinusLayer = 0.0
 		if bridgeDirection != None:
@@ -774,15 +790,13 @@ class SliceSkein:
 			self.addLine( '(<bridgeDirection> ' + str( bridgeDirection ) + ' )' ) # Indicate the bridge direction.
 			halfBridgeMinusLayer = 0.5 * ( self.bridgeExtrusionHeight - self.extrusionHeight )
 		allExtrudateLoops = []
-		for loop in loops:
-			extrudateLoops = self.getExtrudateLoops( halfWidth, loop )
+		zPlusBridge = z + halfBridgeMinusLayer
+		for loop in loopComplexes:
+			extrudateLoops = self.getExtrudateLoopComplexes( halfWidth, loop )
 			for extrudateLoop in extrudateLoops:
-				for point in extrudateLoop:
-					point.z += halfBridgeMinusLayer
-				allExtrudateLoops.append( extrudateLoop )
-				self.addGcodeFromRemainingLoop( extrudateLoop, alreadyFilledArounds, halfWidth )
+				self.addGcodeFromRemainingLoop( extrudateLoop, alreadyFilledArounds, halfWidth, zPlusBridge )
 				addAlreadyFilledArounds( alreadyFilledArounds, extrudateLoop, self.fillInset )
-		self.belowLoops = allExtrudateLoops
+		self.belowLoops = allExtrudateLoopComplexes
 		if bridgeDirection == None:
 			return z + self.extrusionHeight
 		return z + self.bridgeExtrusionHeight

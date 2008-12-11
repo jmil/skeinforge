@@ -136,7 +136,7 @@ class HopPreferences:
 		self.archive.append( self.filenameInput )
 		self.hopOverExtrusionHeight = preferences.FloatPreference().getFromValue( 'Hop Over Extrusion Height (ratio):', 1.0 )
 		self.archive.append( self.hopOverExtrusionHeight )
-		self.minimumHopAngle = preferences.FloatPreference().getFromValue( 'Minimum Hop Angle (degrees):', 20.0 )
+		self.minimumHopAngle = preferences.FloatPreference().getFromValue( 'Minimum Hop Angle (degrees):', 30.0 )
 		self.archive.append( self.minimumHopAngle )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.executeTitle = 'Hop'
@@ -170,7 +170,8 @@ class HopSkein:
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
-		self.output.write( line + "\n" )
+		if len( line ) > 0:
+			self.output.write( line + "\n" )
 
 	def getHopLine( self, line ):
 		"Get hopped gcode line."
@@ -181,16 +182,22 @@ class HopSkein:
 		if self.extruderActive:
 			return line
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-		if self.isNextTravel():
-			return self.getMovementLineWithHop( location )
 		if self.justDeactivated:
 			distance = location.distance( self.oldLocation )
+			if distance < self.minimumDistance:
+				if self.isNextTravel():
+					return self.getMovementLineWithHop( location )
 			alongRatio = min( 0.41666666, self.layerHopDistance / distance )
 			oneMinusAlong = 1.0 - alongRatio
 			closeLocation = self.oldLocation.times( oneMinusAlong ).plus( location.times( alongRatio ) )
 			self.addLine( self.getMovementLineWithHop( closeLocation ) )
+			if self.isNextTravel():
+				return self.getMovementLineWithHop( location )
 			farLocation = self.oldLocation.times( alongRatio ).plus( location.times( oneMinusAlong ) )
 			self.addLine( self.getMovementLineWithHop( farLocation ) )
+			return line
+		if self.isNextTravel():
+			return self.getMovementLineWithHop( location )
 		return line
 
 	def getMovementLineWithHop( self, location ):
@@ -238,6 +245,7 @@ class HopSkein:
 			if firstWord == '(<extrusionHeight>':
 				extrusionHeight = float( splitLine[ 1 ] )
 				self.hopHeight = hopPreferences.hopOverExtrusionHeight.value * extrusionHeight
+				self.minimumDistance = 0.5 * extrusionHeight
 			elif firstWord == '(<bridgeExtrusionWidthOverSolid>':
 				self.bridgeExtrusionWidthOverSolid = float( splitLine[ 1 ] )
 			elif firstWord == '(<decimalPlacesCarried>':

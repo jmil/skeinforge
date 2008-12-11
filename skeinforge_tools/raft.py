@@ -24,16 +24,15 @@ will have to set new preferences for the new material.
 
 The "Base Infill Density" preference is the infill density ratio of the base of the raft, the default ratio is half.  The "Base Layer
 Height over Extrusion Height" preference is the ratio of the height & width of the base layer compared to the height and width
-of the shape infill, the default is two.  The "Base Layers" preference is the number of base layers, the default is one.  The
-"Base Nozzle Lift over Half Base Extrusion Height" is the amount the nozzle is above the center of the extrusion divided by
-half the base extrusion height.
+of the shape infill, the default is two.  The feedrate will be slower for raft layers which have thicker extrusions than the shape
+infill.  The "Base Layers" preference is the number of base layers, the default is one.  The "Base Nozzle Lift over Half Base
+Extrusion Height" is the amount the nozzle is above the center of the extrusion divided by half the base extrusion height.
 
-The interface of the raft has equivalent preferences called "Interface Infill Density",
-"Interface Layer Height over Extrusion Height", "Interface Layers" and "Interface Nozzle Lift over Half Base Extrusion Height".
-The shape has the equivalent preference of called "Operating Nozzle Lift over Half Extrusion Height".
+The interface of the raft has equivalent preferences called "Interface Infill Density", "Interface Layer Height over Extrusion
+Height", "Interface Layers" and "Interface Nozzle Lift over Half Base Extrusion Height".  The shape has the equivalent
+preference of called "Operating Nozzle Lift over Half Extrusion Height".
 
-The altitude that the bottom of the raft will be set to the "Bottom Altitude" preference.  The feedrate will be slower for raft
-layers which have thicker extrusions than the shape infill.
+The altitude that the bottom of the raft will be set to the "Bottom Altitude" preference.
 
 The raft fills a rectangle whose size is the rectangle around the bottom layer of the shape expanded on each side by the
 "Raft Outset Radius over Extrusion Width" preference times the extrusion width, minus the "Infill Overhang" ratio times the
@@ -49,13 +48,13 @@ Angle" preference is the minimum angle that a surface overhangs before support m
 degrees. The "Support Inset over Perimeter Extrusion Width" is the amount that the support material is inset into the object
 over the perimeter extrusion width, the default is zero.
 
-The extruder will orbit for at least "Temperature Change Time of Raft" seconds before extruding the raft.  It will orbit for at least
-"Temperature Change Time of First Layer Outline" seconds before extruding the outline of the first layer of the shape.  It will
-orbit for at least "Temperature of Shape First Layer Within" seconds before extruding within the outline of the first layer of the
-shape.  It will orbit for at least "Temperature Change Time of Next Layers" seconds before extruding the next layers of the
-shape.  It will orbit for at least "Temperature Change Time of Support Layers" seconds before extruding the support layers.  It
-will orbit for at least "Temperature Change Time of Supported Layers" seconds before extruding the layer of the shape above
-the support layer.  If a time is zero, it will not orbit.
+The extruder will orbit for at least "Temperature Change Time Before Raft" seconds before extruding the raft.  It will orbit for
+at least "Temperature Change Time Before First Layer Outline" seconds before extruding the outline of the first layer of the
+shape.  It will orbit for at least "Temperature Change Time Before Next Threads" seconds before extruding within the outline
+of the first layer of the shape and before extruding the next layers of the shape.  It will orbit for at least "Temperature
+Change Time Before Support Layers" seconds before extruding the support layers.  It will orbit for at least "Temperature
+Change Time Before Supported Layers" seconds before extruding the layer of the shape above the support layer.  If a time
+is zero, it will not orbit.
 
 The "Temperature of Raft" preference sets the temperature of the raft.  The "Temperature of Shape First Layer Outline"
 preference sets the temperature of the outline of the first layer of the shape.  The "Temperature of Shape First Layer Within"
@@ -355,18 +354,16 @@ class RaftPreferences:
 		self.archive.append( self.supportChoiceSupportMaterialOnExteriorOnly )
 		self.supportMinimumAngle = preferences.FloatPreference().getFromValue( 'Support Minimum Angle (degrees):', 60.0 )
 		self.archive.append( self.supportMinimumAngle )
-		self.temperatureChangeTimeRaft = preferences.FloatPreference().getFromValue( 'Temperature Change Time of Raft (seconds):', 120.0 )
-		self.archive.append( self.temperatureChangeTimeRaft )
-		self.temperatureChangeTimeFirstLayerOutline = preferences.FloatPreference().getFromValue( 'Temperature Change Time of First Layer Outline (seconds):', 120.0 )
-		self.archive.append( self.temperatureChangeTimeFirstLayerOutline )
-		self.temperatureChangeTimeFirstLayerWithin = preferences.FloatPreference().getFromValue( 'Temperature Change Time of First Layer Within (seconds):', 120.0 )
-		self.archive.append( self.temperatureChangeTimeFirstLayerWithin )
-		self.temperatureChangeTimeNextLayers = preferences.FloatPreference().getFromValue( 'Temperature Change Time of Next Layers (seconds):', 120.0 )
-		self.archive.append( self.temperatureChangeTimeNextLayers )
-		self.temperatureChangeTimeSupportLayers = preferences.FloatPreference().getFromValue( 'Temperature Change Time of Support Layers (seconds):', 120.0 )
-		self.archive.append( self.temperatureChangeTimeSupportLayers )
-		self.temperatureChangeTimeSupportedLayers = preferences.FloatPreference().getFromValue( 'Temperature Change Time of Supported Layers (seconds):', 120.0 )
-		self.archive.append( self.temperatureChangeTimeSupportedLayers )
+		self.temperatureChangeBeforeTimeRaft = preferences.FloatPreference().getFromValue( 'Temperature Change Time Before Raft (seconds):', 120.0 )
+		self.archive.append( self.temperatureChangeBeforeTimeRaft )
+		self.temperatureChangeTimeBeforeFirstLayerOutline = preferences.FloatPreference().getFromValue( 'Temperature Change Time Before First Layer Outline (seconds):', 120.0 )
+		self.archive.append( self.temperatureChangeTimeBeforeFirstLayerOutline )
+		self.temperatureChangeTimeBeforeNextThreads = preferences.FloatPreference().getFromValue( 'Temperature Change Time Before Next Threads (seconds):', 120.0 )
+		self.archive.append( self.temperatureChangeTimeBeforeNextThreads )
+		self.temperatureChangeTimeBeforeSupportLayers = preferences.FloatPreference().getFromValue( 'Temperature Change Time Before Support Layers (seconds):', 120.0 )
+		self.archive.append( self.temperatureChangeTimeBeforeSupportLayers )
+		self.temperatureChangeTimeBeforeSupportedLayers = preferences.FloatPreference().getFromValue( 'Temperature Change Time Before Supported Layers (seconds):', 120.0 )
+		self.archive.append( self.temperatureChangeTimeBeforeSupportedLayers )
 		self.temperatureRaft = preferences.FloatPreference().getFromValue( 'Temperature of Raft (Celcius):', 200.0 )
 		self.archive.append( self.temperatureRaft )
 		self.temperatureShapeFirstLayerOutline = preferences.FloatPreference().getFromValue( 'Temperature of Shape First Layer Outline (Celcius):', 220.0 )
@@ -527,7 +524,7 @@ class RaftSkein:
 		else:
 			self.addTemperature( self.raftPreferences.temperatureShapeFirstLayerOutline.value )
 		self.addLine( '(<layerStart> ' + self.getRounded( self.extrusionTop ) + ' )' ) # Indicate that a new layer is starting.
-		intercircle.addOrbits( beginLoop, self, self.raftPreferences.temperatureChangeTimeRaft.value )
+		intercircle.addOrbits( beginLoop, self, self.raftPreferences.temperatureChangeBeforeTimeRaft.value )
 		for baseLayerIndex in range( self.raftPreferences.baseLayers.value ):
 			self.addBaseLayer( baseExtrusionWidth, baseStep, stepBegin, stepEnd )
 		self.setInterfaceVariables( interfaceExtrusionWidth, stepBegin, stepEnd )
@@ -538,7 +535,7 @@ class RaftSkein:
 		if extrudeRaft:
 			self.addTemperature( self.raftPreferences.temperatureShapeFirstLayerOutline.value )
 			squareLoop = getSquareLoop( stepBegin, stepEnd, self.extrusionTop )
-			intercircle.addOrbits( squareLoop, self, self.raftPreferences.temperatureChangeTimeFirstLayerOutline.value )
+			intercircle.addOrbits( squareLoop, self, self.raftPreferences.temperatureChangeTimeBeforeFirstLayerOutline.value )
 
 	def addSupportLayerTable( self, layerIndex ):
 		"Add support segments from the boundary layers."
@@ -575,7 +572,7 @@ class RaftSkein:
 
 	def addSupportLayerTemperature( self, segments ):
 		"Add support layer and temperature before the object layer."
-		self.addTemperatureOrbits( segments, self.raftPreferences.temperatureShapeSupportLayers, self.raftPreferences.temperatureChangeTimeSupportLayers )
+		self.addTemperatureOrbits( segments, self.raftPreferences.temperatureShapeSupportLayers, self.raftPreferences.temperatureChangeTimeBeforeSupportLayers )
 		endpoints = getEndpointsFromSegments( segments )
 		aroundPixelTable = {}
 		aroundWidth = .444444444444
@@ -589,7 +586,7 @@ class RaftSkein:
 				if self.operatingJump != None:
 					point.z += self.operatingJump
 			self.addGcodeFromFeedrateThread( self.feedrateMinute, path )
-		self.addTemperatureOrbits( segments, self.raftPreferences.temperatureShapeSupportedLayers, self.raftPreferences.temperatureChangeTimeSupportedLayers )
+		self.addTemperatureOrbits( segments, self.raftPreferences.temperatureShapeSupportedLayers, self.raftPreferences.temperatureChangeTimeBeforeSupportedLayers )
 
 	def addTemperature( self, temperature ):
 		"Add a line of temperature."
@@ -696,7 +693,7 @@ class RaftSkein:
 			self.isFirstLayerWithinTemperatureAdded = True
 			self.addTemperature( self.raftPreferences.temperatureShapeFirstLayerWithin.value )
 			if self.raftPreferences.addRaftElevateNozzleOrbitSetAltitude.value:
-				intercircle.addOperatingOrbits( self.boundaryLayers[ self.layerIndex ], self.operatingJump, self, self.raftPreferences.temperatureChangeTimeFirstLayerWithin.value )
+				intercircle.addOperatingOrbits( self.boundaryLayers[ self.layerIndex ], self.operatingJump, self, self.raftPreferences.temperatureChangeTimeBeforeNextThreads.value )
 		return self.getGcodeFromFeedrateMovement( self.feedrateMinute, location )
 
 	def getRounded( self, number ):
@@ -810,7 +807,7 @@ class RaftSkein:
 				if len( segments ) < 1:
 					self.addTemperature( self.raftPreferences.temperatureShapeNextLayers.value )
 					if self.raftPreferences.addRaftElevateNozzleOrbitSetAltitude.value:
-						intercircle.addOperatingOrbits( self.boundaryLayers[ self.layerIndex ], self.operatingJump, self, self.raftPreferences.temperatureChangeTimeNextLayers.value )
+						intercircle.addOperatingOrbits( self.boundaryLayers[ self.layerIndex ], self.operatingJump, self, self.raftPreferences.temperatureChangeTimeBeforeNextThreads.value )
 			if self.layerIndex > len( self.supportLayerTables ) + 1:
 				self.addLine( self.operatingLayerEndLine )
 				self.operatingLayerEndLine = ''
