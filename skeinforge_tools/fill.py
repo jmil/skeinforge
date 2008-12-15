@@ -104,26 +104,24 @@ __license__ = "GPL 3.0"
 #oozebane to handle minimum start up, add differential flow rates
 #user mcodes
 #use slice format, carve & inset, slice aoi xml
-#bridge extrusion width
 #pyramidal
 #change material
 #skeinedge
-#compartmentalize addOrbit
-#distance option?
-#document gear script
+#bridge extrusion width
 #email marcus about bridge extrusion width http://reprap.org/bin/view/Main/ExtruderImprovementsAndAlternatives
+#compartmentalize addOrbit
+#distance option???
 #mosaic
+#rulers & z on skeinview
+#searchable help
+#document gear script
 #gang, maybe from skeinedge?
 #transform
 #pick and place
 #stack
-#infill first
-#rulers & z on skeinview
-#searchable help
-#faster, sort intercircle?
+#infill first option
 #extrude loops I guess make circles? and/or run along sparse infill
 #custom inclined plane, inclined plane from model, screw, fillet travel as well maybe
-#later maybe addAroundClosest around arounds and check for closeness to other infills
 #maybe much afterwards make congajure multistep view
 #maybe bridge supports although staggered spans are probably better
 #maybe update slice to add perimeter path intersection information to the large loop also
@@ -142,8 +140,8 @@ def addAroundGridPoint( arounds, gridPoint, gridPointInsetX, gridPointInsetY, gr
 		for pointIndex in xrange( len( loop ) ):
 			pointFirst = loop[ pointIndex ]
 			pointSecond = loop[ ( pointIndex + 1 ) % len( loop ) ]
-			yIntersection = getYIntersectionIfExists( pointFirst, pointSecond, gridPoint.x )
-			addYIntersectionPathToList( aroundIndex, pointIndex, gridPoint.y, yIntersection, aroundIntersectionPaths )
+			yIntersection = getYIntersectionIfExists( pointFirst, pointSecond, gridPoint.real )
+			addYIntersectionPathToList( aroundIndex, pointIndex, gridPoint.imag, yIntersection, aroundIntersectionPaths )
 	if len( aroundIntersectionPaths ) < 2:
 		print( 'This should never happen, aroundIntersectionPaths is less than 2 in fill.' )
 		print( aroundIntersectionPaths )
@@ -165,8 +163,8 @@ def addAroundGridPoint( arounds, gridPoint, gridPointInsetX, gridPointInsetY, gr
 		for pointIndex in xrange( len( path ) - 1 ):
 			pointFirst = path[ pointIndex ]
 			pointSecond = path[ pointIndex + 1 ]
-			yIntersection = getYIntersectionInsideYSegment( segmentFirstY, segmentSecondY, pointFirst, pointSecond, gridPoint.x )
-			addYIntersectionPathToList( pathIndex, pointIndex, gridPoint.y, yIntersection, yIntersectionPaths )
+			yIntersection = getYIntersectionInsideYSegment( segmentFirstY, segmentSecondY, pointFirst, pointSecond, gridPoint.real )
+			addYIntersectionPathToList( pathIndex, pointIndex, gridPoint.imag, yIntersection, yIntersectionPaths )
 	if len( yIntersectionPaths ) < 1:
 		return
 	yCloseToCenterPaths = []
@@ -182,45 +180,44 @@ def addAroundGridPoint( arounds, gridPoint, gridPointInsetX, gridPointInsetY, gr
 		insertGridPointPair( arounds, gridPoint, gridPointInsetX, gridPoints, isJunctionWide, paths, pixelTable, yCloseToCenterPaths[ 0 ], width )
 		return
 	plusMinusSign = getPlusMinusSign( yCloseToCenterPaths[ 1 ].y - yCloseToCenterPaths[ 0 ].y )
-	yCloseToCenterPaths[ 0 ].gridPoint = Vec3( gridPoint.x, gridPoint.y - plusMinusSign * gridPointInsetY, gridPoint.z )
-	yCloseToCenterPaths[ 1 ].gridPoint = Vec3( gridPoint.x, gridPoint.y + plusMinusSign * gridPointInsetY, gridPoint.z )
+	yCloseToCenterPaths[ 0 ].gridPoint = complex( gridPoint.real, gridPoint.imag - plusMinusSign * gridPointInsetY )
+	yCloseToCenterPaths[ 1 ].gridPoint = complex( gridPoint.real, gridPoint.imag + plusMinusSign * gridPointInsetY )
 	yCloseToCenterPaths.sort( comparePointIndexDescending )
 	insertGridPointPairs( arounds, gridPoint, gridPointInsetX, gridPoints, yCloseToCenterPaths[ 0 ], yCloseToCenterPaths[ 1 ], isBothOrNone, isJunctionWide, paths, pixelTable, width )
 
 def addPath( extrusionWidth, fill, path, rotationPlaneAngle ):
 	"Add simplified path to fill."
-	planeRotated = euclidean.getPathRoundZAxisByPlaneAngle( rotationPlaneAngle, euclidean.getSimplifiedPath( path, extrusionWidth ) )
+	planeRotated = euclidean.getPointComplexesRoundZAxisByComplex( rotationPlaneAngle, euclidean.getSimplifiedPathComplexFunctionPlaceholder( path, extrusionWidth ) )
 	fill.append( planeRotated )
 
 def addPointOnPath( path, pixelTable, point, pointIndex, width ):
 	"Add a point to a path and the pixel table."
 	pointIndexMinusOne = pointIndex - 1
-	pointComplex = point.dropAxis( 2 )
 	if pointIndex < len( path ) and pointIndexMinusOne >= 0:
 		segmentTable = {}
-		beginComplex = path[ pointIndexMinusOne ].dropAxis( 2 )
-		endComplex = path[ pointIndex ].dropAxis( 2 )
-		euclidean.addSegmentToPixelTable( beginComplex, endComplex, segmentTable, 0.0, 0.0, width )
+		begin = path[ pointIndexMinusOne ]
+		end = path[ pointIndex ]
+		euclidean.addSegmentToPixelTable( begin, end, segmentTable, 0.0, 0.0, width )
 		euclidean.removePixelTableFromPixelTable( segmentTable, pixelTable )
 	if pointIndexMinusOne >= 0:
-		beginComplex = path[ pointIndexMinusOne ].dropAxis( 2 )
-		euclidean.addSegmentToPixelTable( beginComplex, pointComplex, pixelTable, 0.0, 0.0, width )
+		begin = path[ pointIndexMinusOne ]
+		euclidean.addSegmentToPixelTable( begin, point, pixelTable, 0.0, 0.0, width )
 	if pointIndex < len( path ):
-		endComplex = path[ pointIndex ].dropAxis( 2 )
-		euclidean.addSegmentToPixelTable( pointComplex, endComplex, pixelTable, 0.0, 0.0, width )
+		end = path[ pointIndex ]
+		euclidean.addSegmentToPixelTable( point, end, pixelTable, 0.0, 0.0, width )
 	path.insert( pointIndex, point )
 
 def addShortenedLineSegment( lineSegment, shortenDistance, shortenedSegments ):
 	"Add shortened line segment."
 	pointBegin = lineSegment[ 0 ].point
 	pointEnd = lineSegment[ 1 ].point
-	segment = pointEnd.minus( pointBegin )
-	segmentLength = segment.lengthXYPlane()
+	segment = pointEnd - pointBegin
+	segmentLength = abs( segment )
 	if segmentLength < 2.1 * shortenDistance:
 		return
-	segmentShorten = segment.times( shortenDistance / segmentLength )
-	lineSegment[ 0 ].point = pointBegin.plus( segmentShorten )
-	lineSegment[ 1 ].point = pointEnd.minus( segmentShorten )
+	segmentShorten = segment * shortenDistance / segmentLength
+	lineSegment[ 0 ].point = pointBegin + segmentShorten
+	lineSegment[ 1 ].point = pointEnd - segmentShorten
 	shortenedSegments.append( lineSegment )
 
 def addSparseEndpoints( doubleExtrusionWidth, endpoints, fillLine, horizontalSegments, infillSolidity, removedEndpoints, solidSurfaceThickness, surroundingXIntersections ):
@@ -240,7 +237,7 @@ def addSparseEndpointsFromSegment( doubleExtrusionWidth, endpoints, fillLine, ho
 		if int( round( round( fillLine * infillSolidity ) / infillSolidity ) ) == fillLine:
 			endpoints += segment
 			return
-	if endpointFirstPoint.distance( endpointSecondPoint ) < doubleExtrusionWidth:
+	if abs( endpointFirstPoint - endpointSecondPoint ) < doubleExtrusionWidth:
 		endpoints += segment
 		return
 	if not isSegmentAround( horizontalSegments[ fillLine - 1 ], segment ):
@@ -261,7 +258,7 @@ def addSurroundingXIntersectionIndexes( surroundingSlices, xIntersectionIndexLis
 	"Add x intersection indexes from surrounding layers."
 	for surroundingIndex in range( len( surroundingSlices ) ):
 		surroundingSlice = surroundingSlices[ surroundingIndex ]
-		euclidean.addXIntersectionIndexesFromLoops( surroundingSlice, surroundingIndex, xIntersectionIndexList, y )
+		euclidean.addXIntersectionIndexesFromLoopsComplexFunctionPlaceholder( surroundingSlice, surroundingIndex, xIntersectionIndexList, y )
 
 def addYIntersectionPathToList( pathIndex, pointIndex, y, yIntersection, yIntersectionPaths ):
 	"Add the y intersection path to the y intersection paths."
@@ -299,14 +296,22 @@ def createExtraFillLoops( radius, surroundingLoop ):
 	for innerSurrounding in surroundingLoop.innerSurroundings:
 		createFillForSurroundings( radius, innerSurrounding.innerSurroundings )
 	outsides = []
-	insides = euclidean.getInsidesAddToOutsides( surroundingLoop.getFillLoops(), outsides )
+	insides = euclidean.getInsidesAddToOutsidesComplexFunctionPlaceholder( surroundingLoop.getFillLoops(), outsides )
 	allFillLoops = []
 	for outside in outsides:
-		transferredLoops = euclidean.getTransferredPaths( insides, outside )
+		transferredLoops = euclidean.getTransferredPathsComplexFunctionPlaceholder( insides, outside )
 		allFillLoops += getExtraFillLoops( transferredLoops, outside, radius )
 	if len( allFillLoops ) > 0:
 		surroundingLoop.lastFillLoops = allFillLoops
 	surroundingLoop.extraLoops += allFillLoops
+
+def getAdditionalLength( path, point, pointIndex ):
+	"Get the additional length added by inserting a point into a path."
+	if pointIndex == 0:
+		return abs( point - path[ 0 ] )
+	if pointIndex == len( path ):
+		return abs( point - path[ - 1 ] )
+	return abs( point - path[ pointIndex - 1 ] ) + abs( point - path[ pointIndex ] ) - abs( path[ pointIndex ] - path[ pointIndex - 1 ] )
 
 def getClosestOppositeIntersectionPaths( yIntersectionPaths ):
 	"Get the close to center paths, starting with the first and an additional opposite if it exists."
@@ -325,17 +330,17 @@ def getExtraFillLoops( insideLoops, outsideLoop, radius ):
 	greaterThanRadius = 1.4 * radius
 	muchGreaterThanRadius = 2.5 * radius
 	extraFillLoops = []
-	circleNodes = intercircle.getCircleNodesFromLoop( outsideLoop, greaterThanRadius )
+	circleNodes = intercircle.getCircleNodesFromLoopComplex( outsideLoop, greaterThanRadius )
 	for inside in insideLoops:
-		circleNodes += intercircle.getCircleNodesFromLoop( inside, greaterThanRadius )
-	centers = intercircle.getCentersFromCircleNodes( circleNodes )
+		circleNodes += intercircle.getCircleNodesFromLoopComplex( inside, greaterThanRadius )
+	centers = intercircle.getCentersFromCircleNodesComplex( circleNodes )
 	otherLoops = insideLoops + [ outsideLoop ]
 	for center in centers:
-		inset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, radius )
-		if euclidean.isLargeSameDirection( inset, center, muchGreaterThanRadius ):
+		inset = intercircle.getSimplifiedInsetFromClockwiseLoopComplex( center, radius )
+		if euclidean.isLargeSameDirectionComplex( inset, center, muchGreaterThanRadius ):
 			if isPathAlwaysInsideLoop( outsideLoop, inset ):
 				if isPathAlwaysOutsideLoops( insideLoops, inset ):
-					if not euclidean.isLoopIntersectingLoops( inset, otherLoops ):
+					if not euclidean.isLoopIntersectingLoopsComplex( inset, otherLoops ):
 						inset.reverse()
 						extraFillLoops.append( inset )
 	return extraFillLoops
@@ -363,9 +368,9 @@ def getFillGcode( gcodeText, fillPreferences = None ):
 def getHorizontalSegmentsFromLoopLists( fillLoops, alreadyFilledArounds, y ):
 	"Get horizontal segments inside loops."
 	xIntersectionIndexList = []
-	euclidean.addXIntersectionIndexesFromLoops( fillLoops, - 1, xIntersectionIndexList, y )
-	euclidean.addXIntersectionIndexesFromLoopLists( alreadyFilledArounds, xIntersectionIndexList, y )
-	return euclidean.getSegmentsFromXIntersectionIndexes( xIntersectionIndexList, y, fillLoops[ 0 ][ 0 ].z )
+	euclidean.addXIntersectionIndexesFromLoopsComplexFunctionPlaceholder( fillLoops, - 1, xIntersectionIndexList, y )
+	euclidean.addXIntersectionIndexesFromLoopListsComplex( alreadyFilledArounds, xIntersectionIndexList, y )
+	return euclidean.getSegmentsFromXIntersectionIndexesComplex( xIntersectionIndexList, y )
 
 def getIntersectionOfXIntersectionIndexes( totalSolidSurfaceThickness, xIntersectionIndexList ):
 	"Get x intersections from surrounding layers."
@@ -387,10 +392,10 @@ def getNonIntersectingGridPointLine( arounds, gridPointInsetX, isJunctionWide, p
 	path = yIntersectionPath.getPath( paths )
 	begin = path[ yIntersectionPath.pointIndex ]
 	end = path[ pointIndexPlusOne ]
-	plusMinusSign = getPlusMinusSign( end.x - begin.x )
+	plusMinusSign = getPlusMinusSign( end.real - begin.real )
 	if isJunctionWide:
-		gridPointXFirst = Vec3( yIntersectionPath.gridPoint.x - plusMinusSign * gridPointInsetX, yIntersectionPath.gridPoint.y, yIntersectionPath.gridPoint.z )
-		gridPointXSecond = Vec3( yIntersectionPath.gridPoint.x + plusMinusSign * gridPointInsetX, yIntersectionPath.gridPoint.y, yIntersectionPath.gridPoint.z )
+		gridPointXFirst = complex( yIntersectionPath.gridPoint.real - plusMinusSign * gridPointInsetX, yIntersectionPath.gridPoint.imag )
+		gridPointXSecond = complex( yIntersectionPath.gridPoint.real + plusMinusSign * gridPointInsetX, yIntersectionPath.gridPoint.imag )
 		if isAddedPointOnPathFree( path, pixelTable, gridPointXSecond, pointIndexPlusOne, width ):
 			if isAddedPointOnPathFree( path, pixelTable, gridPointXFirst, pointIndexPlusOne, width ):
 				return [ gridPointXSecond, gridPointXFirst ]
@@ -415,40 +420,45 @@ def getSurroundingXIntersections( doubleSolidSurfaceThickness, surroundingSlices
 		return None
 	return getIntersectionOfXIntersectionIndexes( doubleSolidSurfaceThickness, xIntersectionIndexList )
 
-def getWithLeastLength( path, point ):
+def getWithLeastLength( path, point, radius ):
 	"Insert a point into a path, at the index at which the path would be shortest."
+	if len( path ) < 1:
+		return 0
 	shortestPointIndex = None
-	shortestPathLength = 999999999999999999.0
+	shortestAdditionalLength = 999999999999999999.0
 	for pointIndex in range( len( path ) + 1 ):
-		concatenation = path[ : ]
-		concatenation.insert( pointIndex, point )
-		concatenationLength = euclidean.getPathLength( concatenation )
-		if concatenationLength < shortestPathLength:
-			shortestPathLength = concatenationLength
+		additionalLength = getAdditionalLength( path, point, pointIndex )
+		if additionalLength < shortestAdditionalLength:
+			shortestAdditionalLength = additionalLength
 			shortestPointIndex = pointIndex
+	if shortestAdditionalLength < - 0.01 * radius:
+		print( 'shortestAdditionalLength < 0.0 in getWithLeastLength in fill' )
+		print( shortestAdditionalLength )
+		print( pointIndex )
+		print( path )
 	return shortestPointIndex
 
 def getYIntersection( firstPoint, secondPoint, x ):
 	"Get where the line crosses x."
-	secondMinusFirst = secondPoint.minus( firstPoint )
-	xMinusFirst = x - firstPoint.x
-	return xMinusFirst / secondMinusFirst.x * secondMinusFirst.y + firstPoint.y
+	secondMinusFirst = secondPoint - firstPoint
+	xMinusFirst = x - firstPoint.real
+	return xMinusFirst / secondMinusFirst.real * secondMinusFirst.imag + firstPoint.imag
 
-def getYIntersectionIfExists( vector3First, vector3Second, x ):
+def getYIntersectionIfExists( complexFirst, complexSecond, x ):
 	"Get the y intersection if it exists."
-	isXAboveFirst = x > vector3First.x
-	isXAboveSecond = x > vector3Second.x
+	isXAboveFirst = x > complexFirst.real
+	isXAboveSecond = x > complexSecond.real
 	if isXAboveFirst == isXAboveSecond:
 		return None
-	return getYIntersection( vector3First, vector3Second, x )
+	return getYIntersection( complexFirst, complexSecond, x )
 
-def getYIntersectionInsideYSegment( segmentFirstY, segmentSecondY, vector3First, vector3Second, x ):
+def getYIntersectionInsideYSegment( segmentFirstY, segmentSecondY, complexFirst, complexSecond, x ):
 	"Get the y intersection inside the y segment if it does, else none."
-	isXAboveFirst = x > vector3First.x
-	isXAboveSecond = x > vector3Second.x
+	isXAboveFirst = x > complexFirst.real
+	isXAboveSecond = x > complexSecond.real
 	if isXAboveFirst == isXAboveSecond:
 		return None
-	yIntersection = getYIntersection( vector3First, vector3Second, x )
+	yIntersection = getYIntersection( complexFirst, complexSecond, x )
 	if yIntersection <= min( segmentFirstY, segmentSecondY ):
 		return None
 	if yIntersection < max( segmentFirstY, segmentSecondY ):
@@ -497,21 +507,21 @@ def insertGridPointPairWithLinePath( arounds, gridPoint, gridPointInsetX, gridPo
 	begin = path[ yIntersectionPath.pointIndex ]
 	end = path[ yIntersectionPath.getPointIndexPlusOne() ]
 	if yIntersectionPath.isOutside:
-		distanceX = end.x - begin.x
+		distanceX = end.real - begin.real
 		if abs( distanceX ) > 2.1 * moreThanInset:
-			intersectionBeginXDistance = yIntersectionPath.gridPoint.x - begin.x
-			endIntersectionXDistance = end.x - yIntersectionPath.gridPoint.x
-			intersectionPoint = begin.times( endIntersectionXDistance / distanceX ).plus( end.times( intersectionBeginXDistance / distanceX ) )
-			distanceYAbsoluteInset = max( abs( yIntersectionPath.gridPoint.y - intersectionPoint.y ), moreThanInset )
-			intersectionEndSegment = end.minus( intersectionPoint )
-			intersectionEndSegmentLength = intersectionEndSegment.length()
+			intersectionBeginXDistance = yIntersectionPath.gridPoint.real - begin.real
+			endIntersectionXDistance = end.real - yIntersectionPath.gridPoint.real
+			intersectionPoint = begin * endIntersectionXDistance / distanceX + end * intersectionBeginXDistance / distanceX
+			distanceYAbsoluteInset = max( abs( yIntersectionPath.gridPoint.imag - intersectionPoint.imag ), moreThanInset )
+			intersectionEndSegment = end - intersectionPoint
+			intersectionEndSegmentLength = abs( intersectionEndSegment )
 			if intersectionEndSegmentLength > 1.1 * distanceYAbsoluteInset:
-				intersectionEndPoint = intersectionPoint.plus( intersectionEndSegment.times( distanceYAbsoluteInset / intersectionEndSegmentLength ) )
+				intersectionEndPoint = intersectionPoint + intersectionEndSegment * distanceYAbsoluteInset / intersectionEndSegmentLength
 				path.insert( yIntersectionPath.getPointIndexPlusOne(), intersectionEndPoint )
-			intersectionBeginSegment = begin.minus( intersectionPoint )
-			intersectionBeginSegmentLength = intersectionBeginSegment.length()
+			intersectionBeginSegment = begin - intersectionPoint
+			intersectionBeginSegmentLength = abs( intersectionBeginSegment )
 			if intersectionBeginSegmentLength > 1.1 * distanceYAbsoluteInset:
-				intersectionBeginPoint = intersectionPoint.plus( intersectionBeginSegment.times( distanceYAbsoluteInset / intersectionBeginSegmentLength ) )
+				intersectionBeginPoint = intersectionPoint + intersectionBeginSegment * distanceYAbsoluteInset / intersectionBeginSegmentLength
 	for point in linePath:
 		addPointOnPath( path, pixelTable, point, yIntersectionPath.getPointIndexPlusOne(), width )
 	if intersectionBeginPoint != None:
@@ -519,29 +529,28 @@ def insertGridPointPairWithLinePath( arounds, gridPoint, gridPointInsetX, gridPo
 
 def isAddedPointOnPathFree( path, pixelTable, point, pointIndex, width ):
 	"Determine if the point added to a path is intersecting the pixel table."
-	pointComplex = point.dropAxis( 2 )
 	if pointIndex > 0 and pointIndex < len( path ):
-		if isSharpCorner( ( path[ pointIndex - 1 ] ).dropAxis( 2 ), pointComplex, ( path[ pointIndex ] ).dropAxis( 2 ) ):
+		if isSharpCorner( ( path[ pointIndex - 1 ] ), point, ( path[ pointIndex ] ) ):
 			return False
 	pointIndexMinusOne = pointIndex - 1
 	if pointIndexMinusOne >= 0:
 		maskTable = {}
-		beginComplex = path[ pointIndexMinusOne ].dropAxis( 2 )
+		begin = path[ pointIndexMinusOne ]
 		if pointIndex < len( path ):
-			endComplex = path[ pointIndex ].dropAxis( 2 )
-			euclidean.addSegmentToPixelTable( beginComplex, endComplex, maskTable, 0.0, 0.0, width )
+			end = path[ pointIndex ]
+			euclidean.addSegmentToPixelTable( begin, end, maskTable, 0.0, 0.0, width )
 		segmentTable = {}
-		euclidean.addSegmentToPixelTable( pointComplex, beginComplex, segmentTable, 0.0, 3.0, width )
+		euclidean.addSegmentToPixelTable( point, begin, segmentTable, 0.0, 3.0, width )
 		if euclidean.isPixelTableIntersecting( pixelTable, segmentTable, maskTable ):
 			return False
 	if pointIndex < len( path ):
 		maskTable = {}
-		beginComplex = path[ pointIndex ].dropAxis( 2 )
+		begin = path[ pointIndex ]
 		if pointIndexMinusOne >= 0:
-			endComplex = path[ pointIndexMinusOne ].dropAxis( 2 )
-			euclidean.addSegmentToPixelTable( beginComplex, endComplex, maskTable, 0.0, 0.0, width )
+			end = path[ pointIndexMinusOne ]
+			euclidean.addSegmentToPixelTable( begin, end, maskTable, 0.0, 0.0, width )
 		segmentTable = {}
-		euclidean.addSegmentToPixelTable( pointComplex, beginComplex, segmentTable, 0.0, 3.0, width )
+		euclidean.addSegmentToPixelTable( point, begin, segmentTable, 0.0, 3.0, width )
 		if euclidean.isPixelTableIntersecting( pixelTable, segmentTable, maskTable ):
 			return False
 	return True
@@ -556,14 +565,14 @@ def isIntersectingLoopsPaths( loops, paths, pointBegin, pointEnd ):
 	segmentYMirror = complex( normalizedSegment.real, - normalizedSegment.imag )
 	pointBeginRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, pointBegin )
 	pointEndRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, pointEnd )
-	if euclidean.isLoopListIntersectingInsideXSegment( loops, pointBeginRotated.x, pointEndRotated.x, segmentYMirror, pointBeginRotated.y ):
+	if euclidean.isLoopListIntersectingInsideXSegment( loops, pointBeginRotated.real, pointEndRotated.real, segmentYMirror, pointBeginRotated.imag ):
 		return True
-	return euclidean.isXSegmentIntersectingPaths( paths, pointBeginRotated.x, pointEndRotated.x, segmentYMirror, pointBeginRotated.y )
+	return euclidean.isXSegmentIntersectingPaths( paths, pointBeginRotated.real, pointEndRotated.real, segmentYMirror, pointBeginRotated.imag )
 
 def isPathAlwaysInsideLoop( loop, path ):
 	"Determine if all points of a path are inside another loop."
 	for point in path:
-		if euclidean.getNumberOfIntersectionsToLeft( point, loop ) % 2 == 0:
+		if euclidean.getNumberOfIntersectionsToLeftComplex( point, loop ) % 2 == 0:
 			return False
 	return True
 
@@ -571,7 +580,7 @@ def isPathAlwaysOutsideLoops( loops, path ):
 	"Determine if all points in a path are outside another loop in a list."
 	for loop in loops:
 		for point in path:
-			if euclidean.getNumberOfIntersectionsToLeft( point, loop ) % 2 == 1:
+			if euclidean.getNumberOfIntersectionsToLeftComplex( point, loop ) % 2 == 1:
 				return False
 	return True
 
@@ -590,7 +599,7 @@ def isPointAddedAroundClosest( aroundPixelTable, layerExtrusionWidth, paths, rem
 		path = paths[ pathIndex ]
 		for pointIndex in range( len( path ) ):
 			point = path[ pointIndex ]
-			distanceSquared = point.distance2( removedEndpointPoint )
+			distanceSquared = abs( point - removedEndpointPoint )
 			if distanceSquared < closestDistanceSquared:
 				closestDistanceSquared = distanceSquared
 				closestPathIndex = pathIndex
@@ -599,7 +608,7 @@ def isPointAddedAroundClosest( aroundPixelTable, layerExtrusionWidth, paths, rem
 	if closestDistanceSquared < 0.8 * layerExtrusionWidth * layerExtrusionWidth:
 		return
 	closestPath = paths[ closestPathIndex ]
-	closestPointIndex = getWithLeastLength( closestPath, removedEndpointPoint )
+	closestPointIndex = getWithLeastLength( closestPath, removedEndpointPoint, width )
 	if isAddedPointOnPathFree( closestPath, aroundPixelTable, removedEndpointPoint, closestPointIndex, width ):
 		addPointOnPath( closestPath, aroundPixelTable, removedEndpointPoint, closestPointIndex, width )
 		return True
@@ -609,7 +618,7 @@ def isSegmentAround( aroundSegments, segment ):
 	"Determine if there is another segment around."
 	for aroundSegment in aroundSegments:
 		endpoint = aroundSegment[ 0 ]
-		if isSegmentInX( segment, endpoint.point.x, endpoint.otherEndpoint.point.x ):
+		if isSegmentInX( segment, endpoint.point.real, endpoint.otherEndpoint.point.real ):
 			return True
 	return False
 
@@ -618,14 +627,14 @@ def isSegmentCompletelyInAnIntersection( segment, xIntersections ):
 	for xIntersectionIndex in xrange( 0, len( xIntersections ), 2 ):
 		surroundingXFirst = xIntersections[ xIntersectionIndex ]
 		surroundingXSecond = xIntersections[ xIntersectionIndex + 1 ]
-		if euclidean.isSegmentCompletelyInX( segment, surroundingXFirst, surroundingXSecond ):
+		if euclidean.isSegmentCompletelyInXComplexFunctionPlaceholder( segment, surroundingXFirst, surroundingXSecond ):
 			return True
 	return False
 
 def isSegmentInX( segment, xFirst, xSecond ):
 	"Determine if the segment overlaps within x."
-	segmentFirstX = segment[ 0 ].point.x
-	segmentSecondX = segment[ 1 ].point.x
+	segmentFirstX = segment[ 0 ].point.real
+	segmentSecondX = segment[ 1 ].point.real
 	if min( segmentFirstX, segmentSecondX ) > max( xFirst, xSecond ):
 		return False
 	return max( segmentFirstX, segmentSecondX ) > min( xFirst, xSecond )
@@ -646,50 +655,49 @@ def isSidePointAdded( aroundPixelTable, closestPath, closestPointIndex, layerExt
 	"Add side point along with the closest removed endpoint to the path, with minimal twisting."
 	if closestPointIndex <= 0 or closestPointIndex >= len( closestPath ):
 		return False
-	pointBeginComplex = closestPath[ closestPointIndex - 1 ].dropAxis( 2 )
-	pointEndComplex = closestPath[ closestPointIndex ].dropAxis( 2 )
-	removedEndpointPointComplex = removedEndpointPoint.dropAxis( 2 )
-	closestComplex = pointBeginComplex
-	farthestComplex = pointEndComplex
-	removedMinusClosest = removedEndpointPointComplex - pointBeginComplex
+	pointBegin = closestPath[ closestPointIndex - 1 ]
+	pointEnd = closestPath[ closestPointIndex ]
+	removedEndpointPoint = removedEndpointPoint
+	closest = pointBegin
+	farthest = pointEnd
+	removedMinusClosest = removedEndpointPoint - pointBegin
 	removedMinusClosestLength = abs( removedMinusClosest )
 	if removedMinusClosestLength <= 0.0:
 		return False
-	removedMinusOther = removedEndpointPointComplex - pointEndComplex
+	removedMinusOther = removedEndpointPoint - pointEnd
 	removedMinusOtherLength = abs( removedMinusOther )
 	if removedMinusOtherLength <= 0.0:
 		return False
 	insertPointAfter = None
 	insertPointBefore = None
 	if removedMinusOtherLength < removedMinusClosestLength:
-		closestComplex = pointEndComplex
-		farthestComplex = pointBeginComplex
+		closest = pointEnd
+		farthest = pointBegin
 		removedMinusClosest = removedMinusOther
 		removedMinusClosestLength = removedMinusOtherLength
 		insertPointBefore = removedEndpointPoint
 	else:
 		insertPointAfter = removedEndpointPoint
 	removedMinusClosestNormalized = removedMinusClosest / removedMinusClosestLength
-	perpendicularComplex = removedMinusClosestNormalized * complex( 0.0, layerExtrusionWidth )
-	sidePointComplex = removedEndpointPointComplex + perpendicularComplex
+	perpendicular = removedMinusClosestNormalized * complex( 0.0, layerExtrusionWidth )
+	sidePoint = removedEndpointPoint + perpendicular
 	#extra check in case the line to the side point somehow slips by the line to the perpendicular
-	sidePointOtherComplex = removedEndpointPointComplex - perpendicularComplex
-	if abs( sidePointComplex -  farthestComplex ) > abs( sidePointOtherComplex -  farthestComplex ):
-		perpendicularComplex = - perpendicularComplex
-		sidePointComplex = sidePointOtherComplex
+	sidePointOther = removedEndpointPoint - perpendicular
+	if abs( sidePoint -  farthest ) > abs( sidePointOther -  farthest ):
+		perpendicular = - perpendicular
+		sidePoint = sidePointOther
 	maskTable = {}
 	closestSegmentTable = {}
 	toPerpendicularTable = {}
-	euclidean.addSegmentToPixelTable( pointBeginComplex, pointEndComplex, maskTable, 1.0, 1.0, width )
-	euclidean.addSegmentToPixelTable( closestComplex, removedEndpointPointComplex, closestSegmentTable, 0.0, 0.0, width )
-	euclidean.addSegmentToPixelTable( sidePointComplex, farthestComplex, toPerpendicularTable, 0.0, 3.0, width )
+	euclidean.addSegmentToPixelTable( pointBegin, pointEnd, maskTable, 1.0, 1.0, width )
+	euclidean.addSegmentToPixelTable( closest, removedEndpointPoint, closestSegmentTable, 0.0, 0.0, width )
+	euclidean.addSegmentToPixelTable( sidePoint, farthest, toPerpendicularTable, 0.0, 3.0, width )
 	if euclidean.isPixelTableIntersecting( aroundPixelTable, toPerpendicularTable, maskTable ) or euclidean.isPixelTableIntersecting( closestSegmentTable, toPerpendicularTable, maskTable ):
-		sidePointComplex = removedEndpointPointComplex - perpendicularComplex
+		sidePoint = removedEndpointPoint - perpendicular
 		toPerpendicularTable = {}
-		euclidean.addSegmentToPixelTable( sidePointComplex, farthestComplex, toPerpendicularTable, 0.0, 3.0, width )
+		euclidean.addSegmentToPixelTable( sidePoint, farthest, toPerpendicularTable, 0.0, 3.0, width )
 		if euclidean.isPixelTableIntersecting( aroundPixelTable, toPerpendicularTable, maskTable ) or euclidean.isPixelTableIntersecting( closestSegmentTable, toPerpendicularTable, maskTable ):
 			return False
-	sidePoint = Vec3( sidePointComplex.real, sidePointComplex.imag, removedEndpointPoint.z )
 	if insertPointBefore != None:
 		addPointOnPath( closestPath, aroundPixelTable, insertPointBefore, closestPointIndex, width )
 	addPointOnPath( closestPath, aroundPixelTable, sidePoint, closestPointIndex, width )
@@ -821,7 +829,7 @@ class FillSkein:
 		arounds = []
 		layerExtrusionWidth = self.extrusionWidth
 		layerFillInset = self.fillInset
-		z = self.rotatedLayers[ layerIndex ].surroundingLoops[ 0 ].boundary[ 0 ].z
+		z = self.rotatedLayers[ layerIndex ].surroundingLoops[ 0 ].z
 		self.addLine( '(<layerStart> %s )' % z ) # Indicate that a new layer is starting.
 		if self.rotatedLayers[ layerIndex ].rotation != None:
 			layerExtrusionWidth = self.extrusionWidth * self.bridgeExtrusionWidthOverSolid
@@ -865,7 +873,7 @@ class FillSkein:
 			self.lastExtraShells = extraShells
 		else:
 			self.lastExtraShells = - 1
-		surroundingLoops = euclidean.getOrderedSurroundingLoops( layerExtrusionWidth, self.rotatedLayers[ layerIndex ].surroundingLoops )
+		surroundingLoops = euclidean.getOrderedSurroundingLoopsComplexFunctionPlaceholder( layerExtrusionWidth, self.rotatedLayers[ layerIndex ].surroundingLoops )
 		if isPerimeterPathInSurroundLoops( surroundingLoops ):
 			extraShells = 0
 		for extraShellIndex in range( extraShells ):
@@ -878,23 +886,23 @@ class FillSkein:
 		for loop in fillLoops:
 			alreadyFilledLoop = []
 			alreadyFilledArounds.append( alreadyFilledLoop )
-			planeRotatedPerimeter = euclidean.getPathRoundZAxisByPlaneAngle( reverseRotationAroundZAngle, loop )
+			planeRotatedPerimeter = euclidean.getPointComplexesRoundZAxisByComplex( reverseRotationAroundZAngle, loop )
 			rotatedExtruderLoops.append( planeRotatedPerimeter )
-			circleNodes = intercircle.getCircleNodesFromLoop( planeRotatedPerimeter, slightlyGreaterThanFill )
-			centers = intercircle.getCentersFromCircleNodes( circleNodes )
-			euclidean.addLoopToPixelTable( planeRotatedPerimeter, aroundPixelTable, aroundWidth )
+			circleNodes = intercircle.getCircleNodesFromLoopComplex( planeRotatedPerimeter, slightlyGreaterThanFill )
+			centers = intercircle.getCentersFromCircleNodesComplex( circleNodes )
+			euclidean.addLoopToPixelTableComplexFunctionPlaceholder( planeRotatedPerimeter, aroundPixelTable, aroundWidth )
 			for center in centers:
-				alreadyFilledInset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, layerFillInset )
-				if euclidean.getMaximumSpan( alreadyFilledInset ) > muchGreaterThanLayerFillInset:
+				alreadyFilledInset = intercircle.getSimplifiedInsetFromClockwiseLoopComplex( center, layerFillInset )
+				if euclidean.getMaximumSpanComplex( alreadyFilledInset ) > muchGreaterThanLayerFillInset:
 					alreadyFilledLoop.append( alreadyFilledInset )
-					around = intercircle.getSimplifiedInsetFromClockwiseLoop( center, aroundInset )
-					if euclidean.isPathInsideLoop( planeRotatedPerimeter, around ) == euclidean.isWiddershins( planeRotatedPerimeter ):
+					around = intercircle.getSimplifiedInsetFromClockwiseLoopComplex( center, aroundInset )
+					if euclidean.isPathInsideLoopComplex( planeRotatedPerimeter, around ) == euclidean.isWiddershinsComplex( planeRotatedPerimeter ):
 						arounds.append( around )
 		if len( arounds ) < 1:
-			euclidean.addToThreadsRemoveFromSurroundings( self.oldOrderedLocation, surroundingLoops, self )
+			euclidean.addToThreadsRemoveFromSurroundingsComplexFunctionPlaceholder( self.oldOrderedLocation, surroundingLoops, self )
 			return
-		back = euclidean.getBackOfLoops( arounds )
-		front = euclidean.getFrontOfLoops( arounds )
+		back = euclidean.getBackOfLoopsComplexFunctionPlaceholder( arounds )
+		front = euclidean.getFrontOfLoopsComplexFunctionPlaceholder( arounds )
 		area = self.getSliceArea( layerIndex )
 		if area > 0.0:
 			areaChange = 1.0
@@ -918,11 +926,11 @@ class FillSkein:
 			surroundingXIntersections = getSurroundingXIntersections( self.doubleSolidSurfaceThickness, surroundingSlices, y )
 			addSparseEndpoints( doubleExtrusionWidth, endpoints, fillLine, horizontalSegments, layerInfillSolidity, removedEndpoints, self.solidSurfaceThickness, surroundingXIntersections )
 		if len( endpoints ) < 1:
-			euclidean.addToThreadsRemoveFromSurroundings( self.oldOrderedLocation, surroundingLoops, self )
+			euclidean.addToThreadsRemoveFromSurroundingsComplexFunctionPlaceholder( self.oldOrderedLocation, surroundingLoops, self )
 			return
-		paths = euclidean.getPathsFromEndpoints( endpoints, layerFillInset, aroundPixelTable, aroundWidth )
+		paths = euclidean.getPathsFromEndpointsComplexFunctionPlaceholder( endpoints, layerFillInset, aroundPixelTable, aroundWidth )
 		if not self.fillPreferences.infillPatternLine.value:
-			self.addGrid( alreadyFilledArounds, arounds, fillLoops, gridPointInsetX, paths, aroundPixelTable, aroundWidth, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingSlices, z )
+			self.addGrid( alreadyFilledArounds, arounds, fillLoops, gridPointInsetX, paths, aroundPixelTable, aroundWidth, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingSlices )
 		oldRemovedEndpointLength = len( removedEndpoints ) + 1
 		while oldRemovedEndpointLength - len( removedEndpoints ) > 0:
 			oldRemovedEndpointLength = len( removedEndpoints )
@@ -930,27 +938,27 @@ class FillSkein:
 		for path in paths:
 			addPath( layerFillInset, fill, path, layerRotationAroundZAngle )
 		euclidean.transferPathsToSurroundingLoops( fill, surroundingLoops )
-		euclidean.addToThreadsRemoveFromSurroundings( self.oldOrderedLocation, surroundingLoops, self )
+		euclidean.addToThreadsRemoveFromSurroundingsComplexFunctionPlaceholder( self.oldOrderedLocation, surroundingLoops, self )
 
-	def addGcodeFromThread( self, thread ):
+	def addGcodeFromThreadZ( self, thread, z ):
 		"Add a gcode thread to the output."
 		if len( thread ) > 0:
-			self.addGcodeMovement( thread[ 0 ] )
+			self.addGcodeMovementZ( thread[ 0 ], z )
 		else:
 			print( "zero length vertex positions array which was skipped over, this should never happen" )
 		if len( thread ) < 2:
 			return
 		self.addLine( 'M101' )
 		for point in thread[ 1 : ]:
-			self.addGcodeMovement( point )
+			self.addGcodeMovementZ( point, z )
 		self.addLine( "M103" ) # Turn extruder off.
 
-	def addGcodeMovement( self, point ):
+	def addGcodeMovementZ( self, point, z ):
 		"Add a movement to the output."
-		self.addLine( "G1 X%s Y%s Z%s" % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ) ) )
+		self.addLine( "G1 X%s Y%s Z%s" % ( self.getRounded( point.real ), self.getRounded( point.imag ), self.getRounded( z ) ) )
 
-	def addGrid( self, alreadyFilledArounds, arounds, fillLoops, gridPointInsetX, paths, pixelTable, width, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingSlices, z ):
-		gridPoints = self.getGridPoints( alreadyFilledArounds, fillLoops, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingSlices, z )
+	def addGrid( self, alreadyFilledArounds, arounds, fillLoops, gridPointInsetX, paths, pixelTable, width, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingSlices ):
+		gridPoints = self.getGridPoints( alreadyFilledArounds, fillLoops, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingSlices )
 		gridPointInsetY = gridPointInsetX * ( 1.0 - self.fillPreferences.gridExtraOverlap.value )
 		if self.fillPreferences.infillPatternGridRectangular.value:
 			gridPointInsetX += self.gridJunctionSeparation
@@ -964,7 +972,7 @@ class FillSkein:
 			oldGridPointLength = len( gridPoints )
 			self.addRemainingGridPoints( arounds, gridPointInsetX, gridPointInsetY, gridPoints, False, paths, pixelTable, width )
 
-	def addGridLinePoints( self, alreadyFilledArounds, begin, end, gridPoints, gridRotationAngle, offset, rotatedExtruderLoops, surroundingSlices, y, z ):
+	def addGridLinePoints( self, alreadyFilledArounds, begin, end, gridPoints, gridRotationAngle, offset, rotatedExtruderLoops, surroundingSlices, y ):
 		"Add the segments of one line of a grid to the infill."
 		if self.gridRadius == 0.0:
 			return
@@ -976,7 +984,7 @@ class FillSkein:
 			gridXOffset = offset + gridWidth * float( gridXStep )
 		while gridXOffset < end:
 			gridPointComplex = complex( gridXOffset, y ) * gridRotationAngle
-			gridPoint = Vec3( gridPointComplex.real, gridPointComplex.imag, z )
+			gridPoint = complex( gridPointComplex.real, gridPointComplex.imag )
 			if self.isPointInsideLineSegments( alreadyFilledArounds, gridPoint, rotatedExtruderLoops, surroundingSlices ):
 				gridPoints.append( gridPoint )
 			gridXStep = self.getNextGripXStep( gridXStep )
@@ -996,10 +1004,10 @@ class FillSkein:
 		"Add a rotated slice to the surrounding slices."
 		if layerIndex < 0 or layerIndex >= len( self.rotatedLayers ):
 			return
-		layer = self.rotatedLayers[ layerIndex ].boundaries
+		surroundingLoops = self.rotatedLayers[ layerIndex ].surroundingLoops
 		rotatedSlice = []
-		for thread in layer:
-			planeRotatedLoop = euclidean.getPathRoundZAxisByPlaneAngle( reverseRotationAroundZAngle, thread )
+		for surroundingLoop in surroundingLoops:
+			planeRotatedLoop = euclidean.getPointComplexesRoundZAxisByComplex( reverseRotationAroundZAngle, surroundingLoop.boundary )
 			rotatedSlice.append( planeRotatedLoop )
 		surroundingSlices.append( rotatedSlice )
 
@@ -1014,21 +1022,19 @@ class FillSkein:
 			return
 		if self.surroundingLoop != None:
 			if self.isPerimeter:
-				if self.surroundingLoop.loop == None:
-					self.surroundingLoop.loop = []
-				self.surroundingLoop.loop.append( location )
+				self.surroundingLoop.addToLoop( location )
 				return
 			elif self.thread == None:
-				self.thread = [ self.oldLocation ]
+				self.thread = [ self.oldLocation.dropAxis( 2 ) ]
 				self.surroundingLoop.perimeterPaths.append( self.thread )
-		self.thread.append( location )
+		self.thread.append( location.dropAxis( 2 ) )
 
 	def getAreaChange( self, area, layerIndex ):
 		"Get the difference between the area of the slice at the layer index and the given area."
 		layerArea = self.getSliceArea( layerIndex )
 		return min( area, layerArea ) / max( area, layerArea )
 
-	def getGridPoints( self, alreadyFilledArounds, fillLoops, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingSlices, z ):
+	def getGridPoints( self, alreadyFilledArounds, fillLoops, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingSlices ):
 		"Add a grid to the infill."
 		if self.infillSolidity > 0.8:
 			return []
@@ -1049,18 +1055,18 @@ class FillSkein:
 		for loop in fillLoops:
 			gridAlreadyFilledLoop = []
 			gridAlreadyFilledArounds.append( gridAlreadyFilledLoop )
-			planeRotatedPerimeter = euclidean.getPathRoundZAxisByPlaneAngle( reverseRotationBaseAngle, loop )
+			planeRotatedPerimeter = euclidean.getPointComplexesRoundZAxisByComplex( reverseRotationBaseAngle, loop )
 			gridRotatedExtruderLoops.append( planeRotatedPerimeter )
-			circleNodes = intercircle.getCircleNodesFromLoop( planeRotatedPerimeter, slightlyGreaterThanFill )
-			centers = intercircle.getCentersFromCircleNodes( circleNodes )
+			circleNodes = intercircle.getCircleNodesFromLoopComplex( planeRotatedPerimeter, slightlyGreaterThanFill )
+			centers = intercircle.getCentersFromCircleNodesComplex( circleNodes )
 			for center in centers:
-				alreadyFilledInset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, gridInset )
-				if euclidean.getMaximumSpan( alreadyFilledInset ) > muchGreaterThanLayerFillInset:
+				alreadyFilledInset = intercircle.getSimplifiedInsetFromClockwiseLoopComplex( center, gridInset )
+				if euclidean.getMaximumSpanComplex( alreadyFilledInset ) > muchGreaterThanLayerFillInset:
 					gridAlreadyFilledLoop.append( alreadyFilledInset )
-					if euclidean.isPathInsideLoop( planeRotatedPerimeter, alreadyFilledInset ) == euclidean.isWiddershins( planeRotatedPerimeter ):
+					if euclidean.isPathInsideLoopComplex( planeRotatedPerimeter, alreadyFilledInset ) == euclidean.isWiddershinsComplex( planeRotatedPerimeter ):
 						for point in alreadyFilledInset:
-							back = max( back, point.y )
-							front = min( front, point.y )
+							back = max( back, point.imag )
+							front = min( front, point.imag )
 		front = ( 0.01 + math.ceil( front / self.gridRadius ) ) * self.gridRadius
 		fillWidth = back - front
 		numberOfLines = int( math.ceil( fillWidth / self.gridRadius ) )
@@ -1076,11 +1082,11 @@ class FillSkein:
 			for lineSegment in horizontalSegment:
 				endpointFirst = lineSegment[ 0 ]
 				endpointSecond = lineSegment[ 1 ]
-				begin = min( endpointFirst.point.x, endpointSecond.point.x )
-				end = max( endpointFirst.point.x, endpointSecond.point.x )
-				y = endpointFirst.point.y
+				begin = min( endpointFirst.point.real, endpointSecond.point.real )
+				end = max( endpointFirst.point.real, endpointSecond.point.real )
+				y = endpointFirst.point.imag
 				offset = self.offsetMultiplier * self.gridRadius * ( round( y / self.gridRadius ) % 2 )
-				self.addGridLinePoints( alreadyFilledArounds, begin, end, gridPoints, gridRotationAngle, offset, rotatedExtruderLoops, surroundingSlices, y, z )
+				self.addGridLinePoints( alreadyFilledArounds, begin, end, gridPoints, gridRotationAngle, offset, rotatedExtruderLoops, surroundingSlices, y )
 		return gridPoints
 
 	def getLayerRoundZ( self, layerIndex ):
@@ -1115,23 +1121,23 @@ class FillSkein:
 		"Get the area of the slice."
 		if layerIndex < 0 or layerIndex >= len( self.rotatedLayers ):
 			return 0.0
-		boundaries = self.rotatedLayers[ layerIndex ].boundaries
+		surroundingLoops = self.rotatedLayers[ layerIndex ].surroundingLoops
 		area = 0.0
-		for boundary in boundaries:
-			area += euclidean.getPolygonArea( boundary )
+		for surroundingLoop in surroundingLoops:
+			area += euclidean.getPolygonAreaComplex( surroundingLoop.boundary )
 		return area
 
 	def isPointInsideLineSegments( self, alreadyFilledArounds, gridPoint, rotatedExtruderLoops, surroundingSlices ):
 		"Is the point inside the line segments of the loops."
 		if self.solidSurfaceThickness <= 0:
 			return True
-		lineSegments = getHorizontalSegmentsFromLoopLists( rotatedExtruderLoops, alreadyFilledArounds, gridPoint.y )
-		surroundingXIntersections = getSurroundingXIntersections( self.doubleSolidSurfaceThickness, surroundingSlices, gridPoint.y )
+		lineSegments = getHorizontalSegmentsFromLoopLists( rotatedExtruderLoops, alreadyFilledArounds, gridPoint.imag )
+		surroundingXIntersections = getSurroundingXIntersections( self.doubleSolidSurfaceThickness, surroundingSlices, gridPoint.imag )
 		for lineSegment in lineSegments:
 			if isSegmentCompletelyInAnIntersection( lineSegment, surroundingXIntersections ):
-				xFirst = lineSegment[ 0 ].point.x
-				xSecond = lineSegment[ 1 ].point.x
-				if gridPoint.x > min( xFirst, xSecond ) and gridPoint.x < max( xFirst, xSecond ):
+				xFirst = lineSegment[ 0 ].point.real
+				xSecond = lineSegment[ 1 ].point.real
+				if gridPoint.real > min( xFirst, xSecond ) and gridPoint.real < max( xFirst, xSecond ):
 					return True
 		return False
 
@@ -1202,7 +1208,7 @@ class FillSkein:
 			self.isPerimeter = False
 		elif firstWord == '(<boundaryPoint>':
 			location = gcodec.getLocationFromSplitLine( None, splitLine )
-			self.surroundingLoop.boundary.append( location )
+			self.surroundingLoop.addToBoundary( location )
 		elif firstWord == '(<bridgeDirection>':
 			secondWordWithoutBrackets = splitLine[ 1 ].replace( '(', '' ).replace( ')', '' )
 			self.getRotatedLayer().rotation = complex( secondWordWithoutBrackets )
@@ -1214,10 +1220,9 @@ class FillSkein:
 		elif firstWord == '(<perimeter>':
 			self.isPerimeter = True
 		elif firstWord == '(<surroundingLoop>':
-			self.surroundingLoop = euclidean.SurroundingLoop()
+			self.surroundingLoop = euclidean.SurroundingLoopZ()
 			rotatedLayer = self.getRotatedLayer()
 			rotatedLayer.surroundingLoops.append( self.surroundingLoop )
-			rotatedLayer.boundaries.append( self.surroundingLoop.boundary )
 		elif firstWord == '(</surroundingLoop>':
 			self.surroundingLoop = None
 
@@ -1236,13 +1241,12 @@ class FillSkein:
 class RotatedLayer:
 	"A rotated layer."
 	def __init__( self ):
-		self.boundaries = []
 		self.rotation = None
 		self.surroundingLoops = []
 
 	def __repr__( self ):
 		"Get the string representation of this RotatedLayer."
-		return '%s, %s, %s' % ( self.rotation, self.surroundingLoops, self.boundaries )
+		return '%s, %s, %s' % ( self.rotation, self.surroundingLoops )
 
 
 class YIntersectionPath:

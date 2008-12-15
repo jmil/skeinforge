@@ -334,6 +334,8 @@ class SkeinWindow:
 		self.update()
 
 	def update( self ):
+		if len( self.skeinPanes ) < 1:
+			return
 		skeinPane = self.skeinPanes[ self.index ]
 		self.canvas.delete( preferences.Tkinter.ALL )
 		for coloredLine in skeinPane:
