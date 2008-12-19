@@ -96,6 +96,27 @@ def addOperatingOrbits( boundaryLoops, operatingJump, skein, temperatureChangeTi
 	setZAccordingToOperatingJump( largestLoop, operatingJump )
 	addOrbits( largestLoop, skein, temperatureChangeTime )
 
+def addOperatingOrbitsComplexFunctionPlaceholder( boundaryLoops, skein, temperatureChangeTime, z ):
+	"Add the orbits before the operating layers."
+	if len( boundaryLoops ) < 1:
+		return
+	largestLength = - 999999999.0
+	largestLoop = None
+	perimeterOutset = 0.4 * skein.extrusionPerimeterWidth
+	greaterThanPerimeterOutset = 1.1 * perimeterOutset
+	for boundaryLoop in boundaryLoops:
+		centers = getCentersFromLoopDirectionComplex( True, boundaryLoop, greaterThanPerimeterOutset )
+		for center in centers:
+			outset = getSimplifiedInsetFromClockwiseLoopComplex( center, perimeterOutset )
+			if euclidean.isLargeSameDirectionComplex( outset, center, perimeterOutset ):
+				loopLength = euclidean.getPolygonLengthComplexFunctionPlaceholder( outset )
+				if loopLength > largestLength:
+					largestLength = loopLength
+					largestLoop = outset
+	if largestLoop == None:
+		return
+	addOrbitsComplexFunctionPlaceholder( largestLoop, skein, temperatureChangeTime, z )
+
 def addOrbits( loop, skein, temperatureChangeTime ):
 	"Add orbits with the extruder off."
 	if len( loop ) < 1:
@@ -107,6 +128,18 @@ def addOrbits( loop, skein, temperatureChangeTime ):
 		for point in loop:
 			skein.addGcodeFromFeedrateMovement( 60.0 * skein.orbitalFeedratePerSecond, point )
 		timeInOrbit += euclidean.getPolygonLength( loop ) / skein.orbitalFeedratePerSecond
+
+def addOrbitsComplexFunctionPlaceholder( loop, skein, temperatureChangeTime, z ):
+	"Add orbits with the extruder off."
+	if len( loop ) < 1:
+		print( 'Zero length loop which was skipped over, this should never happen.' )
+	if temperatureChangeTime < 1.5:
+		return
+	timeInOrbit = 0.0
+	while timeInOrbit < temperatureChangeTime:
+		for point in loop:
+			skein.addGcodeFromFeedrateMovementZ( 60.0 * skein.orbitalFeedratePerSecond, point, z )
+		timeInOrbit += euclidean.getPolygonLengthComplexFunctionPlaceholder( loop ) / skein.orbitalFeedratePerSecond
 
 def addPointsFromSegment( points, radius, pointBegin, pointEnd ):
 	"Add points between the endpoints of a segment."
@@ -424,6 +457,24 @@ def getInsetLoops( inset, loops ):
 					insetLoops.append( insetLoop )
 	return insetLoops
 
+def getInsetLoopsComplexFunctionPlaceholder( inset, loops ):
+	"Get the inset loops."
+	absoluteInset = abs( inset )
+	insetLoops = []
+	slightlyGreaterThanInset = 1.1 * absoluteInset
+	muchGreaterThanLayerInset = 2.5 * absoluteInset
+	for loop in loops:
+		isInInsetDirection = euclidean.isWiddershinsComplex( loop )
+		if inset < 0.0:
+			isInInsetDirection = not isInInsetDirection
+		centers = getCentersFromLoopDirectionComplex( not isInInsetDirection, loop, slightlyGreaterThanInset )
+		for center in centers:
+			insetLoop = getSimplifiedInsetFromClockwiseLoopComplex( center, absoluteInset )
+			if euclidean.isLargeSameDirectionComplex( insetLoop, center, muchGreaterThanLayerInset ):
+				if euclidean.isPathInsideLoopComplex( loop, insetLoop ) == isInInsetDirection:
+					insetLoops.append( insetLoop )
+	return insetLoops
+
 def getIntersectionAtInset( ahead, behind, inset ):
 	"Get circle intersection loop at inset from segment."
 	aheadMinusBehind = ahead.minus( behind )
@@ -497,6 +548,20 @@ def isLoopIntersectingLoop( anotherLoop, loop ):
 		segmentFirstPoint = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, pointFirst )
 		segmentSecondPoint = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, pointSecond )
 		if euclidean.isLoopIntersectingInsideXSegment( anotherLoop, segmentFirstPoint.x, segmentSecondPoint.x, segmentYMirror, segmentFirstPoint.y ):
+			return True
+	return False
+
+def isLoopIntersectingLoopComplexFunctionPlaceholder( anotherLoop, loop ):
+	"Determine if the a loop is intersecting another loop."
+	for pointIndex in range( len( loop ) ):
+		pointFirst = loop[ pointIndex ]
+		pointSecond = loop[ ( pointIndex + 1 ) % len( loop ) ]
+		segment = pointFirst - pointSecond
+		normalizedSegment = euclidean.getNormalized( segment )
+		segmentYMirror = complex( normalizedSegment.real, - normalizedSegment.imag )
+		segmentFirstPoint = segmentYMirror * pointFirst
+		segmentSecondPoint = segmentYMirror * pointSecond
+		if euclidean.isLoopIntersectingInsideXSegmentComplex( anotherLoop, segmentFirstPoint.real, segmentSecondPoint.real, segmentYMirror, segmentFirstPoint.imag ):
 			return True
 	return False
 
@@ -634,6 +699,75 @@ class BoundingLoop:
 			if euclidean.getNumberOfIntersectionsToLeft( point, self.loop ) % 2 == 1:
 				return True
 		return isLoopIntersectingLoop( anotherBoundingLoop.loop, self.loop ) #later check for intersection on only acute angles
+
+	def isRectangleMissingAnother( self, anotherBoundingLoop ):
+		"Determine if the rectangle of this bounding loop is missing the rectangle of another bounding loop."
+		if self.maximum.imag < anotherBoundingLoop.minimum.imag or self.maximum.real < anotherBoundingLoop.minimum.real:
+			return True
+		return self.minimum.imag > anotherBoundingLoop.maximum.imag or self.minimum.real > anotherBoundingLoop.maximum.real
+
+
+class BoundingLoopComplexFunctionPlaceholder:
+	"A class to hold a bounding loop composed of a minimum complex, a maximum complex and an outset loop."
+	def __cmp__( self, other ):
+		"Get comparison in order to sort bounding loops in descending order of area."
+		if self.area < other.area:
+			return 1
+		if self.area > other.area:
+			return - 1
+		return 0
+
+	def __repr__( self ):
+		"Get the string representation of this bounding loop."
+		return '%s, %s, %s' % ( self.minimum, self.maximum, self.loop )
+
+	def getFromLoop( self, loop ):
+		"Get the bounding loop from a path."
+		self.loop = loop
+		self.maximum = euclidean.getComplexMaximumFromPointsComplex( loop )
+		self.minimum = euclidean.getComplexMaximumFromPointsComplex( loop )
+		return self
+
+	def getOutsetBoundingLoop( self, outsetDistance ):
+		"Outset the bounding rectangle and loop by a distance."
+		outsetBoundingLoop = BoundingLoopComplexFunctionPlaceholder()
+		outsetBoundingLoop.maximum = self.maximum + complex( outsetDistance, outsetDistance )
+		outsetBoundingLoop.minimum = self.minimum - complex( outsetDistance, outsetDistance )
+		greaterThanOutsetDistance = 1.1 * outsetDistance
+		centers = getCentersFromLoopDirectionComplex( True, self.loop, greaterThanOutsetDistance )
+		outsetBoundingLoop.loop = getSimplifiedInsetFromClockwiseLoopComplex( centers[ 0 ], outsetDistance )
+		return outsetBoundingLoop
+
+	def isEntirelyInsideAnother( self, anotherBoundingLoop ):
+		"Determine if this bounding loop is entirely inside another bounding loop."
+		if self.minimum.imag < anotherBoundingLoop.minimum.imag or self.minimum.real < anotherBoundingLoop.minimum.real:
+			return False
+		if self.maximum.imag > anotherBoundingLoop.maximum.imag or self.maximum.real > anotherBoundingLoop.maximum.real:
+			return False
+		for point in self.loop:
+			if euclidean.getNumberOfIntersectionsToLeftComplex( point, anotherBoundingLoop.loop ) % 2 == 0:
+				return False
+		return not isLoopIntersectingLoopComplexFunctionPlaceholder( anotherBoundingLoop.loop, self.loop ) #later check for intersection on only acute angles
+
+#	def isIntersectingList( self, boundingLoops ):
+#		"Determine if this bounding loop is any of a list of bounding loops."
+#		for boundingLoop in boundingLoops:
+#			if not self.isRectangleMissingAnother( boundingLoop ):
+#				if isLoopIntersectingLoop( boundingLoop.loop, self.loop ):
+#					return True
+#		return False
+#
+	def isOverlappingAnother( self, anotherBoundingLoop ):
+		"Determine if this bounding loop is intersecting another bounding loop."
+		if self.isRectangleMissingAnother( anotherBoundingLoop ):
+			return False
+		for point in self.loop:
+			if euclidean.getNumberOfIntersectionsToLeftComplex( point, anotherBoundingLoop.loop ) % 2 == 1:
+				return True
+		for point in anotherBoundingLoop.loop:
+			if euclidean.getNumberOfIntersectionsToLeftComplex( point, self.loop ) % 2 == 1:
+				return True
+		return isLoopIntersectingLoopComplexFunctionPlaceholder( anotherBoundingLoop.loop, self.loop ) #later check for intersection on only acute angles
 
 	def isRectangleMissingAnother( self, anotherBoundingLoop ):
 		"Determine if the rectangle of this bounding loop is missing the rectangle of another bounding loop."

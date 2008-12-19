@@ -829,8 +829,7 @@ class FillSkein:
 		arounds = []
 		layerExtrusionWidth = self.extrusionWidth
 		layerFillInset = self.fillInset
-		z = self.rotatedLayers[ layerIndex ].surroundingLoops[ 0 ].z
-		self.addLine( '(<layerStart> %s )' % z ) # Indicate that a new layer is starting.
+		self.addLine( '(<layerStart> %s )' % self.oldOrderedLocation.z ) # Indicate that a new layer is starting.
 		if self.rotatedLayers[ layerIndex ].rotation != None:
 			layerExtrusionWidth = self.extrusionWidth * self.bridgeExtrusionWidthOverSolid
 			layerFillInset = self.fillInset * self.bridgeExtrusionWidthOverSolid

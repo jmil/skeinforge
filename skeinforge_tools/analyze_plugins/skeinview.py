@@ -294,9 +294,9 @@ class SkeinWindow:
 		self.canvas[ 'yscrollcommand' ] = yScrollbar.set
 		self.exit_button = preferences.Tkinter.Button( self.root, text = "Exit", fg = "red", command = self.root.quit )
 		self.exit_button.grid( row = 99, column = 95, columnspan = 5, sticky = preferences.Tkinter.W )
-		self.down_button = preferences.Tkinter.Button( self.root, text = "Down", command = self.down )
+		self.down_button = preferences.Tkinter.Button( self.root, text = "Down \\/", command = self.down )
 		self.down_button.grid( row = 99, column = 0, sticky = preferences.Tkinter.W )
-		self.up_button = preferences.Tkinter.Button( self.root, text = "Up", command = self.up )
+		self.up_button = preferences.Tkinter.Button( self.root, text = "Up /\\", command = self.up )
 		self.up_button.grid( row = 99, column = 1, sticky = preferences.Tkinter.W )
 		self.indexEntry = preferences.Tkinter.Entry( self.root )
 		self.indexEntry.bind( "<Return>", self.indexEntryReturnPressed )

@@ -62,7 +62,6 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
@@ -181,15 +180,11 @@ class MultiplySkein:
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == 'G1':
-				location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-				movedLocation = Vec3( location.x + offset.real, location.y + offset.imag, location.z )
-				line = self.getGcodeFromMovement( movedLocation )
-				self.oldLocation = location
+				movedLocation = self.getMovedLocationSetOldLocation( offset, splitLine )
+				line = self.getGcodeFromMovementZ( movedLocation, self.oldLocation.z )
 			elif firstWord == '(<boundaryPoint>':
-				location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-				movedLocation = Vec3( location.x + offset.real, location.y + offset.imag, location.z )
-				line = '(<boundaryPoint> X%s Y%s Z%s )' % ( self.getRounded( movedLocation.x ), self.getRounded( movedLocation.y ), self.getRounded( movedLocation.z ) )
-				self.oldLocation = location
+				movedLocation = self.getMovedLocationSetOldLocation( offset, splitLine )
+				line = '(<boundaryPoint> X%s Y%s Z%s )' % ( self.getRounded( movedLocation.real ), self.getRounded( movedLocation.imag ), self.getRounded( self.oldLocation.z ) )
 			self.addLine( line )
 
 	def addLayer( self ):
@@ -215,19 +210,19 @@ class MultiplySkein:
 		if len( line ) > 0:
 			self.output.write( line + "\n" )
 
-	def getGcodeFromMovement( self, point ):
+	def getGcodeFromMovementZ( self, point, z ):
 		"Get a gcode movement."
-		return "G1 X%s Y%s Z%s" % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ) )
+		return "G1 X%s Y%s Z%s" % ( self.getRounded( point.real ), self.getRounded( point.imag ), self.getRounded( z ) )
+
+	def getMovedLocationSetOldLocation( self, offset, splitLine ):
+		"Get the moved location and set the old location."
+		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
+		self.oldLocation = location
+		return location.dropAxis( 2 ) + offset
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
 		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
-
-	def getMultipliedLine( self, splitLine ):
-		"Get elevated gcode line with operating feedrate."
-		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-		self.oldLocation = location
-		return self.getGcodeFromMovement( location )
 
 	def parseGcode( self, gcodeText, multiplyPreferences ):
 		"Parse gcode text and store the multiply gcode."
@@ -280,18 +275,16 @@ class MultiplySkein:
 
 	def setCorners( self ):
 		"Set maximum and minimum corners and z."
-		cornerHigh = Vec3( - 999999999.0, - 999999999.0, - 999999999.0 )
-		cornerLow = Vec3( 999999999.0, 999999999.0, 999999999.0 )
+		locationComplexes = []
 		for line in self.lines[ self.lineIndex : ]:
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == 'G1':
 				location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-				cornerHigh = euclidean.getPointMaximum( cornerHigh, location )
-				cornerLow = euclidean.getPointMinimum( cornerLow, location )
+				locationComplexes.append( location.dropAxis( 2 ) )
 				self.oldLocation = location
-		cornerHighComplex = cornerHigh.dropAxis( 2 )
-		cornerLowComplex = cornerLow.dropAxis( 2 )
+		cornerHighComplex = euclidean.getComplexMaximumFromPointsComplex( locationComplexes )
+		cornerLowComplex = euclidean.getComplexMinimumFromPointsComplex( locationComplexes )
 		self.extent = cornerHighComplex - cornerLowComplex
 		self.shapeCenter = 0.5 * ( cornerHighComplex + cornerLowComplex )
 		self.separation = self.multiplyPreferences.separationOverExtrusionWidth.value * self.extrusionWidth

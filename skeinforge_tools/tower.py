@@ -120,7 +120,7 @@ def transferFillLoops( fillLoops, surroundingLoop ):
 	"Transfer fill loops."
 	for innerSurrounding in surroundingLoop.innerSurroundings:
 		transferFillLoopsToSurroundingLoops( fillLoops, innerSurrounding.innerSurroundings )
-	surroundingLoop.extraLoops = euclidean.getTransferredPaths( fillLoops, surroundingLoop.boundary )
+	surroundingLoop.extraLoops = euclidean.getTransferredPathsComplexFunctionPlaceholder( fillLoops, surroundingLoop.boundary )
 
 def transferFillLoopsToSurroundingLoops( fillLoops, surroundingLoops ):
 	"Transfer fill loops to surrounding loops."
@@ -227,41 +227,41 @@ class TowerSkein:
 		surroundingLoops = self.islandLayers[ layerIndex ]
 		for line in self.threadLayers[ layerIndex ].beforeExtrusionLines:
 			self.addLine( line )
-		euclidean.addToThreadsRemoveFromSurroundings( self.oldOrderedLocation, surroundingLoops, self )
+		euclidean.addToThreadsRemoveFromSurroundingsComplexFunctionPlaceholder( self.oldOrderedLocation, surroundingLoops, self )
 
-	def addGcodeFromThread( self, thread ):
+	def addGcodeFromThreadZ( self, thread, z ):
 		"Add a gcode thread to the output."
 		if len( thread ) > 0:
 			firstPoint = thread[ 0 ]
-			if firstPoint.z + self.halfExtrusionHeight < self.oldZ:
-				highPoint = Vec3( firstPoint.x, firstPoint.y, self.oldZ )
+			if z + self.halfExtrusionHeight < self.oldZ:
+				highPoint = complex( firstPoint.real, firstPoint.imag )
 				if self.oldLocation != None:
-					complexToPoint = firstPoint.dropAxis( 2 ) - self.oldLocation.dropAxis( 2 )
+					oldLocationComplex = self.oldLocation.dropAxis( 2 )
+					complexToPoint = firstPoint - oldLocationComplex
 					toPointLength = abs( complexToPoint )
 					if toPointLength > 0.0:
 						truncatedLength = max( 0.5 * toPointLength, toPointLength - self.extrusionWidth )
 						complexToPointTruncated = complexToPoint * truncatedLength / toPointLength
-						toPointTruncated = Vec3( complexToPointTruncated.real, complexToPointTruncated.imag, 0.0 )
-						highPoint = self.oldLocation.plus( toPointTruncated )
-				self.addGcodeMovement( highPoint )
-			self.addGcodeMovement( firstPoint )
-			self.oldZ = firstPoint.z
+						highPoint = oldLocationComplex + complexToPointTruncated
+				self.addGcodeMovementZ( highPoint, z )
+			self.addGcodeMovementZ( firstPoint, z )
+			self.oldZ = z
 		else:
 			print( "zero length vertex positions array which was skipped over, this should never happen" )
 		if len( thread ) < 2:
 			return
 		self.addLine( 'M101' )
 		for point in thread[ 1 : ]:
-			self.addGcodeMovement( point )
+			self.addGcodeMovementZ( point, z )
 		self.addLine( "M103" ) # Turn extruder off.
 
-	def addGcodeMovement( self, point ):
+	def addGcodeMovementZ( self, point, z ):
 		"Add a movement to the output."
 		if point in self.feedrateTable:
 			feedrateMinute = self.feedrateTable[ point ]
-			self.addLine( 'G1 X%s Y%s Z%s F%s' % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ), self.getRounded( feedrateMinute ) ) )
+			self.addLine( 'G1 X%s Y%s Z%s F%s' % ( self.getRounded( point.real ), self.getRounded( point.imag ), self.getRounded( z ), self.getRounded( feedrateMinute ) ) )
 			return
-		self.addLine( 'G1 X%s Y%s Z%s' % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ) ) )
+		self.addLine( 'G1 X%s Y%s Z%s' % ( self.getRounded( point.real ), self.getRounded( point.imag ), self.getRounded( z ) ) )
 
 	def addIfTravel( self, splitLine ):
 		"Add travel move around loops if this the extruder is off."
@@ -270,9 +270,9 @@ class TowerSkein:
 
 	def addIslandLayer( self, threadLayer ):
 		"Add a layer of surrounding islands."
-		surroundingLoops = euclidean.getOrderedSurroundingLoops( self.extrusionWidth, threadLayer.surroundingLoops )
+		surroundingLoops = euclidean.getOrderedSurroundingLoopsComplexFunctionPlaceholder( self.extrusionWidth, threadLayer.surroundingLoops )
 		for surroundingLoop in surroundingLoops:
-			surroundingLoop.boundingLoop = intercircle.BoundingLoop().getFromLoop( surroundingLoop.boundary )
+			surroundingLoop.boundingLoop = intercircle.BoundingLoopComplexFunctionPlaceholder().getFromLoop( surroundingLoop.boundary )
 		euclidean.transferPathsToSurroundingLoops( threadLayer.paths[ : ], surroundingLoops )
 		transferFillLoopsToSurroundingLoops( threadLayer.loops[ : ], surroundingLoops )
 		self.islandLayers.append( surroundingLoops )
@@ -303,19 +303,19 @@ class TowerSkein:
 			if self.isPerimeter:
 				if self.surroundingLoop.loop == None:
 					self.surroundingLoop.loop = []
-				self.surroundingLoop.loop.append( location )
+				self.surroundingLoop.addToLoop( location )
 				return
 			elif self.thread == None:
-				self.thread = [ self.oldLocation ]
+				self.thread = [ self.oldLocation.dropAxis( 2 ) ]
 				self.surroundingLoop.perimeterPaths.append( self.thread )
 		if self.thread == None:
 			self.thread = []
 			if self.isLoop: #do not add to loops because a closed loop does not have to restate its beginning
 				self.threadLayer.loops.append( self.thread )
 			else:
-				self.thread.append( self.oldLocation )
+				self.thread.append( self.oldLocation.dropAxis( 2 ) )
 				self.threadLayer.paths.append( self.thread )
-		self.thread.append( location )
+		self.thread.append( location.dropAxis( 2 ) )
 
 	def addTowers( self ):
 		"Add towers."
@@ -323,14 +323,14 @@ class TowerSkein:
 		if bottomLayerIndex == None:
 			return
 		self.addLayerLinesIfDifferent( bottomLayerIndex )
-		removedIsland = euclidean.getTransferClosestSurroundingLoop( self.oldOrderedLocation, self.islandLayers[ bottomLayerIndex ], self )
+		removedIsland = euclidean.getTransferClosestSurroundingLoopComplexFunctionPlaceholder( self.oldOrderedLocation, self.islandLayers[ bottomLayerIndex ], self )
 		while 1:
 			self.climbTower( removedIsland )
 			bottomLayerIndex = self.getBottomLayerIndex()
 			if bottomLayerIndex == None:
 				return
 			self.addLayerLinesIfDifferent( bottomLayerIndex )
-			removedIsland = euclidean.getTransferClosestSurroundingLoop( self.oldOrderedLocation, self.islandLayers[ bottomLayerIndex ], self )
+			removedIsland = euclidean.getTransferClosestSurroundingLoopComplexFunctionPlaceholder( self.oldOrderedLocation, self.islandLayers[ bottomLayerIndex ], self )
 
 	def climbTower( self, removedIsland ):
 		"Climb up the island to any islands directly above."
@@ -347,7 +347,7 @@ class TowerSkein:
 			if len( islandsWithin ) < 1:
 				return
 			self.addLayerLinesIfDifferent( aboveIndex )
-			removedIsland = euclidean.getTransferClosestSurroundingLoop( self.oldOrderedLocation, islandsWithin, self )
+			removedIsland = euclidean.getTransferClosestSurroundingLoopComplexFunctionPlaceholder( self.oldOrderedLocation, islandsWithin, self )
 			self.islandLayers[ aboveIndex ].remove( removedIsland )
 
 	def getBottomLayerIndex( self ):
@@ -438,7 +438,7 @@ class TowerSkein:
 			self.isPerimeter = False
 		elif firstWord == '(<boundaryPoint>':
 			location = gcodec.getLocationFromSplitLine( None, splitLine )
-			self.surroundingLoop.boundary.append( location )
+			self.surroundingLoop.addToBoundary( location )
 		elif firstWord == '(</extrusionStart>':
 			self.shutdownLineIndex = lineIndex
 		elif firstWord == '(<layerStart>':
@@ -453,7 +453,7 @@ class TowerSkein:
 		elif firstWord == '(<perimeter>':
 			self.isPerimeter = True
 		elif firstWord == '(<surroundingLoop>':
-			self.surroundingLoop = euclidean.SurroundingLoop()
+			self.surroundingLoop = euclidean.SurroundingLoopZ()
 			if self.threadLayer == None:
 				self.threadLayer = ThreadLayer()
 				if self.beforeExtrusionLines != None:

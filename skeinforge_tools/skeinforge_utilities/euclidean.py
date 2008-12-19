@@ -197,6 +197,9 @@ def addToThreadsRemoveFromSurroundings( oldOrderedLocation, surroundingLoops, sk
 
 def addToThreadsRemoveFromSurroundingsComplexFunctionPlaceholder( oldOrderedLocation, surroundingLoops, skein ):
 	"Add to threads from the last location from surrounding loops."
+	if len( surroundingLoops ) < 1:
+		return
+	oldOrderedLocation.z = surroundingLoops[ 0 ].z
 	while len( surroundingLoops ) > 0:
 		getTransferClosestSurroundingLoopComplexFunctionPlaceholder( oldOrderedLocation, surroundingLoops, skein )
 
@@ -829,7 +832,7 @@ def getOrderedSurroundingLoops( extrusionWidth, surroundingLoops ):
 			otherLoops.append( surroundingLoops[ beforeIndex ].boundary )
 		for afterIndex in range( loopIndex + 1, len( surroundingLoops ) ):
 			otherLoops.append( surroundingLoops[ afterIndex ].boundary )
-		if isPathInsideLoopsComplexFunctionPlaceholder( otherLoops, surroundingLoop.boundary ):
+		if isPathInsideLoops( otherLoops, surroundingLoop.boundary ):
 			insides.append( surroundingLoop )
 		else:
 			orderedSurroundingLoops.append( surroundingLoop )
@@ -1861,6 +1864,17 @@ class EndpointComplex:
 		return nearestMiss
 
 
+class LoopLayer:
+	"Loops with a z."
+	def __init__( self, z ):
+		self.loops = []
+		self.z = z
+
+	def __repr__( self ):
+		"Get the string representation of this loop layer."
+		return '%s, %s' % ( self.loops, self.z )
+
+
 class PathZ:
 	"Complex path with a z."
 	def __init__( self, path, z ):
@@ -1868,7 +1882,7 @@ class PathZ:
 		self.z = z
 
 	def __repr__( self ):
-		"Get the string representation of this flat path."
+		"Get the string representation of this path z."
 		return '%s, %s' % ( self.path, self.z )
 
 	def getPath( self ):

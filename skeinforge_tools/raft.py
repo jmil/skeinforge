@@ -141,11 +141,12 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
+#find out why there is the support overlap bug
 #maybe later wide support
 def addXIntersectionsFromSegment( index, segment, xIntersectionIndexList ):
 	"Add the x intersections from the segment."
 	for endpoint in segment:
-		xIntersectionIndexList.append( euclidean.XIntersectionIndex( index, endpoint.point.x ) )
+		xIntersectionIndexList.append( euclidean.XIntersectionIndex( index, endpoint.point.real ) )
 
 def addXIntersectionsFromSegments( index, segments, xIntersectionIndexList ):
 	"Add the x intersections from the segments."
@@ -164,29 +165,29 @@ def getExtendedLineSegment( extensionDistance, lineSegment ):
 	"Add shortened line segment."
 	pointBegin = lineSegment[ 0 ].point
 	pointEnd = lineSegment[ 1 ].point
-	segment = pointEnd.minus( pointBegin )
-	segmentLength = segment.lengthXYPlane()
+	segment = pointEnd - pointBegin
+	segmentLength = abs( segment )
 	if segmentLength <= 0.0 * extensionDistance:
 		print( "This should never happen in getExtendedLineSegment in raft, the segment should have a length greater than zero." )
 		print( lineSegment )
 		return None
-	segmentExtend = segment.times( extensionDistance / segmentLength )
-	lineSegment[ 0 ].point = pointBegin.minus( segmentExtend )
-	lineSegment[ 1 ].point = pointEnd.plus( segmentExtend )
+	segmentExtend = segment * extensionDistance / segmentLength
+	lineSegment[ 0 ].point = pointBegin - segmentExtend
+	lineSegment[ 1 ].point = pointEnd + segmentExtend
 	return lineSegment
 
 def getFillXIntersectionIndexes( fillLoops, y ):
 	"Get fill x intersection indexes inside loops."
 	xIntersectionIndexList = []
-	euclidean.addXIntersectionIndexesFromLoops( fillLoops, 0, xIntersectionIndexList, y )
+	euclidean.addXIntersectionIndexesFromLoopsComplexFunctionPlaceholder( fillLoops, 0, xIntersectionIndexList, y )
 	return xIntersectionIndexList
 
-def getHorizontalSegments( fillLoops, alreadyFilledArounds, y, z ):
+def getHorizontalSegments( fillLoops, alreadyFilledArounds, y ):
 	"Get horizontal segments inside loops."
 	xIntersectionIndexList = []
-	euclidean.addXIntersectionIndexesFromLoops( fillLoops, - 1, xIntersectionIndexList, y )
-	euclidean.addXIntersectionIndexesFromLoops( alreadyFilledArounds, 0, xIntersectionIndexList, y )
-	return euclidean.getSegmentsFromXIntersectionIndexes( xIntersectionIndexList, y, z )
+	euclidean.addXIntersectionIndexesFromLoopsComplexFunctionPlaceholder( fillLoops, - 1, xIntersectionIndexList, y )
+	euclidean.addXIntersectionIndexesFromLoopsComplexFunctionPlaceholder( alreadyFilledArounds, 0, xIntersectionIndexList, y )
+	return euclidean.getSegmentsFromXIntersectionIndexesComplex( xIntersectionIndexList, y )
 
 def getJoinOfXIntersectionIndexes( xIntersectionIndexList ):
 	"Get x intersections from surrounding layers."
@@ -225,15 +226,15 @@ def getRaftGcode( gcodeText, raftPreferences = None ):
 	skein.parseGcode( gcodeText, raftPreferences )
 	return skein.output.getvalue()
 
-def getSquareLoop( beginComplex, endComplex, z ):
+def getSquareLoop( beginComplex, endComplex ):
 	"Get a square loop from the beginning to the end and back."
-	loop = [ Vec3( beginComplex.real, beginComplex.imag, z ) ]
-	loop.append( Vec3( beginComplex.real, endComplex.imag, z ) )
-	loop.append( Vec3( endComplex.real, endComplex.imag, z ) )
-	loop.append( Vec3( endComplex.real, beginComplex.imag, z ) )
+	loop = [ beginComplex ]
+	loop.append( complex( beginComplex.real, endComplex.imag ) )
+	loop.append( endComplex )
+	loop.append( complex( endComplex.real, beginComplex.imag ) )
 	return loop
 
-def joinSegmentTables( fromTable, intoTable, z ):
+def joinSegmentTables( fromTable, intoTable ):
 	"Join both segment tables and put the join into the intoTable."
 	intoTableKeys = intoTable.keys()
 	fromTableKeys = fromTable.keys()
@@ -251,33 +252,28 @@ def joinSegmentTables( fromTable, intoTable, z ):
 		if joinedKey in fromTable:
 			addXIntersectionsFromSegments( 1, fromTable[ joinedKey ], xIntersectionIndexList )
 		xIntersections = getJoinOfXIntersectionIndexes( xIntersectionIndexList )
-		lineSegments = euclidean.getSegmentsFromXIntersections( xIntersections, joinedKey, z )
+		lineSegments = euclidean.getSegmentsFromXIntersectionsComplex( xIntersections, joinedKey )
 		if len( lineSegments ) > 0:
 			intoTable[ joinedKey ] = lineSegments
 		else:
 			print( "This should never happen, there are no line segments in joinSegments in raft." )
 
-def subtractFill( fillXIntersectionIndexTable, supportLayerTable ):
+def subtractFill( fillXIntersectionIndexTable, supportSegmentLayerTable ):
 	"Subtract fill from the support layer table."
-	supportLayerTableKeys = supportLayerTable.keys()
-	supportLayerTableKeys.sort()
-	if len( supportLayerTableKeys ) < 1:
+	supportSegmentLayerTableKeys = supportSegmentLayerTable.keys()
+	supportSegmentLayerTableKeys.sort()
+	if len( supportSegmentLayerTableKeys ) < 1:
 		return
-	firstSegments = supportLayerTable[ supportLayerTableKeys[ 0 ] ]
-	if len( firstSegments ) < 1:
-		print( "This should never happen in subtractFill in raft, there are no segments in the first support layer table value." )
-		return
-	z = firstSegments[ 0 ][ 0 ].point.z
-	for supportLayerTableKey in supportLayerTableKeys:
+	for supportSegmentLayerTableKey in supportSegmentLayerTableKeys:
 		xIntersectionIndexList = []
-		addXIntersectionsFromSegments( - 1, supportLayerTable[ supportLayerTableKey ], xIntersectionIndexList )
-		if supportLayerTableKey in fillXIntersectionIndexTable:
-			addXIntersectionsFromSegments( 0, fillXIntersectionIndexTable[ supportLayerTableKey ], xIntersectionIndexList )
-		lineSegments = euclidean.getSegmentsFromXIntersectionIndexes( xIntersectionIndexList, supportLayerTableKey, z )
+		addXIntersectionsFromSegments( - 1, supportSegmentLayerTable[ supportSegmentLayerTableKey ], xIntersectionIndexList )
+		if supportSegmentLayerTableKey in fillXIntersectionIndexTable:
+			addXIntersectionsFromSegments( 0, fillXIntersectionIndexTable[ supportSegmentLayerTableKey ], xIntersectionIndexList )
+		lineSegments = euclidean.getSegmentsFromXIntersectionIndexesComplex( xIntersectionIndexList, supportSegmentLayerTableKey )
 		if len( lineSegments ) > 0:
-			supportLayerTable[ supportLayerTableKey ] = lineSegments
+			supportSegmentLayerTable[ supportSegmentLayerTableKey ] = lineSegments
 		else:
-			del supportLayerTable[ supportLayerTableKey ]
+			del supportSegmentLayerTable[ supportSegmentLayerTableKey ]
 
 def writeOutput( filename = '' ):
 	"""Raft a gcode linear move file.  Chain raft the gcode if it is not already rafted.
@@ -396,8 +392,6 @@ class RaftSkein:
 	"A class to raft a skein of extrusions."
 	def __init__( self ):
 		self.boundaryLayers = []
-		self.cornerHigh = Vec3( - 999999999.0, - 999999999.0, - 999999999.0 )
-		self.cornerLow = Vec3( 999999999.0, 999999999.0, 999999999.0 )
 		self.decimalPlacesCarried = 3
 		self.extrusionHeight = 0.4
 		self.extrusionStart = True
@@ -415,8 +409,8 @@ class RaftSkein:
 		self.operatingLayerEndLine = '(<operatingLayerEnd> )'
 		self.operatingJump = None
 		self.output = cStringIO.StringIO()
-		self.supportLayers = []
-		self.supportLayerTables = []
+		self.supportLoops = []
+		self.supportSegmentTables = []
 
 	def addBaseLayer( self, baseExtrusionWidth, baseStep, stepBegin, stepEnd ):
 		"Add a base layer."
@@ -431,30 +425,30 @@ class RaftSkein:
 		zCenter = self.extrusionTop + halfBaseExtrusionHeight
 		z = zCenter + halfBaseExtrusionHeight * self.raftPreferences.baseNozzleLiftOverHalfBaseExtrusionHeight.value
 		for x in stepsUntilEnd:
-			begin = Vec3( x, beginY, z )
-			end = Vec3( x, endY, z )
-			segments.append( euclidean.getSegmentFromPoints( begin, end ) )
+			begin = complex( x, beginY )
+			end = complex( x, endY )
+			segments.append( euclidean.getSegmentComplexFromPoints( begin, end ) )
 		if len( segments ) < 1:
 			print( 'This should never happen, the base layer has a size of zero.' )
 			return
-		self.addLayerFromSegments( self.feedrateMinute / self.baseLayerHeightOverExtrusionHeight / self.baseLayerHeightOverExtrusionHeight, baseExtrusionHeight, segments, zCenter )
+		self.addLayerFromSegments( self.feedrateMinute / self.baseLayerHeightOverExtrusionHeight / self.baseLayerHeightOverExtrusionHeight, baseExtrusionHeight, segments, zCenter, z )
 
-	def addGcodeFromFeedrateThread( self, feedrateMinute, thread ):
+	def addGcodeFromFeedrateThreadZ( self, feedrateMinute, thread, z ):
 		"Add a thread to the output."
 		if len( thread ) > 0:
-			self.addGcodeFromFeedrateMovement( feedrateMinute, thread[ 0 ] )
+			self.addGcodeFromFeedrateMovementZ( feedrateMinute, thread[ 0 ], z )
 		else:
 			print( "zero length vertex positions array which was skipped over, this should never happen" )
 		if len( thread ) < 2:
 			return
 		self.addLine( "M101" ) # Turn extruder on.
 		for point in thread[ 1 : ]:
-			self.addGcodeFromFeedrateMovement( feedrateMinute, point )
+			self.addGcodeFromFeedrateMovementZ( feedrateMinute, point, z )
 		self.addLine( "M103" ) # Turn extruder off.
 
-	def addGcodeFromFeedrateMovement( self, feedrateMinute, point ):
+	def addGcodeFromFeedrateMovementZ( self, feedrateMinute, point, z ):
 		"Add a movement to the output."
-		self.addLine( self.getGcodeFromFeedrateMovement( feedrateMinute, point ) )
+		self.addLine( self.getGcodeFromFeedrateMovementZ( feedrateMinute, point, z ) )
 
 	def addInterfaceLayer( self ):
 		"Add an interface layer."
@@ -464,15 +458,15 @@ class RaftSkein:
 		zCenter = self.extrusionTop + halfInterfaceExtrusionHeight
 		z = zCenter + halfInterfaceExtrusionHeight * self.raftPreferences.interfaceNozzleLiftOverHalfInterfaceExtrusionHeight.value
 		for y in self.interfaceStepsUntilEnd:
-			begin = Vec3( self.interfaceBeginX, y, z )
-			end = Vec3( self.interfaceEndX, y, z )
-			segments.append( euclidean.getSegmentFromPoints( begin, end ) )
+			begin = complex( self.interfaceBeginX, y )
+			end = complex( self.interfaceEndX, y )
+			segments.append( euclidean.getSegmentComplexFromPoints( begin, end ) )
 		if len( segments ) < 1:
 			print( 'This should never happen, the interface layer has a size of zero.' )
 			return
-		self.addLayerFromSegments( self.feedrateMinute / self.interfaceLayerHeightOverExtrusionHeight / self.interfaceLayerHeightOverExtrusionHeight, interfaceExtrusionHeight, segments, zCenter )
+		self.addLayerFromSegments( self.feedrateMinute / self.interfaceLayerHeightOverExtrusionHeight / self.interfaceLayerHeightOverExtrusionHeight, interfaceExtrusionHeight, segments, zCenter, z )
 
-	def addLayerFromSegments( self, feedrateMinute, layerExtrusionHeight, segments, zCenter ):
+	def addLayerFromSegments( self, feedrateMinute, layerExtrusionHeight, segments, zCenter, z ):
 		"Add a layer from segments and raise the extrusion top."
 		firstSegment = segments[ 0 ]
 		nearestPoint = firstSegment[ 1 ].point
@@ -481,14 +475,14 @@ class RaftSkein:
 			segmentBegin = segment[ 0 ]
 			segmentEnd = segment[ 1 ]
 			nextEndpoint = segmentBegin
-			if nearestPoint.distance2( segmentBegin.point ) > nearestPoint.distance2( segmentEnd.point ):
+			if abs( nearestPoint - segmentBegin.point ) > abs( nearestPoint - segmentEnd.point ):
 				nextEndpoint = segmentEnd
 			path.append( nextEndpoint.point )
 			nextEndpoint = nextEndpoint.otherEndpoint
 			nearestPoint = nextEndpoint.point
 			path.append( nearestPoint )
 		self.addLine( '(<layerStart> ' + self.getRounded( zCenter ) + ' )' ) # Indicate that a new layer is starting.
-		self.addGcodeFromFeedrateThread( feedrateMinute, path )
+		self.addGcodeFromFeedrateThreadZ( feedrateMinute, path, z )
 		self.extrusionTop += layerExtrusionHeight
 
 	def addLine( self, line ):
@@ -506,9 +500,10 @@ class RaftSkein:
 		interfaceExtrusionWidth = self.extrusionWidth * self.interfaceLayerHeightOverExtrusionHeight
 		self.interfaceStep = interfaceExtrusionWidth / self.raftPreferences.interfaceInfillDensity.value
 		self.setCornersZ()
+		self.cornerLowComplex = self.cornerLow.dropAxis( 2 )
 		halfExtrusionHeight = 0.5 * self.extrusionHeight
-		self.complexHigh = complexRadius + self.cornerHigh.dropAxis( 2 )
-		self.complexLow = self.cornerLow.dropAxis( 2 ) - complexRadius
+		self.complexHigh = complexRadius + self.cornerHighComplex
+		self.complexLow = self.cornerLowComplex - complexRadius
 		extent = self.complexHigh - self.complexLow
 		extentStepX = interfaceExtrusionWidth + 2.0 * self.interfaceStep * math.ceil( 0.5 * ( extent.real - self.interfaceStep ) / self.interfaceStep )
 		extentStepY = baseExtrusionWidth + 2.0 * baseStep * math.ceil( 0.5 * ( extent.imag - baseStep ) / baseStep )
@@ -517,41 +512,35 @@ class RaftSkein:
 		stepBegin = center - 0.5 * extentStep
 		stepEnd = stepBegin + extentStep
 		zBegin = self.extrusionTop + self.extrusionHeight
-		beginLoop = getSquareLoop( self.cornerLow.dropAxis( 2 ), self.cornerHigh.dropAxis( 2 ), zBegin )
+		beginLoop = getSquareLoop( self.cornerLowComplex, self.cornerHighComplex )
 		extrudeRaft = self.raftPreferences.baseLayers.value > 0 or self.raftPreferences.interfaceLayers.value > 0
 		if extrudeRaft:
 			self.addTemperature( self.raftPreferences.temperatureRaft.value )
 		else:
 			self.addTemperature( self.raftPreferences.temperatureShapeFirstLayerOutline.value )
 		self.addLine( '(<layerStart> ' + self.getRounded( self.extrusionTop ) + ' )' ) # Indicate that a new layer is starting.
-		intercircle.addOrbits( beginLoop, self, self.raftPreferences.temperatureChangeBeforeTimeRaft.value )
+		intercircle.addOrbitsComplexFunctionPlaceholder( beginLoop, self, self.raftPreferences.temperatureChangeBeforeTimeRaft.value, zBegin )
 		for baseLayerIndex in range( self.raftPreferences.baseLayers.value ):
 			self.addBaseLayer( baseExtrusionWidth, baseStep, stepBegin, stepEnd )
 		self.setInterfaceVariables( interfaceExtrusionWidth, stepBegin, stepEnd )
 		for interfaceLayerIndex in range( self.raftPreferences.interfaceLayers.value ):
 			self.addInterfaceLayer()
-		self.setBoundaryLayers()
 		self.operatingJump = self.extrusionTop - self.cornerLow.z + halfExtrusionHeight + halfExtrusionHeight * self.raftPreferences.operatingNozzleLiftOverHalfExtrusionHeight.value
-		if extrudeRaft:
+		self.setBoundaryLayers()
+		if extrudeRaft and len( self.boundaryLayers ) > 0:
 			self.addTemperature( self.raftPreferences.temperatureShapeFirstLayerOutline.value )
-			squareLoop = getSquareLoop( stepBegin, stepEnd, self.extrusionTop )
-			intercircle.addOrbits( squareLoop, self, self.raftPreferences.temperatureChangeTimeBeforeFirstLayerOutline.value )
+			squareLoop = getSquareLoop( stepBegin, stepEnd )
+			intercircle.addOrbitsComplexFunctionPlaceholder( squareLoop, self, self.raftPreferences.temperatureChangeTimeBeforeFirstLayerOutline.value, self.boundaryLayers[ 0 ].z )
 
-	def addSupportLayerTable( self, layerIndex ):
+	def addSupportSegmentTable( self, layerIndex ):
 		"Add support segments from the boundary layers."
-		aboveLoops = self.supportLayers[ layerIndex + 1 ]
-		if len( aboveLoops ) < 1:
-			self.supportLayerTables.append( {} )
+		aboveLayer = self.boundaryLayers[ layerIndex + 1 ]
+		if len( aboveLayer.loops ) < 1:
+			self.supportSegmentTables.append( {} )
 			return
-		supportLayer = self.supportLayers[ layerIndex ]
 		horizontalSegmentTable = {}
-		aboveZ = aboveLoops[ 0 ][ 0 ].z
-		rise = self.extrusionHeight
-		z = aboveZ - self.extrusionHeight
-		if len( supportLayer ) > 0:
-			z = supportLayer[ 0 ][ 0 ].z
-			rise = aboveZ - z
-		outsetSupportLayer = intercircle.getInsetLoops( - self.minimumSupportRatio * rise, supportLayer )
+		rise = aboveLayer.z - self.boundaryLayers[ layerIndex ].z
+		outsetSupportLayer = intercircle.getInsetLoopsComplexFunctionPlaceholder( - self.minimumSupportRatio * rise, self.supportLoops[ layerIndex ] )
 		numberOfSubSteps = 10
 		subStepSize = self.interfaceStep / float( numberOfSubSteps )
 		for y in self.interfaceStepsUntilEnd:
@@ -559,117 +548,110 @@ class RaftSkein:
 			for subStepIndex in xrange( 2 * numberOfSubSteps + 1 ):
 				ySubStep = y + ( subStepIndex - numberOfSubSteps ) * subStepSize
 				xIntersectionIndexList = []
-				euclidean.addXIntersectionIndexesFromLoops( aboveLoops, - 1, xIntersectionIndexList, ySubStep )
-				euclidean.addXIntersectionIndexesFromLoops( outsetSupportLayer, 0, xIntersectionIndexList, ySubStep )
+				euclidean.addXIntersectionIndexesFromLoopsComplexFunctionPlaceholder( aboveLayer.loops, - 1, xIntersectionIndexList, ySubStep )
+				euclidean.addXIntersectionIndexesFromLoopsComplexFunctionPlaceholder( outsetSupportLayer, 0, xIntersectionIndexList, ySubStep )
 				xIntersections = euclidean.getXIntersectionsFromIntersections( xIntersectionIndexList )
 				for xIntersection in xIntersections:
 					xTotalIntersectionIndexList.append( euclidean.XIntersectionIndex( subStepIndex, xIntersection ) )
 			xTotalIntersections = getJoinOfXIntersectionIndexes( xTotalIntersectionIndexList )
-			lineSegments = euclidean.getSegmentsFromXIntersections( xTotalIntersections, y, z )
+			lineSegments = euclidean.getSegmentsFromXIntersectionsComplex( xTotalIntersections, y )
 			if len( lineSegments ) > 0:
 				horizontalSegmentTable[ y ] = lineSegments
-		self.supportLayerTables.append( horizontalSegmentTable )
+		self.supportSegmentTables.append( horizontalSegmentTable )
 
-	def addSupportLayerTemperature( self, segments ):
+	def addSupportLayerTemperature( self, supportSegments, z ):
 		"Add support layer and temperature before the object layer."
-		self.addTemperatureOrbits( segments, self.raftPreferences.temperatureShapeSupportLayers, self.raftPreferences.temperatureChangeTimeBeforeSupportLayers )
-		endpoints = getEndpointsFromSegments( segments )
+		self.addTemperatureOrbits( supportSegments, self.raftPreferences.temperatureShapeSupportLayers, self.raftPreferences.temperatureChangeTimeBeforeSupportLayers, z )
+		endpoints = getEndpointsFromSegments( supportSegments )
 		aroundPixelTable = {}
 		aroundWidth = .444444444444
 		layerFillInset = .222222222222
-		boundaryLoops = self.boundaryLayers[ self.layerIndex ]
+		boundaryLoops = self.boundaryLayers[ self.layerIndex ].loops
 		for boundaryLoop in boundaryLoops:
-			euclidean.addLoopToPixelTable( boundaryLoop, aroundPixelTable, aroundWidth )
-		paths = euclidean.getPathsFromEndpoints( endpoints, layerFillInset, aroundPixelTable, aroundWidth )
+			euclidean.addLoopToPixelTableComplexFunctionPlaceholder( boundaryLoop, aroundPixelTable, aroundWidth )
+		paths = euclidean.getPathsFromEndpointsComplexFunctionPlaceholder( endpoints, layerFillInset, aroundPixelTable, aroundWidth )
 		for path in paths:
-			for point in path:
-				if self.operatingJump != None:
-					point.z += self.operatingJump
-			self.addGcodeFromFeedrateThread( self.feedrateMinute, path )
-		self.addTemperatureOrbits( segments, self.raftPreferences.temperatureShapeSupportedLayers, self.raftPreferences.temperatureChangeTimeBeforeSupportedLayers )
+			self.addGcodeFromFeedrateThreadZ( self.feedrateMinute, path, z )
+		self.addTemperatureOrbits( supportSegments, self.raftPreferences.temperatureShapeSupportedLayers, self.raftPreferences.temperatureChangeTimeBeforeSupportedLayers, z )
 
 	def addTemperature( self, temperature ):
 		"Add a line of temperature."
 		self.addLine( 'M104 S' + euclidean.getRoundedToThreePlaces( temperature ) ) # Set temperature.
 
-	def addTemperatureOrbits( self, segments, temperaturePreference, temperatureTimeChangePreference ):
+	def addTemperatureOrbits( self, segments, temperaturePreference, temperatureTimeChangePreference, z ):
 		"Add the temperature and orbits around the support layer."
 		if self.layerIndex < 0:
 			return
-		boundaryLoops = self.boundaryLayers[ self.layerIndex ]
+		boundaryLoops = self.boundaryLayers[ self.layerIndex ].loops
 		self.addTemperature( temperaturePreference.value )
 		if len( boundaryLoops ) < 1:
 			endpoints = getEndpointsFromSegments( segments )
-			layerCornerHigh = Vec3( - 999999999.0, - 999999999.0, - 999999999.0 )
-			layerCornerLow = Vec3( 999999999.0, 999999999.0, 999999999.0 )
+			layerCornerHigh = complex( - 999999999.0, - 999999999.0 )
+			layerCornerLow = complex( 999999999.0, 999999999.0 )
 			for endpoint in endpoints:
-				layerCornerHigh = euclidean.getPointMaximum( layerCornerHigh, endpoint.point )
-				layerCornerLow = euclidean.getPointMinimum( layerCornerLow, endpoint.point )
-			z = endpoints[ 0 ].point.z
-			squareLoop = getSquareLoop( layerCornerLow.dropAxis( 2 ), layerCornerHigh.dropAxis( 2 ), z )
-			intercircle.setZAccordingToOperatingJump( squareLoop, self.operatingJump )
-			intercircle.addOrbits( squareLoop, self, temperatureTimeChangePreference.value )
+				layerCornerHigh = euclidean.getComplexMaximum( layerCornerHigh, endpoint.point )
+				layerCornerLow = euclidean.getComplexMinimum( layerCornerLow, endpoint.point )
+			squareLoop = getSquareLoop( layerCornerLow, layerCornerHigh )
+#			intercircle.setZAccordingToOperatingJump( squareLoop, self.operatingJump )
+			intercircle.addOrbitsComplexFunctionPlaceholder( squareLoop, self, temperatureTimeChangePreference.value, z )
 			return
 		perimeterInset = 0.4 * self.extrusionPerimeterWidth
-		insetBoundaryLoops = intercircle.getInsetLoops( perimeterInset, boundaryLoops )
+		insetBoundaryLoops = intercircle.getInsetLoopsComplexFunctionPlaceholder( perimeterInset, boundaryLoops )
 		if len( insetBoundaryLoops ) < 1:
 			insetBoundaryLoops = boundaryLoops
-		largestLoop = euclidean.getLargestLoop( insetBoundaryLoops )
-		intercircle.setZAccordingToOperatingJump( largestLoop, self.operatingJump )
-		intercircle.addOrbits( largestLoop, self, temperatureTimeChangePreference.value )
+		largestLoop = euclidean.getLargestLoopComplexFunctionPlaceholder( insetBoundaryLoops )
+#		intercircle.setZAccordingToOperatingJump( largestLoop, self.operatingJump )
+		intercircle.addOrbitsComplexFunctionPlaceholder( largestLoop, self, temperatureTimeChangePreference.value, z )
 
 	def addToFillXIntersectionIndexTables( self, fillXIntersectionIndexTables, layerIndex ):
 		"Add fill segments from the boundary layers."
-		boundaryLoops = self.supportLayers[ layerIndex ]
+		supportLoops = self.supportLoops[ layerIndex ]
 		alreadyFilledOutsets = []
 		layerOffsetWidth = self.extrusionWidth
 		slightlyGreaterThanOffset = 1.01 * layerOffsetWidth
 		muchGreaterThanLayerOffset = 2.5 * layerOffsetWidth
-		for boundaryLoop in boundaryLoops:
-			centers = intercircle.getCentersFromLoopDirection( euclidean.isWiddershins( boundaryLoop ), boundaryLoop, slightlyGreaterThanOffset )
+		for supportLoop in supportLoops:
+			centers = intercircle.getCentersFromLoopDirectionComplex( euclidean.isWiddershinsComplex( supportLoop ), supportLoop, slightlyGreaterThanOffset )
 			for center in centers:
-				alreadySupportedOutset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, layerOffsetWidth )
-				if euclidean.getMaximumSpan( alreadySupportedOutset ) > muchGreaterThanLayerOffset:
-					if euclidean.isPathInsideLoop( boundaryLoop, alreadySupportedOutset ) != euclidean.isWiddershins( boundaryLoop ):
+				alreadySupportedOutset = intercircle.getSimplifiedInsetFromClockwiseLoopComplex( center, layerOffsetWidth )
+				if euclidean.getMaximumSpanComplex( alreadySupportedOutset ) > muchGreaterThanLayerOffset:
+					if euclidean.isPathInsideLoopComplex( supportLoop, alreadySupportedOutset ) != euclidean.isWiddershinsComplex( supportLoop ):
 						alreadyFilledOutsets.append( alreadySupportedOutset )
 		if len( alreadyFilledOutsets ) < 1:
 			fillXIntersectionIndexTables.append( {} )
 			return
 		fillXIntersectionIndexTable = {}
-		z = alreadyFilledOutsets[ 0 ][ 0 ].z
 		for y in self.interfaceStepsUntilEnd:
 			xIntersectionIndexes = getFillXIntersectionIndexes( alreadyFilledOutsets, y )
 			if len( xIntersectionIndexes ) > 0:
 				xIntersections = getJoinOfXIntersectionIndexes( xIntersectionIndexes )
-				lineSegments = euclidean.getSegmentsFromXIntersections( xIntersections, y, z )
+				lineSegments = euclidean.getSegmentsFromXIntersectionsComplex( xIntersections, y )
 				fillXIntersectionIndexTable[ y ] = lineSegments
 		fillXIntersectionIndexTables.append( fillXIntersectionIndexTable )
 
-	def extendSegments( self, supportLayerTable ):
+	def extendSegments( self, supportSegmentTable ):
 		"Extend the support segments."
-		supportLayerKeys = supportLayerTable.keys()
+		supportLayerKeys = supportSegmentTable.keys()
 		horizontalSegmentSegmentTable = {}
 		for supportLayerKey in supportLayerKeys:
-			lineSegments = supportLayerTable[ supportLayerKey ]
-			lastSegmentZ = None
+			lineSegments = supportSegmentTable[ supportLayerKey ]
 			xIntersectionIndexList = []
 			for lineSegmentIndex in xrange( len( lineSegments ) ):
 				lineSegment = lineSegments[ lineSegmentIndex ]
 				extendedLineSegment = getExtendedLineSegment( self.raftOutsetRadius, lineSegment )
 				if extendedLineSegment != None:
 					addXIntersectionsFromSegment( lineSegmentIndex, extendedLineSegment, xIntersectionIndexList )
-					lastSegmentZ = extendedLineSegment[ 0 ].point.z
 			xIntersections = getJoinOfXIntersectionIndexes( xIntersectionIndexList )
 			for xIntersectionIndex in xrange( len( xIntersections ) ):
 				xIntersection = xIntersections[ xIntersectionIndex ]
 				xIntersection = max( xIntersection, self.interfaceBeginX )
 				xIntersection = min( xIntersection, self.interfaceEndX )
 				xIntersections[ xIntersectionIndex ] = xIntersection
-			if lastSegmentZ != None:
-				extendedLineSegments = euclidean.getSegmentsFromXIntersections( xIntersections, supportLayerKey, lastSegmentZ )
-				supportLayerTable[ supportLayerKey ] = extendedLineSegments
+			if len( xIntersections ) > 0:
+				extendedLineSegments = euclidean.getSegmentsFromXIntersectionsComplex( xIntersections, supportLayerKey )
+				supportSegmentTable[ supportLayerKey ] = extendedLineSegments
 			else:
-				del supportLayerTable[ supportLayerKey ]
+				del supportSegmentTable[ supportLayerKey ]
 
 	def getBoundaryLine( self, splitLine ):
 		"Get elevated boundary gcode line."
@@ -678,23 +660,26 @@ class RaftSkein:
 			location.z += self.operatingJump
 		return '(<boundaryPoint> X%s Y%s Z%s )' % ( self.getRounded( location.x ), self.getRounded( location.y ), self.getRounded( location.z ) )
 
-	def getGcodeFromFeedrateMovement( self, feedrateMinute, point ):
+	def getGcodeFromFeedrateMovementZ( self, feedrateMinute, point, z ):
 		"Get a gcode movement."
-		return "G1 X%s Y%s Z%s F%s" % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ), self.getRounded( feedrateMinute ) )
+		return "G1 X%s Y%s Z%s F%s" % ( self.getRounded( point.real ), self.getRounded( point.imag ), self.getRounded( z ), self.getRounded( feedrateMinute ) )
 
 	def getRaftedLine( self, splitLine ):
 		"Get elevated gcode line with operating feedrate."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
-		self.oldLocation = Vec3().getFromVec3( location )
+		self.oldLocation = location
+		z = location.z
 		if self.operatingJump != None:
-			location.z += self.operatingJump
+			z += self.operatingJump
 		if not self.isFirstLayerWithinTemperatureAdded and not self.isSurroundingLoop:
 			self.isFirstLayerWithinTemperatureAdded = True
 			self.addTemperature( self.raftPreferences.temperatureShapeFirstLayerWithin.value )
 			if self.raftPreferences.addRaftElevateNozzleOrbitSetAltitude.value:
-				intercircle.addOperatingOrbits( self.boundaryLayers[ self.layerIndex ], self.operatingJump, self, self.raftPreferences.temperatureChangeTimeBeforeNextThreads.value )
-		return self.getGcodeFromFeedrateMovement( self.feedrateMinute, location )
+				boundaryLoops = self.boundaryLayers[ self.layerIndex ].loops
+				if len( boundaryLoops ) > 1:
+					intercircle.addOperatingOrbitsComplexFunctionPlaceholder( boundaryLoops, self, self.raftPreferences.temperatureChangeTimeBeforeNextThreads.value, z )
+		return self.getGcodeFromFeedrateMovementZ( self.feedrateMinute, location.dropAxis( 2 ), z )
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
@@ -709,34 +694,25 @@ class RaftSkein:
 			step += stepSize
 		return steps
 
-	def getSupportLayerSegments( self ):
+	def getSupportSegments( self ):
 		"Get the support layer segments."
-		if len( self.supportLayerTables ) <= self.layerIndex:
+		if len( self.supportSegmentTables ) <= self.layerIndex:
 			return []
+		supportSegmentTable = self.supportSegmentTables[ self.layerIndex ]
 		segments = []
-		supportLayerTable = self.supportLayerTables[ self.layerIndex ]
-		supportLayerKeys = supportLayerTable.keys()
-		supportLayerKeys.sort()
-		for supportLayerKey in supportLayerKeys:
-			segments += supportLayerTable[ supportLayerKey ]
+		segmentTableKeys = supportSegmentTable.keys()
+		segmentTableKeys.sort()
+		for segmentTableKey in segmentTableKeys:
+			segments += supportSegmentTable[ segmentTableKey ]
 		return segments
 
-	def joinSegments( self, supportLayerTableIndex ):
+	def joinSegments( self, supportSegmentTableIndex ):
 		"Join the support segments of this layer with those of the layer above."
-		horizontalSegmentTable = self.supportLayerTables[ supportLayerTableIndex ]
+		horizontalSegmentTable = self.supportSegmentTables[ supportSegmentTableIndex ]
 		horizontalSegmentTableKeys = horizontalSegmentTable.keys()
-		aboveHorizontalSegmentTable = self.supportLayerTables[ supportLayerTableIndex + 1 ]
+		aboveHorizontalSegmentTable = self.supportSegmentTables[ supportSegmentTableIndex + 1 ]
 		aboveHorizontalSegmentTableKeys = aboveHorizontalSegmentTable.keys()
-		z = 2.2123
-		if len( aboveHorizontalSegmentTableKeys ) > 0:
-			firstSegments = aboveHorizontalSegmentTable[ aboveHorizontalSegmentTableKeys[ 0 ] ]
-			if len( firstSegments ) > 0:
-				z = firstSegments[ 0 ][ 0 ].point.z - self.extrusionHeight
-		if len( horizontalSegmentTableKeys ) > 0:
-			firstSegments = horizontalSegmentTable[ horizontalSegmentTableKeys[ 0 ] ]
-			if len( firstSegments ) > 0:
-				z = firstSegments[ 0 ][ 0 ].point.z
-		joinSegmentTables( aboveHorizontalSegmentTable, horizontalSegmentTable, z )
+		joinSegmentTables( aboveHorizontalSegmentTable, horizontalSegmentTable )
 
 	def parseGcode( self, gcodeText, raftPreferences ):
 		"Parse gcode text and store the raft gcode."
@@ -802,36 +778,44 @@ class RaftSkein:
 			self.layerIndex += 1
 			if self.operatingJump != None:
 				line = '(<layerStart> ' + self.getRounded( self.extrusionTop + float( splitLine[ 1 ] ) ) + ' )'
-			segments = self.getSupportLayerSegments()
+			supportSegments = self.getSupportSegments()
 			if self.layerIndex == 1:
-				if len( segments ) < 1:
+				if len( supportSegments ) < 1:
 					self.addTemperature( self.raftPreferences.temperatureShapeNextLayers.value )
 					if self.raftPreferences.addRaftElevateNozzleOrbitSetAltitude.value:
-						intercircle.addOperatingOrbits( self.boundaryLayers[ self.layerIndex ], self.operatingJump, self, self.raftPreferences.temperatureChangeTimeBeforeNextThreads.value )
-			if self.layerIndex > len( self.supportLayerTables ) + 1:
+						boundaryLayer = self.boundaryLayers[ self.layerIndex ]
+						boundaryLoops = boundaryLayer.loops
+						if len( boundaryLoops ) > 0:
+							temperatureChangeTimeBeforeNextThreads = self.raftPreferences.temperatureChangeTimeBeforeNextThreads.value
+							intercircle.addOperatingOrbitsComplexFunctionPlaceholder( boundaryLoops, self, temperatureChangeTimeBeforeNextThreads, boundaryLayer.z )
+			if self.layerIndex > len( self.supportSegmentTables ) + 1:
 				self.addLine( self.operatingLayerEndLine )
 				self.operatingLayerEndLine = ''
 			self.addLine( line )
 			line = ''
-			if len( segments ) > 0:
-				self.addSupportLayerTemperature( segments )
+			if len( supportSegments ) > 0:
+				self.addSupportLayerTemperature( supportSegments, self.boundaryLayers[ self.layerIndex ].z )
 		self.addLine( line )
 
 	def setBoundaryLayers( self ):
 		"Set the boundary layers."
 		boundaryLoop = None
-		boundaryLoops = None
+		boundaryLayer = None
 		for line in self.lines[ self.lineIndex : ]:
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == '(<boundaryPoint>':
+				location = gcodec.getLocationFromSplitLine( None, splitLine )
 				if boundaryLoop == None:
 					boundaryLoop = []
-					boundaryLoops.append( boundaryLoop )
-				boundaryLoop.append( gcodec.getLocationFromSplitLine( None, splitLine ) )
+					boundaryLayer.loops.append( boundaryLoop )
+				boundaryLayer.loops[ - 1 ].append( location.dropAxis( 2 ) )
 			elif firstWord == '(<layerStart>':
-				boundaryLoops = []
-				self.boundaryLayers.append( boundaryLoops )
+				z = float( splitLine[ 1 ] )
+				if self.operatingJump != None:
+					z += self.operatingJump
+				boundaryLayer = euclidean.LoopLayer( z )
+				self.boundaryLayers.append( boundaryLayer )
 			elif firstWord == '(</surroundingLoop>':
 				boundaryLoop = None
 		if self.raftPreferences.supportChoiceNoSupportMaterial.value:
@@ -841,32 +825,35 @@ class RaftSkein:
 		if len( self.boundaryLayers ) < 2:
 			return
 		for boundaryLayer in self.boundaryLayers:
-			self.supportLayers.append( intercircle.getInsetLoops( - self.supportOutset, boundaryLayer ) )
-		for layerIndex in xrange( len( self.supportLayers ) - 1 ):
-			self.addSupportLayerTable( layerIndex )
-		self.truncateSupportLayerTables()
+			supportLoops = intercircle.getInsetLoopsComplexFunctionPlaceholder( - self.supportOutset, boundaryLayer.loops )
+			self.supportLoops.append( supportLoops )
+		for layerIndex in xrange( len( self.supportLoops ) - 1 ):
+			self.addSupportSegmentTable( layerIndex )
+		self.truncateSupportSegmentTables()
 		fillXIntersectionIndexTables = []
-		for supportLayerTableIndex in xrange( len( self.supportLayerTables ) ):
-			self.addToFillXIntersectionIndexTables( fillXIntersectionIndexTables, supportLayerTableIndex )
+		for supportSegmentTableIndex in xrange( len( self.supportSegmentTables ) ):
+			self.addToFillXIntersectionIndexTables( fillXIntersectionIndexTables, supportSegmentTableIndex )
 		if self.raftPreferences.supportChoiceSupportMaterialOnExteriorOnly.value:
-			for supportLayerTableIndex in xrange( 1, len( self.supportLayerTables ) ):
-				self.subtractJoinedFill( fillXIntersectionIndexTables, supportLayerTableIndex )
-		for supportLayerTableIndex in xrange( len( self.supportLayerTables ) - 2, - 1, - 1 ):
-			self.joinSegments( supportLayerTableIndex )
-		for supportLayerTable in self.supportLayerTables:
-			self.extendSegments( supportLayerTable )
-		for supportLayerTableIndex in xrange( len( self.supportLayerTables ) ):
-			subtractFill( fillXIntersectionIndexTables[ supportLayerTableIndex ], self.supportLayerTables[ supportLayerTableIndex ] )
+			for supportSegmentTableIndex in xrange( 1, len( self.supportSegmentTables ) ):
+				self.subtractJoinedFill( fillXIntersectionIndexTables, supportSegmentTableIndex )
+		for supportSegmentTableIndex in xrange( len( self.supportSegmentTables ) - 2, - 1, - 1 ):
+			self.joinSegments( supportSegmentTableIndex )
+		for supportSegmentTable in self.supportSegmentTables:
+			self.extendSegments( supportSegmentTable )
+		for supportSegmentTableIndex in xrange( len( self.supportSegmentTables ) ):
+			subtractFill( fillXIntersectionIndexTables[ supportSegmentTableIndex ], self.supportSegmentTables[ supportSegmentTableIndex ] )
 
 	def setCornersZ( self ):
 		"Set maximum and minimum corners and z."
 		layerIndex = - 1
+		self.cornerHighComplex = complex( - 999999999.0, - 999999999.0 )
+		self.cornerLow = Vec3( 999999999.0, 999999999.0, 999999999.0 )
 		for line in self.lines[ self.lineIndex : ]:
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == 'G1':
 				location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-				self.cornerHigh = euclidean.getPointMaximum( self.cornerHigh, location )
+				self.cornerHighComplex = euclidean.getComplexMaximum( self.cornerHighComplex, location.dropAxis( 2 ) )
 				self.cornerLow = euclidean.getPointMinimum( self.cornerLow, location )
 				self.oldLocation = location
 			elif firstWord == '(<layerStart>':
@@ -883,32 +870,23 @@ class RaftSkein:
 		self.interfaceBeginX = stepBegin.real - self.interfaceOverhang
 		self.interfaceEndX = stepEnd.real + self.interfaceOverhang
 
-	def subtractJoinedFill( self, fillXIntersectionIndexTables, supportLayerTableIndex ):
+	def subtractJoinedFill( self, fillXIntersectionIndexTables, supportSegmentTableIndex ):
 		"Join the fill then subtract it from the support layer table."
-		fillXIntersectionIndexTable = fillXIntersectionIndexTables[ supportLayerTableIndex ]
+		supportSegmentTable = self.supportSegmentTables[ supportSegmentTableIndex ]
+		fillXIntersectionIndexTable = fillXIntersectionIndexTables[ supportSegmentTableIndex ]
 		fillXIntersectionIndexTableKeys = fillXIntersectionIndexTable.keys()
-		belowHorizontalSegmentTable = fillXIntersectionIndexTables[ supportLayerTableIndex - 1 ]
+		belowHorizontalSegmentTable = fillXIntersectionIndexTables[ supportSegmentTableIndex - 1 ]
 		belowHorizontalSegmentTableKeys = belowHorizontalSegmentTable.keys()
-		z = 3.2123
-		if len( belowHorizontalSegmentTableKeys ) > 0:
-			firstSegments = belowHorizontalSegmentTable[ belowHorizontalSegmentTableKeys[ 0 ] ]
-			if len( firstSegments ) > 0:
-				z = firstSegments[ 0 ][ 0 ].point.z + self.extrusionHeight
-		if len( fillXIntersectionIndexTableKeys ) > 0:
-			firstSegments = fillXIntersectionIndexTable[ fillXIntersectionIndexTableKeys[ 0 ] ]
-			if len( firstSegments ) > 0:
-				z = firstSegments[ 0 ][ 0 ].point.z
-		joinSegmentTables( belowHorizontalSegmentTable, fillXIntersectionIndexTable, z )
-		supportLayerTable = self.supportLayerTables[ supportLayerTableIndex ]
-		subtractFill( fillXIntersectionIndexTable, supportLayerTable )
+		joinSegmentTables( belowHorizontalSegmentTable, fillXIntersectionIndexTable )
+		subtractFill( fillXIntersectionIndexTable, supportSegmentTable )
 
-	def truncateSupportLayerTables( self ):
+	def truncateSupportSegmentTables( self ):
 		"Truncate the support segments after the last support segment which contains elements."
-		for supportLayerTableIndex in xrange( len( self.supportLayerTables ) - 1, - 1, - 1 ):
-			if len( self.supportLayerTables[ supportLayerTableIndex ] ) > 0:
-				self.supportLayerTables = self.supportLayerTables[ : supportLayerTableIndex + 1 ]
+		for supportSegmentTableIndex in xrange( len( self.supportSegmentTables ) - 1, - 1, - 1 ):
+			if len( self.supportSegmentTables[ supportSegmentTableIndex ] ) > 0:
+				self.supportSegmentTables = self.supportSegmentTables[ : supportSegmentTableIndex + 1 ]
 				return
-		self.supportLayerTables = []
+		self.supportSegmentTables = []
 
 
 def main():
