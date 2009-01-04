@@ -9,8 +9,8 @@ each end of the loop is clipped over the extrusion width.  The total gap will th
 loops will have a gap, if the ratio is too low there will be a bulge at the loop ends.  To run clip, in a shell type:
 > python clip.py
 
-The following examples clip the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the
-folder which contains Hollow Square.gcode, Hollow Square.gts and clip.py.  The clip function will clip if 'Activate Clip' is true,
+The following examples clip the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the
+folder which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and clip.py.  The clip function will clip if 'Activate Clip' is true,
 which can be set in the dialog or by changing the preferences file 'clip.csv' in the '.skeinforge' folder in your home directory
 with a text editor or a spreadsheet program set to separate tabs.  The functions writeOutput and getClipChainGcode check
 to see if the text has been clipped, if not they call getCombChainGcode in comb.py to comb the text; once they have the
@@ -19,13 +19,13 @@ combed text, then they clip.
 
 > python clip.py
 This brings up the dialog, after clicking 'Clip', the following is printed:
-File Hollow Square.gts is being chain clipped.
-The clipped file is saved as Hollow Square_clip.gcode
+File Screw Holder Bottom.stl is being chain clipped.
+The clipped file is saved as Screw Holder Bottom_clip.gcode
 
 
-> python clip.py Hollow Square.gts
-File Hollow Square.gts is being chain clipped.
-The clipped file is saved as Hollow Square_clip.gcode
+> python clip.py Screw Holder Bottom.stl
+File Screw Holder Bottom.stl is being chain clipped.
+The clipped file is saved as Screw Holder Bottom_clip.gcode
 
 
 > python
@@ -38,9 +38,9 @@ This brings up the clip dialog.
 
 
 >>> clip.writeOutput()
-Hollow Square.gts
-File Hollow Square.gts is being chain clipped.
-The clipped file is saved as Hollow Square_clip.gcode
+Screw Holder Bottom.stl
+File Screw Holder Bottom.stl is being chain clipped.
+The clipped file is saved as Screw Holder Bottom_clip.gcode
 
 
 >>> clip.getClipGcode("
@@ -66,7 +66,6 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
@@ -165,24 +164,24 @@ class ClipSkein:
 		self.oldLocation = None
 		self.output = cStringIO.StringIO()
 
-	def addGcodeFromThread( self, thread ):
+	def addGcodeFromThreadZ( self, thread, z ):
 		"Add a gcode thread to the output."
 		if len( thread ) > 0:
-			self.addGcodeMovement( thread[ 0 ] )
+			self.addGcodeMovementZ( thread[ 0 ], z )
 		else:
 			print( "zero length vertex positions array which was skipped over, this should never happen" )
 		if len( thread ) < 2:
 			return
 		self.addLine( 'M101' )
 		for point in thread[ 1 : ]:
-			self.addGcodeMovement( point )
+			self.addGcodeMovementZ( point, z )
 
-	def addGcodeMovement( self, point ):
+	def addGcodeMovementZ( self, point, z ):
 		"Add a movement to the output."
 		if self.feedrateMinute == None:
-			self.addLine( "G1 X%s Y%s Z%s" % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ) ) )
+			self.addLine( "G1 X%s Y%s Z%s" % ( self.getRounded( point.real ), self.getRounded( point.imag ), self.getRounded( z ) ) )
 		else:
-			self.addLine( "G1 X%s Y%s Z%s F%s" % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ), self.getRounded( self.feedrateMinute ) ) )
+			self.addLine( "G1 X%s Y%s Z%s F%s" % ( self.getRounded( point.real ), self.getRounded( point.imag ), self.getRounded( z ), self.getRounded( self.feedrateMinute ) ) )
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
@@ -191,9 +190,9 @@ class ClipSkein:
 	def addTailoredLoopPath( self ):
 		"Add a clipped and jittered loop path."
 		if self.clipLength > 0.0:
-			self.loopPath = euclidean.getClippedLoopPath( self.clipLength, self.loopPath )
-			self.loopPath = euclidean.getSimplifiedPath( self.loopPath, self.extrusionWidth )
-		self.addGcodeFromThread( self.loopPath )
+			self.loopPath.path = euclidean.getClippedLoopPath( self.clipLength, self.loopPath.path )
+			self.loopPath.path = euclidean.getSimplifiedPath( self.loopPath.path, self.extrusionWidth )
+		self.addGcodeFromThreadZ( self.loopPath.path, self.loopPath.z )
 		self.loopPath = None
 
 	def getRounded( self, number ):
@@ -220,9 +219,9 @@ class ClipSkein:
 		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
 		if self.isLoopPerimeter:
 			if self.isNextExtruderOn():
-				self.loopPath = []
+				self.loopPath = euclidean.PathZ( location.z )
 		if self.loopPath != None:
-			self.loopPath.append( location )
+			self.loopPath.path.append( location.dropAxis( 2 ) )
 		self.oldLocation = location
 
 	def parseGcode( self, gcodeText, loopTailorPreferences ):

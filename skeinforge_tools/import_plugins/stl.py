@@ -13,8 +13,8 @@ http://en.wikipedia.org/wiki/STL_(file_format)
 A good triangle surface format is the GNU Triangulated Surface format which is described at:
 http://gts.sourceforge.net/reference/gts-surfaces.html#GTS-SURFACE-WRITE
 
-This example gets a triangle mesh for the stl file Hollow Square.stl.  This example is run in a terminal in the folder which contains
-Hollow Square.stl and stl.py.
+This example gets a triangle mesh for the stl file Screw Holder Bottom.stl.  This example is run in a terminal in the folder which contains
+Screw Holder Bottom.stl and stl.py.
 
 
 > python
@@ -35,7 +35,7 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
+from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import triangle_mesh
 from struct import unpack
@@ -50,7 +50,7 @@ def addFacesGivenBinary( stlData, triangleMesh, vertexIndexTable ):
 	"Add faces given stl binary."
 	numberOfVertices = ( len( stlData ) - 84 ) / 50
 	vertices = []
-	for vertexIndex in range( numberOfVertices ):
+	for vertexIndex in xrange( numberOfVertices ):
 		byteIndex = 84 + vertexIndex * 50
 		vertices.append( getVertexGivenBinary( byteIndex + 12, stlData ) )
 		vertices.append( getVertexGivenBinary( byteIndex + 24, stlData ) )
@@ -68,14 +68,14 @@ def addFacesGivenText( stlText, triangleMesh, vertexIndexTable ):
 
 def addFacesGivenVertices( triangleMesh, vertexIndexTable, vertices ):
 	"Add faces given stl text."
-	for vertexIndex in range( 0, len( vertices ), 3 ):
+	for vertexIndex in xrange( 0, len( vertices ), 3 ):
 		triangleMesh.faces.append( getFaceGivenLines( triangleMesh, vertexIndex, vertexIndexTable, vertices ) )
 
 def getFaceGivenLines( triangleMesh, vertexStartIndex, vertexIndexTable, vertices ):
 	"Add face given line index and lines."
 	face = triangle_mesh.Face()
 	face.index = len( triangleMesh.faces )
-	for vertexIndex in range( vertexStartIndex, vertexStartIndex + 3 ):
+	for vertexIndex in xrange( vertexStartIndex, vertexStartIndex + 3 ):
 		vertex = vertices[ vertexIndex ]
 		vertexUniqueIndex = len( vertexIndexTable )
 		if str( vertex ) in vertexIndexTable:
@@ -118,9 +118,9 @@ def getTriangleMesh( filename = '' ):
 
 def getVertexGivenBinary( byteIndex, stlData ):
 	"Get vertex given stl vertex line."
-	return Vec3( getFloatGivenBinary( byteIndex, stlData ), getFloatGivenBinary( byteIndex + 4, stlData ), getFloatGivenBinary( byteIndex + 8, stlData ) )
+	return Vector3( getFloatGivenBinary( byteIndex, stlData ), getFloatGivenBinary( byteIndex + 4, stlData ), getFloatGivenBinary( byteIndex + 8, stlData ) )
 
 def getVertexGivenLine( line ):
 	"Get vertex given stl vertex line."
 	splitLine = line.split()
-	return Vec3( float( splitLine[ 1 ] ), float( splitLine[ 2 ] ), float( splitLine[ 3 ] ) )
+	return Vector3( float( splitLine[ 1 ] ), float( splitLine[ 2 ] ), float( splitLine[ 3 ] ) )

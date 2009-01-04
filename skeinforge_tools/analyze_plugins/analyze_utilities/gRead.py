@@ -2,7 +2,7 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
+from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 
 # Get the entire text of a file.
 # @param  filename name of the file
@@ -27,7 +27,7 @@ def getDoubleAfterFirstLetter( word ):
 
 # Get index of the first occurence of the given letter in the split line, starting with the second word.  Return - 1 if letter is not found
 def indexOfStartingWithSecond( letter, splitLine ):
-    for wordIndex in range( 1, len( splitLine ) ):
+    for wordIndex in xrange( 1, len( splitLine ) ):
         word = splitLine[ wordIndex ]
         firstLetter = word[ 0 ]
         if firstLetter == letter:
@@ -40,7 +40,7 @@ class gRead:
         if gcodeText == '':
             gcodeText = getFileText( filename )
         textLines = getTextLines( gcodeText )
-        self.last_pos = Vec3()
+        self.last_pos = Vector3()
         self.layers = layers
         self.layer = None
         self.thread = None
@@ -95,7 +95,7 @@ class gRead:
 
     def linearMove( self, splitLine ):
         if self.thread != None:
-            pos = Vec3().getFromVec3(self.last_pos)
+            pos = self.last_pos.copy()
             self.setPointComponent( pos, splitLine )
             if pos.z > self.max_z:
 #                self.newLayer()

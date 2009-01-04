@@ -15,15 +15,15 @@ feedrate will be sped up to, compared to the original feedrate, the default is 1
 To run unpause, in a shell type:
 > python unpause.py
 
-The following examples unpause the files Hollow Square.gts.  The examples are run in a terminal in the folder which contains
-Hollow Square.gts & unpause.py.  The function writeOutput checks to see if the text has been unpaused, if not they call
+The following examples unpause the files Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains
+Screw Holder Bottom.stl & unpause.py.  The function writeOutput checks to see if the text has been unpaused, if not they call
 getFilletChainGcode in fillet.py to fillet the text; once they have the filleted text, then it unpauses.
 
 
 > python unpause.py
 This brings up the dialog, after clicking 'Unpause', the following is printed:
-File Hollow Square.gts is being chain unpaused.
-The unpaused file is saved as Hollow Square_unpause.gcode
+File Screw Holder Bottom.stl is being chain unpaused.
+The unpaused file is saved as Screw Holder Bottom_unpause.gcode
 
 
 >python
@@ -36,9 +36,9 @@ This brings up the unpause dialog.
 
 
 >>> unpause.writeOutput()
-Hollow Square.gts
-File Hollow Square.gts is being chain unpaused.
-The unpaused file is saved as Hollow Square_unpause.gcode
+Screw Holder Bottom.stl
+File Screw Holder Bottom.stl is being chain unpaused.
+The unpaused file is saved as Screw Holder Bottom_unpause.gcode
 
 The equation to set the feedrate is from Shane Hathaway's description at:
 http://shane.willowrise.com/archives/delay-compensation-in-firmware/
@@ -204,7 +204,7 @@ class UnpauseSkein:
 
 	def parseInitialization( self ):
 		"Parse gcode initialization and store the parameters."
-		for self.lineIndex in range( len( self.lines ) ):
+		for self.lineIndex in xrange( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )

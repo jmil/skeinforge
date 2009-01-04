@@ -60,7 +60,7 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
+from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
@@ -231,8 +231,8 @@ class SkeinviewSkein:
 		if skeinviewPreferences.drawArrows.value:
 			self.arrowType = 'last'
 		self.initializeActiveLocation()
-		self.cornerHigh = Vec3( - 999999999.0, - 999999999.0, - 999999999.0 )
-		self.cornerLow = Vec3( 999999999.0, 999999999.0, 999999999.0 )
+		self.cornerHigh = Vector3( - 999999999.0, - 999999999.0, - 999999999.0 )
+		self.cornerLow = Vector3( 999999999.0, 999999999.0, 999999999.0 )
 		self.goAroundExtruderOffTravel = skeinviewPreferences.goAroundExtruderOffTravel.value
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.isThereALayerStartWord = gcodec.isThereAFirstWord( '(<layerStart>', self.lines, 1 )
@@ -249,7 +249,7 @@ class SkeinviewSkein:
 		self.scaleSize = margin + self.scaleCornerHigh - self.marginCornerLow
 		self.initializeActiveLocation()
 		self.colorNames = [ 'brown', 'red', 'orange', 'yellow', 'green', 'blue', 'purple' ]
-		for self.lineIndex in range( len( self.lines ) ):
+		for self.lineIndex in xrange( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			self.parseLine( line )
 
@@ -292,16 +292,16 @@ class SkeinWindow:
 		yScrollbar.config( command = self.canvas.yview )
 		self.canvas[ 'xscrollcommand' ] = xScrollbar.set
 		self.canvas[ 'yscrollcommand' ] = yScrollbar.set
-		self.exit_button = preferences.Tkinter.Button( self.root, text = "Exit", fg = "red", command = self.root.quit )
-		self.exit_button.grid( row = 99, column = 95, columnspan = 5, sticky = preferences.Tkinter.W )
-		self.down_button = preferences.Tkinter.Button( self.root, text = "Down \\/", command = self.down )
-		self.down_button.grid( row = 99, column = 0, sticky = preferences.Tkinter.W )
-		self.up_button = preferences.Tkinter.Button( self.root, text = "Up /\\", command = self.up )
-		self.up_button.grid( row = 99, column = 1, sticky = preferences.Tkinter.W )
+		self.exitButton = preferences.Tkinter.Button( self.root, text = 'Exit', activebackground = 'black', activeforeground = 'red', command = self.root.quit, fg = 'red' )
+		self.exitButton.grid( row = 99, column = 95, columnspan = 5, sticky = preferences.Tkinter.W )
+		self.downButton = preferences.Tkinter.Button( self.root, activebackground = 'black', activeforeground = 'purple', command = self.down, text = 'Down \\/' )
+		self.downButton.grid( row = 99, column = 0, sticky = preferences.Tkinter.W )
+		self.upButton = preferences.Tkinter.Button( self.root, activebackground = 'black', activeforeground = 'purple', command = self.up, text = 'Up /\\' )
+		self.upButton.grid( row = 99, column = 1, sticky = preferences.Tkinter.W )
 		self.indexEntry = preferences.Tkinter.Entry( self.root )
-		self.indexEntry.bind( "<Return>", self.indexEntryReturnPressed )
+		self.indexEntry.bind( '<Return>', self.indexEntryReturnPressed )
 		self.indexEntry.grid( row = 99, column = 2, columnspan = 10, sticky = preferences.Tkinter.W )
-		self.canvas.bind("<Button-1>", self.buttonOneClicked )
+		self.canvas.bind('<Button-1>', self.buttonOneClicked )
 		self.update()
 		if preferences.globalIsMainLoopRunning:
 			return
@@ -350,13 +350,13 @@ class SkeinWindow:
 				tags = 'The line clicked is: %s %s' % ( coloredLine.lineIndex, coloredLine.line ),
 				width = coloredLine.width )
 		if self.index < len( self.skeinPanes ) - 1:
-			self.up_button.config( state = preferences.Tkinter.NORMAL )
+			self.upButton.config( state = preferences.Tkinter.NORMAL )
 		else:
-			self.up_button.config( state = preferences.Tkinter.DISABLED )
+			self.upButton.config( state = preferences.Tkinter.DISABLED )
 		if self.index > 0:
-			self.down_button.config( state = preferences.Tkinter.NORMAL )
+			self.downButton.config( state = preferences.Tkinter.NORMAL )
 		else:
-			self.down_button.config( state = preferences.Tkinter.DISABLED )
+			self.downButton.config( state = preferences.Tkinter.DISABLED )
 		self.indexEntry.delete( 0, preferences.Tkinter.END )
 		self.indexEntry.insert( 0, str( self.index ) )
 

@@ -39,7 +39,7 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
+from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
@@ -90,6 +90,32 @@ def writeStatisticFileGivenText( filename, gcodeText, statisticPreferences ):
 		print( statisticGcode )
 
 
+class StatisticPreferences:
+	"A class to handle the statistics preferences."
+	def __init__( self ):
+		"Set the default preferences, execute title & preferences filename."
+		#Set the default preferences.
+		self.archive = []
+		self.activateStatistic = preferences.BooleanPreference().getFromValue( 'Activate Statistic', True )
+		self.archive.append( self.activateStatistic )
+		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Generate Statistics for', '' )
+		self.archive.append( self.filenameInput )
+		self.printStatisticFileSkeinforge = preferences.BooleanPreference().getFromValue( 'Print Statistics', False )
+		self.archive.append( self.printStatisticFileSkeinforge )
+		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		self.executeTitle = 'Generate Statistics'
+		self.filenamePreferences = preferences.getPreferencesFilePath( 'statistic.csv' )
+		self.filenameHelp = 'skeinforge_tools.analyze_plugins.statistic.html'
+		self.saveTitle = 'Save Preferences'
+		self.title = 'Statistic Preferences'
+
+	def execute( self ):
+		"Write button has been clicked."
+		filenames = polyfile.getFileOrGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled, [ '_comment' ] )
+		for filename in filenames:
+			statisticFile( filename )
+
+
 class StatisticSkein:
 	"A class to get statistics for a gcode skein."
 	def __init__( self ):
@@ -131,38 +157,38 @@ class StatisticSkein:
 		if self.oldLocation == None:
 			return
 		location = self.getLocationSetFeedrateToSplitLine( splitLine )
-		location.add( self.oldLocation )
-		center = Vec3().getFromVec3( self.oldLocation )
+		location += self.oldLocation
+		center = self.oldLocation.copy()
 		indexOfR = gcodec.indexOfStartingWithSecond( "R", splitLine )
 		if indexOfR > 0:
 			radius = gcodec.getDoubleAfterFirstLetter( splitLine[ indexOfR ] )
-			halfLocationMinusOld = location.minus( self.oldLocation )
-			halfLocationMinusOld.scale( 0.5 )
-			halfLocationMinusOldLength = halfLocationMinusOld.length()
+			halfLocationMinusOld = location - self.oldLocation
+			halfLocationMinusOld *= 0.5
+			halfLocationMinusOldLength = halfLocationMinusOld.magnitude()
 			centerMidpointDistance = math.sqrt( radius * radius - halfLocationMinusOldLength * halfLocationMinusOldLength )
 			centerMinusMidpoint = euclidean.getRotatedWiddershinsQuarterAroundZAxis( halfLocationMinusOld )
 			centerMinusMidpoint.normalize()
-			centerMinusMidpoint.scale( centerMidpointDistance )
+			centerMinusMidpoint *= centerMidpointDistance
 			if isCounterclockwise:
-				center.setToVec3( halfLocationMinusOld.plus( centerMinusMidpoint ) )
+				center.setToVec3( halfLocationMinusOld + centerMinusMidpoint )
 			else:
-				center.setToVec3( halfLocationMinusOld.minus( centerMinusMidpoint ) )
+				center.setToVec3( halfLocationMinusOld - centerMinusMidpoint )
 		else:
 			center.x = gcodec.getDoubleForLetter( "I", splitLine )
 			center.y = gcodec.getDoubleForLetter( "J", splitLine )
 		curveSection = 0.5
-		center.add( self.oldLocation )
-		afterCenterSegment = location.minus( center )
-		beforeCenterSegment = self.oldLocation.minus( center )
+		center += self.oldLocation
+		afterCenterSegment = location - center
+		beforeCenterSegment = self.oldLocation - center
 		afterCenterDifferenceAngle = euclidean.getAngleAroundZAxisDifference( afterCenterSegment, beforeCenterSegment )
 		absoluteDifferenceAngle = abs( afterCenterDifferenceAngle )
-		steps = int( round( 0.5 + max( absoluteDifferenceAngle * 2.4, absoluteDifferenceAngle * beforeCenterSegment.length() / curveSection ) ) )
+		steps = int( round( 0.5 + max( absoluteDifferenceAngle * 2.4, absoluteDifferenceAngle * beforeCenterSegment.magnitude() / curveSection ) ) )
 		stepPlaneAngle = euclidean.getPolar( afterCenterDifferenceAngle / steps, 1.0 )
 		zIncrement = ( afterCenterSegment.z - beforeCenterSegment.z ) / float( steps )
-		for step in range( 1, steps ):
+		for step in xrange( 1, steps ):
 			beforeCenterSegment = euclidean.getRoundZAxisByPlaneAngle( stepPlaneAngle, beforeCenterSegment )
 			beforeCenterSegment.z += zIncrement
-			arcPoint = center.plus( beforeCenterSegment )
+			arcPoint = center + beforeCenterSegment
 			self.addToPath( arcPoint )
 		self.addToPath( location )
 
@@ -174,8 +200,8 @@ class StatisticSkein:
 	def parseGcode( self, gcodeText ):
 		"Parse gcode text and store the statistics."
 		self.characters = 0
-		self.cornerHigh = Vec3( - 999999999.0, - 999999999.0, - 999999999.0 )
-		self.cornerLow = Vec3( 999999999.0, 999999999.0, 999999999.0 )
+		self.cornerHigh = Vector3( - 999999999.0, - 999999999.0, - 999999999.0 )
+		self.cornerLow = Vector3( 999999999.0, 999999999.0, 999999999.0 )
 		self.extruderActive = False
 		self.extruderSpeed = 0.0
 		self.extruderToggled = 0
@@ -195,10 +221,10 @@ class StatisticSkein:
 		self.characters += self.numberOfLines
 		kilobytes = round( self.characters / 1024.0 )
 		halfExtrusionWidth = 0.5 * self.extrusionWidth
-		halfExtrusionCorner = Vec3( halfExtrusionWidth, halfExtrusionWidth, halfExtrusionWidth )
-		self.cornerHigh.add( halfExtrusionCorner )
-		self.cornerLow.subtract( halfExtrusionCorner )
-		extent = self.cornerHigh.minus( self.cornerLow )
+		halfExtrusionCorner = Vector3( halfExtrusionWidth, halfExtrusionWidth, halfExtrusionWidth )
+		self.cornerHigh += halfExtrusionCorner
+		self.cornerLow -= halfExtrusionCorner
+		extent = self.cornerHigh - self.cornerLow
 		roundedHigh = euclidean.getRoundedPoint( self.cornerHigh )
 		roundedLow = euclidean.getRoundedPoint( self.cornerLow )
 		roundedExtent = euclidean.getRoundedPoint( extent )
@@ -253,32 +279,6 @@ class StatisticSkein:
 			self.extrusionHeight = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
 		elif firstWord == '(<procedureDone>':
 			self.procedures.append( splitLine[ 1 ] )
-
-
-class StatisticPreferences:
-	"A class to handle the statistics preferences."
-	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
-		#Set the default preferences.
-		self.archive = []
-		self.activateStatistic = preferences.BooleanPreference().getFromValue( 'Activate Statistic', False )
-		self.archive.append( self.activateStatistic )
-		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Generate Statistics for', '' )
-		self.archive.append( self.filenameInput )
-		self.printStatisticFileSkeinforge = preferences.BooleanPreference().getFromValue( 'Print Statistics', False )
-		self.archive.append( self.printStatisticFileSkeinforge )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
-		self.executeTitle = 'Generate Statistics'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'statistic.csv' )
-		self.filenameHelp = 'skeinforge_tools.analyze_plugins.statistic.html'
-		self.saveTitle = 'Save Preferences'
-		self.title = 'Statistic Preferences'
-
-	def execute( self ):
-		"Write button has been clicked."
-		filenames = polyfile.getFileOrGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled, [ '_comment' ] )
-		for filename in filenames:
-			statisticFile( filename )
 
 
 def main():

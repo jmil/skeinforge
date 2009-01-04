@@ -14,25 +14,25 @@ If the 'Turn Fan On at Beginning' preference is true, cool will turn the fan on 
 To run cool, in a shell which cool is in type:
 > python cool.py
 
-The following examples cool the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the
-folder which contains Hollow Square.gcode, Hollow Square.gts and cool.py.  The cool function will cool if the 'Activate Cool'
+The following examples cool the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the
+folder which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and cool.py.  The cool function will cool if the 'Activate Cool'
 checkbox is on.  The functions writeOutput and getCoolChainGcode check to see if the text has been cooled, if not they
 call the getClipChainGcode in clip.py to clip the text; once they have the clipped text, then they cool.
 
 
 > python cool.py
 This brings up the dialog, after clicking 'Cool', the following is printed:
-File Hollow Square.gts is being chain cooled.
+File Screw Holder Bottom.stl is being chain cooled.
 The extrusion fill density ratio is 0.853
-The cooled file is saved as Hollow Square.gcode
+The cooled file is saved as Screw Holder Bottom.gcode
 The scalable vector graphics file is saved as Hollow_Square_cool.svg
 It took 34 seconds to cool the file.
 
 
-> python cool.py Hollow Square.gts
-File Hollow Square.gts is being chain cooled.
+> python cool.py Screw Holder Bottom.stl
+File Screw Holder Bottom.stl is being chain cooled.
 The extrusion fill density ratio is 0.853
-The cooled file is saved as Hollow Square.gcode
+The cooled file is saved as Screw Holder Bottom.gcode
 The scalable vector graphics file is saved as Hollow_Square_cool.svg
 It took 34 seconds to cool the file.
 
@@ -47,9 +47,9 @@ This brings up the cool dialog.
 
 
 >>> cool.writeOutput()
-File Hollow Square.gts is being chain cooled.
+File Screw Holder Bottom.stl is being chain cooled.
 The extrusion fill density ratio is 0.853
-The cooled file is saved as Hollow Square.gcode
+The cooled file is saved as Screw Holder Bottom.gcode
 The scalable vector graphics file is saved as Hollow_Square_cool.svg
 It took 34 seconds to cool the file.
 
@@ -143,7 +143,7 @@ def writeOutput( filename = '' ):
 class CoolSkein:
 	"A class to cool a skein of extrusions."
 	def __init__( self ):
-		self.boundaryLoops = []
+		self.boundaryLayer = None
 		self.decimalPlacesCarried = 3
 		self.feedrateMinute = 960.0
 		self.highestZ = - 99999999.9
@@ -153,9 +153,9 @@ class CoolSkein:
 		self.oldLocation = None
 		self.output = cStringIO.StringIO()
 
-	def addGcodeFromFeedrateMovement( self, feedrateMinute, point ):
+	def addGcodeFromFeedrateMovementZ( self, feedrateMinute, point, z ):
 		"Add a movement to the output."
-		self.addLine( "G1 X%s Y%s Z%s F%s" % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( self.highestZ ), self.getRounded( feedrateMinute ) ) )
+		self.addLine( "G1 X%s Y%s Z%s F%s" % ( self.getRounded( point.real ), self.getRounded( point.imag ), self.getRounded( z ), self.getRounded( feedrateMinute ) ) )
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
@@ -179,7 +179,7 @@ class CoolSkein:
 		"Parse gcode text and store the cool gcode."
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.parseInitialization( coolPreferences )
-		for self.lineIndex in range( self.lineIndex, len( self.lines ) ):
+		for self.lineIndex in xrange( self.lineIndex, len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			self.parseLine( coolPreferences, line )
 		if coolPreferences.turnFanOffAtEnding.value:
@@ -187,7 +187,7 @@ class CoolSkein:
 
 	def parseInitialization( self, coolPreferences ):
 		"Parse gcode initialization and store the parameters."
-		for self.lineIndex in range( len( self.lines ) ):
+		for self.lineIndex in xrange( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )
@@ -213,21 +213,21 @@ class CoolSkein:
 		if firstWord == 'G1':
 			self.linearMove( splitLine )
 		elif firstWord == '(<boundaryPoint>':
-			self.boundaryLoop.append( gcodec.getLocationFromSplitLine( None, splitLine ) )
+			self.boundaryLoop.append( gcodec.getLocationFromSplitLine( None, splitLine ).dropAxis( 2 ) )
 		elif firstWord == '(<layerStart>':
 			remainingOrbitTime = coolPreferences.minimumLayerTime.value - self.layerTime
-			if remainingOrbitTime > 0.0:
-				intercircle.addOperatingOrbits( self.boundaryLoops, None, self, remainingOrbitTime )
-			self.boundaryLoops = []
-			self.highestZ = - 99999999.9
+			if remainingOrbitTime > 0.0 and self.boundaryLayer != None:
+				intercircle.addOperatingOrbits( self.boundaryLayer.loops, self, remainingOrbitTime, self.highestZ )
+			z = euclidean.LoopLayer( float( splitLine[ 1 ] ) )
+			self.boundaryLayer = euclidean.LoopLayer( z )
+			self.highestZ = z
 			self.layerTime = 0.0
 		elif firstWord == '(<surroundingLoop>':
 			self.boundaryLoop = []
-			self.boundaryLoops.append( self.boundaryLoop )
+			self.boundaryLayer.loops.append( self.boundaryLoop )
 		self.addLine( line )
 
 
-#add one minute orbit
 class CoolPreferences:
 	"A class to handle the cool preferences."
 	def __init__( self ):

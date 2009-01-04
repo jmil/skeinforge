@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 import Image, ImageDraw, ImageChops
 from GifImagePlugin import getheader, getdata
-from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
+from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 
 # Get the entire text of a file.
 # @param  filename name of the file
@@ -30,7 +30,7 @@ def getDoubleForLetter( letter, splitLine ):
 
 # Get index of the first occurence of the given letter in the split line, starting with the second word.  Return - 1 if letter is not found
 def indexOfStartingWithSecond( letter, splitLine ):
-    for wordIndex in range( 1, len( splitLine ) ):
+    for wordIndex in xrange( 1, len( splitLine ) ):
         word = splitLine[ wordIndex ]
         firstLetter = word[ 0 ]
         if firstLetter == letter:
@@ -62,7 +62,7 @@ def makedelta(fp, sequence):
 
 class g2gif:
     def __init__(self,filename, outfile):
-        self.last_pos = Vec3()
+        self.last_pos = Vector3()
         self.last_pos.z = 999
         self.do_move = 1
         fileText = getFileText( filename )
@@ -102,34 +102,32 @@ class g2gif:
         if indexOfZ > 0:
             point.z = getDoubleAfterFirstLetter( splitLine[ indexOfZ ] )
 
-    def scale(self, x, y):
-        return x * 5 + 150, -y * 5 + 100
+    def scale( self, x, y ):
+        return x * 5 + 150, - y * 5 + 100
 
     def linearMove( self, splitLine ):
-        location = Vec3()
+        location = Vector3()
         self.setFeedrate( splitLine )
         self.setPointComponent( location, splitLine )
         if location.z != self.last_pos.z:
             if self.image:
-                for i in range(10):
+                for i in xrange(10):
                     self.images.append(self.image)
             self.image = Image.new('P', (300, 200), 255)
             palette = []
-            for red in range(8):
-                for green in range(8):
-                    for blue in range(4):
+            for red in xrange(8):
+                for green in xrange(8):
+                    for blue in xrange(4):
                         palette.extend((red * 255 / 7, green * 255 / 7, blue * 255 / 3))
             self.image.putpalette(palette)
             self.segment = 0
         else:
             if self.do_move:
                 draw = ImageDraw.Draw(self.image)
-                draw.line((self.scale(self.last_pos.x, self.last_pos.y),
-                           self.scale(location.x, location.y)), fill = 192)
+                draw.line( ( self.scale( self.last_pos.x, self.last_pos.y ), self.scale( location.x, location.y ) ), fill = 192 )
                 self.segment = self.segment + 1
             else:
                 draw = ImageDraw.Draw(self.image)
-                draw.line((self.scale(self.last_pos.x, self.last_pos.y),
-                           self.scale(location.x, location.y)), fill = self.segment)
+                draw.line( ( self.scale( self.last_pos.x, self.last_pos.y ), self.scale(location.x, location.y ) ), fill = self.segment )
         self.last_pos = location
         self.do_move = 0

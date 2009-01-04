@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/python
 
 """
 Introduction
@@ -65,7 +65,7 @@ When the skeinforge dialog pops up, click 'Skeinforge', choose the file which yo
 and the gcode file will be saved with the suffix '_export.gcode'.
 
 Or you can turn files into gcode by adding the file name, for example:
-> python skeinforge.py Hollow Square.stl
+> python skeinforge.py Screw Holder Bottom.stl
 
 
 

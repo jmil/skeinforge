@@ -10,8 +10,8 @@ The center of the shape will be moved to the "Center X" and "Center Y" coordinat
 The "Number of Columns" preference is the number of columns in the array table.  The "Number of Rows" is the number of rows
 in the table.  The "Separation over Extrusion Width" is the ratio of separation between the shape copies over the extrusion width.
 
-The following examples multiply the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the
-folder which contains Hollow Square.gcode, Hollow Square.gts and multiply.py.  The multiply function will multiply if "Activate
+The following examples multiply the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the
+folder which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and multiply.py.  The multiply function will multiply if "Activate
 Multiply" is true, which can be set in the dialog or by changing the preferences file 'multiply.csv' with a text editor or a
 spreadsheet program set to separate tabs.  The functions writeOutput and getMultiplyChainGcode check to see if the text has
 been multiplied, if not they call getFillChainGcode in fill.py to get filled gcode; once they have the filled text, then they multiply.
@@ -19,8 +19,8 @@ been multiplied, if not they call getFillChainGcode in fill.py to get filled gco
 
 > python multiply.py
 This brings up the dialog, after clicking 'Multiply', the following is printed:
-File Hollow Square.gts is being chain multiplied.
-The multiplied file is saved as Hollow Square_multiply.gcode
+File Screw Holder Bottom.stl is being chain multiplied.
+The multiplied file is saved as Screw Holder Bottom_multiply.gcode
 
 
 >python
@@ -33,9 +33,9 @@ This brings up the multiply dialog.
 
 
 >>> multiply.writeOutput()
-Hollow Square.gts
-File Hollow Square.gts is being chain multiplied.
-The multiplied file is saved as Hollow Square_multiply.gcode
+Screw Holder Bottom.stl
+File Screw Holder Bottom.stl is being chain multiplied.
+The multiplied file is saved as Screw Holder Bottom_multiply.gcode
 
 
 >>> multiply.getMultiplyGcode("
@@ -238,7 +238,7 @@ class MultiplySkein:
 
 	def parseInitialization( self ):
 		"Parse gcode initialization and store the parameters."
-		for self.lineIndex in range( len( self.lines ) ):
+		for self.lineIndex in xrange( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )
@@ -283,8 +283,8 @@ class MultiplySkein:
 				location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 				locationComplexes.append( location.dropAxis( 2 ) )
 				self.oldLocation = location
-		cornerHighComplex = euclidean.getComplexMaximumFromPointsComplex( locationComplexes )
-		cornerLowComplex = euclidean.getComplexMinimumFromPointsComplex( locationComplexes )
+		cornerHighComplex = euclidean.getMaximumFromPoints( locationComplexes )
+		cornerLowComplex = euclidean.getMinimumFromPoints( locationComplexes )
 		self.extent = cornerHighComplex - cornerLowComplex
 		self.shapeCenter = 0.5 * ( cornerHighComplex + cornerLowComplex )
 		self.separation = self.multiplyPreferences.separationOverExtrusionWidth.value * self.extrusionWidth

@@ -6,20 +6,20 @@ translated and saved as a GNU Triangulated Surface format file.
 
 An import plugin is a script in the import_plugins folder which has the function getTriangleMesh.
 
-The following examples import the files Hollow Square.stl.  The examples are run in a terminal in the folder which contains
-Hollow Square.stl & import_translator.py.
+The following examples import the files Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains
+Screw Holder Bottom.stl & import_translator.py.
 
 
 > python import_translator.py
 This brings up the dialog, after clicking 'Translate', the following is printed:
-File Hollow Square.stl is being translated to the GNU Triangulated Surface format.'
-The translated file is saved as Hollow Square.gts
+File Screw Holder Bottom.stl is being translated to the GNU Triangulated Surface format.'
+The translated file is saved as Screw Holder Bottom.stl
 It took 0 seconds to translate the file.
 
 
-> python import_translator.py Hollow Square.stl
-File Hollow Square.stl is being translated to the GNU Triangulated Surface format.
-The translated file is saved as Hollow Square.gts
+> python import_translator.py Screw Holder Bottom.stl
+File Screw Holder Bottom.stl is being translated to the GNU Triangulated Surface format.
+The translated file is saved as Screw Holder Bottom.stl
 It took 0 seconds to translate the file.
 
 
@@ -29,8 +29,8 @@ Python 2.5.1 (r251:54863, Sep 22 2007, 01:43:31)
 Type "help", "copyright", "credits" or "license" for more information.
 >>> import import
 >>> import.writeOutput()
-File Hollow Square.stl is being translated to the GNU Triangulated Surface format.
-The translated file is saved as Hollow Square.gts
+File Screw Holder Bottom.stl is being translated to the GNU Triangulated Surface format.
+The translated file is saved as Screw Holder Bottom.stl
 It took 0 seconds to translate the file.
 
 

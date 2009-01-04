@@ -20,21 +20,21 @@ similar but different from the algorithm, so even once the optimal parameters ar
 to eliminate the inaccuracies caused by contraction, but it should reduce them.  To run stretch, in a shell type:
 > python stretch.py
 
-The following examples stretch the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the
-folder which contains Hollow Square.gcode, Hollow Square.gts and stretch.py.  The functions writeOutput and
+The following examples stretch the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the
+folder which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and stretch.py.  The functions writeOutput and
 getStretchChainGcode check to see if the text has been stretched, if not they call the getCoolChainGcode in cool.py to cool the
 text; once they have the cooled text, then they stretch.
 
 
-> python stretch.py Hollow Square.gts
-File Hollow Square.gts is being chain stretched.
-The stretched file is saved as Hollow Square_stretch.gcode
+> python stretch.py Screw Holder Bottom.stl
+File Screw Holder Bottom.stl is being chain stretched.
+The stretched file is saved as Screw Holder Bottom_stretch.gcode
 
 
 > python stretch.py
 This brings up the dialog, after clicking 'Stretch', the following is printed:
-File Hollow Square.gts is being chain stretched.
-The stretched file is saved as Hollow Square_stretch.gcode
+File Screw Holder Bottom.stl is being chain stretched.
+The stretched file is saved as Screw Holder Bottom_stretch.gcode
 
 
 > python
@@ -47,9 +47,9 @@ This brings up the stretch dialog.
 
 
 >>> stretch.writeOutput()
-Hollow Square.gts
-File Hollow Square.gts is being chain stretched.
-The stretched file is saved as Hollow Square_stretch.gcode
+Screw Holder Bottom.stl
+File Screw Holder Bottom.stl is being chain stretched.
+The stretched file is saved as Screw Holder Bottom_stretch.gcode
 
 
 >>> stretch.getStretchGcode("
@@ -75,7 +75,7 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
+from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
@@ -250,7 +250,7 @@ class StretchPreferences:
 		"Set the default preferences, execute title & preferences filename."
 		#Set the default preferences.
 		self.archive = []
-		self.activateStretch = preferences.BooleanPreference().getFromValue( 'Activate Stretch', True )
+		self.activateStretch = preferences.BooleanPreference().getFromValue( 'Activate Stretch', False )
 		self.archive.append( self.activateStretch )
 		self.loopStretchOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Loop Stretch Over Extrusion Width (ratio):', 0.15 )
 		self.archive.append( self.loopStretchOverExtrusionWidth )
@@ -290,10 +290,9 @@ class StretchSkein:
 		self.oldLocation = None
 		self.output = cStringIO.StringIO()
 
-	def addAlongWayLine( self, alongRatio, location ):
-		"Add stretched gcode line, along the way from the old location to the location."
-		oneMinusAlong = 1.0 - alongRatio
-		alongWayLocation = self.oldLocation.times( alongRatio ).plus( location.times( oneMinusAlong ) )
+	def addAlongWayLine( self, alongWay, location ):
+		"Add stretched gcode line, along the way from the location to the old location."
+		alongWayLocation = euclidean.getIntermediateLocation( alongWay, location, self.oldLocation )
 		alongWayLine = self.getStretchedLineFromIndexLocation( self.lineIndex - 1, self.lineIndex, alongWayLocation )
 		self.addLine( alongWayLine )
 
@@ -374,7 +373,7 @@ class StretchSkein:
 		if relativeStretchLength > 1.0:
 			relativeStretch /= relativeStretchLength
 		absoluteStretch = relativeStretch * self.threadMaximumAbsoluteStretch
-		stretchedLocation = location.plus( Vec3( absoluteStretch.real, absoluteStretch.imag, 0.0 ) )
+		stretchedLocation = location + Vector3( absoluteStretch.real, absoluteStretch.imag, 0.0 )
 		feedrateString = self.getRounded( self.feedrateMinute )
 		return "G1 X%s Y%s Z%s F%s" % ( self.getRounded( stretchedLocation.x ), self.getRounded( stretchedLocation.y ), self.getRounded( stretchedLocation.z ), feedrateString )
 
@@ -402,7 +401,7 @@ class StretchSkein:
 
 	def parseInitialization( self ):
 		"Parse gcode initialization and store the parameters."
-		for self.lineIndex in range( len( self.lines ) ):
+		for self.lineIndex in xrange( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )

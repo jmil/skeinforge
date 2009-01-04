@@ -38,7 +38,7 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
+from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
@@ -222,7 +222,7 @@ class VectorwriteSkein:
 			pass
 		suffixFilenames = []
 		indexFilename = os.path.join( multipleDirectoryName, 'index.html' )
-		for vectorWindowIndex in range( len( self.vectorWindows ) ):
+		for vectorWindowIndex in xrange( len( self.vectorWindows ) ):
 			self.writeVectorWindowText( baseUnderscoredPrefix, multipleDirectoryName, suffixFilenames, vectorWindowIndex )
 		self.writeIndexText( baseUnderscoredPrefix, indexFilename, baseUnderscoredPrefix + ' Index', multipleDirectoryName, suffixFilenames )
 		return gcodec.getSummarizedFilename( indexFilename )
@@ -281,8 +281,8 @@ class VectorwriteSkein:
 	def parseGcode( self, gcodeText, vectorwritePreferences ):
 		"Parse gcode text and store the vector output."
 		self.initializeActiveLocation()
-		self.cornerHigh = Vec3( - 999999999.0, - 999999999.0, - 999999999.0 )
-		self.cornerLow = Vec3( 999999999.0, 999999999.0, 999999999.0 )
+		self.cornerHigh = Vector3( - 999999999.0, - 999999999.0, - 999999999.0 )
+		self.cornerLow = Vector3( 999999999.0, 999999999.0, 999999999.0 )
 		lines = gcodec.getTextLines( gcodeText )
 		for line in lines:
 			self.parseCorner( line )
@@ -293,7 +293,7 @@ class VectorwriteSkein:
 		self.initializeActiveLocation()
 		self.colorNames = [ 'brown', 'red', 'orange', 'yellow', 'green', 'blue', 'purple' ]
 		self.addVectorWindow()
-		for lineIndex in range( len( lines ) ):
+		for lineIndex in xrange( len( lines ) ):
 			line = lines[ lineIndex ]
 			nextLine = ''
 			nextIndex = lineIndex + 1

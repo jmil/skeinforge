@@ -22,8 +22,8 @@ support material.  It is best to not tower at least the first layer because the 
 different than that of the other layers.  The default preference is one.  To run tower, in a shell type:
 > python tower.py
 
-The following examples tower the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder
-which contains Hollow Square.gcode, Hollow Square.gts and tower.py.  The tower function will tower if 'Maximum Tower Layers' is
+The following examples tower the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the folder
+which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and tower.py.  The tower function will tower if 'Maximum Tower Layers' is
 greater than zero, which can be set in the dialog or by changing the preferences file 'tower.csv' with a text editor or a spreadsheet
 program set to separate tabs.  The functions writeOutput and getTowerChainGcode check to see if the text has been towered,
 if not they call the getRaftChainGcode in raft.py to raft the text; once they have the rafted text, then they tower.  Pictures of
@@ -33,8 +33,8 @@ http://reprap.soup.io/?search=towering
 
 > python tower.py
 This brings up the dialog, after clicking 'Tower', the following is printed:
-File Hollow Square.gts is being chain towered.
-The towered file is saved as Hollow Square_tower.gcode
+File Screw Holder Bottom.stl is being chain towered.
+The towered file is saved as Screw Holder Bottom_tower.gcode
 
 
 >python
@@ -47,9 +47,9 @@ This brings up the tower dialog.
 
 
 >>> tower.writeOutput()
-Hollow Square.gts
-File Hollow Square.gts is being chain towered.
-The towered file is saved as Hollow Square_tower.gcode
+Screw Holder Bottom.stl
+File Screw Holder Bottom.stl is being chain towered.
+The towered file is saved as Screw Holder Bottom_tower.gcode
 
 
 >>> tower.getTowerGcode("
@@ -75,7 +75,7 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
+from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
@@ -120,7 +120,7 @@ def transferFillLoops( fillLoops, surroundingLoop ):
 	"Transfer fill loops."
 	for innerSurrounding in surroundingLoop.innerSurroundings:
 		transferFillLoopsToSurroundingLoops( fillLoops, innerSurrounding.innerSurroundings )
-	surroundingLoop.extraLoops = euclidean.getTransferredPathsComplexFunctionPlaceholder( fillLoops, surroundingLoop.boundary )
+	surroundingLoop.extraLoops = euclidean.getTransferredPaths( fillLoops, surroundingLoop.boundary )
 
 def transferFillLoopsToSurroundingLoops( fillLoops, surroundingLoops ):
 	"Transfer fill loops to surrounding loops."
@@ -213,7 +213,7 @@ class TowerSkein:
 		self.lines = None
 		self.oldLayerIndex = None
 		self.oldLocation = None
-		self.oldOrderedLocation = Vec3()
+		self.oldOrderedLocation = Vector3()
 		self.oldZ = - 999999999.0
 		self.output = cStringIO.StringIO()
 		self.shutdownLineIndex = sys.maxint
@@ -227,7 +227,7 @@ class TowerSkein:
 		surroundingLoops = self.islandLayers[ layerIndex ]
 		for line in self.threadLayers[ layerIndex ].beforeExtrusionLines:
 			self.addLine( line )
-		euclidean.addToThreadsRemoveFromSurroundingsComplexFunctionPlaceholder( self.oldOrderedLocation, surroundingLoops, self )
+		euclidean.addToThreadsRemoveFromSurroundings( self.oldOrderedLocation, surroundingLoops, self )
 
 	def addGcodeFromThreadZ( self, thread, z ):
 		"Add a gcode thread to the output."
@@ -270,9 +270,9 @@ class TowerSkein:
 
 	def addIslandLayer( self, threadLayer ):
 		"Add a layer of surrounding islands."
-		surroundingLoops = euclidean.getOrderedSurroundingLoopsComplexFunctionPlaceholder( self.extrusionWidth, threadLayer.surroundingLoops )
+		surroundingLoops = euclidean.getOrderedSurroundingLoops( self.extrusionWidth, threadLayer.surroundingLoops )
 		for surroundingLoop in surroundingLoops:
-			surroundingLoop.boundingLoop = intercircle.BoundingLoopComplexFunctionPlaceholder().getFromLoop( surroundingLoop.boundary )
+			surroundingLoop.boundingLoop = intercircle.BoundingLoop().getFromLoop( surroundingLoop.boundary )
 		euclidean.transferPathsToSurroundingLoops( threadLayer.paths[ : ], surroundingLoops )
 		transferFillLoopsToSurroundingLoops( threadLayer.loops[ : ], surroundingLoops )
 		self.islandLayers.append( surroundingLoops )
@@ -323,19 +323,19 @@ class TowerSkein:
 		if bottomLayerIndex == None:
 			return
 		self.addLayerLinesIfDifferent( bottomLayerIndex )
-		removedIsland = euclidean.getTransferClosestSurroundingLoopComplexFunctionPlaceholder( self.oldOrderedLocation, self.islandLayers[ bottomLayerIndex ], self )
+		removedIsland = euclidean.getTransferClosestSurroundingLoop( self.oldOrderedLocation, self.islandLayers[ bottomLayerIndex ], self )
 		while 1:
 			self.climbTower( removedIsland )
 			bottomLayerIndex = self.getBottomLayerIndex()
 			if bottomLayerIndex == None:
 				return
 			self.addLayerLinesIfDifferent( bottomLayerIndex )
-			removedIsland = euclidean.getTransferClosestSurroundingLoopComplexFunctionPlaceholder( self.oldOrderedLocation, self.islandLayers[ bottomLayerIndex ], self )
+			removedIsland = euclidean.getTransferClosestSurroundingLoop( self.oldOrderedLocation, self.islandLayers[ bottomLayerIndex ], self )
 
 	def climbTower( self, removedIsland ):
 		"Climb up the island to any islands directly above."
 		outsetDistance = 1.5 * self.extrusionWidth
-		for step in range( self.towerPreferences.maximumTowerHeight.value ):
+		for step in xrange( self.towerPreferences.maximumTowerHeight.value ):
 			aboveIndex = self.oldLayerIndex + 1
 			if aboveIndex >= len( self.islandLayers ):
 				return
@@ -347,12 +347,12 @@ class TowerSkein:
 			if len( islandsWithin ) < 1:
 				return
 			self.addLayerLinesIfDifferent( aboveIndex )
-			removedIsland = euclidean.getTransferClosestSurroundingLoopComplexFunctionPlaceholder( self.oldOrderedLocation, islandsWithin, self )
+			removedIsland = euclidean.getTransferClosestSurroundingLoop( self.oldOrderedLocation, islandsWithin, self )
 			self.islandLayers[ aboveIndex ].remove( removedIsland )
 
 	def getBottomLayerIndex( self ):
 		"Get the index of the first island layer which has islands."
-		for islandLayerIndex in range( len( self.islandLayers ) ):
+		for islandLayerIndex in xrange( len( self.islandLayers ) ):
 			if len( self.islandLayers[ islandLayerIndex ] ) > 0:
 				return islandLayerIndex
 		return None
@@ -367,7 +367,7 @@ class TowerSkein:
 			return False
 		bottomLayerIndex = self.getBottomLayerIndex()
 		coneAngleTangent = math.tan( math.radians( self.towerPreferences.extruderPossibleCollisionConeAngle.value ) )
-		for layerIndex in range( bottomLayerIndex, untilLayerIndex ):
+		for layerIndex in xrange( bottomLayerIndex, untilLayerIndex ):
 			islands = self.islandLayers[ layerIndex ]
 			outsetDistance = self.extrusionWidth * ( untilLayerIndex - layerIndex ) * coneAngleTangent + 0.5 * self.extrusionWidth
 			for belowIsland in self.islandLayers[ layerIndex ]:
@@ -393,24 +393,23 @@ class TowerSkein:
 		self.oldLocation = None
 		if gcodec.isThereAFirstWord( '(<operatingLayerEnd>', self.lines, self.lineIndex ):
 			self.parseUntilOperatingLayer()
-		for lineIndex in range( self.lineIndex, len( self.lines ) ):
+		for lineIndex in xrange( self.lineIndex, len( self.lines ) ):
 			self.parseLine( lineIndex )
 		for threadLayer in self.threadLayers:
 			self.addIslandLayer( threadLayer )
-		for self.layerIndex in range( min( len( self.islandLayers ), towerPreferences.towerStartLayer.value ) ):
+		for self.layerIndex in xrange( min( len( self.islandLayers ), towerPreferences.towerStartLayer.value ) ):
 			self.addEntireLayer( self.layerIndex )
 		self.addTowers()
 		self.addShutdownToOutput()
 
 	def parseInitialization( self ):
 		"Parse gcode initialization and store the parameters."
-		for self.lineIndex in range( len( self.lines ) ):
+		for self.lineIndex in xrange( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == '(<extrusionStart>':
 				self.addLine( '(<procedureDone> tower )' )
-				self.addLine( line )
 				return
 			if firstWord == '(<decimalPlacesCarried>':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
@@ -453,7 +452,7 @@ class TowerSkein:
 		elif firstWord == '(<perimeter>':
 			self.isPerimeter = True
 		elif firstWord == '(<surroundingLoop>':
-			self.surroundingLoop = euclidean.SurroundingLoopZ()
+			self.surroundingLoop = euclidean.SurroundingLoop()
 			if self.threadLayer == None:
 				self.threadLayer = ThreadLayer()
 				if self.beforeExtrusionLines != None:
@@ -469,7 +468,7 @@ class TowerSkein:
 
 	def parseUntilOperatingLayer( self ):
 		"Parse gcode until the operating layer if there is one."
-		for self.lineIndex in range( self.lineIndex, len( self.lines ) ):
+		for self.lineIndex in xrange( self.lineIndex, len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )

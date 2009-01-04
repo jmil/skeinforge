@@ -119,7 +119,7 @@ def getTextLines( text ):
 
 def indexOfStartingWithSecond( letter, splitLine ):
 	"Get index of the first occurence of the given letter in the split line, starting with the second word.  Return - 1 if letter is not found"
-	for wordIndex in range( 1, len( splitLine ) ):
+	for wordIndex in xrange( 1, len( splitLine ) ):
 		word = splitLine[ wordIndex ]
 		firstLetter = word[ 0 ]
 		if firstLetter == letter:

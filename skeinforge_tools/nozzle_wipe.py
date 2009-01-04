@@ -18,21 +18,21 @@ the zeroth layer, the third layer, sixth layer and so on.
 To run nozzle wipe, in a shell which nozzle wipe is in type:
 > python nozzle_wipe.py
 
-The following examples nozzle wipes the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the
-folder which contains Hollow Square.gcode, Hollow Square.gts and nozzle_wipe.py.  The nozzle wipe function will nozzle wipe if the
+The following examples nozzle wipes the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the
+folder which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and nozzle_wipe.py.  The nozzle wipe function will nozzle wipe if the
 'Activate Nozzle Wipe' checkbox is on.  The functions writeOutput and getNozzleWipeChainGcode check to see if the text has been
 nozzle wiped, if not they call the getHopChainGcode in hop.py to hop the text; once they have the hopped text, then they nozzle wipe.
 
 
 > python nozzle_wipe.py
 This brings up the dialog, after clicking 'Nozzle Wipe', the following is printed:
-File Hollow Square.gts is being chain nozzle wiped.
-The nozzle wiped file is saved as Hollow Square_nozzle_wipe.gcode
+File Screw Holder Bottom.stl is being chain nozzle wiped.
+The nozzle wiped file is saved as Screw Holder Bottom_nozzle_wipe.gcode
 
 
-> python nozzle_wipe.py Hollow Square.gts
-File Hollow Square.gts is being chain nozzle wiped.
-The nozzle wiped file is saved as Hollow Square_nozzle_wipe.gcode
+> python nozzle_wipe.py Screw Holder Bottom.stl
+File Screw Holder Bottom.stl is being chain nozzle wiped.
+The nozzle wiped file is saved as Screw Holder Bottom_nozzle_wipe.gcode
 
 
 > python
@@ -45,8 +45,8 @@ This brings up the nozzle wipe dialog.
 
 
 >>> nozzle_wipe.writeOutput()
-File Hollow Square.gts is being chain nozzle wiped.
-The nozzle wiped file is saved as Hollow Square_nozzle_wipe.gcode
+File Screw Holder Bottom.stl is being chain nozzle wiped.
+The nozzle wiped file is saved as Screw Holder Bottom_nozzle_wipe.gcode
 
 
 >>> nozzle_wipe.getNozzleWipeGcode("
@@ -76,7 +76,7 @@ import __init__
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
-from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
+from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools import analyze
 from skeinforge_tools import hop
 from skeinforge_tools import import_translator
@@ -243,16 +243,16 @@ class NozzleWipeSkein:
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.nozzleWipePeriod = nozzleWipePreferences.nozzleWipePeriod.value
 		self.parseInitialization( nozzleWipePreferences )
-		self.locationArrival = Vec3( nozzleWipePreferences.locationArrivalX.value, nozzleWipePreferences.locationArrivalY.value, nozzleWipePreferences.locationArrivalZ.value )
-		self.locationDeparture = Vec3( nozzleWipePreferences.locationDepartureX.value, nozzleWipePreferences.locationDepartureY.value, nozzleWipePreferences.locationDepartureZ.value )
-		self.locationWipe = Vec3( nozzleWipePreferences.locationWipeX.value, nozzleWipePreferences.locationWipeY.value, nozzleWipePreferences.locationWipeZ.value )
-		for self.lineIndex in range( self.lineIndex, len( self.lines ) ):
+		self.locationArrival = Vector3( nozzleWipePreferences.locationArrivalX.value, nozzleWipePreferences.locationArrivalY.value, nozzleWipePreferences.locationArrivalZ.value )
+		self.locationDeparture = Vector3( nozzleWipePreferences.locationDepartureX.value, nozzleWipePreferences.locationDepartureY.value, nozzleWipePreferences.locationDepartureZ.value )
+		self.locationWipe = Vector3( nozzleWipePreferences.locationWipeX.value, nozzleWipePreferences.locationWipeY.value, nozzleWipePreferences.locationWipeZ.value )
+		for self.lineIndex in xrange( self.lineIndex, len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			self.parseLine( line )
 
 	def parseInitialization( self, nozzleWipePreferences ):
 		"Parse gcode initialization and store the parameters."
-		for self.lineIndex in range( len( self.lines ) ):
+		for self.lineIndex in xrange( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )

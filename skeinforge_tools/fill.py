@@ -45,14 +45,14 @@ zero, the entire object will be composed of a sparse infill, and water could flo
 through the surface and with a value of three, the object could be watertight.  The higher the solid surface thickness, the stronger and
 heavier the object will be.  The default is three.
 
-The following examples fill the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder which
-contains Hollow Square.gcode, Hollow Square.gts and fill.py.
+The following examples fill the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which
+contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and fill.py.
 
 
 > python fill.py
 This brings up the dialog, after clicking 'Fill', the following is printed:
-File Hollow Square.gts is being chain filled.
-The filled file is saved as Hollow Square_fill.gcode
+File Screw Holder Bottom.stl is being chain filled.
+The filled file is saved as Screw Holder Bottom_fill.gcode
 
 
 >python
@@ -61,14 +61,14 @@ Python 2.5.1 (r251:54863, Sep 22 2007, 01:43:31)
 Type "help", "copyright", "credits" or "license" for more information.
 >>> import fill
 >>> fill.main()
-File Hollow Square.gts is being filled.
-The filled file is saved as Hollow Square_fill.gcode
+File Screw Holder Bottom.stl is being filled.
+The filled file is saved as Screw Holder Bottom_fill.gcode
 It took 3 seconds to fill the file.
 
 
 >>> fill.writeOutput()
-File Hollow Square.gts is being filled.
-The filled file is saved as Hollow Square_fill.gcode
+File Screw Holder Bottom.stl is being filled.
+The filled file is saved as Screw Holder Bottom_fill.gcode
 It took 3 seconds to fill the file.
 
 """
@@ -86,7 +86,7 @@ from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
-from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
+from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools import analyze
 from skeinforge_tools import import_translator
 from skeinforge_tools import polyfile
@@ -102,21 +102,22 @@ __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
 #oozebane to handle minimum start up, add differential flow rates
-#user mcodes
 #use slice format, carve & inset, slice aoi xml
+#user mcodes
+#skeinedge
 #pyramidal
 #change material
-#skeinedge
 #bridge extrusion width
 #email marcus about bridge extrusion width http://reprap.org/bin/view/Main/ExtruderImprovementsAndAlternatives
-#compartmentalize addOrbit
+#compartmentalize addOrbit, maybe already done
 #distance option???
-#mosaic
-#rulers & z on skeinview
-#searchable help
+#rulers, zoom & select field on skeinview
+#simulate
 #document gear script
 #gang, maybe from skeinedge?
+#mosaic
 #transform
+#searchable help
 #pick and place
 #stack
 #infill first option
@@ -135,7 +136,7 @@ def addAroundGridPoint( arounds, gridPoint, gridPointInsetX, gridPointInsetY, gr
 	"Add the path around the grid point."
 	closestPathIndex = None
 	aroundIntersectionPaths = []
-	for aroundIndex in range( len( arounds ) ):
+	for aroundIndex in xrange( len( arounds ) ):
 		loop = arounds[ aroundIndex ]
 		for pointIndex in xrange( len( loop ) ):
 			pointFirst = loop[ pointIndex ]
@@ -158,7 +159,7 @@ def addAroundGridPoint( arounds, gridPoint, gridPointInsetX, gridPointInsetY, gr
 	segmentFirstY = min( yCloseToCenterArounds[ 0 ].y, yCloseToCenterArounds[ 1 ].y )
 	segmentSecondY = max( yCloseToCenterArounds[ 0 ].y, yCloseToCenterArounds[ 1 ].y )
 	yIntersectionPaths = []
-	for pathIndex in range( len( paths ) ):
+	for pathIndex in xrange( len( paths ) ):
 		path = paths[ pathIndex ]
 		for pointIndex in xrange( len( path ) - 1 ):
 			pointFirst = path[ pointIndex ]
@@ -187,7 +188,7 @@ def addAroundGridPoint( arounds, gridPoint, gridPointInsetX, gridPointInsetY, gr
 
 def addPath( extrusionWidth, fill, path, rotationPlaneAngle ):
 	"Add simplified path to fill."
-	planeRotated = euclidean.getPointComplexesRoundZAxisByComplex( rotationPlaneAngle, euclidean.getSimplifiedPathComplexFunctionPlaceholder( path, extrusionWidth ) )
+	planeRotated = euclidean.getPointsRoundZAxis( rotationPlaneAngle, euclidean.getSimplifiedPath( path, extrusionWidth ) )
 	fill.append( planeRotated )
 
 def addPointOnPath( path, pixelTable, point, pointIndex, width ):
@@ -256,9 +257,9 @@ def addSparseEndpointsFromSegment( doubleExtrusionWidth, endpoints, fillLine, ho
 
 def addSurroundingXIntersectionIndexes( surroundingSlices, xIntersectionIndexList, y ):
 	"Add x intersection indexes from surrounding layers."
-	for surroundingIndex in range( len( surroundingSlices ) ):
+	for surroundingIndex in xrange( len( surroundingSlices ) ):
 		surroundingSlice = surroundingSlices[ surroundingIndex ]
-		euclidean.addXIntersectionIndexesFromLoopsComplexFunctionPlaceholder( surroundingSlice, surroundingIndex, xIntersectionIndexList, y )
+		euclidean.addXIntersectionIndexesFromLoops( surroundingSlice, surroundingIndex, xIntersectionIndexList, y )
 
 def addYIntersectionPathToList( pathIndex, pointIndex, y, yIntersection, yIntersectionPaths ):
 	"Add the y intersection path to the y intersection paths."
@@ -296,10 +297,10 @@ def createExtraFillLoops( radius, surroundingLoop ):
 	for innerSurrounding in surroundingLoop.innerSurroundings:
 		createFillForSurroundings( radius, innerSurrounding.innerSurroundings )
 	outsides = []
-	insides = euclidean.getInsidesAddToOutsidesComplexFunctionPlaceholder( surroundingLoop.getFillLoops(), outsides )
+	insides = euclidean.getInsidesAddToOutsides( surroundingLoop.getFillLoops(), outsides )
 	allFillLoops = []
 	for outside in outsides:
-		transferredLoops = euclidean.getTransferredPathsComplexFunctionPlaceholder( insides, outside )
+		transferredLoops = euclidean.getTransferredPaths( insides, outside )
 		allFillLoops += getExtraFillLoops( transferredLoops, outside, radius )
 	if len( allFillLoops ) > 0:
 		surroundingLoop.lastFillLoops = allFillLoops
@@ -330,17 +331,17 @@ def getExtraFillLoops( insideLoops, outsideLoop, radius ):
 	greaterThanRadius = 1.4 * radius
 	muchGreaterThanRadius = 2.5 * radius
 	extraFillLoops = []
-	circleNodes = intercircle.getCircleNodesFromLoopComplex( outsideLoop, greaterThanRadius )
+	circleNodes = intercircle.getCircleNodesFromLoop( outsideLoop, greaterThanRadius )
 	for inside in insideLoops:
-		circleNodes += intercircle.getCircleNodesFromLoopComplex( inside, greaterThanRadius )
-	centers = intercircle.getCentersFromCircleNodesComplex( circleNodes )
+		circleNodes += intercircle.getCircleNodesFromLoop( inside, greaterThanRadius )
+	centers = intercircle.getCentersFromCircleNodes( circleNodes )
 	otherLoops = insideLoops + [ outsideLoop ]
 	for center in centers:
-		inset = intercircle.getSimplifiedInsetFromClockwiseLoopComplex( center, radius )
-		if euclidean.isLargeSameDirectionComplex( inset, center, muchGreaterThanRadius ):
+		inset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, radius )
+		if euclidean.isLargeSameDirection( inset, center, muchGreaterThanRadius ):
 			if isPathAlwaysInsideLoop( outsideLoop, inset ):
 				if isPathAlwaysOutsideLoops( insideLoops, inset ):
-					if not euclidean.isLoopIntersectingLoopsComplex( inset, otherLoops ):
+					if not euclidean.isLoopIntersectingLoops( inset, otherLoops ):
 						inset.reverse()
 						extraFillLoops.append( inset )
 	return extraFillLoops
@@ -368,9 +369,9 @@ def getFillGcode( gcodeText, fillPreferences = None ):
 def getHorizontalSegmentsFromLoopLists( fillLoops, alreadyFilledArounds, y ):
 	"Get horizontal segments inside loops."
 	xIntersectionIndexList = []
-	euclidean.addXIntersectionIndexesFromLoopsComplexFunctionPlaceholder( fillLoops, - 1, xIntersectionIndexList, y )
-	euclidean.addXIntersectionIndexesFromLoopListsComplex( alreadyFilledArounds, xIntersectionIndexList, y )
-	return euclidean.getSegmentsFromXIntersectionIndexesComplex( xIntersectionIndexList, y )
+	euclidean.addXIntersectionIndexesFromLoops( fillLoops, - 1, xIntersectionIndexList, y )
+	euclidean.addXIntersectionIndexesFromLoopLists( alreadyFilledArounds, xIntersectionIndexList, y )
+	return euclidean.getSegmentsFromXIntersectionIndexes( xIntersectionIndexList, y )
 
 def getIntersectionOfXIntersectionIndexes( totalSolidSurfaceThickness, xIntersectionIndexList ):
 	"Get x intersections from surrounding layers."
@@ -420,22 +421,17 @@ def getSurroundingXIntersections( doubleSolidSurfaceThickness, surroundingSlices
 		return None
 	return getIntersectionOfXIntersectionIndexes( doubleSolidSurfaceThickness, xIntersectionIndexList )
 
-def getWithLeastLength( path, point, radius ):
+def getWithLeastLength( path, point ):
 	"Insert a point into a path, at the index at which the path would be shortest."
 	if len( path ) < 1:
 		return 0
 	shortestPointIndex = None
 	shortestAdditionalLength = 999999999999999999.0
-	for pointIndex in range( len( path ) + 1 ):
+	for pointIndex in xrange( len( path ) + 1 ):
 		additionalLength = getAdditionalLength( path, point, pointIndex )
 		if additionalLength < shortestAdditionalLength:
 			shortestAdditionalLength = additionalLength
 			shortestPointIndex = pointIndex
-	if shortestAdditionalLength < - 0.01 * radius:
-		print( 'shortestAdditionalLength < 0.0 in getWithLeastLength in fill' )
-		print( shortestAdditionalLength )
-		print( pointIndex )
-		print( path )
 	return shortestPointIndex
 
 def getYIntersection( firstPoint, secondPoint, x ):
@@ -572,7 +568,7 @@ def isIntersectingLoopsPaths( loops, paths, pointBegin, pointEnd ):
 def isPathAlwaysInsideLoop( loop, path ):
 	"Determine if all points of a path are inside another loop."
 	for point in path:
-		if euclidean.getNumberOfIntersectionsToLeftComplex( point, loop ) % 2 == 0:
+		if euclidean.getNumberOfIntersectionsToLeft( point, loop ) % 2 == 0:
 			return False
 	return True
 
@@ -580,7 +576,7 @@ def isPathAlwaysOutsideLoops( loops, path ):
 	"Determine if all points in a path are outside another loop in a list."
 	for loop in loops:
 		for point in path:
-			if euclidean.getNumberOfIntersectionsToLeftComplex( point, loop ) % 2 == 1:
+			if euclidean.getNumberOfIntersectionsToLeft( point, loop ) % 2 == 1:
 				return False
 	return True
 
@@ -595,9 +591,9 @@ def isPointAddedAroundClosest( aroundPixelTable, layerExtrusionWidth, paths, rem
 	"Add the closest removed endpoint to the path, with minimal twisting."
 	closestDistanceSquared = 999999999999999999.0
 	closestPathIndex = None
-	for pathIndex in range( len( paths ) ):
+	for pathIndex in xrange( len( paths ) ):
 		path = paths[ pathIndex ]
-		for pointIndex in range( len( path ) ):
+		for pointIndex in xrange( len( path ) ):
 			point = path[ pointIndex ]
 			distanceSquared = abs( point - removedEndpointPoint )
 			if distanceSquared < closestDistanceSquared:
@@ -608,7 +604,7 @@ def isPointAddedAroundClosest( aroundPixelTable, layerExtrusionWidth, paths, rem
 	if closestDistanceSquared < 0.8 * layerExtrusionWidth * layerExtrusionWidth:
 		return
 	closestPath = paths[ closestPathIndex ]
-	closestPointIndex = getWithLeastLength( closestPath, removedEndpointPoint, width )
+	closestPointIndex = getWithLeastLength( closestPath, removedEndpointPoint )
 	if isAddedPointOnPathFree( closestPath, aroundPixelTable, removedEndpointPoint, closestPointIndex, width ):
 		addPointOnPath( closestPath, aroundPixelTable, removedEndpointPoint, closestPointIndex, width )
 		return True
@@ -627,7 +623,7 @@ def isSegmentCompletelyInAnIntersection( segment, xIntersections ):
 	for xIntersectionIndex in xrange( 0, len( xIntersections ), 2 ):
 		surroundingXFirst = xIntersections[ xIntersectionIndex ]
 		surroundingXSecond = xIntersections[ xIntersectionIndex + 1 ]
-		if euclidean.isSegmentCompletelyInXComplexFunctionPlaceholder( segment, surroundingXFirst, surroundingXSecond ):
+		if euclidean.isSegmentCompletelyInX( segment, surroundingXFirst, surroundingXSecond ):
 			return True
 	return False
 
@@ -649,7 +645,7 @@ def isSharpCorner( beginComplex, centerComplex, endComplex ):
 		return False
 	centerBeginComplex /= centerBeginLength
 	centerEndComplex /= centerEndLength
-	return euclidean.getComplexDot( centerBeginComplex, centerEndComplex ) > 0.9
+	return euclidean.getDotProduct( centerBeginComplex, centerEndComplex ) > 0.9
 
 def isSidePointAdded( aroundPixelTable, closestPath, closestPointIndex, layerExtrusionWidth, removedEndpointPoint, width ):
 	"Add side point along with the closest removed endpoint to the path, with minimal twisting."
@@ -813,7 +809,7 @@ class FillSkein:
 		self.lastExtraShells = - 1
 		self.lineIndex = 0
 		self.oldLocation = None
-		self.oldOrderedLocation = Vec3()
+		self.oldOrderedLocation = Vector3()
 		self.output = cStringIO.StringIO()
 		self.rotatedLayer = None
 		self.rotatedLayers = []
@@ -847,7 +843,7 @@ class FillSkein:
 		slightlyGreaterThanFill = 1.01 * layerFillInset
 		layerRotationAroundZAngle = self.getLayerRoundZ( layerIndex )
 		if self.fillPreferences.infillPatternGridHexagonal.value:
-			if abs( euclidean.getComplexDot( layerRotationAroundZAngle, euclidean.getPolar( self.infillBeginRotation, 1.0 ) ) ) < math.sqrt( 0.5 ):
+			if abs( euclidean.getDotProduct( layerRotationAroundZAngle, euclidean.getPolar( self.infillBeginRotation, 1.0 ) ) ) < math.sqrt( 0.5 ):
 				layerInfillSolidity *= 0.5
 				self.isDoubleJunction = False
 			else:
@@ -861,7 +857,7 @@ class FillSkein:
 		surroundingSlices = []
 		layerRemainder = layerIndex % int( round( self.fillPreferences.diaphragmPeriod.value ) )
 		if layerRemainder >= int( round( self.fillPreferences.diaphragmThickness.value ) ):
-			for surroundingIndex in range( 1, self.solidSurfaceThickness + 1 ):
+			for surroundingIndex in xrange( 1, self.solidSurfaceThickness + 1 ):
 				self.addRotatedSlice( layerIndex - surroundingIndex, reverseRotationAroundZAngle, surroundingSlices )
 				self.addRotatedSlice( layerIndex + surroundingIndex, reverseRotationAroundZAngle, surroundingSlices )
 		extraShells = self.fillPreferences.extraShellsSparseLayer.value
@@ -872,10 +868,10 @@ class FillSkein:
 			self.lastExtraShells = extraShells
 		else:
 			self.lastExtraShells = - 1
-		surroundingLoops = euclidean.getOrderedSurroundingLoopsComplexFunctionPlaceholder( layerExtrusionWidth, self.rotatedLayers[ layerIndex ].surroundingLoops )
+		surroundingLoops = euclidean.getOrderedSurroundingLoops( layerExtrusionWidth, self.rotatedLayers[ layerIndex ].surroundingLoops )
 		if isPerimeterPathInSurroundLoops( surroundingLoops ):
 			extraShells = 0
-		for extraShellIndex in range( extraShells ):
+		for extraShellIndex in xrange( extraShells ):
 			radius = layerExtrusionWidth
 			if extraShellIndex == 0:
 				radius = 0.5  * ( layerExtrusionWidth + self.extrusionPerimeterWidth )
@@ -885,27 +881,27 @@ class FillSkein:
 		for loop in fillLoops:
 			alreadyFilledLoop = []
 			alreadyFilledArounds.append( alreadyFilledLoop )
-			planeRotatedPerimeter = euclidean.getPointComplexesRoundZAxisByComplex( reverseRotationAroundZAngle, loop )
+			planeRotatedPerimeter = euclidean.getPointsRoundZAxis( reverseRotationAroundZAngle, loop )
 			rotatedExtruderLoops.append( planeRotatedPerimeter )
-			circleNodes = intercircle.getCircleNodesFromLoopComplex( planeRotatedPerimeter, slightlyGreaterThanFill )
-			centers = intercircle.getCentersFromCircleNodesComplex( circleNodes )
-			euclidean.addLoopToPixelTableComplexFunctionPlaceholder( planeRotatedPerimeter, aroundPixelTable, aroundWidth )
+			circleNodes = intercircle.getCircleNodesFromLoop( planeRotatedPerimeter, slightlyGreaterThanFill )
+			centers = intercircle.getCentersFromCircleNodes( circleNodes )
+			euclidean.addLoopToPixelTable( planeRotatedPerimeter, aroundPixelTable, aroundWidth )
 			for center in centers:
-				alreadyFilledInset = intercircle.getSimplifiedInsetFromClockwiseLoopComplex( center, layerFillInset )
-				if euclidean.getMaximumSpanComplex( alreadyFilledInset ) > muchGreaterThanLayerFillInset:
+				alreadyFilledInset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, layerFillInset )
+				if euclidean.getMaximumSpan( alreadyFilledInset ) > muchGreaterThanLayerFillInset:
 					alreadyFilledLoop.append( alreadyFilledInset )
-					around = intercircle.getSimplifiedInsetFromClockwiseLoopComplex( center, aroundInset )
-					if euclidean.isPathInsideLoopComplex( planeRotatedPerimeter, around ) == euclidean.isWiddershinsComplex( planeRotatedPerimeter ):
+					around = intercircle.getSimplifiedInsetFromClockwiseLoop( center, aroundInset )
+					if euclidean.isPathInsideLoop( planeRotatedPerimeter, around ) == euclidean.isWiddershins( planeRotatedPerimeter ):
 						arounds.append( around )
 		if len( arounds ) < 1:
-			euclidean.addToThreadsRemoveFromSurroundingsComplexFunctionPlaceholder( self.oldOrderedLocation, surroundingLoops, self )
+			euclidean.addToThreadsRemoveFromSurroundings( self.oldOrderedLocation, surroundingLoops, self )
 			return
-		back = euclidean.getBackOfLoopsComplexFunctionPlaceholder( arounds )
-		front = euclidean.getFrontOfLoopsComplexFunctionPlaceholder( arounds )
+		back = euclidean.getBackOfLoops( arounds )
+		front = euclidean.getFrontOfLoops( arounds )
 		area = self.getSliceArea( layerIndex )
 		if area > 0.0:
 			areaChange = 1.0
-			for surroundingIndex in range( 1, self.solidSurfaceThickness + 1 ):
+			for surroundingIndex in xrange( 1, self.solidSurfaceThickness + 1 ):
 				areaChange = min( areaChange, self.getAreaChange( area, layerIndex - surroundingIndex ) )
 				areaChange = min( areaChange, self.getAreaChange( area, layerIndex + surroundingIndex ) )
 			if areaChange > 0.5 or self.solidSurfaceThickness == 0:
@@ -919,15 +915,15 @@ class FillSkein:
 			lineSegments = getHorizontalSegmentsFromLoopLists( rotatedExtruderLoops, alreadyFilledArounds, y )
 			horizontalSegments.append( lineSegments )
 		removedEndpoints = []
-		for fillLine in range( len( horizontalSegments ) ):
+		for fillLine in xrange( len( horizontalSegments ) ):
 			y = front + float( fillLine ) * layerExtrusionWidth
 			horizontalEndpoints = horizontalSegments[ fillLine ]
 			surroundingXIntersections = getSurroundingXIntersections( self.doubleSolidSurfaceThickness, surroundingSlices, y )
 			addSparseEndpoints( doubleExtrusionWidth, endpoints, fillLine, horizontalSegments, layerInfillSolidity, removedEndpoints, self.solidSurfaceThickness, surroundingXIntersections )
 		if len( endpoints ) < 1:
-			euclidean.addToThreadsRemoveFromSurroundingsComplexFunctionPlaceholder( self.oldOrderedLocation, surroundingLoops, self )
+			euclidean.addToThreadsRemoveFromSurroundings( self.oldOrderedLocation, surroundingLoops, self )
 			return
-		paths = euclidean.getPathsFromEndpointsComplexFunctionPlaceholder( endpoints, layerFillInset, aroundPixelTable, aroundWidth )
+		paths = euclidean.getPathsFromEndpoints( endpoints, layerFillInset, aroundPixelTable, aroundWidth )
 		if not self.fillPreferences.infillPatternLine.value:
 			self.addGrid( alreadyFilledArounds, arounds, fillLoops, gridPointInsetX, paths, aroundPixelTable, aroundWidth, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingSlices )
 		oldRemovedEndpointLength = len( removedEndpoints ) + 1
@@ -937,7 +933,7 @@ class FillSkein:
 		for path in paths:
 			addPath( layerFillInset, fill, path, layerRotationAroundZAngle )
 		euclidean.transferPathsToSurroundingLoops( fill, surroundingLoops )
-		euclidean.addToThreadsRemoveFromSurroundingsComplexFunctionPlaceholder( self.oldOrderedLocation, surroundingLoops, self )
+		euclidean.addToThreadsRemoveFromSurroundings( self.oldOrderedLocation, surroundingLoops, self )
 
 	def addGcodeFromThreadZ( self, thread, z ):
 		"Add a gcode thread to the output."
@@ -1006,7 +1002,7 @@ class FillSkein:
 		surroundingLoops = self.rotatedLayers[ layerIndex ].surroundingLoops
 		rotatedSlice = []
 		for surroundingLoop in surroundingLoops:
-			planeRotatedLoop = euclidean.getPointComplexesRoundZAxisByComplex( reverseRotationAroundZAngle, surroundingLoop.boundary )
+			planeRotatedLoop = euclidean.getPointsRoundZAxis( reverseRotationAroundZAngle, surroundingLoop.boundary )
 			rotatedSlice.append( planeRotatedLoop )
 		surroundingSlices.append( rotatedSlice )
 
@@ -1054,15 +1050,15 @@ class FillSkein:
 		for loop in fillLoops:
 			gridAlreadyFilledLoop = []
 			gridAlreadyFilledArounds.append( gridAlreadyFilledLoop )
-			planeRotatedPerimeter = euclidean.getPointComplexesRoundZAxisByComplex( reverseRotationBaseAngle, loop )
+			planeRotatedPerimeter = euclidean.getPointsRoundZAxis( reverseRotationBaseAngle, loop )
 			gridRotatedExtruderLoops.append( planeRotatedPerimeter )
-			circleNodes = intercircle.getCircleNodesFromLoopComplex( planeRotatedPerimeter, slightlyGreaterThanFill )
-			centers = intercircle.getCentersFromCircleNodesComplex( circleNodes )
+			circleNodes = intercircle.getCircleNodesFromLoop( planeRotatedPerimeter, slightlyGreaterThanFill )
+			centers = intercircle.getCentersFromCircleNodes( circleNodes )
 			for center in centers:
-				alreadyFilledInset = intercircle.getSimplifiedInsetFromClockwiseLoopComplex( center, gridInset )
-				if euclidean.getMaximumSpanComplex( alreadyFilledInset ) > muchGreaterThanLayerFillInset:
+				alreadyFilledInset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, gridInset )
+				if euclidean.getMaximumSpan( alreadyFilledInset ) > muchGreaterThanLayerFillInset:
 					gridAlreadyFilledLoop.append( alreadyFilledInset )
-					if euclidean.isPathInsideLoopComplex( planeRotatedPerimeter, alreadyFilledInset ) == euclidean.isWiddershinsComplex( planeRotatedPerimeter ):
+					if euclidean.isPathInsideLoop( planeRotatedPerimeter, alreadyFilledInset ) == euclidean.isWiddershins( planeRotatedPerimeter ):
 						for point in alreadyFilledInset:
 							back = max( back, point.imag )
 							front = min( front, point.imag )
@@ -1123,7 +1119,7 @@ class FillSkein:
 		surroundingLoops = self.rotatedLayers[ layerIndex ].surroundingLoops
 		area = 0.0
 		for surroundingLoop in surroundingLoops:
-			area += euclidean.getPolygonAreaComplex( surroundingLoop.boundary )
+			area += euclidean.getPolygonArea( surroundingLoop.boundary )
 		return area
 
 	def isPointInsideLineSegments( self, alreadyFilledArounds, gridPoint, rotatedExtruderLoops, surroundingSlices ):
@@ -1159,15 +1155,15 @@ class FillSkein:
 		self.infillOddLayerExtraRotation = math.radians( fillPreferences.infillOddLayerExtraRotation.value )
 		self.solidSurfaceThickness = int( round( self.fillPreferences.solidSurfaceThickness.value ) )
 		self.doubleSolidSurfaceThickness = self.solidSurfaceThickness + self.solidSurfaceThickness
-		for lineIndex in range( self.lineIndex, len( self.lines ) ):
+		for lineIndex in xrange( self.lineIndex, len( self.lines ) ):
 			self.parseLine( lineIndex )
-		for layerIndex in range( len( self.rotatedLayers ) ):
+		for layerIndex in xrange( len( self.rotatedLayers ) ):
 			self.addFill( layerIndex )
 		self.addShutdownToOutput()
 
 	def parseInitialization( self ):
 		"Parse gcode initialization and store the parameters."
-		for self.lineIndex in range( len( self.lines ) ):
+		for self.lineIndex in xrange( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
 			firstWord = ''
@@ -1219,7 +1215,7 @@ class FillSkein:
 		elif firstWord == '(<perimeter>':
 			self.isPerimeter = True
 		elif firstWord == '(<surroundingLoop>':
-			self.surroundingLoop = euclidean.SurroundingLoopZ()
+			self.surroundingLoop = euclidean.SurroundingLoop()
 			rotatedLayer = self.getRotatedLayer()
 			rotatedLayer.surroundingLoops.append( self.surroundingLoop )
 		elif firstWord == '(</surroundingLoop>':

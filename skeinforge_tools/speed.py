@@ -13,8 +13,8 @@ In the "Flowrate Choice" radio button group, if "Do Not Add Flowrate" is selecte
 output.  If "Metric" is selected, the flowrate in cubic millimeters per second will be added to the output.  If "PWM Setting" is
 selected, the value in the "Flowrate PWM Setting" field will be added to the output.
 
-The following examples speed the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the
-folder which contains Hollow Square.gcode, Hollow Square.gts and speed.py.  The speed function will speed if "Activate
+The following examples speed the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the
+folder which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and speed.py.  The speed function will speed if "Activate
 Speed" is true, which can be set in the dialog or by changing the preferences file 'speed.csv' with a text editor or a spreadsheet
 program set to separate tabs.  The functions writeOutput and getSpeedChainGcode check to see if the text has been speeded,
 if not they call getMultiplyChainGcode in multiply.py to get multiplied gcode; once they have the multiplied text, then they
@@ -23,8 +23,8 @@ speed.
 
 > python speed.py
 This brings up the dialog, after clicking 'Speed', the following is printed:
-File Hollow Square.gts is being chain speeded.
-The speeded file is saved as Hollow Square_speed.gcode
+File Screw Holder Bottom.stl is being chain speeded.
+The speeded file is saved as Screw Holder Bottom_speed.gcode
 
 
 >python
@@ -37,9 +37,9 @@ This brings up the speed dialog.
 
 
 >>> speed.writeOutput()
-Hollow Square.gts
-File Hollow Square.gts is being chain speeded.
-The speeded file is saved as Hollow Square_speed.gcode
+Screw Holder Bottom.stl
+File Screw Holder Bottom.stl is being chain speeded.
+The speeded file is saved as Screw Holder Bottom_speed.gcode
 
 
 >>> speed.getSpeedGcode("
@@ -155,6 +155,10 @@ class SpeedPreferences:
 		self.archive.append( self.flowratePWMSetting )
 		self.orbitalFeedrateOverOperatingFeedrate = preferences.FloatPreference().getFromValue( 'Orbital Feedrate over Operating Feedrate (ratio):', 0.5 )
 		self.archive.append( self.orbitalFeedrateOverOperatingFeedrate )
+		self.perimeterFeedrateOverOperatingFeedrate = preferences.FloatPreference().getFromValue( 'Perimeter Feedrate over Operating Feedrate (ratio):', 1.0 )
+		self.archive.append( self.perimeterFeedrateOverOperatingFeedrate )
+		self.perimeterFlowrateOverOperatingFlowrate = preferences.FloatPreference().getFromValue( 'Perimeter Flowrate over Operating Flowrate (ratio):', 1.0 )
+		self.archive.append( self.perimeterFlowrateOverOperatingFlowrate )
 		#Create the archive, title of the execute button, title of the dialog & preferences filename.
 		self.executeTitle = 'Speed'
 		self.filenamePreferences = preferences.getPreferencesFilePath( 'speed.csv' )
@@ -174,26 +178,32 @@ class SpeedSkein:
 	def __init__( self ):
 		self.decimalPlacesCarried = 3
 		self.feedrateSecond = 16.0
+		self.isSurroundingLoopBeginning = False
 		self.lineIndex = 0
 		self.lines = None
+		self.oldFlowrateString = None
 		self.oldLocation = None
 		self.output = cStringIO.StringIO()
 
-	def addFlowrate( self ):
+	def addFlowrateLine( self, flowrateString ):
 		"Add flowrate line."
-		roundedFlowrate = euclidean.getRoundedToThreePlaces( math.pi * self.extrusionDiameter * self.extrusionDiameter / 4.0 * self.feedrateSecond )
-		self.addLine( '(<flowrateCubicMillimetersPerSecond> ' + roundedFlowrate + ' )' )
-		if self.speedPreferences.flowrateDoNotAddFlowratePreference.value:
-			return
-		if self.speedPreferences.flowrateMetricPreference.value:
-			self.addLine( 'M108 S' + roundedFlowrate )
-			return
-		self.addLine( 'M108 S' + euclidean.getRoundedToThreePlaces( self.speedPreferences.flowratePWMSetting.value ) )
+		self.addLine( 'M108 S' + flowrateString )
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
 		if len( line ) > 0:
 			self.output.write( line + "\n" )
+
+	def getFlowrateString( self ):
+		"Get the flowrate string."
+		if self.speedPreferences.flowrateDoNotAddFlowratePreference.value:
+			return None
+		flowrate = self.flowrateCubicMillimetersPerSecond
+		if self.speedPreferences.flowratePWMPreference.value:
+			flowrate = self.speedPreferences.flowratePWMSetting.value
+		if self.isSurroundingLoopBeginning:
+			flowrate *= self.speedPreferences.perimeterFlowrateOverOperatingFlowrate.value
+		return euclidean.getRoundedToThreePlaces( flowrate )
 
 	def getGcodeFromFeedrateMovement( self, feedrateMinute, point ):
 		"Get a gcode movement."
@@ -207,7 +217,14 @@ class SpeedSkein:
 		"Get elevated gcode line with operating feedrate."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		self.oldLocation = location
-		return self.getGcodeFromFeedrateMovement( 60.0 * self.feedrateSecond, location )
+		feedrate = 60.0 * self.feedrateSecond
+		if self.isSurroundingLoopBeginning:
+			feedrate *= self.speedPreferences.perimeterFeedrateOverOperatingFeedrate.value
+		flowrateString = self.getFlowrateString()
+		if flowrateString != self.oldFlowrateString:
+			self.addFlowrateLine( flowrateString )
+		self.oldFlowrateString = flowrateString
+		return self.getGcodeFromFeedrateMovement( feedrate, location )
 
 	def parseGcode( self, gcodeText, speedPreferences ):
 		"Parse gcode text and store the speed gcode."
@@ -221,7 +238,7 @@ class SpeedSkein:
 
 	def parseInitialization( self ):
 		"Parse gcode initialization and store the parameters."
-		for self.lineIndex in range( len( self.lines ) ):
+		for self.lineIndex in xrange( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )
@@ -229,7 +246,9 @@ class SpeedSkein:
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
 			elif firstWord == '(<extrusionDiameter>':
 				self.extrusionDiameter = float( splitLine[ 1 ] )
-				self.addFlowrate()
+				self.flowrateCubicMillimetersPerSecond = math.pi * self.extrusionDiameter * self.extrusionDiameter / 4.0 * self.feedrateSecond
+				roundedFlowrate = euclidean.getRoundedToThreePlaces( self.flowrateCubicMillimetersPerSecond )
+				self.addLine( '(<flowrateCubicMillimetersPerSecond> ' + roundedFlowrate + ' )' )
 			elif firstWord == '(<extrusionWidth>':
 				self.addLine( '(<feedrateMinute> %s )' % ( 60.0 * self.feedrateSecond ) )
 				self.addLine( '(<orbitalFeedratePerSecond> %s )' % self.orbitalFeedratePerSecond )
@@ -248,6 +267,10 @@ class SpeedSkein:
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':
 			line = self.getSpeededLine( splitLine )
+		elif firstWord == 'M103':
+			self.isSurroundingLoopBeginning = False
+		elif firstWord == '(<surroundingLoop>':
+			self.isSurroundingLoopBeginning = True
 		self.addLine( line )
 
 

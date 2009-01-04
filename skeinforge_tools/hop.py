@@ -12,16 +12,16 @@ means the extruder path will gradually rise to the hop height, the default is 20
 To run hop, in a shell which hop is in type:
 > python hop.py
 
-The following examples hop the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the
-folder which contains Hollow Square.gcode, Hollow Square.gts and hop.py.  The hop function will hop if the 'Activate Hop'
+The following examples hop the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the
+folder which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and hop.py.  The hop function will hop if the 'Activate Hop'
 checkbox is on.  The functions writeOutput and getHopChainGcode check to see if the text has been hopped, if not they
 call the getStretchChainGcode in stretch.py to stretch the text; once they have the stretched text, then they hop.
 
 
 > python hop.py
 This brings up the dialog, after clicking 'Hop', the following is printed:
-File Hollow Square.gts is being chain hopped.
-The hopped file is saved as Hollow Square_hop.gcode
+File Screw Holder Bottom.stl is being chain hopped.
+The hopped file is saved as Screw Holder Bottom_hop.gcode
 
 
 > python
@@ -34,9 +34,9 @@ This brings up the hop dialog.
 
 
 >>> hop.writeOutput()
-Hollow Square.gts
-File Hollow Square.gts is being chain hopped.
-The hopped file is saved as Hollow Square_hop.gcode
+Screw Holder Bottom.stl
+File Screw Holder Bottom.stl is being chain hopped.
+The hopped file is saved as Screw Holder Bottom_hop.gcode
 
 
 >>> hop.getHopGcode("
@@ -182,27 +182,32 @@ class HopSkein:
 		if self.extruderActive:
 			return line
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
+		highestZ = location.z
+		if self.oldLocation != None:
+			highestZ = max( highestZ, self.oldLocation.z )
+		locationComplex = location.dropAxis( 2 )
 		if self.justDeactivated:
-			distance = location.distance( self.oldLocation )
+			oldLocationComplex = self.oldLocation.dropAxis( 2 )
+			distance = abs( locationComplex - oldLocationComplex )
 			if distance < self.minimumDistance:
 				if self.isNextTravel():
-					return self.getMovementLineWithHop( location )
+					return self.getMovementLineWithHop( locationComplex, highestZ )
 			alongRatio = min( 0.41666666, self.layerHopDistance / distance )
 			oneMinusAlong = 1.0 - alongRatio
-			closeLocation = self.oldLocation.times( oneMinusAlong ).plus( location.times( alongRatio ) )
-			self.addLine( self.getMovementLineWithHop( closeLocation ) )
+			closeLocation = oldLocationComplex * oneMinusAlong + locationComplex * alongRatio
+			self.addLine( self.getMovementLineWithHop( locationComplex, highestZ ) )
 			if self.isNextTravel():
-				return self.getMovementLineWithHop( location )
-			farLocation = self.oldLocation.times( alongRatio ).plus( location.times( oneMinusAlong ) )
-			self.addLine( self.getMovementLineWithHop( farLocation ) )
+				return self.getMovementLineWithHop( locationComplex, highestZ )
+			farLocation = oldLocationComplex * alongRatio + locationComplex * oneMinusAlong
+			self.addLine( self.getMovementLineWithHop( farLocation, highestZ ) )
 			return line
 		if self.isNextTravel():
-			return self.getMovementLineWithHop( location )
+			return self.getMovementLineWithHop( locationComplex, highestZ )
 		return line
 
-	def getMovementLineWithHop( self, location ):
+	def getMovementLineWithHop( self, location, z ):
 		"Get linear movement line for a location."
-		movementLine = 'G1 X%s Y%s Z%s' % ( self.getRounded( location.x ), self.getRounded( location.y ), self.getRounded( location.z + self.layerHopHeight ) )
+		movementLine = 'G1 X%s Y%s Z%s' % ( self.getRounded( location.real ), self.getRounded( location.imag ), self.getRounded( z + self.layerHopHeight ) )
 		if self.feedrateString != '':
 			movementLine += ' ' + self.feedrateString
 		return movementLine
@@ -213,7 +218,7 @@ class HopSkein:
 
 	def isNextTravel( self ):
 		"Determine if there is another linear travel before the thread ends."
-		for afterIndex in range( self.lineIndex + 1, len( self.lines ) ):
+		for afterIndex in xrange( self.lineIndex + 1, len( self.lines ) ):
 			line = self.lines[ afterIndex ]
 			splitLine = line.split( ' ' )
 			firstWord = "";
@@ -230,13 +235,13 @@ class HopSkein:
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.minimumSlope = math.tan( math.radians( hopPreferences.minimumHopAngle.value ) )
 		self.parseInitialization( hopPreferences )
-		for self.lineIndex in range( self.lineIndex, len( self.lines ) ):
+		for self.lineIndex in xrange( self.lineIndex, len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			self.parseLine( line )
 
 	def parseInitialization( self, hopPreferences ):
 		"Parse gcode initialization and store the parameters."
-		for self.lineIndex in range( len( self.lines ) ):
+		for self.lineIndex in xrange( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
 			firstWord = ''

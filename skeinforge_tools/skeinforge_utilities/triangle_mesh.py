@@ -3,8 +3,8 @@ Triangle Mesh holds the faces and edges of a triangular mesh.
 
 It can read from and write to a GNU Triangulated Surface (.gts) file.
 
-The following examples slice the GNU Triangulated Surface file Hollow Square.gts.  The examples are run in a terminal in the folder which
-contains Hollow Square.gts and triangle_mesh.py.
+The following examples slice the GNU Triangulated Surface file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which
+contains Screw Holder Bottom.stl and triangle_mesh.py.
 
 
 >python
@@ -13,14 +13,14 @@ Python 2.5.1 (r251:54863, Sep 22 2007, 01:43:31)
 Type "help", "copyright", "credits" or "license" for more information.
 >>> import slice
 >>> slice.main()
-File Hollow Square.gts is being sliced.
-The sliced file is saved as Hollow Square_slice.gcode
+File Screw Holder Bottom.stl is being sliced.
+The sliced file is saved as Screw Holder Bottom_slice.gcode
 It took 3 seconds to slice the file.
 
 
 >>> slice.writeOutput()
-File Hollow Square.gcode is being sliced.
-The sliced file is saved as Hollow Square_slice.gcode
+File Screw Holder Bottom.gcode is being sliced.
+The sliced file is saved as Screw Holder Bottom_slice.gcode
 It took 3 seconds to slice the file.
 
 
@@ -39,7 +39,7 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
+from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools.skeinforge_utilities import gcodec
 import cStringIO
 
@@ -138,7 +138,7 @@ class Face:
 		self.edgeIndexes = edgeIndexes
 		for edgeIndex in edgeIndexes:
 			edges[ edgeIndex ].addFaceIndex( faceIndex )
-		for triangleIndex in range( 3 ):
+		for triangleIndex in xrange( 3 ):
 			indexFirst = ( 3 - triangleIndex ) % 3
 			indexSecond = ( 4 - triangleIndex ) % 3
 			self.vertexIndexes.append( getCommonVertexIndex( edges[ edgeIndexes[ indexFirst ] ], edges[ edgeIndexes[ indexSecond ] ] ) )
@@ -150,7 +150,7 @@ class Face:
 
 	def setEdgeIndexesToVertexIndexes( self, edges, edgeTable ):
 		"Set the edge indexes to the vertex indexes."
-		for triangleIndex in range( 3 ):
+		for triangleIndex in xrange( 3 ):
 			indexFirst = ( 3 - triangleIndex ) % 3
 			indexSecond = ( 4 - triangleIndex ) % 3
 			vertexIndexFirst = self.vertexIndexes[ indexFirst ]
@@ -221,13 +221,13 @@ class TriangleMesh:
 		numberOfEdges = int( splitLine[ 1 ] )
 		numberOfFaces = int( splitLine[ 2 ] )
 		faceTriples = []
-		for vertexIndex in range( numberOfVertices ):
+		for vertexIndex in xrange( numberOfVertices ):
 			line = linesWithoutComments[ vertexIndex + 1 ]
 			splitLine = line.split()
-			vertex = Vec3( float( splitLine[ 0 ] ), float( splitLine[ 1 ] ), float( splitLine[ 2 ] ) )
+			vertex = Vector3( float( splitLine[ 0 ] ), float( splitLine[ 1 ] ), float( splitLine[ 2 ] ) )
 			self.vertices.append( vertex )
 		edgeStart = numberOfVertices + 1
-		for edgeIndex in range( numberOfEdges ):
+		for edgeIndex in xrange( numberOfEdges ):
 			line = linesWithoutComments[ edgeIndex + edgeStart ]
 			splitLine = line.split()
 			vertexIndexes = []
@@ -236,7 +236,7 @@ class TriangleMesh:
 			edge = Edge().getFromVertexIndexes( edgeIndex, vertexIndexes )
 			self.edges.append( edge )
 		faceStart = edgeStart + numberOfEdges
-		for faceIndex in range( numberOfFaces ):
+		for faceIndex in xrange( numberOfFaces ):
 			line = linesWithoutComments[ faceIndex + faceStart ]
 			splitLine = line.split()
 			edgeIndexes = []

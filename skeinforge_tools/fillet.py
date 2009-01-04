@@ -20,8 +20,8 @@ jerk at the end of the path.  The default value is 0.5 and if the value is less 
 the new feedrate, the default is true.  To run fillet, in a shell in the folder which fillet is in type:
 > python fillet.py
 
-The following examples fillet the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder
-which contains Hollow Square.gcode, Hollow Square.gts and fillet.py.  The fillet function executes the preferred fillet type, which
+The following examples fillet the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the folder
+which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and fillet.py.  The fillet function executes the preferred fillet type, which
 can be set in the dialog or by changing the preferences file 'fillet.csv' with a text editor or a spreadsheet program set to separate
 tabs.  The functions writeOutput and getFilletChainGcode check to see if the text has been combed, if not they call the
 getOozebaneChainGcode in oozebane.py to fill the text; once they have the oozebaned text, then they fillet.
@@ -29,8 +29,8 @@ getOozebaneChainGcode in oozebane.py to fill the text; once they have the oozeba
 
 > python fillet.py
 This brings up the dialog, after clicking 'Fillet', the following is printed:
-File Hollow Square.gts is being chain filleted.
-The filleted file is saved as Hollow Square_fillet.gcode
+File Screw Holder Bottom.stl is being chain filleted.
+The filleted file is saved as Screw Holder Bottom_fillet.gcode
 
 
 > python
@@ -43,23 +43,23 @@ This brings up the fillet dialog.
 
 
 >>> fillet.arcPointFile()
-File Hollow Square.gcode is being filleted into arc points.
-The arc point file is saved as Hollow Square_fillet.gcode
+File Screw Holder Bottom.gcode is being filleted into arc points.
+The arc point file is saved as Screw Holder Bottom_fillet.gcode
 
 
 >>> fillet.arcRadiusFile()
-File Hollow Square.gcode is being filleted into arc radiuses.
-The arc radius file is saved as Hollow Square_fillet.gcode
+File Screw Holder Bottom.gcode is being filleted into arc radiuses.
+The arc radius file is saved as Screw Holder Bottom_fillet.gcode
 
 
 >>> fillet.arcSegmentFile()
-File Hollow Square.gcode is being arc segmented.
-The arc segment file is saved as Hollow Square_fillet.gcode
+File Screw Holder Bottom.gcode is being arc segmented.
+The arc segment file is saved as Screw Holder Bottom_fillet.gcode
 
 
 >>> fillet.bevelFile()
-File Hollow Square.gcode is being beveled.
-The beveled file is saved as Hollow Square_fillet.gcode
+File Screw Holder Bottom.gcode is being beveled.
+The beveled file is saved as Screw Holder Bottom_fillet.gcode
 
 
 >>> fillet.getArcPointGcode("
@@ -117,9 +117,9 @@ many lines of gcode
 
 
 >>> fillet.writeOutput()
-Hollow Square.gts
-File Hollow Square.gcode is being chain filleted.
-The filleted file is saved as Hollow Square_fillet.gcode
+Screw Holder Bottom.stl
+File Screw Holder Bottom.gcode is being chain filleted.
+The filleted file is saved as Screw Holder Bottom_fillet.gcode
 
 """
 
@@ -332,12 +332,12 @@ class BevelSkein:
 		if self.reversalSlowdownDistance < 0.1:
 			return None
 		reversalBufferSlowdownDistance = self.reversalSlowdownDistance * 1.2
-		if afterSegment.length() < reversalBufferSlowdownDistance:
+		if afterSegment.magnitude() < reversalBufferSlowdownDistance:
 			return None
-		if beforeSegment.length() < reversalBufferSlowdownDistance:
+		if beforeSegment.magnitude() < reversalBufferSlowdownDistance:
 			return None
-		afterSegmentNormalized = afterSegment.times( 1.0 / afterSegment.length() )
-		beforeSegmentNormalized = beforeSegment.times( 1.0 / beforeSegment.length() )
+		afterSegmentNormalized = afterSegment / afterSegment.magnitude()
+		beforeSegmentNormalized = beforeSegment / beforeSegment.magnitude()
 		planeDot = euclidean.getPlaneDot( beforeSegmentNormalized, afterSegmentNormalized )
 		if self.extruderActive:
 			return None
@@ -354,7 +354,7 @@ class BevelSkein:
 
 	def getNextLocation( self ):
 		"Get the next linear move.  Return none is none is found."
-		for afterIndex in range( self.lineIndex + 1, len( self.lines ) ):
+		for afterIndex in xrange( self.lineIndex + 1, len( self.lines ) ):
 			line = self.lines[ afterIndex ]
 			splitLine = line.split( ' ' )
 			if gcodec.getFirstWord( splitLine ) == 'G1':
@@ -383,13 +383,13 @@ class BevelSkein:
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.filletPreferences = filletPreferences
 		self.parseInitialization( filletPreferences )
-		for self.lineIndex in range( self.lineIndex, len( self.lines ) ):
+		for self.lineIndex in xrange( self.lineIndex, len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			self.parseLine( line )
 
 	def parseInitialization( self, filletPreferences ):
 		"Parse gcode initialization and store the parameters."
-		for self.lineIndex in range( len( self.lines ) ):
+		for self.lineIndex in xrange( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )
@@ -429,12 +429,12 @@ class BevelSkein:
 	def splitPointGetAfter( self, location, nextLocation ):
 		"Bevel a point and return the end of the bevel."
 		bevelLength = 0.5 * self.layerFilletRadius
-		beforeSegment = self.oldLocation.minus( location )
-		halfBeforeSegmentLength = 0.5 * beforeSegment.length()
+		beforeSegment = self.oldLocation - location
+		halfBeforeSegmentLength = 0.5 * beforeSegment.magnitude()
 		if halfBeforeSegmentLength <= 0.0:
 			return location
-		afterSegment = nextLocation.minus( location )
-		afterSegmentExtension = 0.333 * afterSegment.length()
+		afterSegment = nextLocation - location
+		afterSegmentExtension = 0.333 * afterSegment.magnitude()
 		if afterSegmentExtension <= 0.0:
 			return location
 		extruderOffReversalPoint = self.getExtruderOffReversalPoint( afterSegment, beforeSegment, location )
@@ -458,30 +458,30 @@ class ArcSegmentSkein( BevelSkein ):
 		"Add arc segments to the filleted skein."
 		curveSection = 0.5
 		absoluteDifferenceAngle = abs( afterCenterDifferenceAngle )
-		steps = int( math.ceil( max( absoluteDifferenceAngle * 2.4, absoluteDifferenceAngle * beforeCenterSegment.length() / curveSection ) ) )
+		steps = int( math.ceil( max( absoluteDifferenceAngle * 2.4, absoluteDifferenceAngle * beforeCenterSegment.magnitude() / curveSection ) ) )
 		stepPlaneAngle = euclidean.getPolar( afterCenterDifferenceAngle / steps, 1.0 )
-		for step in range( 1, steps ):
+		for step in xrange( 1, steps ):
 			beforeCenterSegment = euclidean.getRoundZAxisByPlaneAngle( stepPlaneAngle, beforeCenterSegment )
-			arcPoint = center.plus( beforeCenterSegment )
+			arcPoint = center + beforeCenterSegment
 			self.addLinearMovePoint( self.getCornerFeedrate(), arcPoint )
 		self.addLinearMovePoint( self.getCornerFeedrate(), afterPoint )
 
 	def splitPointGetAfter( self, location, nextLocation ):
 		"Fillet a point into arc segments and return the end of the last segment."
-		afterSegment = nextLocation.minus( location )
-		afterSegmentLength = afterSegment.length()
+		afterSegment = nextLocation - location
+		afterSegmentLength = afterSegment.magnitude()
 		afterSegmentExtension = 0.5 * afterSegmentLength
 		if afterSegmentExtension == 0.0:
 			return location
-		beforeSegment = self.oldLocation.minus( location )
-		beforeSegmentLength = beforeSegment.length()
+		beforeSegment = self.oldLocation - location
+		beforeSegmentLength = beforeSegment.magnitude()
 		if beforeSegmentLength == 0.0:
 			return location
 		radius = self.layerFilletRadius
-		afterSegmentNormalized = afterSegment.times( 1.0 / afterSegmentLength )
-		beforeSegmentNormalized = beforeSegment.times( 1.0 / beforeSegmentLength )
-		betweenCenterDotNormalized = afterSegmentNormalized.plus( beforeSegmentNormalized )
-		if betweenCenterDotNormalized.length() < 0.01 * self.layerFilletRadius:
+		afterSegmentNormalized = afterSegment / afterSegmentLength
+		beforeSegmentNormalized = beforeSegment / beforeSegmentLength
+		betweenCenterDotNormalized = afterSegmentNormalized + beforeSegmentNormalized
+		if betweenCenterDotNormalized.magnitude() < 0.01 * self.layerFilletRadius:
 			return location
 		extruderOffReversalPoint = self.getExtruderOffReversalPoint( afterSegment, beforeSegment, location )
 		if extruderOffReversalPoint != None:
@@ -504,9 +504,9 @@ class ArcSegmentSkein( BevelSkein ):
 		afterPoint = euclidean.getPointPlusSegmentWithLength( bevelLength, location, afterSegment )
 		radius = bevelLength * radiusOverBevelLength
 		centerDotDistance = radius / betweenAfterPlaneDot
-		center = location.plus( betweenCenterDotNormalized.times( centerDotDistance ) )
-		afterCenterSegment = afterPoint.minus( center )
-		beforeCenterSegment = beforePoint.minus( center )
+		center = location + betweenCenterDotNormalized * centerDotDistance
+		afterCenterSegment = afterPoint - center
+		beforeCenterSegment = beforePoint - center
 		afterCenterDifferenceAngle = euclidean.getAngleAroundZAxisDifference( afterCenterSegment, beforeCenterSegment )
 		self.addArc( afterCenterDifferenceAngle, afterPoint, beforeCenterSegment, beforePoint, center )
 		return afterPoint
@@ -516,8 +516,8 @@ class ArcPointSkein( ArcSegmentSkein ):
 	"A class to arc point a skein of extrusions."
 	def addArc( self, afterCenterDifferenceAngle, afterPoint, beforeCenterSegment, beforePoint, center ):
 		"Add an arc point to the filleted skein."
-		afterPointMinusBefore = afterPoint.minus( beforePoint )
-		centerMinusBefore = center.minus( beforePoint )
+		afterPointMinusBefore = afterPoint - beforePoint
+		centerMinusBefore = center - beforePoint
 		if afterCenterDifferenceAngle > 0.0:
 			self.output.write( 'G3' )
 		else:

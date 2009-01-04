@@ -147,7 +147,7 @@ class CommentSkein:
 			print( "A helical move is relative and therefore must not be the first move of a gcode file." )
 			return
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-		location.add( self.oldLocation )
+		location += self.oldLocation
 		self.oldLocation = location
 
 

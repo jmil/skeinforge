@@ -20,15 +20,15 @@ An export plugin is a script in the export_plugins folder which has the function
 To run export, in a shell type:
 > python export.py
 
-The following examples export the files Hollow Square.gts.  The examples are run in a terminal in the folder which contains
-Hollow Square.gts & export.py.  The function writeOutput checks to see if the text has been exported, if not they call
+The following examples export the files Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains
+Screw Holder Bottom.stl & export.py.  The function writeOutput checks to see if the text has been exported, if not they call
 getUnpauseChainGcode in unpause.py to unpause the text; once they have the unpaused text, then it exports.
 
 
 > python export.py
 This brings up the dialog, after clicking 'Export', the following is printed:
-File Hollow Square.gts is being chain exported.
-The exported file is saved as Hollow Square_export.gcode
+File Screw Holder Bottom.stl is being chain exported.
+The exported file is saved as Screw Holder Bottom_export.gcode
 
 
 >python
@@ -41,9 +41,9 @@ This brings up the export dialog.
 
 
 >>> export.writeOutput()
-Hollow Square.gts
-File Hollow Square.gts is being chain exported.
-The exported file is saved as Hollow Square_export.gcode
+Screw Holder Bottom.stl
+File Screw Holder Bottom.stl is being chain exported.
+The exported file is saved as Screw Holder Bottom_export.gcode
 
 """
 

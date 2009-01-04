@@ -79,7 +79,7 @@ def readPreferencesFromText( preferences, text ):
 	preferenceTable = {}
 	for preference in preferences.archive:
 		preference.addToPreferenceTable( preferenceTable )
-	for lineIndex in range( len( lines ) ):
+	for lineIndex in xrange( len( lines ) ):
 		setArchiveToLine( lineIndex, lines, preferenceTable )
 
 def setArchiveToLine( lineIndex, lines, preferenceTable ):
@@ -223,7 +223,7 @@ class DisplayToolButton:
 		for word in words:
 			capitalizedStrings.append( word.capitalize() )
 		capitalizedName = ' '.join( capitalizedStrings )
-		self.displayButton = Tkinter.Button( preferencesDialog.master, text = capitalizedName, command = self.displayTool )
+		self.displayButton = Tkinter.Button( preferencesDialog.master, activebackground = 'black', activeforeground = 'violet', command = self.displayTool, text = capitalizedName )
 		self.displayButton.grid( row = preferencesDialog.row, column = 0 )
 		preferencesDialog.row += 1
 
@@ -552,23 +552,23 @@ class PreferencesDialog:
 		if self.row < 30:
 			Tkinter.Label( master ).grid( row = self.row, column = 0 )
 			self.row += 1
-		cancelColor = 'black'
+		cancelColor = 'red'
 		cancelTitle = 'Close'
 		if displayPreferences.saveTitle != None:
-			saveButton = Tkinter.Button( master, text = displayPreferences.saveTitle, command = self.savePreferencesDestroy )
-			saveButton.grid( row = self.row, column = self.column )
-			self.column += 1
-			cancelColor = 'red'
 			cancelTitle = 'Cancel'
 		if displayPreferences.executeTitle != None:
-			executeButton = Tkinter.Button( master, text = displayPreferences.executeTitle, command = self.execute )
+			executeButton = Tkinter.Button( master, activebackground = 'black', activeforeground = 'blue', text = displayPreferences.executeTitle, command = self.execute )
 			executeButton.grid( row = self.row, column = self.column )
 			self.column += 1
-		helpButton = Tkinter.Button( master, text = "       ?       ", command = self.openBrowser )
+		helpButton = Tkinter.Button( master, activebackground = 'black', activeforeground = 'white', text = "       ?       ", command = self.openBrowser )
 		helpButton.grid( row = self.row, column = self.column )
 		self.column += 1
-		cancelButton = Tkinter.Button( master, command = master.destroy, fg = cancelColor, text = cancelTitle )
+		cancelButton = Tkinter.Button( master, activebackground = 'black', activeforeground = cancelColor, command = master.destroy, fg = cancelColor, text = cancelTitle )
 		cancelButton.grid( row = self.row, column = self.column )
+		self.column += 1
+		if displayPreferences.saveTitle != None:
+			saveButton = Tkinter.Button( master, activebackground = 'black', activeforeground = 'darkgreen', command = self.savePreferencesDestroy, fg = 'darkgreen', text = displayPreferences.saveTitle )
+			saveButton.grid( row = self.row, column = self.column )
 
 	def execute( self ):
 		for executable in self.executables:
@@ -580,7 +580,7 @@ class PreferencesDialog:
 	def openBrowser( self ):
 		numberOfLevelsDeepInPackageHierarchy = 2
 		packageFilePath = os.path.abspath( __file__ )
-		for level in range( numberOfLevelsDeepInPackageHierarchy + 1 ):
+		for level in xrange( numberOfLevelsDeepInPackageHierarchy + 1 ):
 			packageFilePath = os.path.dirname( packageFilePath )
 		documentationPath = os.path.join( os.path.join( packageFilePath, 'documentation' ), self.displayPreferences.filenameHelp )
 		os.system( webbrowser.get().name + ' ' + documentationPath )#used this instead of webbrowser.open() to workaround webbrowser open() bug

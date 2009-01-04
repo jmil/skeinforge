@@ -17,8 +17,8 @@ finish within the perimeter, a low value means the extruder will not loop and a 
 perimeter.  To run comb, in a shell type:
 > python comb.py
 
-The following examples comb the files Hollow Square.gcode & Hollow Square.gts.  The examples are run in a terminal in the folder
-which contains Hollow Square.gcode, Hollow Square.gts and comb.py.  The comb function will comb if 'Activate Comb' is true, which
+The following examples comb the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the folder
+which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and comb.py.  The comb function will comb if 'Activate Comb' is true, which
 can be set in the dialog or by changing the preferences file 'comb.csv' in the '.skeinforge' folder in your home directory with a text
 editor or a spreadsheet program set to separate tabs.  The functions writeOutput and getCombChainGcode check to see if the
 text has been combed, if not they call getTowerChainGcode in tower.py to tower the text; once they have the towered text, then
@@ -28,8 +28,8 @@ http://reprap.soup.io/?search=combing
 
 > python comb.py
 This brings up the dialog, after clicking 'Comb', the following is printed:
-File Hollow Square.gts is being chain combed.
-The combed file is saved as Hollow Square_comb.gcode
+File Screw Holder Bottom.stl is being chain combed.
+The combed file is saved as Screw Holder Bottom_comb.gcode
 
 
 >python
@@ -42,9 +42,9 @@ This brings up the comb dialog.
 
 
 >>> comb.writeOutput()
-Hollow Square.gts
-File Hollow Square.gts is being chain combed.
-The combed file is saved as Hollow Square_comb.gcode
+Screw Holder Bottom.stl
+File Screw Holder Bottom.stl is being chain combed.
+The combed file is saved as Screw Holder Bottom_comb.gcode
 
 
 >>> comb.getCombGcode("
@@ -70,7 +70,6 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools.skeinforge_utilities.vec3 import Vec3
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
@@ -90,7 +89,7 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 #patched over falling tower comb bug if location.z < self.getBetweens()[ 0 ][ 0 ].z + 0.5 * self.extrusionWidth, but a real solution would be nice
-#maybe use 2d everywhere in case there is movement across layers
+#addLoopsBeforeLeavingPerimeter or something before crossing bug, seen on layer 8 of Screw holder
 def getCombChainGcode( filename, gcodeText, combPreferences = None ):
 	"Comb a gcode linear move text.  Chain comb the gcode if it is not already combed."
 	gcodeText = gcodec.getGcodeFileText( filename, gcodeText )
@@ -193,71 +192,50 @@ class CombSkein:
 		self.pointTable = {}
 		self.initializeMoreParameters()
 
-	def addGcodeFromThread( self, thread ):
+	def addGcodeFromThreadZ( self, thread, z ):
 		"Add a gcode thread to the output."
 		if len( thread ) > 0:
-			self.addGcodeMovement( thread[ 0 ] )
+			self.addGcodeMovementZ( thread[ 0 ], z )
 		else:
 			print( "zero length vertex positions array which was skipped over, this should never happen" )
 		if len( thread ) < 2:
 			return
 		self.addLine( 'M101' )
-		self.addGcodePath( thread[ 1 : ] )
+		self.addGcodePathZ( thread[ 1 : ], z )
 
-	def addGcodeMovement( self, point ):
+	def addGcodeMovementZ( self, point, z ):
 		"Add a movement to the output."
 		if self.feedrateMinute == None:
-			self.addLine( "G1 X%s Y%s Z%s" % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ) ) )
+			self.addLine( "G1 X%s Y%s Z%s" % ( self.getRounded( point.real ), self.getRounded( point.imag ), self.getRounded( z ) ) )
 		else:
-			self.addLine( "G1 X%s Y%s Z%s F%s" % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ), self.getRounded( self.feedrateMinute ) ) )
+			self.addLine( "G1 X%s Y%s Z%s F%s" % ( self.getRounded( point.real ), self.getRounded( point.imag ), self.getRounded( z ), self.getRounded( self.feedrateMinute ) ) )
 
-	def addGcodePath( self, path ):
+	def addGcodePathZ( self, path, z ):
 		"Add a gcode path, without modifying the extruder, to the output."
 		for point in path:
-			self.addGcodeMovement( point )
+			self.addGcodeMovementZ( point, z )
 
 	def addIfTravel( self, splitLine ):
-		"Add travel move around loops if this the extruder is off."
+		"Add travel move around loops if the extruder is off."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		if not self.extruderActive and self.oldLocation != None:
 			if len( self.getBetweens() ) > 0:
-				aroundBetweenPath = []
-				self.insertPathsAroundBetween( aroundBetweenPath, location )
-				aroundBetweenPath = euclidean.getAwayPath( aroundBetweenPath, self.extrusionWidth )
-				self.addGcodePath( aroundBetweenPath )
+				self.addGcodePathZ( self.getAroundBetweenPath( location ), location.z )
 		self.oldLocation = location
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
 		self.output.write( line + "\n" )
 
-	def addLoopsBeforeLeavingPerimeter( self, aroundBetweenPath, insetPerimeter, perimeterCrossing ):
-		"Add loops before leaving the first outer perimeter, in order to leave most of the ooze in the infill."
-		totalDistance = perimeterCrossing.distance( self.oldLocation )
-		loopLength = euclidean.getPolygonLength( insetPerimeter )
-		nearestCrossingDistanceIndex = euclidean.getNearestDistanceSquaredIndex( perimeterCrossing, insetPerimeter )
-		crossingBeginIndex = ( int( nearestCrossingDistanceIndex.imag ) + 1 ) % len( insetPerimeter )
-		aroundLoop = euclidean.getAroundLoop( crossingBeginIndex, crossingBeginIndex, insetPerimeter )
-		aroundPath = [ perimeterCrossing ] + aroundLoop + [ perimeterCrossing ]
-		aroundPath = euclidean.getClippedAtEndLoopPath( self.extrusionWidth, aroundPath )
-		crossingToEnd = aroundPath[ - 1 ].minus( perimeterCrossing )
-		crossingToOld = self.oldLocation.minus( perimeterCrossing )
-		planeDot = euclidean.getPlaneDot( crossingToEnd, crossingToOld )
-		if planeDot < 0.0:
-			aroundLoop.reverse()
-		while totalDistance < self.minimumPerimeterDepartureDistance:
-			aroundBetweenPath += aroundLoop
-			totalDistance += loopLength
-		aroundBetweenPath.append( perimeterCrossing )
-
 	def addPathBeforeEnd( self, aroundBetweenPath, location, loop ):
 		"Add the path before the end of the loop."
 		halfFillInset = 0.5 * self.layerFillInset
 		if self.arrivalInsetFollowDistance < halfFillInset:
 			return
+		locationComplex = location.dropAxis( 2 )
 		closestInset = None
-		closestDistanceSquaredIndex = complex( 999999999999999999.0, - 1 )
-		loop = euclidean.getAwayPath( loop, self.extrusionWidth )
+		closestDistanceIndex = euclidean.DistanceIndex( 999999999999999999.0, - 1 )
+		loop = euclidean.getAwayPoints( loop, self.extrusionWidth )
 		circleNodes = intercircle.getCircleNodesFromLoop( loop, self.layerFillInset )
 		centers = []
 		centers = intercircle.getCentersFromCircleNodes( circleNodes )
@@ -265,14 +243,14 @@ class CombSkein:
 			inset = intercircle.getInsetFromClockwiseLoop( center, halfFillInset )
 			if euclidean.isLargeSameDirection( inset, center, self.layerFillInset ):
 				if euclidean.isPathInsideLoop( loop, inset ) == euclidean.isWiddershins( loop ):
-					distanceSquaredIndex = euclidean.getNearestDistanceSquaredIndex( location, inset )
-					if distanceSquaredIndex.real < closestDistanceSquaredIndex.real:
+					distanceIndex = euclidean.getNearestDistanceIndex( locationComplex, inset )
+					if distanceIndex.distance < closestDistanceIndex.distance:
 						closestInset = inset
-						closestDistanceSquaredIndex = distanceSquaredIndex
+						closestDistanceIndex = distanceIndex
 		if closestInset == None:
 			return
-		extrusionHalfWidthSquared = 0.25 * self.extrusionWidth * self.extrusionWidth
-		closestInset = euclidean.getLoopStartingNearest( extrusionHalfWidthSquared, location, closestInset )
+		extrusionHalfWidth = 0.5 * self.extrusionWidth
+		closestInset = euclidean.getLoopStartingNearest( extrusionHalfWidth, locationComplex, closestInset )
 		if euclidean.getPolygonLength( closestInset ) < 0.2 * self.arrivalInsetFollowDistance:
 			return
 		closestInset.append( closestInset[ 0 ] )
@@ -285,43 +263,55 @@ class CombSkein:
 			return
 		aroundBetweenPath += euclidean.getClippedAtEndLoopPath( halfFillInset, closestInset )[ len( pathBeforeArrival ) - 1 : ]
 
-	def addPathBetween( self, aroundBetweenPath, betweenFirst, betweenSecond, loopFirst ):
+	def addPathBetween( self, aroundBetweenPath, betweenFirst, betweenSecond, isLeavingPerimeter, loopFirst ):
 		"Add a path between the perimeter and the fill."
 		clockwisePath = [ betweenFirst ]
 		widdershinsPath = [ betweenFirst ]
-		nearestFirstDistanceIndex = euclidean.getNearestDistanceSquaredIndex( betweenFirst, loopFirst )
-		nearestSecondDistanceIndex = euclidean.getNearestDistanceSquaredIndex( betweenSecond, loopFirst )
-		secondBeforeIndex = int( nearestSecondDistanceIndex.imag )
-		firstBeginIndex = ( int( nearestFirstDistanceIndex.imag ) + 1 ) % len( loopFirst )
-		secondBeginIndex = ( secondBeforeIndex + 1 ) % len( loopFirst )
-		if nearestFirstDistanceIndex.imag == nearestSecondDistanceIndex.imag:
-			nearestPoint = euclidean.getNearestPointOnSegment( loopFirst[ secondBeforeIndex ], loopFirst[ secondBeginIndex ], betweenSecond )
-			aroundBetweenPath += [ betweenFirst, nearestPoint ]
-			return
-		widdershinsLoop = euclidean.getAroundLoop( firstBeginIndex, secondBeginIndex, loopFirst )
-		widdershinsPath += widdershinsLoop
-		clockwiseLoop = euclidean.getAroundLoop( secondBeginIndex, firstBeginIndex, loopFirst )
-		clockwiseLoop.reverse()
-		clockwisePath += clockwiseLoop
-		clockwisePath.append( betweenSecond )
-		widdershinsPath.append( betweenSecond )
+		nearestFirstDistanceIndex = euclidean.getNearestDistanceIndex( betweenFirst, loopFirst )
+		nearestSecondDistanceIndex = euclidean.getNearestDistanceIndex( betweenSecond, loopFirst )
+		firstBeginIndex = ( nearestFirstDistanceIndex.index + 1 ) % len( loopFirst )
+		secondBeginIndex = ( nearestSecondDistanceIndex.index + 1 ) % len( loopFirst )
+		loopBeforeLeaving = euclidean.getAroundLoop( firstBeginIndex, firstBeginIndex, loopFirst )
+		if nearestFirstDistanceIndex.index == nearestSecondDistanceIndex.index:
+			nearestPoint = euclidean.getNearestPointOnSegment( loopFirst[ nearestSecondDistanceIndex.index ], loopFirst[ secondBeginIndex ], betweenSecond )
+			widdershinsPath += [ nearestPoint ]
+			clockwisePath += [ nearestPoint ]
+			if euclidean.getPathLength( widdershinsPath ) < self.minimumPerimeterDepartureDistance:
+				widdershinsPath = [ betweenFirst ] + loopBeforeLeaving + [ nearestPoint ]
+				reversedLoop = loopBeforeLeaving[ : ]
+				reversedLoop.reverse()
+				clockwisePath = [ betweenFirst ] + reversedLoop + [ nearestPoint ]
+		else:
+			widdershinsLoop = euclidean.getAroundLoop( firstBeginIndex, secondBeginIndex, loopFirst )
+			widdershinsPath += widdershinsLoop
+			clockwiseLoop = euclidean.getAroundLoop( secondBeginIndex, firstBeginIndex, loopFirst )
+			clockwiseLoop.reverse()
+			clockwisePath += clockwiseLoop
+			clockwisePath.append( betweenSecond )
+			widdershinsPath.append( betweenSecond )
 		if euclidean.getPathLength( widdershinsPath ) > euclidean.getPathLength( clockwisePath ):
+			loopBeforeLeaving.reverse()
 			widdershinsPath = clockwisePath
-		widdershinsPath = euclidean.getAwayPath( widdershinsPath, 0.2 * self.layerFillInset )
+		if isLeavingPerimeter:
+			totalDistance = euclidean.getPathLength( widdershinsPath )
+			loopLength = euclidean.getPolygonLength( loopBeforeLeaving )
+			while totalDistance < self.minimumPerimeterDepartureDistance:
+				widdershinsPath = [ betweenFirst ] + loopBeforeLeaving + widdershinsPath[ 1 : ]
+				totalDistance += loopLength
 		aroundBetweenPath += widdershinsPath
 
 	def addTailoredLoopPath( self ):
 		"Add a clipped and jittered loop path."
-		loop = self.loopPath[ : - 1 ]
+		loop = self.loopPath.path[ : - 1 ]
 		jitterDistance = self.layerJitter + self.arrivalInsetFollowDistance
 		if self.beforeLoopLocation != None:
-			extrusionHalfWidthSquared = 0.25 * self.extrusionWidth * self.extrusionWidth
-			loop = euclidean.getLoopStartingNearest( extrusionHalfWidthSquared, self.beforeLoopLocation, loop )
+			extrusionHalfWidth = 0.5 * self.extrusionWidth
+			loop = euclidean.getLoopStartingNearest( extrusionHalfWidth, self.beforeLoopLocation, loop )
 		if jitterDistance != 0.0:
 			loop = self.getJitteredLoop( jitterDistance, loop )
-			loop = euclidean.getAwayPath( loop, 0.2 * self.layerFillInset )
-		self.loopPath = loop + [ loop[ 0 ] ]
-		self.addGcodeFromThread( self.loopPath )
+			loop = euclidean.getAwayPoints( loop, 0.2 * self.layerFillInset )
+		self.loopPath.path = loop + [ loop[ 0 ] ]
+		self.addGcodeFromThreadZ( self.loopPath.path, self.loopPath.z )
 		self.loopPath = None
 
 	def addToLoop( self, location ):
@@ -334,7 +324,22 @@ class CombSkein:
 			self.boundaryLoop = [] #starting with an empty array because a closed loop does not have to restate its beginning
 			self.layer.append( self.boundaryLoop )
 		if self.boundaryLoop != None:
-			self.boundaryLoop.append( location )
+			self.boundaryLoop.append( location.dropAxis( 2 ) )
+
+	def getAroundBetweenPath( self, location ):
+		"Insert paths around and between the perimeter and the fill."
+		aroundBetweenPath = []
+		outerPerimeter = None
+		if str( location ) in self.pointTable:
+			perimeter = self.pointTable[ str( location ) ]
+			if euclidean.isWiddershins( perimeter ):
+				outerPerimeter = perimeter
+		nextBeginning = self.getOutloopLocation( location )
+		pathEnd = self.getOutloopLocation( self.oldLocation )
+		self.insertPathsBetween( aroundBetweenPath, nextBeginning, pathEnd )
+		if outerPerimeter != None:
+			self.addPathBeforeEnd( aroundBetweenPath, location, outerPerimeter )
+		return aroundBetweenPath
 
 	def getBetweens( self ):
 		"Set betweens for the layer."
@@ -367,48 +372,61 @@ class CombSkein:
 			secondPoint  = jitterLoop[ ( pointIndex + 1 ) % len( jitterLoop ) ]
 			pointIndex += 1
 			lastLength = totalLength
-			totalLength += firstPoint.distance( secondPoint )
+			totalLength += abs( firstPoint - secondPoint )
 		remainingLength = jitterPosition - lastLength
 		pointIndex = pointIndex % len( jitterLoop )
 		ultimateJitteredPoint = jitterLoop[ pointIndex ]
 		penultimateJitteredPointIndex = ( pointIndex + len( jitterLoop ) - 1 ) % len( jitterLoop )
 		penultimateJitteredPoint = jitterLoop[ penultimateJitteredPointIndex ]
-		segment = ultimateJitteredPoint.minus( penultimateJitteredPoint )
-		segmentLength = segment.length()
+		segment = ultimateJitteredPoint - penultimateJitteredPoint
+		segmentLength = abs( segment )
 		originalOffsetLoop = euclidean.getAroundLoop( pointIndex, pointIndex, jitterLoop )
 		if segmentLength <= 0.0:
 			return [ penultimateJitteredPoint ] + originalOffsetLoop[ - 1 ]
-		newUltimatePoint = penultimateJitteredPoint.plus( segment.times( remainingLength / segmentLength ) )
+		newUltimatePoint = penultimateJitteredPoint + segment * remainingLength / segmentLength
 		return [ newUltimatePoint ] + originalOffsetLoop
 
 	def getOutloopLocation( self, point ):
 		"Get location outside of loop."
+		pointComplex = point.dropAxis( 2 )
 		if str( point ) not in self.pointTable:
-			return point
+			return pointComplex
 		closestBetween = None
-		closestDistanceSquaredIndex = complex( 999999999999999999.0, - 1 )
+		closestDistanceIndex = euclidean.DistanceIndex( 999999999999999999.0, - 1 )
 		for between in self.getBetweens():
-			distanceSquaredIndex = euclidean.getNearestDistanceSquaredIndex( point, between )
-			if distanceSquaredIndex.real < closestDistanceSquaredIndex.real:
+			distanceIndex = euclidean.getNearestDistanceIndex( pointComplex, between )
+			if distanceIndex.distance < closestDistanceIndex.distance:
 				closestBetween = between
-				closestDistanceSquaredIndex = distanceSquaredIndex
+				closestDistanceIndex = distanceIndex
 		if closestBetween == None:
 			print( 'This should never happen, closestBetween should always exist.' )
 			print( point )
 			print( self.getBetweens() )
-			return point
-		closestIndex = int( round( closestDistanceSquaredIndex.imag ) )
+			return pointComplex
+		closestIndex = closestDistanceIndex.index
 		segmentBegin = closestBetween[ closestIndex ]
 		segmentEnd = closestBetween[ ( closestIndex + 1 ) % len( closestBetween ) ]
-		nearestPoint = euclidean.getNearestPointOnSegment( segmentBegin, segmentEnd, point )
-		distanceToNearestPoint = point.distance( nearestPoint )
-		nearestMinusOld = nearestPoint.minus( point )
-		nearestMinusOld.scale( 1.5 )
-		return point.plus( nearestMinusOld )
+		nearestPoint = euclidean.getNearestPointOnSegment( segmentBegin, segmentEnd, pointComplex )
+		distanceToNearestPoint = abs( pointComplex - nearestPoint )
+		nearestMinusOld = 1.5 * ( nearestPoint - pointComplex )
+		return pointComplex + nearestMinusOld
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
 		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
+
+	def getStartIndex( self, xIntersections ):
+		"Get the start index of the intersections."
+		startIndex = 0
+		while startIndex < len( xIntersections ) - 1:
+			xIntersectionFirst = xIntersections[ startIndex ]
+			xIntersectionSecond = xIntersections[ startIndex + 1 ]
+			loopFirst = self.getBetweens()[ xIntersectionFirst.index ]
+			loopSecond = self.getBetweens()[ xIntersectionSecond.index ]
+			if loopFirst == loopSecond:
+				return startIndex % 2
+			startIndex += 1
+		return 0
 
 	def initializeMoreParameters( self ):
 		"Add a movement to the output."
@@ -420,54 +438,37 @@ class CombSkein:
 		self.oldLocation = None
 		self.output = cStringIO.StringIO()
 
-	def insertPathsAroundBetween( self, aroundBetweenPath, location ):
-		"Insert paths around and between the perimeter and the fill."
-		outerPerimeter = None
-		if str( location ) in self.pointTable:
-			perimeter = self.pointTable[ str( location ) ]
-			if euclidean.isWiddershins( perimeter ):
-				outerPerimeter = perimeter
-		nextBeginning = self.getOutloopLocation( location )
-		pathEnd = self.getOutloopLocation( self.oldLocation )
-		self.insertPathsBetween( aroundBetweenPath, nextBeginning, pathEnd )
-		if outerPerimeter != None:
-			self.addPathBeforeEnd( aroundBetweenPath, location, outerPerimeter )
-
 	def insertPathsBetween( self, aroundBetweenPath, nextBeginning, pathEnd ):
 		"Insert paths between the perimeter and the fill."
 		betweenX = []
 		switchX = []
-		segment = nextBeginning.minus( pathEnd )
-		segment.normalize()
-		segmentXY = segment.dropAxis( 2 )
-		segmentYMirror = complex( segment.x, - segment.y )
-		pathEndRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, pathEnd )
-		nextBeginningRotated = euclidean.getRoundZAxisByPlaneAngle( segmentYMirror, nextBeginning )
-		y = pathEndRotated.y
+		segment = euclidean.getNormalized( nextBeginning - pathEnd )
+		segmentYMirror = complex( segment.real, - segment.imag )
+		pathEndRotated = segmentYMirror * pathEnd
+		nextBeginningRotated = segmentYMirror * nextBeginning
+		y = pathEndRotated.imag
 		for betweenIndex in xrange( len( self.getBetweens() ) ):
 			between = self.getBetweens()[ betweenIndex ]
-			betweenRotated = euclidean.getPathRoundZAxisByPlaneAngle( segmentYMirror, between )
+			betweenRotated = euclidean.getPointsRoundZAxis( segmentYMirror, between )
 			euclidean.addXIntersectionIndexes( betweenRotated, betweenIndex, switchX, y )
 		switchX.sort()
-		maximumX = max( pathEndRotated.x, nextBeginningRotated.x )
-		minimumX = min( pathEndRotated.x, nextBeginningRotated.x )
+		maximumX = max( pathEndRotated.real, nextBeginningRotated.real )
+		minimumX = min( pathEndRotated.real, nextBeginningRotated.real )
 		for xIntersection in switchX:
 			if xIntersection.x > minimumX and xIntersection.x < maximumX:
 				betweenX.append( xIntersection )
-		betweenXIndex = 0
+		betweenXIndex = self.getStartIndex( betweenX )
 		while betweenXIndex < len( betweenX ) - 1:
 			betweenXFirst = betweenX[ betweenXIndex ]
 			betweenXSecond = betweenX[ betweenXIndex + 1 ]
 			loopFirst = self.getBetweens()[ betweenXFirst.index ]
-			z = loopFirst[ 0 ].z
-			betweenFirst = euclidean.getRoundZAxisByPlaneAngle( segmentXY, Vec3( betweenXFirst.x, y, z ) )
-			betweenSecond = euclidean.getRoundZAxisByPlaneAngle( segmentXY, Vec3( betweenXSecond.x, y, z ) )
-			if betweenXSecond.index == betweenXFirst.index:
-				betweenXIndex += 1
-			else:
-				self.addLoopsBeforeLeavingPerimeter( aroundBetweenPath, loopFirst, betweenFirst )
-			self.addPathBetween( aroundBetweenPath, betweenFirst, betweenSecond, loopFirst )
-			betweenXIndex += 1
+			betweenFirst = segment * complex( betweenXFirst.x, y )
+			betweenSecond = segment * complex( betweenXSecond.x, y )
+			isLeavingPerimeter = False
+			if betweenXSecond.index != betweenXFirst.index:
+				isLeavingPerimeter = True
+			self.addPathBetween( aroundBetweenPath, betweenFirst, betweenSecond, isLeavingPerimeter, loopFirst )
+			betweenXIndex += 2
 
 	def isNextExtruderOn( self ):
 		"Determine if there is an extruder on command before a move command."
@@ -489,10 +490,10 @@ class CombSkein:
 		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
 		if self.isLoopPerimeter:
 			if self.isNextExtruderOn():
-				self.loopPath = []
-				self.beforeLoopLocation = self.oldLocation
+				self.loopPath = euclidean.PathZ( location.z )
+				self.beforeLoopLocation = self.oldLocation.dropAxis( 2 )
 		if self.loopPath != None:
-			self.loopPath.append( location )
+			self.loopPath.path.append( location.dropAxis( 2 ) )
 		self.oldLocation = location
 
 	def parseAddJitter( self, line ):
@@ -584,18 +585,9 @@ class CombSkein:
 		if firstWord == 'G1':
 			if self.isPerimeter:
 				location = gcodec.getLocationFromSplitLine( None, splitLine )
-#				if self.perimeter == None:
-#					self.perimeter = []
-#				self.perimeter.append( location )
-#				self.pointTable[ str( location ) ] = self.perimeter
 				self.pointTable[ str( location ) ] = self.boundaryLoop
 		elif firstWord == 'M103':
 			self.boundaryLoop = None
-#			if self.perimeter != None:
-#				if len( self.perimeter ) > 2:
-#					if self.perimeter[ 0 ] == self.perimeter[ - 1 ]:
-#						del self.perimeter[ - 1 ]
-#				self.perimeter = None
 			self.isPerimeter = False
 		elif firstWord == '(<boundaryPoint>':
 			location = gcodec.getLocationFromSplitLine( None, splitLine )
@@ -603,7 +595,6 @@ class CombSkein:
 		elif firstWord == '(<layerStart>':
 			self.boundaryLoop = None
 			self.layer = None
-#			self.perimeter = None
 			self.oldZ = float( splitLine[ 1 ] )
 		elif firstWord == '(<perimeter>':
 			self.isPerimeter = True
