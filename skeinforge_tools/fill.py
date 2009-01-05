@@ -825,8 +825,9 @@ class FillSkein:
 		arounds = []
 		layerExtrusionWidth = self.extrusionWidth
 		layerFillInset = self.fillInset
-		self.addLine( '(<layerStart> %s )' % self.oldOrderedLocation.z ) # Indicate that a new layer is starting.
-		if self.rotatedLayers[ layerIndex ].rotation != None:
+		rotatedLayer = self.rotatedLayers[ layerIndex ]
+		self.addLine( '(<layerStart> %s )' % rotatedLayer.z ) # Indicate that a new layer is starting.
+		if rotatedLayer.rotation != None:
 			layerExtrusionWidth = self.extrusionWidth * self.bridgeExtrusionWidthOverSolid
 			layerFillInset = self.fillInset * self.bridgeExtrusionWidthOverSolid
 			self.addLine( '(<bridgeLayer> )' ) # Indicate that this is a bridge layer.
@@ -852,7 +853,7 @@ class FillSkein:
 		rotatedExtruderLoops = []
 		stretch = 0.5 * layerExtrusionWidth
 		loops = []
-		for surroundingLoop in self.rotatedLayers[ layerIndex ].surroundingLoops:
+		for surroundingLoop in rotatedLayer.surroundingLoops:
 			loops.append( surroundingLoop.boundary )
 		surroundingSlices = []
 		layerRemainder = layerIndex % int( round( self.fillPreferences.diaphragmPeriod.value ) )
@@ -868,7 +869,7 @@ class FillSkein:
 			self.lastExtraShells = extraShells
 		else:
 			self.lastExtraShells = - 1
-		surroundingLoops = euclidean.getOrderedSurroundingLoops( layerExtrusionWidth, self.rotatedLayers[ layerIndex ].surroundingLoops )
+		surroundingLoops = euclidean.getOrderedSurroundingLoops( layerExtrusionWidth, rotatedLayer.surroundingLoops )
 		if isPerimeterPathInSurroundLoops( surroundingLoops ):
 			extraShells = 0
 		for extraShellIndex in xrange( extraShells ):
@@ -991,6 +992,7 @@ class FillSkein:
 			self.output.write( line + "\n" )
 
 	def addRemainingGridPoints( self, arounds, gridPointInsetX, gridPointInsetY, gridPoints, isBothOrNone, paths, pixelTable, width ):
+		"Add the remaining grid points to the grid point list."
 		for gridPointIndex in xrange( len( gridPoints ) - 1, - 1, - 1 ):
 			gridPoint = gridPoints[ gridPointIndex ]
 			addAroundGridPoint( arounds, gridPoint, gridPointInsetX, gridPointInsetY, gridPoints, self.gridRadius, isBothOrNone, self.isDoubleJunction, self.isJunctionWide, paths, pixelTable, width )
@@ -1015,13 +1017,12 @@ class FillSkein:
 		"Add a location to thread."
 		if self.oldLocation == None:
 			return
-		if self.surroundingLoop != None:
-			if self.isPerimeter:
-				self.surroundingLoop.addToLoop( location )
-				return
-			elif self.thread == None:
-				self.thread = [ self.oldLocation.dropAxis( 2 ) ]
-				self.surroundingLoop.perimeterPaths.append( self.thread )
+		if self.isPerimeter:
+			self.surroundingLoop.addToLoop( location )
+			return
+		elif self.thread == None:
+			self.thread = [ self.oldLocation.dropAxis( 2 ) ]
+			self.surroundingLoop.perimeterPaths.append( self.thread )
 		self.thread.append( location.dropAxis( 2 ) )
 
 	def getAreaChange( self, area, layerIndex ):
@@ -1100,13 +1101,6 @@ class FillSkein:
 			if gridXStep % 3 == 0:
 				gridXStep += 1
 		return gridXStep
-
-	def getRotatedLayer( self ):
-		"Get the rotated layer, making a new one if necessary."
-		if self.rotatedLayer == None:
-			self.rotatedLayer = RotatedLayer()
-			self.rotatedLayers.append( self.rotatedLayer )
-		return self.rotatedLayer
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
@@ -1206,18 +1200,18 @@ class FillSkein:
 			self.surroundingLoop.addToBoundary( location )
 		elif firstWord == '(<bridgeDirection>':
 			secondWordWithoutBrackets = splitLine[ 1 ].replace( '(', '' ).replace( ')', '' )
-			self.getRotatedLayer().rotation = complex( secondWordWithoutBrackets )
+			self.rotatedLayer.rotation = complex( secondWordWithoutBrackets )
 		elif firstWord == '(</extrusionStart>':
 			self.shutdownLineIndex = lineIndex
 		elif firstWord == '(<layerStart>':
-			self.rotatedLayer = None
+			self.rotatedLayer = RotatedLayer( float( splitLine[ 1 ] ) )
+			self.rotatedLayers.append( self.rotatedLayer )
 			self.thread = None
 		elif firstWord == '(<perimeter>':
 			self.isPerimeter = True
 		elif firstWord == '(<surroundingLoop>':
 			self.surroundingLoop = euclidean.SurroundingLoop()
-			rotatedLayer = self.getRotatedLayer()
-			rotatedLayer.surroundingLoops.append( self.surroundingLoop )
+			self.rotatedLayer.surroundingLoops.append( self.surroundingLoop )
 		elif firstWord == '(</surroundingLoop>':
 			self.surroundingLoop = None
 
@@ -1235,13 +1229,14 @@ class FillSkein:
 
 class RotatedLayer:
 	"A rotated layer."
-	def __init__( self ):
+	def __init__( self, z ):
 		self.rotation = None
 		self.surroundingLoops = []
+		self.z = z
 
 	def __repr__( self ):
 		"Get the string representation of this RotatedLayer."
-		return '%s, %s, %s' % ( self.rotation, self.surroundingLoops )
+		return '%s, %s, %s' % ( self.z, self.rotation, self.surroundingLoops )
 
 
 class YIntersectionPath:
