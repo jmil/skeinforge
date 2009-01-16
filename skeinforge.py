@@ -3,11 +3,11 @@
 """
 Introduction
 
-Skeinforge is a tool chain to forge a gcode skein for a model.
+Skeinforge is a GPL tool chain to forge a gcode skein for a model.
 
-The tool chain starts with slice_shape, which slices the model into layers, then the layers are modified by other tools in turn like
-fill, comb, tower, raft, stretch, hop, nozzle_wipe, oozebane, fillet & export.  Each tool automatically gets the gcode from the
-previous tool.  So if you want a sliced & filled gcode, call the fill tool and it will call slice_shape, then it will fill and output the
+The tool chain starts with carve, which carves the model into layers, then the layers are modified by other tools in turn like
+fill, comb, tower, raft, stretch, hop, wipe, oozebane, fillet & export.  Each tool automatically gets the gcode from the
+previous tool.  So if you want a carved & filled gcode, call the fill tool and it will call carve, then it will fill and output the
 gcode.  If you want to use all the tools, call export and it will call in turn all the other tools down the chain to produce the gcode file.
 
 The skeinforge module provides a single place to call up all the preference dialogs.  When the 'Skeinforge' button is clicked,
@@ -27,10 +27,10 @@ There are also tools which handle preferences for the chain, like material & pol
 The analyze tool calls plugins in the analyze_plugins folder, which will analyze the gcode in some way when it is generated if
 their Activate checkbox is selected.
 
-The import_translator tool accesses and displays the import plugins.
+The interpret tool accesses and displays the import plugins.
 
 The default preferences are similar to those on Nophead's machine.  A preference which is often different is the
-'Extrusion Diameter' in slice_shape.
+'Extrusion Diameter' in carve.
 
 
 
@@ -71,11 +71,11 @@ Or you can turn files into gcode by adding the file name, for example:
 
 End of the Beginning
 
-When slice is generating the code, if there is a file start.txt, it will add that to the very beginning of the gcode.  After it has
+When carve is generating the code, if there is a file start.txt, it will add that to the very beginning of the gcode.  After it has
 added some initialization code and just before it adds the extrusion gcode, it will add the file endofthebeginning.txt if it exists.
-At the very end, it will add the file end.txt if it exists.  Slice does not care if the text file names are capitalized, but some file
+At the very end, it will add the file end.txt if it exists.  Carve does not care if the text file names are capitalized, but some file
 systems do not handle file name cases properly, so to be on the safe side you should give them lower case names.  It will
-first look for the file in the same directory as slice, if it does not find it it will look in ~/.skeinforge/gcode_scripts.
+first look for the file in the same directory as carve, if it does not find it it will look in ~/.skeinforge/gcode_scripts.
 
 The computation intensive python modules will use psyco if it is available and run about twice as fast.  Psyco is described at:
 http://psyco.sourceforge.net/index.html
@@ -151,8 +151,8 @@ folder.
 STL is an inferior triangle surface format, described at:
 http://en.wikipedia.org/wiki/STL_(file_format)
 
-If you're using an STL file and you can't even slice it, try converting it to a GNU Triangulated Surface file in Art of Illusion.  If
-it still doesn't slice, then follow the advice in the troubleshooting section.
+If you're using an STL file and you can't even carve it, try converting it to a GNU Triangulated Surface file in Art of Illusion.  If
+it still doesn't carve, then follow the advice in the troubleshooting section.
 
 
 
@@ -182,8 +182,8 @@ If there's a bug, try downloading the very latest version because sometimes I up
 Then you can ask for skeinforge help by sending a private message through the forum software by going to my page at:
 http://forums.reprap.org/profile.php?12,488
 
-or posting in the "How to Print Gcode from Host" thread at:
-http://forums.reprap.org/read.php?12,10772
+or posting in the "Skeinforge Powwow" thread at:
+http://forums.reprap.org/read.php?12,20013
 
 When asking for help please include your object and your zipped skeinforge preferences.  The skeinforge preferences are in
 the .skeinforge folder in your home directory.
@@ -191,7 +191,7 @@ the .skeinforge folder in your home directory.
 
 Examples
 
-The following examples slice and dice the STL file Screw Holder.stl.  The examples are run in a terminal in the folder which
+The following examples carve and dice the STL file Screw Holder.stl.  The examples are run in a terminal in the folder which
 contains Screw Holder.gts and skeinforge.py.
 
 > python skeinforge.py
@@ -221,7 +221,7 @@ from __future__ import absolute_import
 
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
-from skeinforge_tools import import_translator
+from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools import polyfile
 import cStringIO
 import sys
@@ -233,11 +233,15 @@ Adrian Bowyer <http://forums.reprap.org/profile.php?12,13>
 Brendan Erwin <http://forums.reprap.org/profile.php?12,217>
 Greenarrow <http://forums.reprap.org/profile.php?12,81>
 Ian England <http://forums.reprap.org/profile.php?12,192>
+John Gilmore <http://forums.reprap.org/profile.php?12,364>
+Jonwise <http://forums.reprap.org/profile.php?12,716>
 Kyle Corbitt <http://forums.reprap.org/profile.php?12,90>
 Marius Kintel <http://reprap.soup.io/>
 Nophead <http://www.blogger.com/profile/12801535866788103677>
+PJR <http://forums.reprap.org/profile.php?12,757>
 Reece.Arnott <http://forums.reprap.org/profile.php?12,152>
 Wade <http://forums.reprap.org/profile.php?12,489>
+Zach Hoeken <http://blog.zachhoeken.com/>
 
 Organizations:
 Art of Illusion <http://www.artofillusion.org/>"""
@@ -246,26 +250,26 @@ __license__ = "GPL 3.0"
 
 
 def getSkeinforgeToolFilenames():
-	"Get skeinforge plugin filenames."
+	"Get skeinforge plugin fileNames."
 	return gcodec.getPluginFilenames( 'skeinforge_tools', __file__ )
 
-def writeOutput( filename = '' ):
-	"Skeinforge a gcode file.  If no filename is specified, skeinforge the first gcode file in this folder that is not modified."
+def writeOutput( fileName = '' ):
+	"Skeinforge a gcode file.  If no fileName is specified, skeinforge the first gcode file in this folder that is not modified."
 	skeinforgePluginFilenames = getSkeinforgeToolFilenames()
-	toolNames = 'export fillet oozebane nozzle_wipe hop stretch clip comb tower raft speed multiply fill slice_shape'.split()
+	toolNames = 'export unpause fillet oozebane wipe hop stretch clip comb tower raft speed multiply fill inset carve'.split()
 	for toolName in toolNames:
 		for skeinforgePluginFilename in skeinforgePluginFilenames:
 			if skeinforgePluginFilename == toolName:
 				pluginModule = gcodec.getModule( skeinforgePluginFilename, 'skeinforge_tools', __file__ )
 				if pluginModule != None:
-					pluginModule.writeOutput( filename )
+					pluginModule.writeOutput( fileName )
 				return
 
 
 class SkeinforgePreferences:
 	"A class to handle the skeinforge preferences."
 	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
+		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
 		self.skeinforgeLabel = preferences.LabelDisplay().getFromName( 'Open Preferences: ' )
@@ -276,20 +280,20 @@ class SkeinforgePreferences:
 			skeinforgeDisplayToolButton = preferences.DisplayToolButton().getFromFolderName( 'skeinforge_tools', __file__, skeinforgePluginFilename )
 			self.skeinforgeDisplayToolButtons.append( skeinforgeDisplayToolButton )
 		self.archive += self.skeinforgeDisplayToolButtons
-		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Skeinforged', '' )
-		self.archive.append( self.filenameInput )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Skeinforged', '' )
+		self.archive.append( self.fileNameInput )
+		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Skeinforge'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'skeinforge.csv' )
-		self.filenameHelp = 'skeinforge.html'
+		self.fileNamePreferences = preferences.getPreferencesFilePath( 'skeinforge.csv' )
+		self.fileNameHelp = 'skeinforge.html'
 		self.saveTitle = None
 		self.title = 'Skeinforge Preferences'
 
 	def execute( self ):
 		"Skeinforge button has been clicked."
-		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
-		for filename in filenames:
-			writeOutput( filename )
+		fileNames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.fileNameInput.value, interpret.getImportPluginFilenames(), self.fileNameInput.wasCancelled )
+		for fileName in fileNames:
+			writeOutput( fileName )
 
 def main():
 	"Display the skeinforge dialog."

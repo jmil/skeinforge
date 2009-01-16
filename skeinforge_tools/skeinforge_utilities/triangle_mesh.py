@@ -3,7 +3,7 @@ Triangle Mesh holds the faces and edges of a triangular mesh.
 
 It can read from and write to a GNU Triangulated Surface (.gts) file.
 
-The following examples slice the GNU Triangulated Surface file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which
+The following examples carve the GNU Triangulated Surface file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which
 contains Screw Holder Bottom.stl and triangle_mesh.py.
 
 
@@ -11,20 +11,20 @@ contains Screw Holder Bottom.stl and triangle_mesh.py.
 Python 2.5.1 (r251:54863, Sep 22 2007, 01:43:31)
 [GCC 4.2.1 (SUSE Linux)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
->>> import slice
->>> slice.main()
-File Screw Holder Bottom.stl is being sliced.
-The sliced file is saved as Screw Holder Bottom_slice.gcode
-It took 3 seconds to slice the file.
+>>> import carve
+>>> carve.main()
+File Screw Holder Bottom.stl is being carved.
+The carved file is saved as Screw Holder Bottom_carve.gcode
+It took 3 seconds to carve the file.
 
 
->>> slice.writeOutput()
-File Screw Holder Bottom.gcode is being sliced.
-The sliced file is saved as Screw Holder Bottom_slice.gcode
-It took 3 seconds to slice the file.
+>>> carve.writeOutput()
+File Screw Holder Bottom.gcode is being carved.
+The carved file is saved as Screw Holder Bottom_carve.gcode
+It took 3 seconds to carve the file.
 
 
->>> slice.getSliceGcode("
+>>> carve.getCarveGcode("
 54 162 108 Number of Vertices,Number of Edges,Number of Faces
 -5.800000000000001 5.341893939393939 4.017841892579603 Vertex Coordinates XYZ
 5.800000000000001 5.341893939393939 4.017841892579603
@@ -40,8 +40,12 @@ from __future__ import absolute_import
 import __init__
 
 from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
+from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
+from skeinforge_tools.skeinforge_utilities import intercircle
+import cmath
 import cStringIO
+import math
 
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
@@ -49,6 +53,62 @@ __credits__ = 'Art of Illusion <http://www.artofillusion.org/>'
 __date__ = "$Date: 2008/02/05 $"
 __license__ = "GPL 3.0"
 
+
+def addEdgePair( edgePairTable, edges, faceEdgeIndex, remainingEdgeIndex, remainingEdgeTable ):
+	"Add edge pair to the edge pair table."
+	if faceEdgeIndex == remainingEdgeIndex:
+		return
+	if not faceEdgeIndex in remainingEdgeTable:
+		return
+	edgePair = triangle_mesh.EdgePair().getFromIndexesEdges( [ remainingEdgeIndex, faceEdgeIndex ], edges )
+	edgePairTable[ str( edgePair ) ] = edgePair
+
+def addLoopToPointTable( loop, pointTable ):
+	"Add the points in the loop to the point table."
+	for point in loop:
+		pointTable[ point ] = loop
+
+def addPointsAtZ( edgePair, points, radius, vertices, z ):
+	"Add point complexes on the segment between the edge intersections with z."
+	carveIntersectionFirst = getCarveIntersectionFromEdge( edgePair.edges[ 0 ], vertices, z )
+	carveIntersectionSecond = getCarveIntersectionFromEdge( edgePair.edges[ 1 ], vertices, z )
+	intercircle.addPointsFromSegment( points, radius, carveIntersectionFirst, carveIntersectionSecond, 0.3 )
+
+def addWithLeastLength( loops, point, shortestAdditionalLength ):
+	"Insert a point into a loop, at the index at which the loop would be shortest."
+	shortestLoop = None
+	shortestPointIndex = None
+	for loop in loops:
+		if len( loop ) > 2:
+			for pointIndex in xrange( len( loop ) ):
+				additionalLength = getAdditionalLoopLength( loop, point, pointIndex )
+				if additionalLength < shortestAdditionalLength:
+					shortestAdditionalLength = additionalLength
+					shortestLoop = loop
+					shortestPointIndex = pointIndex
+	if shortestPointIndex != None:
+		afterCenterComplex = shortestLoop[ shortestPointIndex ]
+		afterEndComplex = shortestLoop[ ( shortestPointIndex + 1 ) % len( shortestLoop ) ]
+		isInlineAfter = isInline( point, afterCenterComplex, afterEndComplex )
+		beforeCenterComplex = shortestLoop[ ( shortestPointIndex + len( shortestLoop ) - 1 ) % len( shortestLoop ) ]
+		beforeEndComplex = shortestLoop[ ( shortestPointIndex + len( shortestLoop ) - 2 ) % len( shortestLoop ) ]
+		isInlineBefore = isInline( point, beforeCenterComplex, beforeEndComplex )
+		if isInlineAfter or isInlineBefore:
+			shortestLoop.insert( shortestPointIndex, point )
+
+def compareArea( loopArea, otherLoopArea ):
+	"Get comparison in order to sort loop areas in descending order of area."
+	if loopArea.area < otherLoopArea.area:
+		return 1
+	if loopArea.area > otherLoopArea.area:
+		return - 1
+	return 0
+
+def getAdditionalLoopLength( loop, point, pointIndex ):
+	"Get the additional length added by inserting a point into a loop."
+	afterPoint = loop[ pointIndex ]
+	beforePoint = loop[ ( pointIndex + len( loop ) - 1 ) % len( loop ) ]
+	return abs( point - beforePoint ) + abs( point - afterPoint ) - abs( afterPoint - beforePoint )
 
 def getCommonVertexIndex( edgeFirst, edgeSecond ):
 	"Get the vertex index that both edges have in common."
@@ -60,19 +120,243 @@ def getCommonVertexIndex( edgeFirst, edgeSecond ):
 	print( edgeSecond )
 	return 0
 
-def getTriangleMesh( filename = '' ):
-	"Slice a GNU Triangulated Surface file.  If no filename is specified, slice the first GNU Triangulated Surface file in this folder."
-	if filename == '':
+def getCarveIntersectionFromEdge( edge, vertices, z ):
+	"Get the complex where the carve intersects the edge."
+	firstVertex = vertices[ edge.vertexIndexes[ 0 ] ]
+	firstVertexComplex = firstVertex.dropAxis( 2 )
+	secondVertex = vertices[ edge.vertexIndexes[ 1 ] ]
+	secondVertexComplex = secondVertex.dropAxis( 2 )
+	zMinusFirst = z - firstVertex.z
+	up = secondVertex.z - firstVertex.z
+	return zMinusFirst * ( secondVertexComplex - firstVertexComplex ) / up + firstVertexComplex
+
+def getCommonVertexIndex( edgeFirst, edgeSecond ):
+	"Get the vertex index that both edges have in common."
+	for edgeFirstVertexIndex in edgeFirst.vertexIndexes:
+		if edgeFirstVertexIndex == edgeSecond.vertexIndexes[ 0 ] or edgeFirstVertexIndex == edgeSecond.vertexIndexes[ 1 ]:
+			return edgeFirstVertexIndex
+	print( "Inconsistent GNU Triangulated Surface" )
+	print( edgeFirst )
+	print( edgeSecond )
+	return 0
+
+def getDoubledRoundZ( overhangingSegment, segmentRoundZ ):
+	"Get doubled plane angle around z of the overhanging segment."
+	endpoint = overhangingSegment[ 0 ]
+	roundZ = endpoint.point - endpoint.otherEndpoint.point
+	roundZ *= segmentRoundZ
+	if abs( roundZ ) == 0.0:
+		return complex()
+	if roundZ.real < 0.0:
+		roundZ *= - 1.0
+	roundZLength = abs( roundZ )
+	return roundZ * roundZ / roundZLength
+
+def getLoopsFromCorrectMesh( edges, faces, vertices, z ):
+	"Get loops from a carve of a correct mesh."
+	remainingEdgeTable = getRemainingEdgeTable( edges, vertices, z )
+	remainingValues = remainingEdgeTable.values()
+	for edge in remainingValues:
+		if len( edge.faceIndexes ) < 2:
+			print( 'This should never happen, there is a hole in the triangle mesh, each edge should have two faces.' )
+			print( edge )
+			print( "Something will still be printed, but there is no guarantee that it will be the correct shape." )
+			print( 'Once the gcode is saved, you should check over the layer with a z of:' )
+			print( z )
+			return []
+	loops = []
+	while isPathAdded( edges, faces, loops, remainingEdgeTable, vertices, z ):
+		pass
+	return loops
+#	untouchables = []
+#	for boundingLoop in boundingLoops:
+#		if not boundingLoop.isIntersectingList( untouchables ):
+#			untouchables.append( boundingLoop )
+#	if len( untouchables ) < len( boundingLoops ):
+#		print( 'This should never happen, the carve layer intersects itself. Something will still be printed, but there is no guarantee that it will be the correct shape.' )
+#		print( 'Once the gcode is saved, you should check over the layer with a z of:' )
+#		print( z )
+#	remainingLoops = []
+#	for untouchable in untouchables:
+#		remainingLoops.append( untouchable.loop )
+#	return remainingLoops
+
+def getLoopsFromUnprovenMesh( edges, extrusionWidth, faces, importCoarseness, vertices, z ):
+	"Get loops from a carve of an unproven mesh."
+	edgePairTable = {}
+	importRadius = importCoarseness * extrusionWidth
+	points = []
+	pointTable = {}
+	remainingEdgeTable = getRemainingEdgeTable( edges, vertices, z )
+	remainingEdgeTableKeys = remainingEdgeTable.keys()
+	for remainingEdgeIndexKey in remainingEdgeTable:
+		edge = remainingEdgeTable[ remainingEdgeIndexKey ]
+		carveIntersection = getCarveIntersectionFromEdge( edge, vertices, z )
+		points.append( carveIntersection )
+		for edgeFaceIndex in edge.faceIndexes:
+			face = faces[ edgeFaceIndex ]
+			for edgeIndex in face.edgeIndexes:
+				addEdgePair( edgePairTable, edges, edgeIndex, remainingEdgeIndexKey, remainingEdgeTable )
+	onlyPoints = points[ : ]
+	for edgePairValue in edgePairTable.values():
+		addPointsAtZ( edgePairValue, points, importRadius, vertices, z )
+	circleNodes = intercircle.getCircleNodesFromPoints( points, importRadius )
+	centers = intercircle.getCentersFromCircleNodes( circleNodes )
+	loops = intercircle.getLoopsFromLoopsDirection( True, centers )
+	for loop in loops:
+		addLoopToPointTable( loop, pointTable )
+	clockwiseLoops = getLoopsInDescendingOrderOfArea( intercircle.getLoopsFromLoopsDirection( False, centers ) )
+	clockwiseLoops.reverse()
+	for clockwiseLoop in clockwiseLoops:
+		if len( clockwiseLoop ) > 2 and euclidean.getMaximumSpan( clockwiseLoop ) > 2.5 * importRadius:
+			if getOverlapRatio( clockwiseLoop, pointTable ) < 0.45:
+				loops.append( clockwiseLoop )
+				addLoopToPointTable( clockwiseLoop, pointTable )
+	shortestAdditionalLength = 0.85 * importRadius
+	for onlyPoint in onlyPoints:
+		if onlyPoint not in pointTable:
+			addWithLeastLength( loops, onlyPoint, shortestAdditionalLength )
+	return loops
+
+def getLoopsInDescendingOrderOfArea( loops ):
+	"Get the lowest zone index."
+	loopAreas = []
+	for loop in loops:
+		loopArea = LoopArea( loop )
+		loopAreas.append( loopArea )
+	loopAreas.sort( compareArea )
+	loopsInDescendingOrderOfArea = []
+	for loopArea in loopAreas:
+		loopsInDescendingOrderOfArea.append( loopArea.loop )
+	return loopsInDescendingOrderOfArea
+
+def getLowestZoneIndex( zoneArray, z ):
+	"Get the lowest zone index."
+	lowestZoneIndex = 0
+	lowestZone = 99999999.0
+	for zoneIndex in xrange( len( zoneArray ) ):
+		zone = zoneArray[ zoneIndex ]
+		if zone < lowestZone:
+			lowestZone = zone
+			lowestZoneIndex = zoneIndex
+	return lowestZoneIndex
+
+def getNextEdgeIndexAroundZ( edge, faces, remainingEdgeTable ):
+	"Get the next edge index in the mesh carve."
+	for faceIndex in edge.faceIndexes:
+		face = faces[ faceIndex ]
+		for edgeIndex in face.edgeIndexes:
+			if edgeIndex in remainingEdgeTable:
+				return edgeIndex
+	return - 1
+
+def getOverhangDirection( belowOutsetLoops, segmentBegin, segmentEnd ):
+	"Add to span direction from the endpoint segments which overhang the layer below."
+	segment = segmentEnd - segmentBegin
+	normalizedSegment = euclidean.getNormalized( complex( segment.real, segment.imag ) )
+	segmentYMirror = complex( normalizedSegment.real, - normalizedSegment.imag )
+	segmentBegin = segmentYMirror * segmentBegin
+	segmentEnd = segmentYMirror * segmentEnd
+	solidXIntersectionList = []
+	y = segmentBegin.imag
+	solidXIntersectionList.append( euclidean.XIntersectionIndex( - 1.0, segmentBegin.real ) )
+	solidXIntersectionList.append( euclidean.XIntersectionIndex( - 1.0, segmentEnd.real ) )
+	for belowLoopIndex in xrange( len( belowOutsetLoops ) ):
+		belowLoop = belowOutsetLoops[ belowLoopIndex ]
+		rotatedOutset = euclidean.getPointsRoundZAxis( segmentYMirror, belowLoop )
+		euclidean.addXIntersectionIndexes( rotatedOutset, belowLoopIndex, solidXIntersectionList, y )
+	overhangingSegments = euclidean.getSegmentsFromXIntersectionIndexes( solidXIntersectionList, y )
+	overhangDirection = complex()
+	for overhangingSegment in overhangingSegments:
+		overhangDirection += getDoubledRoundZ( overhangingSegment, normalizedSegment )
+	return overhangDirection
+
+def getOverlapRatio( loop, pointTable ):
+	"Get the overlap ratio between the loop and the point table."
+	numberOfOverlaps = 0
+	for point in loop:
+		if point in pointTable:
+			numberOfOverlaps += 1
+	return float( numberOfOverlaps ) / float( len( loop ) )
+
+def getPath( edges, pathIndexes, loop, z ):
+	"Get the path from the edge intersections."
+	path = []
+	for pathIndexIndex in xrange( len( pathIndexes ) ):
+		pathIndex = pathIndexes[ pathIndexIndex ]
+		edge = edges[ pathIndex ]
+		carveIntersection = getCarveIntersectionFromEdge( edge, loop, z )
+		path.append( carveIntersection )
+	return path
+
+def getRemainingEdgeTable( edges, vertices, z ):
+	"Get the remaining edge hashtable."
+	remainingEdgeTable = {}
+	for edgeIndex in xrange( len( edges ) ):
+		edge = edges[ edgeIndex ]
+		if isZInEdge( edge, vertices, z ):
+			remainingEdgeTable[ edgeIndex ] = edge
+	return remainingEdgeTable
+
+def getSharedFace( firstEdge, faces, secondEdge ):
+	"Get the face which is shared by two edges."
+	for firstEdgeFaceIndex in firstEdge.faceIndexes:
+		for secondEdgeFaceIndex in secondEdge.faceIndexes:
+			if firstEdgeFaceIndex == secondEdgeFaceIndex:
+				return faces[ firstEdgeFaceIndex ]
+	return None
+
+def getTriangleMesh( fileName = '' ):
+	"Carve a GNU Triangulated Surface file.  If no fileName is specified, carve the first GNU Triangulated Surface file in this folder."
+	if fileName == '':
 		unmodified = gcodec.getGNUTriangulatedSurfaceFiles()
 		if len( unmodified ) == 0:
 			print( "There are no GNU Triangulated Surface files in this folder." )
 			return None
-		filename = unmodified[ 0 ]
-	gnuTriangulatedSurfaceText = gcodec.getFileText( filename )
+		fileName = unmodified[ 0 ]
+	gnuTriangulatedSurfaceText = gcodec.getFileText( fileName )
 	if gnuTriangulatedSurfaceText == '':
 		return None
 	triangleMesh = TriangleMesh().getFromGNUTriangulatedSurfaceText( gnuTriangulatedSurfaceText )
 	return triangleMesh
+
+def isInline( beginComplex, centerComplex, endComplex ):
+	"Determine if the three complex points form a line."
+	centerBeginComplex = beginComplex - centerComplex
+	centerEndComplex = endComplex - centerComplex
+	centerBeginLength = abs( centerBeginComplex )
+	centerEndLength = abs( centerEndComplex )
+	if centerBeginLength <= 0.0 or centerEndLength <= 0.0:
+		return False
+	centerBeginComplex /= centerBeginLength
+	centerEndComplex /= centerEndLength
+	return euclidean.getDotProduct( centerBeginComplex, centerEndComplex ) < - 0.999
+
+def isPathAdded( edges, faces, loops, remainingEdgeTable, vertices, z ):
+	"Get the path indexes around a triangle mesh carve and add the path to the flat loops."
+	if len( remainingEdgeTable ) < 1:
+		return False
+	pathIndexes = []
+	remainingEdgeIndexKey = remainingEdgeTable.keys()[ 0 ]
+	pathIndexes.append( remainingEdgeIndexKey )
+	del remainingEdgeTable[ remainingEdgeIndexKey ]
+	nextEdgeIndexAroundZ = getNextEdgeIndexAroundZ( edges[ remainingEdgeIndexKey ], faces, remainingEdgeTable )
+	while nextEdgeIndexAroundZ != - 1:
+		pathIndexes.append( nextEdgeIndexAroundZ )
+		del remainingEdgeTable[ nextEdgeIndexAroundZ ]
+		nextEdgeIndexAroundZ = getNextEdgeIndexAroundZ( edges[ nextEdgeIndexAroundZ ], faces, remainingEdgeTable )
+	if len( pathIndexes ) < 3:
+		print( "Dangling edges, will use intersecting circles to get import layer at height " + z.toString() )
+		del loops[ : ]
+		return False
+	loops.append( getPath( edges, pathIndexes, vertices, z ) )
+	return True
+
+def isZInEdge( edge, vertices, z ):
+	"Determine if z is inside the edge."
+	vertex1ZHigher = vertices[ edge.vertexIndexes[ 0 ] ].z > z
+	vertex2ZHigher = vertices[ edge.vertexIndexes[ 1 ] ].z > z
+	return vertex1ZHigher != vertex2ZHigher
 
 
 class Edge:
@@ -119,6 +403,7 @@ class EdgePair:
 		for edgeIndex in self.edgeIndexes:
 			self.edges.append( edges[ edgeIndex ] )
 		return self
+
 
 class Face:
 	"A face of a triangle mesh."
@@ -169,6 +454,17 @@ class Face:
 		return self
 
 
+class LoopArea:
+	"Complex loop with an area."
+	def __init__( self, loop ):
+		self.area = abs( euclidean.getPolygonArea( loop ) )
+		self.loop = loop
+
+	def __repr__( self ):
+		"Get the string representation of this flat path."
+		return '%s, %s' % ( self.area, self.loop )
+
+
 """
 Quoted from http://gts.sourceforge.net/reference/gts-surfaces.html#GTS-SURFACE-WRITE
 "All the lines beginning with GTS_COMMENTS (#!) are ignored. The first line contains three unsigned integers separated by spaces. The first integer is the number of vertices, nv, the second is the number of edges, ne and the third is the number of faces, nf.
@@ -182,13 +478,95 @@ class TriangleMesh:
 	"A triangle mesh."
 	def __init__( self ):
 		"Add empty lists."
+		self.belowLoops = None
+		self.bridgeLayerThickness = None
 		self.edges = []
 		self.faces = []
+		self.rotatedBoundaryLayers = []
 		self.vertices = []
 	
 	def __repr__( self ):
 		"Get the string representation of this TriangleMesh."
 		return str( self.vertices ) + '\n' + str( self.edges ) + '\n' + str( self.faces )
+
+	def addToZoneArray( self, point, zoneArray, z ):
+		"Add a height to the zone array."
+		zoneLayer = int( round( ( point.z - z ) / self.zZoneInterval ) )
+		zoneAround = 2 * int( abs( zoneLayer ) )
+		if zoneLayer < 0:
+			zoneAround -= 1
+		if zoneAround < len( zoneArray ):
+			zoneArray[ zoneAround ] += 1
+
+	def getBridgeDirection( self, layerLoops ):
+		"Get span direction for the majority of the overhanging extrusion perimeter, if any."
+		if self.bridgeLayerThickness == None:
+			return None
+		if self.belowLoops == None:
+			return None
+		belowOutsetLoops = []
+		overhangInset = 1.25 * self.extrusionWidth
+		slightlyGreaterThanOverhang = 1.1 * overhangInset
+		muchGreaterThanOverhang = 2.5 * overhangInset
+		for loop in self.belowLoops:
+			centers = intercircle.getCentersFromLoopDirection( True, loop, slightlyGreaterThanOverhang )
+			for center in centers:
+				outset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, overhangInset )
+				if euclidean.isLargeSameDirection( outset, center, muchGreaterThanOverhang ):
+					belowOutsetLoops.append( outset )
+		bridgeDirection = complex()
+		for loop in layerLoops:
+			for pointIndex in xrange( len( loop ) ):
+				previousIndex = ( pointIndex + len( loop ) - 1 ) % len( loop )
+				bridgeDirection += getOverhangDirection( belowOutsetLoops, loop[ previousIndex ], loop[ pointIndex ] )
+		if abs( bridgeDirection ) < 0.5 * self.extrusionWidth:
+			return None
+		else:
+			bridgeDirection /= abs( bridgeDirection )
+			return cmath.sqrt( bridgeDirection )
+
+	def getBridgeLoops( self, loop ):
+		"Get the inset bridge loops from the loop."
+		slightlyGreaterThanHalfWidth = 1.1 * self.extrusionWidth
+		muchGreaterThanHalfWIdth = 2.5 * self.extrusionWidth
+		extrudateLoops = []
+		circleNodes = intercircle.getCircleNodesFromLoop( loop, slightlyGreaterThanHalfWidth )
+		centers = intercircle.getCentersFromCircleNodes( circleNodes )
+		for center in centers:
+			extrudateLoop = intercircle.getSimplifiedInsetFromClockwiseLoop( center, self.extrusionWidth )
+			if euclidean.isLargeSameDirection( extrudateLoop, center, muchGreaterThanHalfWIdth ):
+				if euclidean.isPathInsideLoop( loop, extrudateLoop ) == euclidean.isWiddershins( loop ):
+					extrudateLoop.reverse()
+					extrudateLoops.append( extrudateLoop )
+		return extrudateLoops
+
+	def getCarveCornerMaximum( self ):
+		"Get the corner maximum of the vertices."
+		return self.cornerMaximum
+
+	def getCarveCornerMinimum( self ):
+		"Get the corner minimum of the vertices."
+		return self.cornerMinimum
+
+	def getCarveLayerThickness( self ):
+		"Get the layer thickness."
+		return self.layerThickness
+
+	def getCarveRotatedBoundaryLayers( self ):
+		"Get the rotated boundary layers."
+		self.cornerMaximum = Vector3( - 999999999.0, - 999999999.0, - 999999999.0 )
+		self.cornerMinimum = Vector3( 999999999.0, 999999999.0, 999999999.0 )
+		for point in self.vertices:
+			self.cornerMaximum = euclidean.getPointMaximum( self.cornerMaximum, point )
+			self.cornerMinimum = euclidean.getPointMinimum( self.cornerMinimum, point )
+		halfHeight = 0.5 * self.layerThickness
+		zZoneLayers = 99
+		self.zZoneInterval = self.layerThickness / zZoneLayers / 100.0
+		layerTop = self.cornerMaximum.z - halfHeight * 0.5
+		z = self.cornerMinimum.z + halfHeight
+		while z < layerTop:
+			z = self.getZAddExtruderPaths( z )
+		return self.rotatedBoundaryLayers
 
 	def getGNUTriangulatedSurfaceText( self ):
 		"Get this mesh in the GNU Triangulated Surface (.gts) format."
@@ -205,46 +583,71 @@ class TriangleMesh:
 			output.write( '%s\n' % face.getGNUTriangulatedSurfaceLine() )
 		return output.getvalue()
 
-	def getFromGNUTriangulatedSurfaceText( self, gnuTriangulatedSurfaceText ):
-		"Initialize from a GNU Triangulated Surface Text."
-		if gnuTriangulatedSurfaceText == '':
-			return None
-		lines = gcodec.getTextLines( gnuTriangulatedSurfaceText )
-		linesWithoutComments = []
-		for line in lines:
-			if len( line ) > 0:
-				firstCharacter = line[ 0 ]
-				if firstCharacter != '#' and firstCharacter != '!':
-					linesWithoutComments.append( line )
-		splitLine = linesWithoutComments[ 0 ].split()
-		numberOfVertices = int( splitLine[ 0 ] )
-		numberOfEdges = int( splitLine[ 1 ] )
-		numberOfFaces = int( splitLine[ 2 ] )
-		faceTriples = []
-		for vertexIndex in xrange( numberOfVertices ):
-			line = linesWithoutComments[ vertexIndex + 1 ]
-			splitLine = line.split()
-			vertex = Vector3( float( splitLine[ 0 ] ), float( splitLine[ 1 ] ), float( splitLine[ 2 ] ) )
-			self.vertices.append( vertex )
-		edgeStart = numberOfVertices + 1
-		for edgeIndex in xrange( numberOfEdges ):
-			line = linesWithoutComments[ edgeIndex + edgeStart ]
-			splitLine = line.split()
-			vertexIndexes = []
-			for word in splitLine[ : 2 ]:
-				vertexIndexes.append( int( word ) - 1 )
-			edge = Edge().getFromVertexIndexes( edgeIndex, vertexIndexes )
-			self.edges.append( edge )
-		faceStart = edgeStart + numberOfEdges
-		for faceIndex in xrange( numberOfFaces ):
-			line = linesWithoutComments[ faceIndex + faceStart ]
-			splitLine = line.split()
-			edgeIndexes = []
-			for word in splitLine[ : 3 ]:
-				edgeIndexes.append( int( word ) - 1 )
-			face = Face().getFromEdgeIndexes( edgeIndexes, self.edges, faceIndex )
-			self.faces.append( face )
-		return self
+	def getLoopsFromMesh( self, z ):
+		"Get loops from a carve of a mesh."
+		originalLoops = []
+		if self.isCorrectMesh:
+			originalLoops = getLoopsFromCorrectMesh( self.edges, self.faces, self.vertices, z )
+		if len( originalLoops ) < 1:
+			originalLoops = getLoopsFromUnprovenMesh( self.edges, self.extrusionWidth, self.faces, self.importCoarseness, self.vertices, z )
+		simplifiedLoops = []
+		for originalLoop in originalLoops:
+			simplifiedLoops.append( euclidean.getSimplifiedLoop( originalLoop, self.extrusionWidth ) )
+		loops = getLoopsInDescendingOrderOfArea( simplifiedLoops )
+		for loopIndex in xrange( len( loops ) ):
+			loop = loops[ loopIndex ]
+			leftPoint = euclidean.getLeftPoint( loop )
+			totalNumberOfIntersectionsToLeft = 0
+			for otherLoop in loops[ : loopIndex ] + loops[ loopIndex + 1 : ]:
+				totalNumberOfIntersectionsToLeft += euclidean.getNumberOfIntersectionsToLeft( leftPoint, otherLoop )
+			loopIsWiddershins = euclidean.isWiddershins( loop )
+			isEven = totalNumberOfIntersectionsToLeft % 2 == 0
+			if isEven != loopIsWiddershins:
+				loop.reverse()
+		return loops
+
+	def getZAddExtruderPaths( self, z ):
+		"Get next z and add extruder loops."
+		zoneArray = []
+		for point in self.vertices:
+			self.addToZoneArray( point, zoneArray, z )
+		lowestZoneIndex = getLowestZoneIndex( zoneArray, z )
+		halfAround = int( math.ceil( float( lowestZoneIndex ) / 2.0 ) )
+		zAround = float( halfAround ) * self.zZoneInterval
+		if lowestZoneIndex % 2 == 1:
+			zAround = - zAround
+		zPlusAround = z + zAround
+		rotatedBoundaryLayer = euclidean.RotatedLoopLayer( zPlusAround )
+		self.rotatedBoundaryLayers.append( rotatedBoundaryLayer )
+		rotatedBoundaryLayer.loops = self.getLoopsFromMesh( zPlusAround )
+		allExtrudateLoops = []
+		for loop in rotatedBoundaryLayer.loops:
+			allExtrudateLoops += self.getBridgeLoops( loop )
+		rotatedBoundaryLayer.rotation = self.getBridgeDirection( allExtrudateLoops )
+		self.belowLoops = allExtrudateLoops
+		if rotatedBoundaryLayer.rotation == None:
+			return z + self.layerThickness
+		return z + self.bridgeLayerThickness
+
+	def setCarveBridgeLayerThickness( self, bridgeLayerThickness ):
+		"Set the bridge layer thickness.  If the infill is not in the direction of the bridge, the bridge layer thickness should be given as None or not set at all."
+		self.bridgeLayerThickness = bridgeLayerThickness
+
+	def setCarveLayerThickness( self, layerThickness ):
+		"Set the layer thickness."
+		self.layerThickness = layerThickness
+
+	def setCarveExtrusionWidth( self, extrusionWidth ):
+		"Set the extrusion width."
+		self.extrusionWidth = extrusionWidth
+
+	def setCarveImportCoarseness( self, importCoarseness ):
+		"Set the import coarseness."
+		self.importCoarseness = importCoarseness
+
+	def setCarveIsCorrectMesh( self, isCorrectMesh ):
+		"Set the is correct mesh flag."
+		self.isCorrectMesh = isCorrectMesh
 
 	def setEdgesForAllFaces( self ):
 		"Set the face edges of all the faces."

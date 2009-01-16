@@ -50,23 +50,23 @@ def getPreferencesDirectoryPath():
 	"Get the preferences directory path, which is the home directory joined with .skeinforge."
 	return os.path.join( os.path.expanduser( '~' ), '.skeinforge' )
 
-def getPreferencesFilePath( filename ):
-	"Get the preferences file path, which is the home directory joined with .skeinforge and filename."
+def getPreferencesFilePath( fileName ):
+	"Get the preferences file path, which is the home directory joined with .skeinforge and fileName."
 	directoryName = getPreferencesDirectoryPath()
 	try:
 		os.mkdir( directoryName )
 	except OSError:
 		pass
-	return os.path.join( directoryName, filename )
+	return os.path.join( directoryName, fileName )
 
 def readPreferences( preferences ):
 	"Set an archive to the preferences read from a file."
-	text = gcodec.getFileText( preferences.filenamePreferences )
+	text = gcodec.getFileText( preferences.fileNamePreferences )
 	if text == '':
 		print( 'Since the preferences file:' )
-		print( preferences.filenamePreferences )
+		print( preferences.fileNamePreferences )
 		print( 'does not exist, the default preferences will be written to that file.' )
-		text = gcodec.getFileText( os.path.join( 'defaults', os.path.basename( preferences.filenamePreferences ) ) )
+		text = gcodec.getFileText( os.path.join( 'defaults', os.path.basename( preferences.fileNamePreferences ) ) )
 		if text != '':
 			readPreferencesFromText( preferences, text )
 		writePreferences( preferences )
@@ -94,7 +94,7 @@ def setArchiveToLine( lineIndex, lines, preferenceTable ):
 
 def writePreferences( preferences ):
 	"Write the preferences to a file."
-	gcodec.writeFileText( preferences.filenamePreferences, getArchiveText( preferences ) )
+	gcodec.writeFileText( preferences.fileNamePreferences, getArchiveText( preferences ) )
 
 
 class AddListboxSelection:
@@ -276,7 +276,7 @@ class Filename( BooleanPreference ):
 		"Add this to the dialog."
 		preferencesDialog.executables.append( self )
 
-	"A class to display, read & write a filename."
+	"A class to display, read & write a fileName."
 	def execute( self ):
 		try:
 			import tkFileDialog
@@ -286,13 +286,13 @@ class Filename( BooleanPreference ):
 				initialDirectory += os.sep
 			else:
 				initialDirectory = "."
-			filename = tkFileDialog.askopenfilename( filetypes = self.getFilenameFirstTypes(), initialdir = initialDirectory, initialfile = os.path.basename( summarized ), title = self.name )
-			if ( str( filename ) == '()' or str( filename ) == '' ):
+			fileName = tkFileDialog.askopenfilename( filetypes = self.getFilenameFirstTypes(), initialdir = initialDirectory, initialfile = os.path.basename( summarized ), title = self.name )
+			if ( str( fileName ) == '()' or str( fileName ) == '' ):
 				self.wasCancelled = True
 			else:
-				self.value = filename
+				self.value = fileName
 		except:
-			print( 'Oops, ' + self.name + ' could not get filename.' )
+			print( 'Oops, ' + self.name + ' could not get fileName.' )
 
 	def getFromFilename( self, fileTypes, name, value ):
 		"Initialize."
@@ -302,7 +302,7 @@ class Filename( BooleanPreference ):
 		return self
 
 	def getFilenameFirstTypes( self ):
-		"Get the file types with the file type of the filename moved to the front of the list."
+		"Get the file types with the file type of the fileName moved to the front of the list."
 		basename = os.path.basename( self.value )
 		splitFile = basename.split( '.' )
 		allReadables = []
@@ -316,9 +316,9 @@ class Filename( BooleanPreference ):
 		for fileType in self.fileTypes:
 			fileExtension = fileType[ 1 ].split( '.' )[ - 1 ]
 			if fileExtension == baseExtension:
-				filenameFirstTypes = self.fileTypes[ : ]
-				filenameFirstTypes.remove( fileType )
-				return [ fileType ] + filenameFirstTypes + allReadables
+				fileNameFirstTypes = self.fileTypes[ : ]
+				fileNameFirstTypes.remove( fileType )
+				return [ fileType ] + fileNameFirstTypes + allReadables
 		return self.fileTypes + allReadables
 
 	def setToDisplay( self ):
@@ -326,7 +326,7 @@ class Filename( BooleanPreference ):
 		pass
 
 	def setValueToString( self, valueString ):
-		"Set the filename to the string."
+		"Set the fileName to the string."
 		self.value = valueString
 
 
@@ -582,7 +582,7 @@ class PreferencesDialog:
 		packageFilePath = os.path.abspath( __file__ )
 		for level in xrange( numberOfLevelsDeepInPackageHierarchy + 1 ):
 			packageFilePath = os.path.dirname( packageFilePath )
-		documentationPath = os.path.join( os.path.join( packageFilePath, 'documentation' ), self.displayPreferences.filenameHelp )
+		documentationPath = os.path.join( os.path.join( packageFilePath, 'documentation' ), self.displayPreferences.fileNameHelp )
 		os.system( webbrowser.get().name + ' ' + documentationPath )#used this instead of webbrowser.open() to workaround webbrowser open() bug
 
 	def savePreferences( self ):

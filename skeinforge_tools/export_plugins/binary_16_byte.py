@@ -61,7 +61,7 @@ from __future__ import absolute_import
 import __init__
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
-from skeinforge_tools import import_translator
+from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools import polyfile
 from struct import Struct
 import cStringIO
@@ -107,11 +107,11 @@ def getStringFromCharacterSplitLine( character, splitLine ):
 		return None
 	return splitLine[ indexOfCharacter ][ 1 : ]
 
-def getSummarizedFilename( filename ):
-	"Get the filename basename if the file is in the current working directory, otherwise return the original full name."
-	if os.getcwd() == os.path.dirname( filename ):
-		return os.path.basename( filename )
-	return filename
+def getSummarizedFilename( fileName ):
+	"Get the fileName basename if the file is in the current working directory, otherwise return the original full name."
+	if os.getcwd() == os.path.dirname( fileName ):
+		return os.path.basename( fileName )
+	return fileName
 
 def getTextLines( text ):
 	"Get the all the lines of text of a text."
@@ -130,28 +130,28 @@ def isArchivable():
 	"Return whether or not this plugin is archivable."
 	return True
 
-def writeFileText( filename, fileText ):
+def writeFileText( fileName, fileText ):
 	"Write a text to a file."
 	try:
-		file = open( filename, 'wb' )
+		file = open( fileName, 'wb' )
 		file.write( fileText )
 		file.close()
 	except IOError:
-		print( 'The file ' + filename + ' can not be written to.' )
+		print( 'The file ' + fileName + ' can not be written to.' )
 
-def writeOutput( filename = '', gcodeText = '' ):
+def writeOutput( fileName = '', gcodeText = '' ):
 	"Write the exported version of a gcode file.  This function, getOutput and isArchivable are the only necessary functions in a skeinforge export plugin."
-	if filename == '':
-		unmodified = import_translator.getGNUTranslatorFilesUnmodified()
+	if fileName == '':
+		unmodified = interpret.getGNUTranslatorFilesUnmodified()
 		if len( unmodified ) == 0:
 			print( "There are no unmodified gcode files in this folder." )
 			return
-		filename = unmodified[ 0 ]
+		fileName = unmodified[ 0 ]
 	binary16BytePreferences = Binary16BytePreferences()
 	preferences.readPreferences( binary16BytePreferences )
-	gcodeText = gcodec.getGcodeFileText( filename, gcodeText )
+	gcodeText = gcodec.getGcodeFileText( fileName, gcodeText )
 	skeinOutput = getOutput( gcodeText, binary16BytePreferences )
-	suffixFilename = filename[ : filename.rfind( '.' ) ] + '_export.' + binary16BytePreferences.fileExtension.value
+	suffixFilename = fileName[ : fileName.rfind( '.' ) ] + '_export.' + binary16BytePreferences.fileExtension.value
 	writeFileText( suffixFilename, skeinOutput )
 	print( 'The converted file is saved as ' + getSummarizedFilename( suffixFilename ) )
 
@@ -159,13 +159,13 @@ def writeOutput( filename = '', gcodeText = '' ):
 class Binary16BytePreferences:
 	"A class to handle the export preferences."
 	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
+		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
 		self.fileExtension = preferences.StringPreference().getFromValue( 'File Extension:', 'bin' )
 		self.archive.append( self.fileExtension )
-		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Converted to Binary 16 Byte', '' )
-		self.archive.append( self.filenameInput )
+		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Converted to Binary 16 Byte', '' )
+		self.archive.append( self.fileNameInput )
 		self.feedrateStepLength = preferences.FloatPreference().getFromValue( 'Feedrate Step Length (millimeters/second)', 0.1 )
 		self.archive.append( self.feedrateStepLength )
 		self.xStepLength = preferences.FloatPreference().getFromValue( 'X Step Length (millimeters)', 0.1 )
@@ -180,18 +180,18 @@ class Binary16BytePreferences:
 		self.archive.append( self.yOffset )
 		self.zOffset = preferences.FloatPreference().getFromValue( 'Z Offset (millimeters)', 0.0 )
 		self.archive.append( self.zOffset )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Convert to Binary 16 Byte'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'binary_16_byte.csv' )
-		self.filenameHelp = 'skeinforge_tools.export_plugins.binary_16_byte.html'
+		self.fileNamePreferences = preferences.getPreferencesFilePath( 'binary_16_byte.csv' )
+		self.fileNameHelp = 'skeinforge_tools.export_plugins.binary_16_byte.html'
 		self.saveTitle = 'Save Preferences'
 		self.title = 'Binary 16 Byte Preferences'
 
 	def execute( self ):
 		"Convert to binary 16 byte button has been clicked."
-		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, [ '.gcode' ], self.filenameInput.wasCancelled )
-		for filename in filenames:
-			writeOutput( filename )
+		fileNames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.fileNameInput.value, [ '.gcode' ], self.fileNameInput.wasCancelled )
+		for fileName in fileNames:
+			writeOutput( fileName )
 
 
 class Binary16ByteSkein:

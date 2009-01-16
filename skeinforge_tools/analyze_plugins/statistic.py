@@ -5,6 +5,9 @@ The default 'Activate Statistic' checkbox is on.  When it is on, the functions d
 skeinforge toolchain, when it is off, the functions will not be called from the toolchain.  The functions will still be called, whether
 or not the 'Activate Statistic' checkbox is on, when statistic is run directly.
 
+When the 'Print Statistics' checkbox is on, the statistics will be printed to the console, the default is on.  When the 'Save
+Statistics' checkbox is on, the statistics will be save as a .txt file, the default is off.
+
 To run statistic, in a shell in the folder which statistic is in type:
 > python statistic.py
 
@@ -60,60 +63,63 @@ def getStatisticGcode( gcodeText ):
 	skein.parseGcode( gcodeText )
 	return skein.output.getvalue()
 
-def statisticFile( filename = '' ):
-	"Write statistics for a gcode file.  If no filename is specified, write statistics for the first gcode file in this folder that is not modified."
-	if filename == '':
+def statisticFile( fileName = '' ):
+	"Write statistics for a gcode file.  If no fileName is specified, write statistics for the first gcode file in this folder that is not modified."
+	if fileName == '':
 		unmodified = gcodec.getUnmodifiedGCodeFiles()
 		if len( unmodified ) == 0:
 			print( "There are no unmodified gcode files in this folder." )
 			return
-		filename = unmodified[ 0 ]
+		fileName = unmodified[ 0 ]
 	statisticPreferences = StatisticPreferences()
 	preferences.readPreferences( statisticPreferences )
-	writeStatisticFileGivenText( filename, gcodec.getFileText( filename ), statisticPreferences )
+	writeStatisticFileGivenText( fileName, gcodec.getFileText( fileName ), statisticPreferences )
 
-def writeOutput( filename, gcodeText = '' ):
+def writeOutput( fileName, gcodeText = '' ):
 	"Write statistics for a skeinforge gcode file, if 'Write Statistics File for Skeinforge Chain' is selected."
 	statisticPreferences = StatisticPreferences()
 	preferences.readPreferences( statisticPreferences )
 	if gcodeText == '':
-		gcodeText = gcodec.getFileText( filename )
+		gcodeText = gcodec.getFileText( fileName )
 	if statisticPreferences.activateStatistic.value:
-		writeStatisticFileGivenText( filename, gcodeText, statisticPreferences )
+		writeStatisticFileGivenText( fileName, gcodeText, statisticPreferences )
 
-def writeStatisticFileGivenText( filename, gcodeText, statisticPreferences ):
+def writeStatisticFileGivenText( fileName, gcodeText, statisticPreferences ):
 	"Write statistics for a gcode file."
-	print( 'Statistics are being generated for the file ' + gcodec.getSummarizedFilename( filename ) )
+	print( 'Statistics are being generated for the file ' + gcodec.getSummarizedFilename( fileName ) )
 	statisticGcode = getStatisticGcode( gcodeText )
-	gcodec.writeFileMessageEnd( '.txt', filename, statisticGcode, 'The statistics file is saved as ' )
-	if statisticPreferences.printStatisticFileSkeinforge.value:
+	if statisticPreferences.printStatistics.value:
 		print( statisticGcode )
+	if statisticPreferences.saveStatistics.value:
+		gcodec.writeFileMessageEnd( '.txt', fileName, statisticGcode, 'The statistics file is saved as ' )
 
 
 class StatisticPreferences:
 	"A class to handle the statistics preferences."
 	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
+		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
 		self.activateStatistic = preferences.BooleanPreference().getFromValue( 'Activate Statistic', True )
 		self.archive.append( self.activateStatistic )
-		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Generate Statistics for', '' )
-		self.archive.append( self.filenameInput )
-		self.printStatisticFileSkeinforge = preferences.BooleanPreference().getFromValue( 'Print Statistics', False )
-		self.archive.append( self.printStatisticFileSkeinforge )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Generate Statistics for', '' )
+		self.archive.append( self.fileNameInput )
+		self.printStatistics = preferences.BooleanPreference().getFromValue( 'Print Statistics', True )
+		self.archive.append( self.printStatistics )
+		self.saveStatistics = preferences.BooleanPreference().getFromValue( 'Save Statistics', False )
+		self.archive.append( self.saveStatistics )
+		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Generate Statistics'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'statistic.csv' )
-		self.filenameHelp = 'skeinforge_tools.analyze_plugins.statistic.html'
+		self.fileNamePreferences = preferences.getPreferencesFilePath( 'statistic.csv' )
+		self.fileNameHelp = 'skeinforge_tools.analyze_plugins.statistic.html'
 		self.saveTitle = 'Save Preferences'
 		self.title = 'Statistic Preferences'
 
 	def execute( self ):
 		"Write button has been clicked."
-		filenames = polyfile.getFileOrGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled, [ '_comment' ] )
-		for filename in filenames:
-			statisticFile( filename )
+		fileNames = polyfile.getFileOrGcodeDirectory( self.fileNameInput.value, self.fileNameInput.wasCancelled, [ '_comment' ] )
+		for fileName in fileNames:
+			statisticFile( fileName )
 
 
 class StatisticSkein:
@@ -208,7 +214,7 @@ class StatisticSkein:
 		self.extrusionDiameter = 0.5
 		self.extrusionWidth = 0.4
 		self.feedrateMinute = 600.0
-		self.extrusionHeight = 0.4
+		self.layerThickness = 0.4
 		self.numberOfLines = 0
 		self.procedures = []
 		self.totalBuildTime = 0.0
@@ -229,7 +235,7 @@ class StatisticSkein:
 		roundedLow = euclidean.getRoundedPoint( self.cornerLow )
 		roundedExtent = euclidean.getRoundedPoint( extent )
 		axisString =  " axis, the extrusion starts at "
-		volumeExtruded = 0.0009 * self.extrusionWidth * self.extrusionHeight * self.totalDistanceExtruded # the 9 comes from a typical fill density of 0.9
+		volumeExtruded = 0.0009 * self.extrusionWidth * self.layerThickness * self.totalDistanceExtruded # the 9 comes from a typical fill density of 0.9
 		self.addLine( "On the X" + axisString + str( int ( roundedLow.x ) ) + " mm and ends at " + str( int ( roundedHigh.x ) ) + " mm, for a width of " + str( int ( extent.x ) ) + " mm" )
 		self.addLine( "On the Y" + axisString + str( int ( roundedLow.y ) ) + " mm and ends at " + str( int ( roundedHigh.y ) ) + " mm, for a depth of " + str( int ( extent.y ) ) + " mm" )
 		self.addLine( "On the Z" + axisString + str( int ( roundedLow.z ) ) + " mm and ends at " + str( int ( roundedHigh.z ) ) + " mm, for a height of " + str( int ( extent.z ) ) + " mm" )
@@ -242,7 +248,7 @@ class StatisticSkein:
 		self.addLine( "The following procedures have been performed on the skein:" )
 		for procedure in self.procedures:
 			self.addLine( procedure )
-		self.addLine( "The layer thickness is "  + str( self.extrusionHeight ) + " mm." )
+		self.addLine( "The layer thickness is "  + str( self.layerThickness ) + " mm." )
 		self.addLine( "The text has " + str( self.numberOfLines ) + " lines and a size of " + str( kilobytes ) + " KB." )
 		self.addLine( "The total build time is " + str( int( round( self.totalBuildTime ) ) ) + " s." )
 		self.addLine( "The total distance extruded is " + str( int( round( self.totalDistanceExtruded ) ) ) + " mm." )
@@ -275,8 +281,8 @@ class StatisticSkein:
 			self.extrusionDiameter = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
 		elif firstWord == '(<extrusionWidth>':
 			self.extrusionWidth = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
-		elif firstWord == '(<extrusionHeight>':
-			self.extrusionHeight = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
+		elif firstWord == '(<layerThickness>':
+			self.layerThickness = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
 		elif firstWord == '(<procedureDone>':
 			self.procedures.append( splitLine[ 1 ] )
 

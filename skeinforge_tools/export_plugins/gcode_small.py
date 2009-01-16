@@ -37,11 +37,11 @@ def getStringFromCharacterSplitLine( character, splitLine ):
 		return None
 	return splitLine[ indexOfCharacter ][ 1 : ]
 
-def getSummarizedFilename( filename ):
-	"Get the filename basename if the file is in the current working directory, otherwise return the original full name."
-	if os.getcwd() == os.path.dirname( filename ):
-		return os.path.basename( filename )
-	return filename
+def getSummarizedFilename( fileName ):
+	"Get the fileName basename if the file is in the current working directory, otherwise return the original full name."
+	if os.getcwd() == os.path.dirname( fileName ):
+		return os.path.basename( fileName )
+	return fileName
 
 def getTextLines( text ):
 	"Get the all the lines of text of a text."
@@ -60,20 +60,20 @@ def isArchivable():
 	"Return whether or not this plugin is archivable."
 	return False
 
-def writeFileText( filename, fileText ):
+def writeFileText( fileName, fileText ):
 	"Write a text to a file."
 	try:
-		file = open( filename, 'w+' )
+		file = open( fileName, 'w+' )
 		file.write( fileText )
 		file.close()
 	except IOError:
-		print( 'The file ' + filename + ' can not be written to.' )
+		print( 'The file ' + fileName + ' can not be written to.' )
 
-def writeOutput( filename, gcodeText ):
+def writeOutput( fileName, gcodeText ):
 	"Write the exported version of a gcode file.  This function, getOutput and isArchivable are the only necessary functions in a skeinforge export plugin."
 	output = getOutput( gcodeText )
-	writeFileText( filename, output )
-	print( 'The exported file is saved as ' + getSummarizedFilename( filename ) )
+	writeFileText( fileName, output )
+	print( 'The exported file is saved as ' + getSummarizedFilename( fileName ) )
 
 
 class GcodeSmallSkein:

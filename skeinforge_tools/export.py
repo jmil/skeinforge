@@ -56,7 +56,7 @@ from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
-from skeinforge_tools import import_translator
+from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools import polyfile
 from skeinforge_tools import unpause
 import cStringIO
@@ -92,23 +92,23 @@ def getSelectedPlugin( exportPreferences ):
 			return plugin
 	return None
 
-def writeOutput( filename = '' ):
+def writeOutput( fileName = '' ):
 	"""Export a gcode linear move file.  Chain export the gcode if it is not already exported.
-	If no filename is specified, export the first unmodified gcode file in this folder."""
-	if filename == '':
-		unmodified = import_translator.getGNUTranslatorFilesUnmodified()
+	If no fileName is specified, export the first unmodified gcode file in this folder."""
+	if fileName == '':
+		unmodified = interpret.getGNUTranslatorFilesUnmodified()
 		if len( unmodified ) == 0:
 			print( "There are no unmodified gcode files in this folder." )
 			return
-		filename = unmodified[ 0 ]
+		fileName = unmodified[ 0 ]
 	exportPreferences = ExportPreferences()
 	preferences.readPreferences( exportPreferences )
 	startTime = time.time()
-	print( 'File ' + gcodec.getSummarizedFilename( filename ) + ' is being chain exported.' )
-	suffixFilename = filename[ : filename.rfind( '.' ) ] + '_export.' + exportPreferences.fileExtension.value
-	gcodeText = gcodec.getGcodeFileText( filename, '' )
+	print( 'File ' + gcodec.getSummarizedFilename( fileName ) + ' is being chain exported.' )
+	suffixFilename = fileName[ : fileName.rfind( '.' ) ] + '_export.' + exportPreferences.fileExtension.value
+	gcodeText = gcodec.getGcodeFileText( fileName, '' )
 	if not gcodec.isProcedureDone( gcodeText, 'unpause' ):
-		gcodeText = unpause.getUnpauseChainGcode( filename, gcodeText )
+		gcodeText = unpause.getUnpauseChainGcode( fileName, gcodeText )
 	if gcodeText == '':
 		return
 	analyze.writeOutput( suffixFilename, gcodeText )
@@ -133,7 +133,7 @@ def writeOutput( filename = '' ):
 class ExportPreferences:
 	"A class to handle the export preferences."
 	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
+		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
 		self.activateExport = preferences.BooleanPreference().getFromValue( 'Activate Export', True )
@@ -169,20 +169,20 @@ class ExportPreferences:
 		self.archive += self.exportOperationsButtons
 		self.fileExtension = preferences.StringPreference().getFromValue( 'File Extension:', 'gcode' )
 		self.archive.append( self.fileExtension )
-		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Exported', '' )
-		self.archive.append( self.filenameInput )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Exported', '' )
+		self.archive.append( self.fileNameInput )
+		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Export'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'export.csv' )
-		self.filenameHelp = 'skeinforge_tools.export.html'
+		self.fileNamePreferences = preferences.getPreferencesFilePath( 'export.csv' )
+		self.fileNameHelp = 'skeinforge_tools.export.html'
 		self.saveTitle = 'Save Preferences'
 		self.title = 'Export Preferences'
 
 	def execute( self ):
 		"Export button has been clicked."
-		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
-		for filename in filenames:
-			writeOutput( filename )
+		fileNames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.fileNameInput.value, interpret.getImportPluginFilenames(), self.fileNameInput.wasCancelled )
+		for fileName in fileNames:
+			writeOutput( fileName )
 
 
 class ExportSkein:

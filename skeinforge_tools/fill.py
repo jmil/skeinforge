@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 """
-Fill is a script to fill the slices of a gcode file.
+Fill is a script to fill the carves of a gcode file.
 
 The diaphragm is a solid group of layers, at regular intervals.  It can be used with a sparse infill to give the object watertight, horizontal
 compartments and/or a higher shear strength.  The "Diaphragm Period" is the number of layers between diaphrams.  The "Diaphragm
@@ -88,9 +88,9 @@ from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools import analyze
-from skeinforge_tools import import_translator
+from skeinforge_tools.skeinforge_utilities import interpret
+from skeinforge_tools import inset
 from skeinforge_tools import polyfile
-from skeinforge_tools import slice_shape
 import cStringIO
 import math
 import sys
@@ -101,8 +101,9 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-#oozebane to handle minimum start up, add differential flow rates
-#use slice format, carve & inset, slice aoi xml
+#use slice svg and slc format
+#move early startup to oozebane
+#carve aoi xml
 #user mcodes
 #skeinedge
 #pyramidal
@@ -125,7 +126,7 @@ __license__ = "GPL 3.0"
 #custom inclined plane, inclined plane from model, screw, fillet travel as well maybe
 #maybe much afterwards make congajure multistep view
 #maybe bridge supports although staggered spans are probably better
-#maybe update slice to add perimeter path intersection information to the large loop also
+#maybe update carve to add perimeter path intersection information to the large loop also
 #maybe stripe although mosaic alone can handle it
 #stretch fiber around shape
 #multiple heads around edge
@@ -255,11 +256,11 @@ def addSparseEndpointsFromSegment( doubleExtrusionWidth, endpoints, fillLine, ho
 		return
 	endpoints += segment
 
-def addSurroundingXIntersectionIndexes( surroundingSlices, xIntersectionIndexList, y ):
+def addSurroundingXIntersectionIndexes( surroundingCarves, xIntersectionIndexList, y ):
 	"Add x intersection indexes from surrounding layers."
-	for surroundingIndex in xrange( len( surroundingSlices ) ):
-		surroundingSlice = surroundingSlices[ surroundingIndex ]
-		euclidean.addXIntersectionIndexesFromLoops( surroundingSlice, surroundingIndex, xIntersectionIndexList, y )
+	for surroundingIndex in xrange( len( surroundingCarves ) ):
+		surroundingCarve = surroundingCarves[ surroundingIndex ]
+		euclidean.addXIntersectionIndexesFromLoops( surroundingCarve, surroundingIndex, xIntersectionIndexList, y )
 
 def addYIntersectionPathToList( pathIndex, pointIndex, y, yIntersection, yIntersectionPaths ):
 	"Add the y intersection path to the y intersection paths."
@@ -346,15 +347,15 @@ def getExtraFillLoops( insideLoops, outsideLoop, radius ):
 						extraFillLoops.append( inset )
 	return extraFillLoops
 
-def getFillChainGcode( filename, gcodeText, fillPreferences = None ):
-	"Fill the slices of a gcode text.  Chain fill the gcode if it is not already sliced."
-	gcodeText = gcodec.getGcodeFileText( filename, gcodeText )
-	if not gcodec.isProcedureDone( gcodeText, 'slice_shape' ):
-		gcodeText = slice_shape.getSliceGcode( filename )
+def getFillChainGcode( fileName, gcodeText, fillPreferences = None ):
+	"Fill the carves of a gcode text.  Chain fill the gcode if it is not already carved."
+	gcodeText = gcodec.getGcodeFileText( fileName, gcodeText )
+	if not gcodec.isProcedureDone( gcodeText, 'inset' ):
+		gcodeText = inset.getInsetChainGcode( fileName, gcodeText )
 	return getFillGcode( gcodeText, fillPreferences )
 
 def getFillGcode( gcodeText, fillPreferences = None ):
-	"Fill the slices of a gcode text."
+	"Fill the carves of a gcode text."
 	if gcodeText == '':
 		return ''
 	if gcodec.isProcedureDone( gcodeText, 'fill' ):
@@ -413,11 +414,11 @@ def getPlusMinusSign( number ):
 		return 1.0
 	return - 1.0
 
-def getSurroundingXIntersections( doubleSolidSurfaceThickness, surroundingSlices, y ):
+def getSurroundingXIntersections( doubleSolidSurfaceThickness, surroundingCarves, y ):
 	"Get x intersections from surrounding layers."
 	xIntersectionIndexList = []
-	addSurroundingXIntersectionIndexes( surroundingSlices, xIntersectionIndexList, y )
-	if len( surroundingSlices ) < doubleSolidSurfaceThickness:
+	addSurroundingXIntersectionIndexes( surroundingCarves, xIntersectionIndexList, y )
+	if len( surroundingCarves ) < doubleSolidSurfaceThickness:
 		return None
 	return getIntersectionOfXIntersectionIndexes( doubleSolidSurfaceThickness, xIntersectionIndexList )
 
@@ -720,20 +721,20 @@ def setIsOutside( yCloseToCenterPath, yIntersectionPaths ):
 				return
 	yCloseToCenterPath.isOutside = True
 
-def writeOutput( filename = '' ):
-	"Fill the slices of a gcode file.  Chain slice the file if it is a GNU TriangulatedSurface file.  If no filename is specified, fill the first unmodified gcode file in this folder."
-	if filename == '':
-		unmodified = import_translator.getGNUTranslatorFilesUnmodified()
+def writeOutput( fileName = '' ):
+	"Fill the carves of a gcode file.  Chain carve the file if it is a GNU TriangulatedSurface file.  If no fileName is specified, fill the first unmodified gcode file in this folder."
+	if fileName == '':
+		unmodified = interpret.getGNUTranslatorFilesUnmodified()
 		if len( unmodified ) == 0:
 			print( "There are no unmodified gcode files in this folder." )
 			return
-		filename = unmodified[ 0 ]
+		fileName = unmodified[ 0 ]
 	startTime = time.time()
 	fillPreferences = FillPreferences()
 	preferences.readPreferences( fillPreferences )
-	print( 'File ' + gcodec.getSummarizedFilename( filename ) + ' is being chain filled.' )
-	suffixFilename = filename[ : filename.rfind( '.' ) ] + '_fill.gcode'
-	fillGcode = getFillChainGcode( filename, '', fillPreferences )
+	print( 'File ' + gcodec.getSummarizedFilename( fileName ) + ' is being chain filled.' )
+	suffixFilename = fileName[ : fileName.rfind( '.' ) ] + '_fill.gcode'
+	fillGcode = getFillChainGcode( fileName, '', fillPreferences )
 	if fillGcode == '':
 		return
 	gcodec.writeFileText( suffixFilename, fillGcode )
@@ -745,7 +746,7 @@ def writeOutput( filename = '' ):
 class FillPreferences:
 	"A class to handle the fill preferences."
 	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
+		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
 		self.diaphragmPeriod = preferences.IntPreference().getFromValue( 'Diaphragm Period (layers):', 999999 )
@@ -762,8 +763,8 @@ class FillPreferences:
 		self.archive.append( self.gridExtraOverlap )
 		self.gridJunctionSeparationOverInnerOctogonRadius = preferences.FloatPreference().getFromValue( 'Grid Junction Separation over Inner Octogon Radius (ratio):', 0.0 )
 		self.archive.append( self.gridJunctionSeparationOverInnerOctogonRadius )
-		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Filled', '' )
-		self.archive.append( self.filenameInput )
+		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Filled', '' )
+		self.archive.append( self.fileNameInput )
 		self.infillBeginRotation = preferences.FloatPreference().getFromValue( 'Infill Begin Rotation (degrees):', 45.0 )
 		self.archive.append( self.infillBeginRotation )
 		self.infillBeginRotationRepeat = preferences.IntPreference().getFromValue( 'Infill Begin Rotation Repeat (layers):', 1 )
@@ -785,18 +786,18 @@ class FillPreferences:
 		self.archive.append( self.interiorInfillDensityOverExteriorDensity )
 		self.solidSurfaceThickness = preferences.IntPreference().getFromValue( 'Solid Surface Thickness (layers):', 3 )
 		self.archive.append( self.solidSurfaceThickness )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Fill'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'fill.csv' )
-		self.filenameHelp = 'skeinforge_tools.fill.html'
+		self.fileNamePreferences = preferences.getPreferencesFilePath( 'fill.csv' )
+		self.fileNameHelp = 'skeinforge_tools.fill.html'
 		self.saveTitle = 'Save Preferences'
 		self.title = 'Fill Preferences'
 
 	def execute( self ):
 		"Fill button has been clicked."
-		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
-		for filename in filenames:
-			writeOutput( filename )
+		fileNames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.fileNameInput.value, interpret.getImportPluginFilenames(), self.fileNameInput.wasCancelled )
+		for fileName in fileNames:
+			writeOutput( fileName )
 
 
 class FillSkein:
@@ -818,7 +819,7 @@ class FillSkein:
 		self.thread = None
 
 	def addFill( self, layerIndex ):
-		"Add fill to the slice layer."
+		"Add fill to the carve layer."
 #		if layerIndex != 17 and layerIndex != 18:
 #			return
 		alreadyFilledArounds = []
@@ -855,14 +856,14 @@ class FillSkein:
 		loops = []
 		for surroundingLoop in rotatedLayer.surroundingLoops:
 			loops.append( surroundingLoop.boundary )
-		surroundingSlices = []
+		surroundingCarves = []
 		layerRemainder = layerIndex % int( round( self.fillPreferences.diaphragmPeriod.value ) )
 		if layerRemainder >= int( round( self.fillPreferences.diaphragmThickness.value ) ):
 			for surroundingIndex in xrange( 1, self.solidSurfaceThickness + 1 ):
-				self.addRotatedSlice( layerIndex - surroundingIndex, reverseRotationAroundZAngle, surroundingSlices )
-				self.addRotatedSlice( layerIndex + surroundingIndex, reverseRotationAroundZAngle, surroundingSlices )
+				self.addRotatedCarve( layerIndex - surroundingIndex, reverseRotationAroundZAngle, surroundingCarves )
+				self.addRotatedCarve( layerIndex + surroundingIndex, reverseRotationAroundZAngle, surroundingCarves )
 		extraShells = self.fillPreferences.extraShellsSparseLayer.value
-		if len( surroundingSlices ) < self.doubleSolidSurfaceThickness:
+		if len( surroundingCarves ) < self.doubleSolidSurfaceThickness:
 			extraShells = self.fillPreferences.extraShellsAlternatingSolidLayer.value
 			if self.lastExtraShells != self.fillPreferences.extraShellsBase.value:
 				extraShells = self.fillPreferences.extraShellsBase.value
@@ -899,7 +900,7 @@ class FillSkein:
 			return
 		back = euclidean.getBackOfLoops( arounds )
 		front = euclidean.getFrontOfLoops( arounds )
-		area = self.getSliceArea( layerIndex )
+		area = self.getCarveArea( layerIndex )
 		if area > 0.0:
 			areaChange = 1.0
 			for surroundingIndex in xrange( 1, self.solidSurfaceThickness + 1 ):
@@ -919,14 +920,14 @@ class FillSkein:
 		for fillLine in xrange( len( horizontalSegments ) ):
 			y = front + float( fillLine ) * layerExtrusionWidth
 			horizontalEndpoints = horizontalSegments[ fillLine ]
-			surroundingXIntersections = getSurroundingXIntersections( self.doubleSolidSurfaceThickness, surroundingSlices, y )
+			surroundingXIntersections = getSurroundingXIntersections( self.doubleSolidSurfaceThickness, surroundingCarves, y )
 			addSparseEndpoints( doubleExtrusionWidth, endpoints, fillLine, horizontalSegments, layerInfillSolidity, removedEndpoints, self.solidSurfaceThickness, surroundingXIntersections )
 		if len( endpoints ) < 1:
 			euclidean.addToThreadsRemoveFromSurroundings( self.oldOrderedLocation, surroundingLoops, self )
 			return
 		paths = euclidean.getPathsFromEndpoints( endpoints, layerFillInset, aroundPixelTable, aroundWidth )
 		if not self.fillPreferences.infillPatternLine.value:
-			self.addGrid( alreadyFilledArounds, arounds, fillLoops, gridPointInsetX, paths, aroundPixelTable, aroundWidth, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingSlices )
+			self.addGrid( alreadyFilledArounds, arounds, fillLoops, gridPointInsetX, paths, aroundPixelTable, aroundWidth, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingCarves )
 		oldRemovedEndpointLength = len( removedEndpoints ) + 1
 		while oldRemovedEndpointLength - len( removedEndpoints ) > 0:
 			oldRemovedEndpointLength = len( removedEndpoints )
@@ -953,8 +954,8 @@ class FillSkein:
 		"Add a movement to the output."
 		self.addLine( "G1 X%s Y%s Z%s" % ( self.getRounded( point.real ), self.getRounded( point.imag ), self.getRounded( z ) ) )
 
-	def addGrid( self, alreadyFilledArounds, arounds, fillLoops, gridPointInsetX, paths, pixelTable, width, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingSlices ):
-		gridPoints = self.getGridPoints( alreadyFilledArounds, fillLoops, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingSlices )
+	def addGrid( self, alreadyFilledArounds, arounds, fillLoops, gridPointInsetX, paths, pixelTable, width, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingCarves ):
+		gridPoints = self.getGridPoints( alreadyFilledArounds, fillLoops, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingCarves )
 		gridPointInsetY = gridPointInsetX * ( 1.0 - self.fillPreferences.gridExtraOverlap.value )
 		if self.fillPreferences.infillPatternGridRectangular.value:
 			gridPointInsetX += self.gridJunctionSeparation
@@ -968,7 +969,7 @@ class FillSkein:
 			oldGridPointLength = len( gridPoints )
 			self.addRemainingGridPoints( arounds, gridPointInsetX, gridPointInsetY, gridPoints, False, paths, pixelTable, width )
 
-	def addGridLinePoints( self, alreadyFilledArounds, begin, end, gridPoints, gridRotationAngle, offset, rotatedExtruderLoops, surroundingSlices, y ):
+	def addGridLinePoints( self, alreadyFilledArounds, begin, end, gridPoints, gridRotationAngle, offset, rotatedExtruderLoops, surroundingCarves, y ):
 		"Add the segments of one line of a grid to the infill."
 		if self.gridRadius == 0.0:
 			return
@@ -981,7 +982,7 @@ class FillSkein:
 		while gridXOffset < end:
 			gridPointComplex = complex( gridXOffset, y ) * gridRotationAngle
 			gridPoint = complex( gridPointComplex.real, gridPointComplex.imag )
-			if self.isPointInsideLineSegments( alreadyFilledArounds, gridPoint, rotatedExtruderLoops, surroundingSlices ):
+			if self.isPointInsideLineSegments( alreadyFilledArounds, gridPoint, rotatedExtruderLoops, surroundingCarves ):
 				gridPoints.append( gridPoint )
 			gridXStep = self.getNextGripXStep( gridXStep )
 			gridXOffset = offset + gridWidth * float( gridXStep )
@@ -997,16 +998,16 @@ class FillSkein:
 			gridPoint = gridPoints[ gridPointIndex ]
 			addAroundGridPoint( arounds, gridPoint, gridPointInsetX, gridPointInsetY, gridPoints, self.gridRadius, isBothOrNone, self.isDoubleJunction, self.isJunctionWide, paths, pixelTable, width )
 
-	def addRotatedSlice( self, layerIndex, reverseRotationAroundZAngle, surroundingSlices ):
-		"Add a rotated slice to the surrounding slices."
+	def addRotatedCarve( self, layerIndex, reverseRotationAroundZAngle, surroundingCarves ):
+		"Add a rotated carve to the surrounding carves."
 		if layerIndex < 0 or layerIndex >= len( self.rotatedLayers ):
 			return
 		surroundingLoops = self.rotatedLayers[ layerIndex ].surroundingLoops
-		rotatedSlice = []
+		rotatedCarve = []
 		for surroundingLoop in surroundingLoops:
 			planeRotatedLoop = euclidean.getPointsRoundZAxis( reverseRotationAroundZAngle, surroundingLoop.boundary )
-			rotatedSlice.append( planeRotatedLoop )
-		surroundingSlices.append( rotatedSlice )
+			rotatedCarve.append( planeRotatedLoop )
+		surroundingCarves.append( rotatedCarve )
 
 	def addShutdownToOutput( self ):
 		"Add shutdown gcode to the output."
@@ -1026,11 +1027,11 @@ class FillSkein:
 		self.thread.append( location.dropAxis( 2 ) )
 
 	def getAreaChange( self, area, layerIndex ):
-		"Get the difference between the area of the slice at the layer index and the given area."
-		layerArea = self.getSliceArea( layerIndex )
+		"Get the difference between the area of the carve at the layer index and the given area."
+		layerArea = self.getCarveArea( layerIndex )
 		return min( area, layerArea ) / max( area, layerArea )
 
-	def getGridPoints( self, alreadyFilledArounds, fillLoops, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingSlices ):
+	def getGridPoints( self, alreadyFilledArounds, fillLoops, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingCarves ):
 		"Add a grid to the infill."
 		if self.infillSolidity > 0.8:
 			return []
@@ -1038,8 +1039,8 @@ class FillSkein:
 		rotationBaseAngle = euclidean.getPolar( self.infillBeginRotation, 1.0 )
 		reverseRotationBaseAngle = complex( rotationBaseAngle.real, - rotationBaseAngle.imag )
 		gridRotationAngle = reverseRotationAroundZAngle * rotationBaseAngle
-		surroundingSlicesLength = len( surroundingSlices )
-		if surroundingSlicesLength < self.doubleSolidSurfaceThickness:
+		surroundingCarvesLength = len( surroundingCarves )
+		if surroundingCarvesLength < self.doubleSolidSurfaceThickness:
 			return []
 		gridAlreadyFilledArounds = []
 		gridRotatedExtruderLoops = []
@@ -1082,7 +1083,7 @@ class FillSkein:
 				end = max( endpointFirst.point.real, endpointSecond.point.real )
 				y = endpointFirst.point.imag
 				offset = self.offsetMultiplier * self.gridRadius * ( round( y / self.gridRadius ) % 2 )
-				self.addGridLinePoints( alreadyFilledArounds, begin, end, gridPoints, gridRotationAngle, offset, rotatedExtruderLoops, surroundingSlices, y )
+				self.addGridLinePoints( alreadyFilledArounds, begin, end, gridPoints, gridRotationAngle, offset, rotatedExtruderLoops, surroundingCarves, y )
 		return gridPoints
 
 	def getLayerRoundZ( self, layerIndex ):
@@ -1106,8 +1107,8 @@ class FillSkein:
 		"Get number rounded to the number of carried decimal places as a string."
 		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
 
-	def getSliceArea( self, layerIndex ):
-		"Get the area of the slice."
+	def getCarveArea( self, layerIndex ):
+		"Get the area of the carve."
 		if layerIndex < 0 or layerIndex >= len( self.rotatedLayers ):
 			return 0.0
 		surroundingLoops = self.rotatedLayers[ layerIndex ].surroundingLoops
@@ -1116,12 +1117,12 @@ class FillSkein:
 			area += euclidean.getPolygonArea( surroundingLoop.boundary )
 		return area
 
-	def isPointInsideLineSegments( self, alreadyFilledArounds, gridPoint, rotatedExtruderLoops, surroundingSlices ):
+	def isPointInsideLineSegments( self, alreadyFilledArounds, gridPoint, rotatedExtruderLoops, surroundingCarves ):
 		"Is the point inside the line segments of the loops."
 		if self.solidSurfaceThickness <= 0:
 			return True
 		lineSegments = getHorizontalSegmentsFromLoopLists( rotatedExtruderLoops, alreadyFilledArounds, gridPoint.imag )
-		surroundingXIntersections = getSurroundingXIntersections( self.doubleSolidSurfaceThickness, surroundingSlices, gridPoint.imag )
+		surroundingXIntersections = getSurroundingXIntersections( self.doubleSolidSurfaceThickness, surroundingCarves, gridPoint.imag )
 		for lineSegment in lineSegments:
 			if isSegmentCompletelyInAnIntersection( lineSegment, surroundingXIntersections ):
 				xFirst = lineSegment[ 0 ].point.real

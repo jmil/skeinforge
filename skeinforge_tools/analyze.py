@@ -27,30 +27,30 @@ __license__ = "GPL 3.0"
 
 
 def getAnalyzePluginFilenames():
-	"Get analyze plugin filenames."
+	"Get analyze plugin fileNames."
 	return gcodec.getPluginFilenames( 'analyze_plugins', __file__ )
 
-def writeOutput( filename = '', gcodeText = '' ):
-	"Analyze a gcode file.  If no filename is specified, comment the first gcode file in this folder that is not modified."
-	if filename == '':
+def writeOutput( fileName = '', gcodeText = '' ):
+	"Analyze a gcode file.  If no fileName is specified, comment the first gcode file in this folder that is not modified."
+	if fileName == '':
 		unmodified = gcodec.getUncommentedGcodeFiles()
 		if len( unmodified ) == 0:
 			print( "There is no gcode file in this folder that is not a comment file." )
 			return
-		filename = unmodified[ 0 ]
+		fileName = unmodified[ 0 ]
 	if gcodeText == '':
-		gcodeText = gcodec.getFileText( filename )
+		gcodeText = gcodec.getFileText( fileName )
 	analyzePluginFilenames = getAnalyzePluginFilenames()
 	for analyzePluginFilename in analyzePluginFilenames:
 		pluginModule = gcodec.getModule( analyzePluginFilename, 'analyze_plugins', __file__ )
 		if pluginModule != None:
-			pluginModule.writeOutput( filename, gcodeText )
+			pluginModule.writeOutput( fileName, gcodeText )
 
 
 class AnalyzePreferences:
 	"A class to handle the analyze preferences."
 	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
+		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
 		self.analyzeLabel = preferences.LabelDisplay().getFromName( 'Open Preferences: ' )
@@ -62,20 +62,20 @@ class AnalyzePreferences:
 			self.analyzePlugins.append( analyzePlugin )
 #		self.analyzePlugins.sort( key = preferences.RadioCapitalized.getLowerName )
 		self.archive += self.analyzePlugins
-		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Analyzed', '' )
-		self.archive.append( self.filenameInput )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Analyzed', '' )
+		self.archive.append( self.fileNameInput )
+		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Analyze'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'analyze.csv' )
-		self.filenameHelp = 'skeinforge_tools.analyze.html'
+		self.fileNamePreferences = preferences.getPreferencesFilePath( 'analyze.csv' )
+		self.fileNameHelp = 'skeinforge_tools.analyze.html'
 		self.saveTitle = None
 		self.title = 'Analyze Preferences'
 
 	def execute( self ):
 		"Analyze button has been clicked."
-		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, [], self.filenameInput.wasCancelled )
-		for filename in filenames:
-			writeOutput( filename )
+		fileNames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.fileNameInput.value, [], self.fileNameInput.wasCancelled )
+		for fileName in fileNames:
+			writeOutput( fileName )
 
 
 def main( hashtable = None ):

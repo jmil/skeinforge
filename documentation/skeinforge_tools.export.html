@@ -30,15 +30,15 @@ An&nbsp;export&nbsp;plugin&nbsp;is&nbsp;a&nbsp;script&nbsp;in&nbsp;the&nbsp;expo
 To&nbsp;run&nbsp;export,&nbsp;in&nbsp;a&nbsp;shell&nbsp;type:<br>
 &gt;&nbsp;python&nbsp;export.py<br>
 &nbsp;<br>
-The&nbsp;following&nbsp;examples&nbsp;export&nbsp;the&nbsp;files&nbsp;Hollow&nbsp;Square.gts.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains<br>
-Hollow&nbsp;Square.gts&nbsp;&amp;&nbsp;export.py.&nbsp;&nbsp;The&nbsp;function&nbsp;writeOutput&nbsp;checks&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text&nbsp;has&nbsp;been&nbsp;exported,&nbsp;if&nbsp;not&nbsp;they&nbsp;call<br>
+The&nbsp;following&nbsp;examples&nbsp;export&nbsp;the&nbsp;files&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains<br>
+Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;&amp;&nbsp;export.py.&nbsp;&nbsp;The&nbsp;function&nbsp;writeOutput&nbsp;checks&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text&nbsp;has&nbsp;been&nbsp;exported,&nbsp;if&nbsp;not&nbsp;they&nbsp;call<br>
 getUnpauseChainGcode&nbsp;in&nbsp;unpause.py&nbsp;to&nbsp;unpause&nbsp;the&nbsp;text;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;unpaused&nbsp;text,&nbsp;then&nbsp;it&nbsp;exports.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python&nbsp;export.py<br>
 This&nbsp;brings&nbsp;up&nbsp;the&nbsp;dialog,&nbsp;after&nbsp;clicking&nbsp;'Export',&nbsp;the&nbsp;following&nbsp;is&nbsp;printed:<br>
-File&nbsp;Hollow&nbsp;Square.gts&nbsp;is&nbsp;being&nbsp;chain&nbsp;exported.<br>
-The&nbsp;exported&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_export.gcode<br>
+File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;exported.<br>
+The&nbsp;exported&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_export.gcode<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;python<br>
@@ -51,9 +51,9 @@ This&nbsp;brings&nbsp;up&nbsp;the&nbsp;export&nbsp;dialog.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&gt;&gt;&nbsp;export.<a href="#-writeOutput">writeOutput</a>()<br>
-Hollow&nbsp;Square.gts<br>
-File&nbsp;Hollow&nbsp;Square.gts&nbsp;is&nbsp;being&nbsp;chain&nbsp;exported.<br>
-The&nbsp;exported&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_export.gcode</tt></p>
+Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;exported.<br>
+The&nbsp;exported&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_export.gcode</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -66,8 +66,8 @@ The&nbsp;exported&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_e
 <a href="cStringIO.html">cStringIO</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.euclidean.html">skeinforge_tools.skeinforge_utilities.euclidean</a><br>
 </td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
-<a href="skeinforge_tools.import_translator.html">skeinforge_tools.import_translator</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.intercircle.html">skeinforge_tools.skeinforge_utilities.intercircle</a><br>
+<a href="skeinforge_tools.skeinforge_utilities.interpret.html">skeinforge_tools.skeinforge_utilities.interpret</a><br>
 <a href="os.html">os</a><br>
 </td><td width="25%" valign=top><a href="skeinforge_tools.polyfile.html">skeinforge_tools.polyfile</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.preferences.html">skeinforge_tools.skeinforge_utilities.preferences</a><br>
@@ -95,7 +95,7 @@ The&nbsp;exported&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_e
 <td colspan=2><tt>A&nbsp;class&nbsp;to&nbsp;handle&nbsp;the&nbsp;export&nbsp;preferences.<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
-<dl><dt><a name="ExportPreferences-__init__"><strong>__init__</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;default&nbsp;preferences,&nbsp;execute&nbsp;title&nbsp;&amp;&nbsp;preferences&nbsp;filename.</tt></dd></dl>
+<dl><dt><a name="ExportPreferences-__init__"><strong>__init__</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;default&nbsp;preferences,&nbsp;execute&nbsp;title&nbsp;&amp;&nbsp;preferences&nbsp;fileName.</tt></dd></dl>
 
 <dl><dt><a name="ExportPreferences-execute"><strong>execute</strong></a>(self)</dt><dd><tt>Export&nbsp;button&nbsp;has&nbsp;been&nbsp;clicked.</tt></dd></dl>
 
@@ -129,8 +129,8 @@ The&nbsp;exported&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow&nbsp;Square_e
 <td width="100%"><dl><dt><a name="-getExportGcode"><strong>getExportGcode</strong></a>(gcodeText, exportPreferences<font color="#909090">=None</font>)</dt><dd><tt>Export&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-getSelectedPlugin"><strong>getSelectedPlugin</strong></a>(exportPreferences)</dt><dd><tt>Get&nbsp;the&nbsp;selected&nbsp;plugin.</tt></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>(hashtable<font color="#909090">=None</font>)</dt><dd><tt>Display&nbsp;the&nbsp;export&nbsp;dialog.</tt></dd></dl>
- <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(filename<font color="#909090">=''</font>)</dt><dd><tt>Export&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;Chain&nbsp;export&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;exported.<br>
-If&nbsp;no&nbsp;filename&nbsp;is&nbsp;specified,&nbsp;export&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
+ <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName<font color="#909090">=''</font>)</dt><dd><tt>Export&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;Chain&nbsp;export&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;exported.<br>
+If&nbsp;no&nbsp;fileName&nbsp;is&nbsp;specified,&nbsp;export&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">

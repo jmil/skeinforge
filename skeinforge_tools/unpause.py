@@ -54,7 +54,7 @@ from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
 from skeinforge_tools import fillet
-from skeinforge_tools import import_translator
+from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools import polyfile
 import cStringIO
 import os
@@ -67,11 +67,11 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def getUnpauseChainGcode( filename, gcodeText, unpausePreferences = None ):
+def getUnpauseChainGcode( fileName, gcodeText, unpausePreferences = None ):
 	"Unpause a gcode linear move text.  Chain unpause the gcode if it is not already unpaused."
-	gcodeText = gcodec.getGcodeFileText( filename, gcodeText )
+	gcodeText = gcodec.getGcodeFileText( fileName, gcodeText )
 	if not gcodec.isProcedureDone( gcodeText, 'fillet' ):
-		gcodeText = fillet.getFilletChainGcode( filename, gcodeText )
+		gcodeText = fillet.getFilletChainGcode( fileName, gcodeText )
 	return getUnpauseGcode( gcodeText, unpausePreferences )
 
 def getUnpauseGcode( gcodeText, unpausePreferences = None ):
@@ -96,20 +96,20 @@ def getSelectedPlugin( unpausePreferences ):
 			return plugin
 	return None
 
-def writeOutput( filename = '' ):
-	"Unpause a gcode linear move file.  Chain unpause the gcode if it is not already unpaused.  If no filename is specified, unpause the first unmodified gcode file in this folder."
-	if filename == '':
-		unmodified = import_translator.getGNUTranslatorFilesUnmodified()
+def writeOutput( fileName = '' ):
+	"Unpause a gcode linear move file.  Chain unpause the gcode if it is not already unpaused.  If no fileName is specified, unpause the first unmodified gcode file in this folder."
+	if fileName == '':
+		unmodified = interpret.getGNUTranslatorFilesUnmodified()
 		if len( unmodified ) == 0:
 			print( "There are no unmodified gcode files in this folder." )
 			return
-		filename = unmodified[ 0 ]
+		fileName = unmodified[ 0 ]
 	unpausePreferences = UnpausePreferences()
 	preferences.readPreferences( unpausePreferences )
 	startTime = time.time()
-	print( 'File ' + gcodec.getSummarizedFilename( filename ) + ' is being chain unpaused.' )
-	suffixFilename = filename[ : filename.rfind( '.' ) ] + '_unpause.gcode'
-	unpauseGcode = getUnpauseChainGcode( filename, '', unpausePreferences )
+	print( 'File ' + gcodec.getSummarizedFilename( fileName ) + ' is being chain unpaused.' )
+	suffixFilename = fileName[ : fileName.rfind( '.' ) ] + '_unpause.gcode'
+	unpauseGcode = getUnpauseChainGcode( fileName, '', unpausePreferences )
 	if unpauseGcode == '':
 		return
 	gcodec.writeFileText( suffixFilename, unpauseGcode )
@@ -121,29 +121,29 @@ def writeOutput( filename = '' ):
 class UnpausePreferences:
 	"A class to handle the unpause preferences."
 	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
+		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
 		self.activateUnpause = preferences.BooleanPreference().getFromValue( 'Activate Unpause', False )
 		self.archive.append( self.activateUnpause )
 		self.delay = preferences.FloatPreference().getFromValue( 'Delay (milliseconds):', 28.0 )
 		self.archive.append( self.delay )
-		self.filenameInput = preferences.Filename().getFromFilename( import_translator.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Unpaused', '' )
-		self.archive.append( self.filenameInput )
+		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Unpaused', '' )
+		self.archive.append( self.fileNameInput )
 		self.maximumSpeed = preferences.FloatPreference().getFromValue( 'Maximum Speed (ratio):', 1.5 )
 		self.archive.append( self.maximumSpeed )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Unpause'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'unpause.csv' )
-		self.filenameHelp = 'skeinforge_tools.unpause.html'
+		self.fileNamePreferences = preferences.getPreferencesFilePath( 'unpause.csv' )
+		self.fileNameHelp = 'skeinforge_tools.unpause.html'
 		self.saveTitle = 'Save Preferences'
 		self.title = 'Unpause Preferences'
 
 	def execute( self ):
 		"Unpause button has been clicked."
-		filenames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.filenameInput.value, import_translator.getGNUTranslatorFileTypes(), self.filenameInput.wasCancelled )
-		for filename in filenames:
-			writeOutput( filename )
+		fileNames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.fileNameInput.value, interpret.getImportPluginFilenames(), self.fileNameInput.wasCancelled )
+		for fileName in fileNames:
+			writeOutput( fileName )
 
 
 class UnpauseSkein:

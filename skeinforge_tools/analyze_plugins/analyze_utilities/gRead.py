@@ -5,10 +5,10 @@ import __init__
 from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 
 # Get the entire text of a file.
-# @param  filename name of the file
+# @param  fileName name of the file
 # @return  entire text of a file.
-def getFileText( filename ):
-    file = open( filename, 'r' )
+def getFileText( fileName ):
+    file = open( fileName, 'r' )
     fileText = file.read()
     file.close()
     return fileText
@@ -36,9 +36,9 @@ def indexOfStartingWithSecond( letter, splitLine ):
 
 
 class gRead:
-    def __init__(self,filename, layers,gcodeText = ''):
+    def __init__(self,fileName, layers,gcodeText = ''):
         if gcodeText == '':
-            gcodeText = getFileText( filename )
+            gcodeText = getFileText( fileName )
         textLines = getTextLines( gcodeText )
         self.last_pos = Vector3()
         self.layers = layers

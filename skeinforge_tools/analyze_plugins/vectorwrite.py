@@ -55,35 +55,35 @@ __license__ = "GPL 3.0"
 
 
 #add open webbrowser first time file is created choice
-def writeOutput( filename, gcodeText = '' ):
+def writeOutput( fileName, gcodeText = '' ):
 	"Write scalable vector graphics for a skeinforge gcode file, if 'Write Scalable Vector Graphics for Skeinforge Chain' is selected."
 	vectorwritePreferences = VectorwritePreferences()
 	preferences.readPreferences( vectorwritePreferences )
 	if gcodeText == '':
-		gcodeText = gcodec.getFileText( filename )
+		gcodeText = gcodec.getFileText( fileName )
 	if vectorwritePreferences.activateVectorwrite.value:
-		writeVectorFileGivenText( filename, gcodeText, vectorwritePreferences )
+		writeVectorFileGivenText( fileName, gcodeText, vectorwritePreferences )
 
-def writeVectorFile( filename = '' ):
-	"Write scalable vector graphics for a gcode file.  If no filename is specified, write scalable vector graphics for the first gcode file in this folder."
-	if filename == '':
+def writeVectorFile( fileName = '' ):
+	"Write scalable vector graphics for a gcode file.  If no fileName is specified, write scalable vector graphics for the first gcode file in this folder."
+	if fileName == '':
 		unmodified = gcodec.getUnmodifiedGCodeFiles()
 		if len( unmodified ) == 0:
 			print( "There is no gcode file in this folder." )
 			return
-		filename = unmodified[ 0 ]
+		fileName = unmodified[ 0 ]
 	vectorwritePreferences = VectorwritePreferences()
 	preferences.readPreferences( vectorwritePreferences )
-	gcodeText = gcodec.getFileText( filename )
-	writeVectorFileGivenText( filename, gcodeText, vectorwritePreferences )
+	gcodeText = gcodec.getFileText( fileName )
+	writeVectorFileGivenText( fileName, gcodeText, vectorwritePreferences )
 
-def writeVectorFileGivenText( filename, gcodeText, vectorwritePreferences ):
+def writeVectorFileGivenText( fileName, gcodeText, vectorwritePreferences ):
 	"Write scalable vector graphics for a gcode file."
 	if gcodeText == '':
 		return ''
 	skein = VectorwriteSkein()
 	skein.parseGcode( gcodeText, vectorwritePreferences )
-	print( 'The scalable vector graphics file is saved as ' + skein.getFilenameWriteFiles( filename ) )
+	print( 'The scalable vector graphics file is saved as ' + skein.getFilenameWriteFiles( fileName ) )
 
 
 class VectorWindow:
@@ -149,21 +149,21 @@ class VectorWindow:
 class VectorwritePreferences:
 	"A class to handle the vectorwrite preferences."
 	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
+		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
 		self.activateVectorwrite = preferences.BooleanPreference().getFromValue( 'Activate Vectorwrite', False )
 		self.archive.append( self.activateVectorwrite )
-		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Write Vector Graphics for', '' )
-		self.archive.append( self.filenameInput )
+		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Write Vector Graphics for', '' )
+		self.archive.append( self.fileNameInput )
 		self.minimumNumberLayersMultipleFiles = preferences.IntPreference().getFromValue( 'Minimum Number of Layers for Multiple Files (integer):', 10 )
 		self.archive.append( self.minimumNumberLayersMultipleFiles )
 		self.pixelsWidthExtrusion = preferences.FloatPreference().getFromValue( 'Pixels over Extrusion Width (ratio):', 5.0 )
 		self.archive.append( self.pixelsWidthExtrusion )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Write Vector Graphics'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'vectorwrite.csv' )
-		self.filenameHelp = 'skeinforge_tools.analyze_plugins.vectorwrite.html'
+		self.fileNamePreferences = preferences.getPreferencesFilePath( 'vectorwrite.csv' )
+		self.fileNameHelp = 'skeinforge_tools.analyze_plugins.vectorwrite.html'
 		self.saveTitle = 'Save Preferences'
 		self.title = 'Vectorwrite Preferences'
 
@@ -206,10 +206,10 @@ class VectorwriteSkein:
 		self.vectorWindow.setPaneCorners( self.scaleCornerLow, self.scaleCornerHigh )
 		self.vectorWindows.append( self.vectorWindow )
 
-	def getFilenameWriteFiles( self, filename ):
-		"Write one or multiple files for the filename."
-		directoryName = os.path.dirname( filename )
-		baseUnderscoredName = os.path.basename( filename ).replace( ' ', '_' )
+	def getFilenameWriteFiles( self, fileName ):
+		"Write one or multiple files for the fileName."
+		directoryName = os.path.dirname( fileName )
+		baseUnderscoredName = os.path.basename( fileName ).replace( ' ', '_' )
 		baseUnderscoredPrefix = baseUnderscoredName[ : baseUnderscoredName.rfind( '.' ) ]
 		if not self.isMultiple:
 			suffixFilename = os.path.join( directoryName, baseUnderscoredPrefix + '.svg' )
@@ -239,7 +239,7 @@ class VectorwriteSkein:
 		return baseUnderscoredPrefix + '_' + zeroPrefixIndex
 
 	def getSuffixFilename( self, baseUnderscoredPrefix, multipleDirectoryName, vectorWindowIndex ):
-		"Get suffix filename for a numbered vector window."
+		"Get suffix fileName for a numbered vector window."
 		return os.path.join( multipleDirectoryName, self.getLinkBasename( baseUnderscoredPrefix, vectorWindowIndex ) + '.svg' )
 
 	def initializeActiveLocation( self ):
@@ -361,9 +361,9 @@ class VectorwriteSkein:
 
 	def execute( self ):
 		"Write button has been clicked."
-		filenames = polyfile.getFileOrGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
-		for filename in filenames:
-			writeVectorFile( filename )
+		fileNames = polyfile.getFileOrGcodeDirectory( self.fileNameInput.value, self.fileNameInput.wasCancelled )
+		for fileName in fileNames:
+			writeVectorFile( fileName )
 
 
 def main( hashtable = None ):

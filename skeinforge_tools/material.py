@@ -44,17 +44,17 @@ def getSelectedMaterial():
 class MaterialPreferences:
 	"A class to handle the material preferences."
 	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
+		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.materialList = preferences.ListPreference().getFromValue( 'Material List:', [ 'ABS', 'HDPE', 'PCL', 'PLA' ] )
 		self.materialListbox = preferences.ListboxPreference().getFromListPreference( self.materialList, 'Material Selection:', 'ABS' )
 		self.addListboxSelection = preferences.AddListboxSelection().getFromListboxPreference( self.materialListbox )
 		self.deleteListboxSelection = preferences.DeleteListboxSelection().getFromListboxPreference( self.materialListbox )
-		#Create the archive, title of the dialog & preferences filename.
+		#Create the archive, title of the dialog & preferences fileName.
 		self.archive = [ self.materialList, self.materialListbox, self.addListboxSelection, self.deleteListboxSelection ]
 		self.executeTitle = None
-		self.filenameHelp = 'skeinforge_tools.material.html'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'material.csv' )
+		self.fileNameHelp = 'skeinforge_tools.material.html'
+		self.fileNamePreferences = preferences.getPreferencesFilePath( 'material.csv' )
 		self.saveTitle = 'Save Preferences'
 		self.title = 'Material Preferences'
 

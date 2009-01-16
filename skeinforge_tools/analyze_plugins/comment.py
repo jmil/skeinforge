@@ -51,15 +51,15 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def commentFile( filename = '' ):
-	"Comment a gcode file.  If no filename is specified, comment the first gcode file in this folder that is not modified."
-	if filename == '':
+def commentFile( fileName = '' ):
+	"Comment a gcode file.  If no fileName is specified, comment the first gcode file in this folder that is not modified."
+	if fileName == '':
 		unmodified = gcodec.getUnmodifiedGCodeFiles()
 		if len( unmodified ) == 0:
 			print( "There are no unmodified gcode files in this folder." )
 			return
-		filename = unmodified[ 0 ]
-	writeCommentFileGivenText( filename, gcodec.getFileText( filename ) )
+		fileName = unmodified[ 0 ]
+	writeCommentFileGivenText( fileName, gcodec.getFileText( fileName ) )
 
 def getCommentGcode( gcodeText ):
 	"Get gcode text with added comments."
@@ -67,18 +67,18 @@ def getCommentGcode( gcodeText ):
 	skein.parseGcode( gcodeText )
 	return skein.output.getvalue()
 
-def writeCommentFileGivenText( filename, gcodeText ):
+def writeCommentFileGivenText( fileName, gcodeText ):
 	"Write a commented gcode file for a gcode file."
-	gcodec.writeFileMessageEnd( '_comment.gcode', filename, getCommentGcode( gcodeText ), 'The commented file is saved as ' )
+	gcodec.writeFileMessageEnd( '_comment.gcode', fileName, getCommentGcode( gcodeText ), 'The commented file is saved as ' )
 
-def writeOutput( filename, gcodeText = '' ):
+def writeOutput( fileName, gcodeText = '' ):
 	"Write a commented gcode file for a skeinforge gcode file, if 'Write Commented File for Skeinforge Chain' is selected."
 	commentPreferences = CommentPreferences()
 	preferences.readPreferences( commentPreferences )
 	if gcodeText == '':
-		gcodeText = gcodec.getFileText( filename )
+		gcodeText = gcodec.getFileText( fileName )
 	if commentPreferences.activateComment.value:
-		writeCommentFileGivenText( filename, gcodeText )
+		writeCommentFileGivenText( fileName, gcodeText )
 
 
 class CommentSkein:
@@ -154,25 +154,25 @@ class CommentSkein:
 class CommentPreferences:
 	"A class to handle the comment preferences."
 	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
+		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
 		self.activateComment = preferences.BooleanPreference().getFromValue( 'Activate Comment', False )
 		self.archive.append( self.activateComment )
-		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Write Comments for', '' )
-		self.archive.append( self.filenameInput )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Write Comments for', '' )
+		self.archive.append( self.fileNameInput )
+		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Write Comments'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'comment.csv' )
-		self.filenameHelp = 'skeinforge_tools.analyze_plugins.comment.html'
+		self.fileNamePreferences = preferences.getPreferencesFilePath( 'comment.csv' )
+		self.fileNameHelp = 'skeinforge_tools.analyze_plugins.comment.html'
 		self.saveTitle = 'Save Preferences'
 		self.title = 'Comment Preferences'
 
 	def execute( self ):
 		"Write button has been clicked."
-		filenames = polyfile.getFileOrGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled, [ '_comment' ] )
-		for filename in filenames:
-			commentFile( filename )
+		fileNames = polyfile.getFileOrGcodeDirectory( self.fileNameInput.value, self.fileNameInput.wasCancelled, [ '_comment' ] )
+		for fileName in fileNames:
+			commentFile( fileName )
 
 
 def main():

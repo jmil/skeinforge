@@ -35,15 +35,15 @@ def createInitFile():
 	fileText = '__all__ = ' + str( getPythonFilenamesExceptInit() )
 	writeFileText( '__init__.py', fileText )
 
-def findWords( filenames, search ):
+def findWords( fileNames, search ):
 	"Find in files the search."
 	print( search + ' is being searched for.' )
-	for filename in filenames:
-		fileText = getFileText( filename )
+	for fileName in fileNames:
+		fileText = getFileText( fileName )
 		if fileText != '':
 			whereInText = fileText.find( search )
 			if whereInText != - 1:
-				print( filename )
+				print( fileName )
 				print( whereInText )
 				whereInTextFromEnd = fileText.rfind( search )
 				if whereInTextFromEnd != whereInText:
@@ -97,25 +97,30 @@ def getFilesWithFileTypeWithoutWords( fileType, words = [], fileInDirectory = ''
 	if fileInDirectory != '':
 		directoryName = os.path.dirname( fileInDirectory )
 	directory = os.listdir( directoryName )
-	for filename in directory:
-		joinedFilename = filename
+	for fileName in directory:
+		joinedFilename = fileName
 		if fileInDirectory != '':
-			joinedFilename = os.path.join( directoryName, filename )
+			joinedFilename = os.path.join( directoryName, fileName )
 		if isFileWithFileTypeWithoutWords( fileType, joinedFilename, words ):
 			filesWithFileType.append( joinedFilename )
 	filesWithFileType.sort()
 	return filesWithFileType
 
-def getFileText( filename, readMode = 'r' ):
+def getFileText( fileName, readMode = 'r' ):
 	"Get the entire text of a file."
 	try:
-		file = open( filename, readMode )
+		file = open( fileName, readMode )
 		fileText = file.read()
 		file.close()
 		return fileText
 	except IOError:
-		print( 'The file ' + filename + ' does not exist, an empty string will be returned.' )
+		print( 'The file ' + fileName + ' does not exist, an empty string will be returned.' )
 		return ''
+
+def getFileTextInFileDirectory( fileInDirectory, fileName, readMode = 'r' ):
+	"Get the entire text of a file in the directory of the file in directory."
+	absoluteFilePathInFileDirectory = os.path.join( os.path.dirname( fileInDirectory ), fileName )
+	return getFileText( absoluteFilePathInFileDirectory, readMode )
 
 def getFirstWord( splitLine ):
 	"Get the first word of a split line."
@@ -123,25 +128,25 @@ def getFirstWord( splitLine ):
 		return splitLine[ 0 ]
 	return ''
 
-def getGcodeFileText( filename, gcodeText ):
+def getGcodeFileText( fileName, gcodeText ):
 	"Get the gcode text from a file if it the gcode text is empty and if the file is a gcode file."
 	if gcodeText != '':
 		return gcodeText
-	if filename[ - len( '.gcode' ) : ] == '.gcode':
-		return getFileText( filename )
+	if fileName[ - len( '.gcode' ) : ] == '.gcode':
+		return getFileText( fileName )
 	return ''
 
 #def getGNUGcode( fileInDirectory = '' ):
 #	"Get GNU Triangulated Surface files and gcode files which are not modified."
 #	return getGNUTriangulatedSurfaceFiles( fileInDirectory ) + getUnmodifiedGCodeFiles( fileInDirectory )
 
-#def getGNUDirectoryOrFile( isDirectory, filename, wasCancelled ):
+#def getGNUDirectoryOrFile( isDirectory, fileName, wasCancelled ):
 #	"Get the GNU Triangulated Surface files in the directory the file is in if isDirectory is true.  Otherwise, return the file in a list."
-#	if str( filename ) == '()' or wasCancelled:
+#	if str( fileName ) == '()' or wasCancelled:
 #		return []
 #	if isDirectory:
-#		return getGNUTriangulatedSurfaceFiles( filename )
-#	return [ filename ]
+#		return getGNUTriangulatedSurfaceFiles( fileName )
+#	return [ fileName ]
 
 #def getGNUTriangulatedSurfaceFiles( fileInDirectory = '' ):
 #	"Get GNU Triangulated Surface files."
@@ -156,31 +161,31 @@ def getLocationFromSplitLine( oldLocation, splitLine ):
 		getDoubleFromCharacterSplitLineValue( 'Y', splitLine, oldLocation.y ),
 		getDoubleFromCharacterSplitLineValue( 'Z', splitLine, oldLocation.z ) )
 
-def getModule( filename, folderName, moduleFilename ):
-	"Get the module from the filename and folder name."
+def getModule( fileName, folderName, moduleFilename ):
+	"Get the module from the fileName and folder name."
 	absoluteDirectory = os.path.join( os.path.dirname( os.path.abspath( moduleFilename ) ), folderName )
 	originalSystemPath = sys.path[ : ]
 	try:
 		sys.path.insert( 0, absoluteDirectory )
-		folderPluginsModule = __import__( filename )
+		folderPluginsModule = __import__( fileName )
 		sys.path = originalSystemPath
 		return folderPluginsModule
 	except Exception, why:
 		sys.path = originalSystemPath
 		print( why )
 		print( '' )
-		print( 'That error means; could not import a module with the filename ' + filename )
+		print( 'That error means; could not import a module with the fileName ' + fileName )
 		print( 'folder name ' + folderName )
-		print( 'and module filename ' + moduleFilename )
+		print( 'and module fileName ' + moduleFilename )
 		print( 'giving an absolute directory name of ' + absoluteDirectory )
 		print( '' )
-		print( 'The plugin could not be imported.  So to run ' + filename + ' directly and at least get a more informative error message,' )
+		print( 'The plugin could not be imported.  So to run ' + fileName + ' directly and at least get a more informative error message,' )
 		print( 'in a shell in the ' + folderName + ' folder type ' )
-		print( '> python ' + filename + '.py' )
+		print( '> python ' + fileName + '.py' )
 	return None
 
 def getPluginFilenames( folderName, moduleFilename ):
-	"Get the filenames of the python plugins in the export_plugins folder."
+	"Get the fileNames of the python plugins in the export_plugins folder."
 	pluginsFolderName = os.path.join( os.path.dirname( os.path.abspath( moduleFilename ) ), folderName )
 	fileInDirectory = os.path.join( pluginsFolderName, '__init__.py' )
 	fullPluginFilenames = getPythonFilenamesExceptInit( fileInDirectory )
@@ -195,8 +200,8 @@ def getPythonDirectoryNames( directoryName ):
 	"Get the python directories."
 	pythonDirectoryNames = []
 	directory = os.listdir( directoryName )
-	for filename in directory:
-		subdirectoryName = os.path.join( directoryName, filename )
+	for fileName in directory:
+		subdirectoryName = os.path.join( directoryName, fileName )
 		if os.path.isdir( subdirectoryName ):
 			if os.path.isfile( os.path.join( subdirectoryName, '__init__.py' ) ):
 				pythonDirectoryNames.append( subdirectoryName )
@@ -217,13 +222,13 @@ def getPythonDirectoryNamesRecursively( directoryName = '' ):
 	return recursivePythonDirectoryNames
 
 def getPythonFilenamesExceptInit( fileInDirectory = '' ):
-	"Get the python filenames of the directory which the fileInDirectory is in, except for the __init__.py file."
+	"Get the python fileNames of the directory which the fileInDirectory is in, except for the __init__.py file."
 	pythonFilenamesExceptInit = getFilesWithFileTypeWithoutWords( 'py', [ '__init__.py' ], fileInDirectory )
 	pythonFilenamesExceptInit.sort()
 	return pythonFilenamesExceptInit
 
 def getPythonFilenamesExceptInitRecursively( directoryName = '' ):
-	"Get the python filenames of the directory recursively, except for the __init__.py files."
+	"Get the python fileNames of the directory recursively, except for the __init__.py files."
 	pythonDirectoryNames = getPythonDirectoryNamesRecursively( directoryName )
 	pythonFilenamesExceptInitRecursively = []
 	for pythonDirectoryName in pythonDirectoryNames:
@@ -231,20 +236,28 @@ def getPythonFilenamesExceptInitRecursively( directoryName = '' ):
 	pythonFilenamesExceptInitRecursively.sort()
 	return pythonFilenamesExceptInitRecursively
 
-def getSummarizedFilename( filename ):
-	"Get the filename basename if the file is in the current working directory, otherwise return the original full name."
-	if os.getcwd() == os.path.dirname( filename ):
-		return os.path.basename( filename )
-	return filename
+def getSummarizedFilename( fileName ):
+	"Get the fileName basename if the file is in the current working directory, otherwise return the original full name."
+	if os.getcwd() == os.path.dirname( fileName ):
+		return os.path.basename( fileName )
+	return fileName
 
 def getTextLines( text ):
 	"Get the all the lines of text of a text."
-	return text.replace( '\r', '\n' ).split( '\n' )
+	return text.replace( '\r', '\n' ).replace( '\n\n', '\n' ).split( '\n' )
 
 def getUnmodifiedGCodeFiles( fileInDirectory = '' ):
 	"Get gcode files which are not modified."
-	words = '_clip _comb _comment _cool _fill _fillet _hop _nozzle_wipe _oozebane _raft _slice _statistic _stretch _tower _transform _wipe'.split()
+	#transform may be needed in future but probably won't
+	words = ' carve clip comb comment cool fill fillet hop inset oozebane raft stretch tower wipe'.replace( ' ', ' _' ).split()
 	return getFilesWithFileTypeWithoutWords( 'gcode', words, fileInDirectory )
+
+def getWithoutBracketsEqualTab( line ):
+	"Get a string without the greater than sign, the bracket and less than sign, the equal sign or the tab."
+	line = line.replace( '=', ' ' )
+	line = line.replace( '(<', '' )
+	line = line.replace( '>', '' )
+	return line.replace( '\t', '' )
 
 def indexOfStartingWithSecond( letter, splitLine ):
 	"Get index of the first occurence of the given letter in the split line, starting with the second word.  Return - 1 if letter is not found"
@@ -255,19 +268,19 @@ def indexOfStartingWithSecond( letter, splitLine ):
 			return wordIndex
 	return - 1
 
-def isFileWithFileTypeWithoutWords( fileType, filename, words ):
+def isFileWithFileTypeWithoutWords( fileType, fileName, words ):
 	"""Determine if file has a given file type, but with does not contain a word in a list.
 
 	Keyword arguments:
 	fileType -- file type required
-	filename -- name of the file
-	words -- list of words which the filename must not have"""
-	filename = os.path.basename( filename )
+	fileName -- name of the file
+	words -- list of words which the fileName must not have"""
+	fileName = os.path.basename( fileName )
 	fileTypeDot = '.' + fileType
-	if filename[ - len( fileTypeDot ) : ] != fileTypeDot:
+	if fileName[ - len( fileTypeDot ) : ] != fileTypeDot:
 		return False
 	for word in words:
-		if filename.find( word ) >= 0:
+		if fileName.find( word ) >= 0:
 			return False
 	return True
 
@@ -277,14 +290,12 @@ def isProcedureDone( gcodeText, procedure ):
 		return False
 	lines = getTextLines( gcodeText )
 	for line in lines:
-		splitLine = line.split( ' ' )
-		firstWord = ''
-		if len( splitLine ) > 0:
-			firstWord = splitLine[ 0 ]
-		if firstWord == '(<procedureDone>':
+		splitLine = getWithoutBracketsEqualTab( line ).split()
+		firstWord = getFirstWord( splitLine )
+		if firstWord == 'procedureDone':
 			if splitLine[ 1 ].find( procedure ) != - 1:
 				return True
-		elif firstWord == '(<extrusionStart>':
+		elif firstWord == 'extrusionStart':
 			return False
 	return False
 
@@ -297,30 +308,30 @@ def isThereAFirstWord( firstWord, lines, startIndex ):
 			return True
 	return False
 
-def replaceWords( filenames, original, replacement ):
+def replaceWords( fileNames, original, replacement ):
 	"Replace in files the original with the replacement."
 	print( original + ' is being replaced with ' + replacement + ' in the following files:' )
-	for filename in filenames:
-		fileText = getFileText( filename )
+	for fileName in fileNames:
+		fileText = getFileText( fileName )
 		if fileText != '':
 			whereInText = fileText.find( original )
 			if whereInText != - 1:
-				print( filename )
+				print( fileName )
 				print( whereInText )
 				fileText = fileText.replace( original, replacement )
-				writeFileText( filename, fileText )
+				writeFileText( fileName, fileText )
 
-def writeFileMessageEnd( end, filename, fileText, message ):
-	"Write to a filename with a suffix and print a message."
-	suffixFilename = filename[ : filename.rfind( '.' ) ] + end
+def writeFileMessageEnd( end, fileName, fileText, message ):
+	"Write to a fileName with a suffix and print a message."
+	suffixFilename = fileName[ : fileName.rfind( '.' ) ] + end
 	writeFileText( suffixFilename, fileText )
 	print( message + getSummarizedFilename( suffixFilename ) )
 
-def writeFileText( filename, fileText, writeMode = 'w+' ):
+def writeFileText( fileName, fileText, writeMode = 'w+' ):
 	"Write a text to a file."
 	try:
-		file = open( filename, writeMode )
+		file = open( fileName, writeMode )
 		file.write( fileText )
 		file.close()
 	except IOError:
-		print( 'The file ' + filename + ' can not be written to.' )
+		print( 'The file ' + fileName + ' can not be written to.' )

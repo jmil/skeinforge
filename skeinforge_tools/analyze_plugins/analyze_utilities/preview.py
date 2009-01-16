@@ -57,10 +57,10 @@ class Preview:
         self.update()
 
 
-def viewGif( filename, gcodeText = '' ):
+def viewGif( fileName, gcodeText = '' ):
     layers = []
     try:
-        gRead(filename, layers, gcodeText)
+        gRead(fileName, layers, gcodeText)
         Preview(layers)
     except Exception, why:
         print( 'Preview failed: ' + str( why ) )

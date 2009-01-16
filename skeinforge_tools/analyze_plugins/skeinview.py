@@ -85,24 +85,24 @@ def displaySkeinviewFileGivenText( gcodeText, skeinviewPreferences = None ):
 	skein.parseGcode( gcodeText, skeinviewPreferences )
 	SkeinWindow( skein.arrowType, skeinviewPreferences.screenHorizontalInset.value, skeinviewPreferences.screenVerticalInset.value, skein.scaleSize, skein.skeinPanes )
 
-def skeinviewFile( filename = '' ):
-	"Skeinview a gcode file.  If no filename is specified, skeinview the first gcode file in this folder that is not modified."
-	if filename == '':
+def skeinviewFile( fileName = '' ):
+	"Skeinview a gcode file.  If no fileName is specified, skeinview the first gcode file in this folder that is not modified."
+	if fileName == '':
 		unmodified = gcodec.getUnmodifiedGCodeFiles()
 		if len( unmodified ) == 0:
 			print( "There are no unmodified gcode files in this folder." )
 			return
-		filename = unmodified[ 0 ]
-	gcodeText = gcodec.getFileText( filename )
+		fileName = unmodified[ 0 ]
+	gcodeText = gcodec.getFileText( fileName )
 	displaySkeinviewFileGivenText( gcodeText )
 
-def writeOutput( filename, gcodeText = '' ):
+def writeOutput( fileName, gcodeText = '' ):
 	"Write a skeinviewed gcode file for a skeinforge gcode file, if 'Activate Skeinview' is selected."
 	skeinviewPreferences = SkeinviewPreferences()
 	preferences.readPreferences( skeinviewPreferences )
 	if skeinviewPreferences.activateSkeinview.value:
 		if gcodeText == '':
-			gcodeText = gcodec.getFileText( filename )
+			gcodeText = gcodec.getFileText( fileName )
 		displaySkeinviewFileGivenText( gcodeText, skeinviewPreferences )
 
 
@@ -125,15 +125,15 @@ class ColoredLine:
 class SkeinviewPreferences:
 	"A class to handle the skeinview preferences."
 	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
+		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
 		self.activateSkeinview = preferences.BooleanPreference().getFromValue( 'Activate Skeinview', True )
 		self.archive.append( self.activateSkeinview )
 		self.drawArrows = preferences.BooleanPreference().getFromValue( 'Draw Arrows', True )
 		self.archive.append( self.drawArrows )
-		self.filenameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Skeinview', '' )
-		self.archive.append( self.filenameInput )
+		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Skeinview', '' )
+		self.archive.append( self.fileNameInput )
 		self.goAroundExtruderOffTravel = preferences.BooleanPreference().getFromValue( 'Go Around Extruder Off Travel', False )
 		self.archive.append( self.goAroundExtruderOffTravel )
 		self.pixelsWidthExtrusion = preferences.FloatPreference().getFromValue( 'Pixels over Extrusion Width (ratio):', 10.0 )
@@ -142,18 +142,18 @@ class SkeinviewPreferences:
 		self.archive.append( self.screenHorizontalInset )
 		self.screenVerticalInset = preferences.IntPreference().getFromValue( 'Screen Vertical Inset (pixels):', 50 )
 		self.archive.append( self.screenVerticalInset )
-		#Create the archive, title of the execute button, title of the dialog & preferences filename.
+		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Skeinview'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'skeinview.csv' )
-		self.filenameHelp = 'skeinforge_tools.analyze_plugins.skeinview.html'
+		self.fileNamePreferences = preferences.getPreferencesFilePath( 'skeinview.csv' )
+		self.fileNameHelp = 'skeinforge_tools.analyze_plugins.skeinview.html'
 		self.saveTitle = 'Save Preferences'
 		self.title = 'Skeinview Preferences'
 
 	def execute( self ):
 		"Write button has been clicked."
-		filenames = polyfile.getFileOrGcodeDirectory( self.filenameInput.value, self.filenameInput.wasCancelled )
-		for filename in filenames:
-			skeinviewFile( filename )
+		fileNames = polyfile.getFileOrGcodeDirectory( self.fileNameInput.value, self.fileNameInput.wasCancelled )
+		for fileName in fileNames:
+			skeinviewFile( fileName )
 
 
 class SkeinviewSkein:

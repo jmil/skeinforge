@@ -1068,6 +1068,18 @@ class PathZ:
 		return '%s, %s' % ( self.path, self.z )
 
 
+class RotatedLoopLayer:
+	"A rotated layer."
+	def __init__( self, z ):
+		self.loops = []
+		self.rotation = None
+		self.z = z
+
+	def __repr__( self ):
+		"Get the string representation of this rotated loop layer."
+		return '%s, %s, %s' % ( self.z, self.rotation, self.loops )
+
+
 class SurroundingLoop:
 	"A loop that surrounds paths."
 	def __init__( self ):

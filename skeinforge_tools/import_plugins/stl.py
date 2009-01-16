@@ -1,11 +1,11 @@
 """
-The stl.py script is an import translator plugin to get a triangle mesh from an stl file.
+The stl.py script is an import translator plugin to get a carving from an stl file.
 
-An import plugin is a script in the import_plugins folder which has the function getTriangleMesh.  It is meant to be run from the
-import_translator tool.  To ensure that the plugin works on platforms which do not handle file capitalization properly, give the plugin
+An import plugin is a script in the import_plugins folder which has the function getCarving.  It is meant to be run from the
+interpret tool.  To ensure that the plugin works on platforms which do not handle file capitalization properly, give the plugin
 a lower case name.
 
-The getTriangleMesh function takes the filename of an stl file and returns the triangle mesh.
+The getCarving function takes the file name of an stl file and returns the carving.
 
 STL is an inferior triangle surface format, described at:
 http://en.wikipedia.org/wiki/STL_(file_format)
@@ -13,8 +13,8 @@ http://en.wikipedia.org/wiki/STL_(file_format)
 A good triangle surface format is the GNU Triangulated Surface format which is described at:
 http://gts.sourceforge.net/reference/gts-surfaces.html#GTS-SURFACE-WRITE
 
-This example gets a triangle mesh for the stl file Screw Holder Bottom.stl.  This example is run in a terminal in the folder which contains
-Screw Holder Bottom.stl and stl.py.
+This example gets a carving for the stl file Screw Holder Bottom.stl.  This example is run in a terminal in the folder which
+contains Screw Holder Bottom.stl and stl.py.
 
 
 > python
@@ -22,10 +22,10 @@ Python 2.5.1 (r251:54863, Sep 22 2007, 01:43:31)
 [GCC 4.2.1 (SUSE Linux)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
 >>> import stl
->>> stl.getTriangleMesh()
+>>> stl.getCarving()
 [11.6000003815, 10.6837882996, 7.80209827423
 ..
-many more lines of the triangle mesh
+many more lines of the carving
 ..
 
 """
@@ -90,15 +90,15 @@ def getFloatGivenBinary( byteIndex, stlData ):
 	"Get vertex given stl vertex line."
 	return unpack( 'f', stlData[ byteIndex : byteIndex + 4 ] )[ 0 ]
 
-def getTriangleMesh( filename = '' ):
+def getCarving( fileName = '' ):
 	"Get the triangle mesh for the stl file."
-	if filename == '':
+	if fileName == '':
 		unmodified = gcodec.getFilesWithFileTypeWithoutWords( 'stl' )
 		if len( unmodified ) == 0:
 			print( "There is no stl file in this folder." )
-			return
-		filename = unmodified[ 0 ]
-	stlData = gcodec.getFileText( filename, 'rb' )
+			return None
+		fileName = unmodified[ 0 ]
+	stlData = gcodec.getFileText( fileName, 'rb' )
 	if stlData == '':
 		return None
 	triangleMesh = triangle_mesh.TriangleMesh()

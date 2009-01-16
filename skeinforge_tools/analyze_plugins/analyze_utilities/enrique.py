@@ -4,10 +4,10 @@ from GifImagePlugin import getheader, getdata
 from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 
 # Get the entire text of a file.
-# @param  filename name of the file
+# @param  fileName name of the file
 # @return  entire text of a file.
-def getFileText( filename ):
-    file = open( filename, 'r' )
+def getFileText( fileName ):
+    file = open( fileName, 'r' )
     fileText = file.read()
     file.close()
     return fileText
@@ -61,11 +61,11 @@ def makedelta(fp, sequence):
 
 
 class g2gif:
-    def __init__(self,filename, outfile):
+    def __init__(self,fileName, outfile):
         self.last_pos = Vector3()
         self.last_pos.z = 999
         self.do_move = 1
-        fileText = getFileText( filename )
+        fileText = getFileText( fileName )
         textLines = getTextLines( fileText )
         self.images = []
         self.image = None

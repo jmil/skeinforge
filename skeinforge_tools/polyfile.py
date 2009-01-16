@@ -38,29 +38,29 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def getFileOrGcodeDirectory( filename, wasCancelled, words = [] ):
+def getFileOrGcodeDirectory( fileName, wasCancelled, words = [] ):
 	"Get the gcode files in the directory the file is in if directory preference is true.  Otherwise, return the file in a list."
-	if isEmptyOrCancelled( filename, wasCancelled ):
+	if isEmptyOrCancelled( fileName, wasCancelled ):
 		return []
 	if isDirectoryPreference():
-		return gcodec.getFilesWithFileTypeWithoutWords( 'gcode', words, filename )
-	return [ filename ]
+		return gcodec.getFilesWithFileTypeWithoutWords( 'gcode', words, fileName )
+	return [ fileName ]
 
-def getFileOrDirectoryTypes( filename, fileTypes, wasCancelled ):
+def getFileOrDirectoryTypes( fileName, fileTypes, wasCancelled ):
 	"Get the gcode files in the directory the file is in if directory preference is true.  Otherwise, return the file in a list."
-	if isEmptyOrCancelled( filename, wasCancelled ):
+	if isEmptyOrCancelled( fileName, wasCancelled ):
 		return []
 	if isDirectoryPreference():
-		return gcodec.getFilesWithFileTypesWithoutWords( fileTypes, [], filename )
-	return [ filename ]
+		return gcodec.getFilesWithFileTypesWithoutWords( fileTypes, [], fileName )
+	return [ fileName ]
 
-def getFileOrDirectoryTypesUnmodifiedGcode( filename, fileTypes, wasCancelled ):
+def getFileOrDirectoryTypesUnmodifiedGcode( fileName, fileTypes, wasCancelled ):
 	"Get the gcode files in the directory the file is in if directory preference is true.  Otherwise, return the file in a list."
-	if isEmptyOrCancelled( filename, wasCancelled ):
+	if isEmptyOrCancelled( fileName, wasCancelled ):
 		return []
 	if isDirectoryPreference():
-		return gcodec.getFilesWithFileTypesWithoutWords( fileTypes, [], filename ) + gcodec.getUnmodifiedGCodeFiles( filename )
-	return [ filename ]
+		return gcodec.getFilesWithFileTypesWithoutWords( fileTypes, [], fileName ) + gcodec.getUnmodifiedGCodeFiles( fileName )
+	return [ fileName ]
 
 def isDirectoryPreference():
 	"Determine if the directory preference is true."
@@ -72,15 +72,15 @@ def isDirectoryPreference():
 #		print( '"Execute File" is selected, so only the opened file will be executed.  To execute all the unmodified files in the directory, change the preference in polyfile.' )
 	return polyfilePreferences.directoryPreference.value
 
-def isEmptyOrCancelled( filename, wasCancelled ):
-	"Determine if the filename is empty or the dialog was cancelled."
-	return str( filename ) == '' or str( filename ) == '()' or wasCancelled
+def isEmptyOrCancelled( fileName, wasCancelled ):
+	"Determine if the fileName is empty or the dialog was cancelled."
+	return str( fileName ) == '' or str( fileName ) == '()' or wasCancelled
 
 
 class PolyfilePreferences:
 	"A class to handle the polyfile preferences."
 	def __init__( self ):
-		"Set the default preferences, execute title & preferences filename."
+		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
 		self.directoryOrFileChoiceLabel = preferences.LabelDisplay().getFromName( 'Directory or File Choice: ' )
@@ -90,10 +90,10 @@ class PolyfilePreferences:
 		self.archive.append( self.directoryPreference )
 		self.filePreference = preferences.Radio().getFromRadio( 'Execute File', directoryRadio, True )
 		self.archive.append( self.filePreference )
-		#Create the archive, title of the dialog & preferences filename.
+		#Create the archive, title of the dialog & preferences fileName.
 		self.executeTitle = None
-		self.filenameHelp = 'skeinforge_tools.polyfile.html'
-		self.filenamePreferences = preferences.getPreferencesFilePath( 'polyfile.csv' )
+		self.fileNameHelp = 'skeinforge_tools.polyfile.html'
+		self.fileNamePreferences = preferences.getPreferencesFilePath( 'polyfile.csv' )
 		self.saveTitle = 'Save Preferences'
 		self.title = 'Polyfile Preferences'
 
