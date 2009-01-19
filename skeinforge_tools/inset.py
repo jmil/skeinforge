@@ -165,7 +165,7 @@ def getInsetGcode( gcodeText, insetPreferences = None ):
 	skein.parseGcode( insetPreferences, gcodeText )
 	return skein.output.getvalue()
 
-def getSegmentsFromPoints( aroundLists, loopLists, pointBegin, pointEnd ):
+def getSegmentsFromPoints( aroundLists, isWiddershins, loopLists, pointBegin, pointEnd ):
 	"Get endpoint segments from the beginning and end of a line segment."
 	normalizedSegment = pointEnd - pointBegin
 	normalizedSegmentLength = abs( normalizedSegment )
@@ -193,7 +193,7 @@ def getSegmentsFromPoints( aroundLists, loopLists, pointBegin, pointEnd ):
 		endpointBegin.point = normalizedSegment * endpointBegin.point
 		endpointEnd = segment[ 1 ]
 		endpointEnd.point = normalizedSegment * endpointEnd.point
-		if len( aroundLists ) < 1:
+		if len( aroundLists ) < 1 or isWiddershins:
 			insideSegments.append( segment )
 		elif isSegmentInsideAround( aroundLists, segment ):
 			insideSegments.append( segment )
@@ -348,18 +348,19 @@ class InsetSkein:
 		outlines = []
 		thickOutlines = []
 		allLoopLists = loopLists[ : ] + [ thickOutlines ]
+		isLoopWiddershins = euclidean.isWiddershins( loop )
 		for pointIndex in xrange( len( loop ) ):
 			pointBegin = loop[ pointIndex ]
 			pointEnd = loop[ ( pointIndex + 1 ) % len( loop ) ]
 			if isIntersectingSelf:
 				if euclidean.isLineIntersectingLoops( outlines, pointBegin, pointEnd ):
-					segments += getSegmentsFromPoints( loopLists, allLoopLists, pointBegin, pointEnd )
+					segments += getSegmentsFromPoints( loopLists, isLoopWiddershins, allLoopLists, pointBegin, pointEnd )
 				else:
-					segments += getSegmentsFromPoints( loopLists, loopLists, pointBegin, pointEnd )
+					segments += getSegmentsFromPoints( loopLists, isLoopWiddershins, loopLists, pointBegin, pointEnd )
 				addSegmentOutline( False, outlines, pointBegin, pointEnd, self.extrusionWidth )
 				addSegmentOutline( True, thickOutlines, pointBegin, pointEnd, self.extrusionWidth )
 			else:
-				segments += getSegmentsFromPoints( loopLists, loopLists, pointBegin, pointEnd )
+				segments += getSegmentsFromPoints( loopLists, isLoopWiddershins, loopLists, pointBegin, pointEnd )
 		perimeterPaths = []
 		path = []
 		muchSmallerThanRadius = 0.1 * radius
@@ -388,6 +389,9 @@ class InsetSkein:
 		else:
 			self.addLine( '(<perimeter> )' ) # Indicate that a perimeter is beginning.
 			self.addGcodeFromThreadZ( loop + [ loop[ 0 ] ], z )
+#		if not ( isIntersectingWithinLists( loop, loopLists ) or isIntersectingSelf ):
+#			self.addLine( '(<perimeter> )' ) # Indicate that a perimeter is beginning.
+#			self.addGcodeFromThreadZ( loop + [ loop[ 0 ] ], z )
 		self.addLine( '(</surroundingLoop> )' )
 
 	def addGcodeFromThreadZ( self, thread, z ):
@@ -397,6 +401,7 @@ class InsetSkein:
 		else:
 			print( "zero length vertex positions array which was skipped over, this should never happen" )
 		if len( thread ) < 2:
+			print( thread )
 			return
 		self.addLine( "M101" ) # Turn extruder on.
 		for point in thread[ 1 : ]:
@@ -435,20 +440,21 @@ class InsetSkein:
 		circleArea = self.extrusionDiameter * self.extrusionDiameter * math.pi / 4.0
 		print( 'The extrusion fill density ratio is ' + euclidean.getRoundedToThreePlaces( circleArea / self.extrusionWidth / self.layerThickness ) )
 
-	def addInset( self, layerIndex ):
+	def addInset( self, rotatedBoundaryLayer ):
 		"Add fill to the carve layer."
 		alreadyFilledArounds = []
 		halfWidth = self.halfExtrusionPerimeterWidth
-		rotatedBoundaryLayer = self.rotatedBoundaryLayers[ layerIndex ]
 		self.addLine( '(<layerStart> %s )' % rotatedBoundaryLayer.z ) # Indicate that a new layer is starting.
 		if rotatedBoundaryLayer.rotation != None:
 			halfWidth *= self.bridgeExtrusionWidthOverSolid
 			self.addLine( '(<bridgeDirection> ' + str( rotatedBoundaryLayer.rotation ) + ' )' ) # Indicate the bridge direction.
+		allLoops = []
 		for loop in rotatedBoundaryLayer.loops:
 			extrudateLoops = self.getExtrudateLoops( halfWidth, loop )
 			for extrudateLoop in extrudateLoops:
 				self.addGcodeFromRemainingLoop( extrudateLoop, alreadyFilledArounds, halfWidth, rotatedBoundaryLayer.z )
 				addAlreadyFilledArounds( alreadyFilledArounds, extrudateLoop, self.fillInset )
+			allLoops += extrudateLoops
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
@@ -538,8 +544,8 @@ class InsetSkein:
 		self.addInitializationToOutput()
 		for lineIndex in xrange( self.lineIndex, len( self.lines ) ):
 			self.parseLine( lineIndex )
-		for layerIndex in xrange( len( self.rotatedBoundaryLayers ) ):
-			self.addInset( layerIndex )
+		for rotatedBoundaryLayer in self.rotatedBoundaryLayers:
+			self.addInset( rotatedBoundaryLayer )
 		self.addShutdownToOutput()
 
 	def parseInitialization( self ):
@@ -576,7 +582,7 @@ class InsetSkein:
 		if firstWord == '(<boundaryPoint>':
 			location = gcodec.getLocationFromSplitLine( None, splitLine )
 			self.boundary.append( location.dropAxis( 2 ) )
-		elif ( firstWord == '(<bridgeDirection>' or firstWord == '//bridgeDirection' ):
+		elif ( firstWord == '(<bridgeDirection>' or firstWord == '<!--bridgeDirection-->' ):
 			secondWordWithoutBrackets = splitLine[ 1 ].replace( '(', '' ).replace( ')', '' )
 			self.rotatedBoundaryLayer.rotation = complex( secondWordWithoutBrackets )
 		elif firstWord == '(<layerStart>':

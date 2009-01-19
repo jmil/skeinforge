@@ -252,7 +252,7 @@ class CarveSkein:
 		self.addLine( '\tbridgeExtrusionWidthOverSolid = ' + euclidean.getRoundedToThreePlaces( self.bridgeExtrusionWidth / self.extrusionWidth ) )
 		self.addLine( '\tprocedureDone = "carve"' ) # The skein has been carved.
 		self.addLine( '\textrusionStart = 1' ) # Initialization is finished, extrusion is starting.
-		beginningOfPathSectionIndex = self.svgTemplateLines.index( '//Beginning of path section' )
+		beginningOfPathSectionIndex = self.svgTemplateLines.index( '<!--Beginning of path section-->' )
 		self.addLines( self.svgTemplateLines[ endOfSVGHeaderIndex + 1 : beginningOfPathSectionIndex ] )
 
 	def addLayerStart( self, layerIndex, z ):
@@ -296,7 +296,7 @@ class CarveSkein:
 		"Add rotated boundary layer to the output."
 		self.addLayerStart( layerIndex, rotatedBoundaryLayer.z )
 		if rotatedBoundaryLayer.rotation != None:
-			self.addLine('\t\t\t//bridgeDirection %s' % rotatedBoundaryLayer.rotation ) # Indicate the bridge direction.
+			self.addLine('\t\t\t<!--bridgeDirection--> %s' % rotatedBoundaryLayer.rotation ) # Indicate the bridge direction.
 #			<path transform="scale(3.7, -3.7) translate(0, 5)" d="M 0 -5 L 50 0 L60 50 L 5 50 z M 5 3 L5 15 L15 15 L15 5 z"/>
 #		transform = 'scale(' + unitScale + ' ' + (unitScale * -1) + ') translate(' + (sliceMinX * -1) + ' ' + (sliceMinY * -1) + ')'
 		pathString = '\t\t\t<path transform="scale(%s, %s) translate(%s, %s)" d="' % ( self.unitScale, - self.unitScale, self.getRounded( - self.cornerMinimum.x ), self.getRounded( - self.cornerMinimum.y ) )
@@ -310,7 +310,7 @@ class CarveSkein:
 
 	def addShutdownToOutput( self ):
 		"Add shutdown svg to the output."
-		endOfPathSectionIndex = self.svgTemplateLines.index( '//End of path section' )
+		endOfPathSectionIndex = self.svgTemplateLines.index( '<!--End of path section-->' )
 		self.addLines( self.svgTemplateLines[ endOfPathSectionIndex + 1 : ] )
 
 	def getReplacedSVGTemplateLines( self, rotatedBoundaryLayers ):
@@ -346,15 +346,27 @@ class CarveSkein:
 		"Get number rounded to the number of carried decimal places as a string."
 		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
 
+	def getRoundedComplexString( self, point ):
+		"Get the rounded complex string."
+		return self.getRounded( point.real ) + ' ' + self.getRounded( point.imag )
+
 	def getSVGLoopString( self, loop ):
 		"Get the svg loop string."
 		svgLoopString = ''
+		if len( loop ) < 1:
+			return ''
+		oldRoundedComplexString = self.getRoundedComplexString( loop[ - 1 ] )
 		for pointIndex in xrange( len( loop ) ):
 			point = loop[ pointIndex ]
 			stringBeginning = 'M '
-			if pointIndex > 0:
+			if len( svgLoopString ) > 0:
 				stringBeginning = ' L '
-			svgLoopString += stringBeginning + self.getRounded( point.real ) + ' ' + self.getRounded( point.imag )
+			roundedComplexString = self.getRoundedComplexString( point )
+			if roundedComplexString != oldRoundedComplexString:
+				svgLoopString += stringBeginning + self.getRoundedComplexString( point )
+			oldRoundedComplexString = roundedComplexString
+		if len( svgLoopString ) < 1:
+			return ''
 		return svgLoopString + ' z'
 
 	def parseCarving( self, carvePreferences, carving ):

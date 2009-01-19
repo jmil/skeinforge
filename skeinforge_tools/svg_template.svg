@@ -134,11 +134,7 @@ function setText(id, str ){
 
 function SliderDown(event){sliding = true;}
 
-function SliderUp(event){
-	sliding = false;
-//	x = (150 - 14) / (layers.length - 1) * currentLayer
-//	document.getElementById('thumb').setAttributeNS(null,'cx',x + 17)
-}
+function SliderUp(event){sliding = false;}
 
 function SliderMove(event){
 	value = event.clientX - 130
@@ -219,7 +215,7 @@ function viewSingle(){
 	</metadata>
 	<!--Begin Layer Data   -->
 	<g id="layerData" fill="darkseagreen" stroke="#00F" stroke-width="0.54px" font-weight="bold" font-family="Arial" font-size="15px">
-//Beginning of path section
+<!--Beginning of path section-->
 <!-- transform algorithm
 	unit scale (mm=3.7, in=96)
 	
@@ -238,7 +234,7 @@ function viewSingle(){
 			<text y="15" fill="#000" stroke="none">Layer 1, z 0.1</text>
 			<path transform="scale(3.7, -3.7) translate(0, 5)" d="M 0 -5 L 50 0 L60 50 L 5 50 z M 5 3 L5 15 L15 15 L15 5 z"/>
 		</g>
-//End of path section
+<!--End of path section-->
 	</g>
 	<!--End Layer Data-->
 	
