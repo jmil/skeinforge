@@ -216,7 +216,7 @@ class Vector3:
 		"Scale each component of this Vector3 so that it has a magnitude of 1. If this Vector3 has a magnitude of 0, this method has no effect."
 		magnitude = abs( self )
 		if magnitude != 0.0:
-			self / magnitude
+			self /= magnitude
 
 	def reflect( self, normal ):
 		"Reflect the Vector3 across the normal, which is assumed to be normalized."

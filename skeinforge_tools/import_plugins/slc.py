@@ -147,7 +147,8 @@ class SLCCarving:
 			for contourIndex in xrange( numContours ):
 				numPoints = getLittleEndianUnsignedLongGivenFile( file )
 				numGaps = getLittleEndianUnsignedLongGivenFile( file )
-				rotatedBoundaryLayer.loops.append( getPointsFromFile( numPoints, file ) )
+				if numPoints > 2:
+					rotatedBoundaryLayer.loops.append( getPointsFromFile( numPoints, file ) )
 
 	def readFile( self, fileName ):
 		"Read SLC and store the layers."
@@ -178,12 +179,8 @@ class SLCCarving:
 		"Set the layer thickness."
 		pass
 
-	def setCarveExtrusionWidth( self, extrusionWidth ):
-		"Set the extrusion width."
-		pass
-
-	def setCarveImportCoarseness( self, importCoarseness ):
-		"Set the import coarseness."
+	def setCarveImportRadius( self, importRadius ):
+		"Set the import radius."
 		pass
 
 	def setCarveIsCorrectMesh( self, isCorrectMesh ):

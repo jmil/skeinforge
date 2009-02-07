@@ -864,6 +864,13 @@ def isPointInsideLoop( loop, point ):
 	"Determine if a point is inside another loop."
 	return getNumberOfIntersectionsToLeft( point, loop ) % 2 == 1
 
+def isPointInsideLoops( loops, point ):
+	"Determine if a point is inside a loop list."
+	for loop in loops:
+		if isPointInsideLoop( loop, point ):
+			return True
+	return False
+
 def isSegmentCompletelyInX( segment, xFirst, xSecond ):
 	"Determine if the segment overlaps within x."
 	segmentFirstX = segment[ 0 ].point.real
@@ -1082,10 +1089,11 @@ class RotatedLoopLayer:
 
 class SurroundingLoop:
 	"A loop that surrounds paths."
-	def __init__( self ):
+	def __init__( self, isOutsideExtrudedFirst = True ):
 		self.boundary = []
 		self.extraLoops = []
 		self.innerSurroundings = None
+		self.isOutsideExtrudedFirst = isOutsideExtrudedFirst
 		self.lastFillLoops = None
 		self.loop = None
 		self.paths = []
@@ -1111,16 +1119,16 @@ class SurroundingLoop:
 	def addToThreads( self, oldOrderedLocation, skein ):
 		"Add to paths from the last location."
 		addSurroundingLoopBeginning( self.boundary, skein, self.z )
+		if not self.isOutsideExtrudedFirst:
+			self.transferClosestFillLoops( oldOrderedLocation, skein )
 		if self.loop == None:
 			transferClosestPaths( oldOrderedLocation, self.perimeterPaths[ : ], skein )
 		else:
 			addToThreadsFromLoop( self.extrusionHalfWidth, '(<perimeter> )', self.loop[ : ], oldOrderedLocation, skein )#later when comb is updated replace perimeter with loop
 		skein.addLine( '(</surroundingLoop> )' )
 		addToThreadsRemoveFromSurroundings( oldOrderedLocation, self.innerSurroundings[ : ], skein )
-		if len( self.extraLoops ) > 0:
-			remainingFillLoops = self.extraLoops[ : ]
-			while len( remainingFillLoops ) > 0:
-				transferClosestFillLoop( self.extrusionHalfWidth, oldOrderedLocation, remainingFillLoops, skein )
+		if self.isOutsideExtrudedFirst:
+			self.transferClosestFillLoops( oldOrderedLocation, skein )
 		transferClosestPaths( oldOrderedLocation, self.paths[ : ], skein )
 
 	def getFillLoops( self ):
@@ -1146,6 +1154,14 @@ class SurroundingLoop:
 		for surroundingLoop in self.innerSurroundings:
 			loopsToBeFilled.append( surroundingLoop.boundary )
 		return loopsToBeFilled
+
+	def transferClosestFillLoops( self, oldOrderedLocation, skein ):
+		"Transfer closest fill loops."
+		if len( self.extraLoops ) < 1:
+			return
+		remainingFillLoops = self.extraLoops[ : ]
+		while len( remainingFillLoops ) > 0:
+			transferClosestFillLoop( self.extrusionHalfWidth, oldOrderedLocation, remainingFillLoops, skein )
 
 	def transferPaths( self, paths ):
 		"Transfer paths."

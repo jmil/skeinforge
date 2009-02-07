@@ -236,11 +236,13 @@ Ian England <http://forums.reprap.org/profile.php?12,192>
 John Gilmore <http://forums.reprap.org/profile.php?12,364>
 Jonwise <http://forums.reprap.org/profile.php?12,716>
 Kyle Corbitt <http://forums.reprap.org/profile.php?12,90>
+Michael Duffin <http://forums.reprap.org/profile.php?12,930>
 Marius Kintel <http://reprap.soup.io/>
 Nophead <http://www.blogger.com/profile/12801535866788103677>
 PJR <http://forums.reprap.org/profile.php?12,757>
 Reece.Arnott <http://forums.reprap.org/profile.php?12,152>
 Wade <http://forums.reprap.org/profile.php?12,489>
+Xsainnz <http://forums.reprap.org/profile.php?12,563>
 Zach Hoeken <http://blog.zachhoeken.com/>
 
 Organizations:

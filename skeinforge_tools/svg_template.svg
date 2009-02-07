@@ -32,7 +32,7 @@ sliceDimensionY = null;
 sliceDimensionZ = null;
 svgMinWidth = javascriptControlBoxX + 2 * margin; //Width of control box and margins
 textHeight = 22.5;
-unitScale = 1*1; //mm = 1; inch = 25.4
+unitScale = 3.7; //mm = 1; inch = 25.4
 zoomScale = 1; //Default 1:1 may need smaller scale for large objects
 
 //No javascript control var
@@ -208,7 +208,7 @@ function viewSingle(){
 }
 	]]></script>
 	
-	<title>SVG slice format example v8</title>
+	<title>replaceWithTitle</title>
 	<desc></desc>
 	<metadata>
 		<slice:layers id="sliceData" version="0.1" units="mm" layerThickness="0.2" minX="0" maxX="61" minY="-5" maxY="50" minZ="0" maxZ="1"/>

@@ -38,7 +38,6 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-#later , make defaults for layerThickness, maxZ, minZ
 def addPathData( line, loops ):
 	"Add the data from the path line."
 	line = line.replace( '"', ' ' )
@@ -186,12 +185,8 @@ class SVGCarving:
 		"Set the layer thickness."
 		pass
 
-	def setCarveExtrusionWidth( self, extrusionWidth ):
-		"Set the extrusion width."
-		pass
-
-	def setCarveImportCoarseness( self, importCoarseness ):
-		"Set the import coarseness."
+	def setCarveImportRadius( self, importRadius ):
+		"Set the import radius."
 		pass
 
 	def setCarveIsCorrectMesh( self, isCorrectMesh ):

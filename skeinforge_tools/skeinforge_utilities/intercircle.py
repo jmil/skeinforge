@@ -105,6 +105,8 @@ def addPointsFromSegment( pointComplexes, radius, pointBeginComplex, pointEndCom
 
 def getCentersFromCircleNodes( circleNodesComplex ):
 	"Get the complex centers of the circle intersection loops from circle nodes."
+	if len( circleNodesComplex ) < 2:
+		return []
 	circleIntersections = getCircleIntersectionsFromCircleNodes( circleNodesComplex )
 	circleIntersectionLoopComplexes = getCircleIntersectionLoops( circleIntersections )
 	return getCentersFromIntersectionLoops( circleIntersectionLoopComplexes )

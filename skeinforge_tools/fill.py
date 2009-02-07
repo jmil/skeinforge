@@ -101,21 +101,28 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-#use slice svg and slc format
-#move early startup to oozebane
 #carve aoi xml
+#fix remove bug in inset
+#cut negative inset
 #user mcodes
-#skeinedge
+#skeinedge or viewpart
+#move extrusionDiameter from carve to inset
+#gang or concatenate, maybe from skeinedge?
+#hole sequence, probably made obsolete by CSGEvaluator
+#xml gcode
+#preferences in gcode or saved versions
 #pyramidal
+#oozebane reverse?
 #change material
-#bridge extrusion width
+#bridge extrusion width, straighten out the use of layer thickness
 #email marcus about bridge extrusion width http://reprap.org/bin/view/Main/ExtruderImprovementsAndAlternatives
+#xml & svg more forgiving, svg make defaults for layerThickness, maxZ, minZ, add layer z to svg_template, make the slider on the template track even when mouse is outside
+#boundaries, center radius z bottom top, circular or rectangular
 #compartmentalize addOrbit, maybe already done
 #distance option???
 #rulers, zoom & select field on skeinview
 #simulate
 #document gear script
-#gang, maybe from skeinedge?
 #mosaic
 #transform
 #searchable help
@@ -132,6 +139,20 @@ __license__ = "GPL 3.0"
 #multiple heads around edge
 #angle shape for overhang extrusions
 #free fabricator
+
+#stepper motor
+#tensile stuart platform
+#gear vacuum pump
+#gear turbine
+#heat engine
+#solar power
+#kayak
+#sailboat
+#yacht
+#house
+#condo with reflected gardens in between buildings
+#medical equipment
+#cell counter, etc..
 
 def addAroundGridPoint( arounds, gridPoint, gridPointInsetX, gridPointInsetY, gridPoints, gridSearchRadius, isBothOrNone, isDoubleJunction, isJunctionWide, paths, pixelTable, width ):
 	"Add the path around the grid point."
@@ -784,6 +805,8 @@ class FillPreferences:
 		self.archive.append( self.infillPatternLine )
 		self.interiorInfillDensityOverExteriorDensity = preferences.FloatPreference().getFromValue( 'Interior Infill Density over Exterior Density (ratio):', 0.9 )
 		self.archive.append( self.interiorInfillDensityOverExteriorDensity )
+		self.outsideExtrudedFirst = preferences.BooleanPreference().getFromValue( 'Outside Extruded First', True )
+		self.archive.append( self.outsideExtrudedFirst )
 		self.solidSurfaceThickness = preferences.IntPreference().getFromValue( 'Solid Surface Thickness (layers):', 3 )
 		self.archive.append( self.solidSurfaceThickness )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
@@ -1211,7 +1234,7 @@ class FillSkein:
 		elif firstWord == '(<perimeter>':
 			self.isPerimeter = True
 		elif firstWord == '(<surroundingLoop>':
-			self.surroundingLoop = euclidean.SurroundingLoop()
+			self.surroundingLoop = euclidean.SurroundingLoop( self.fillPreferences.outsideExtrudedFirst.value )
 			self.rotatedLayer.surroundingLoops.append( self.surroundingLoop )
 		elif firstWord == '(</surroundingLoop>':
 			self.surroundingLoop = None

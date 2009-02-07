@@ -165,7 +165,7 @@ def getInsetGcode( gcodeText, insetPreferences = None ):
 	skein.parseGcode( insetPreferences, gcodeText )
 	return skein.output.getvalue()
 
-def getSegmentsFromPoints( aroundLists, isWiddershins, loopLists, pointBegin, pointEnd ):
+def getSegmentsFromPoints( aroundLists, loopLists, pointBegin, pointEnd ):
 	"Get endpoint segments from the beginning and end of a line segment."
 	normalizedSegment = pointEnd - pointBegin
 	normalizedSegmentLength = abs( normalizedSegment )
@@ -193,7 +193,7 @@ def getSegmentsFromPoints( aroundLists, isWiddershins, loopLists, pointBegin, po
 		endpointBegin.point = normalizedSegment * endpointBegin.point
 		endpointEnd = segment[ 1 ]
 		endpointEnd.point = normalizedSegment * endpointEnd.point
-		if len( aroundLists ) < 1 or isWiddershins:
+		if len( aroundLists ) < 1:
 			insideSegments.append( segment )
 		elif isSegmentInsideAround( aroundLists, segment ):
 			insideSegments.append( segment )
@@ -238,9 +238,8 @@ def isSegmentInsideAround( aroundLists, segment ):
 	"Determine if the segment is inside an around."
 	midpoint = 0.5 * ( segment[ 0 ].point + segment[ 1 ].point )
 	for aroundList in aroundLists:
-		for around in aroundList:
-			if euclidean.isPointInsideLoop( around, midpoint ):
-				return True
+		if euclidean.isPointInsideLoops( aroundList, midpoint ):
+			return True
 	return False
 
 def writeOutput( fileName = '' ):
@@ -348,19 +347,21 @@ class InsetSkein:
 		outlines = []
 		thickOutlines = []
 		allLoopLists = loopLists[ : ] + [ thickOutlines ]
-		isLoopWiddershins = euclidean.isWiddershins( loop )
+		aroundLists = loopLists
+		if euclidean.isWiddershins( loop ):
+			aroundLists = []
 		for pointIndex in xrange( len( loop ) ):
 			pointBegin = loop[ pointIndex ]
 			pointEnd = loop[ ( pointIndex + 1 ) % len( loop ) ]
 			if isIntersectingSelf:
 				if euclidean.isLineIntersectingLoops( outlines, pointBegin, pointEnd ):
-					segments += getSegmentsFromPoints( loopLists, isLoopWiddershins, allLoopLists, pointBegin, pointEnd )
+					segments += getSegmentsFromPoints( aroundLists, allLoopLists, pointBegin, pointEnd )
 				else:
-					segments += getSegmentsFromPoints( loopLists, isLoopWiddershins, loopLists, pointBegin, pointEnd )
+					segments += getSegmentsFromPoints( aroundLists, loopLists, pointBegin, pointEnd )
 				addSegmentOutline( False, outlines, pointBegin, pointEnd, self.extrusionWidth )
 				addSegmentOutline( True, thickOutlines, pointBegin, pointEnd, self.extrusionWidth )
 			else:
-				segments += getSegmentsFromPoints( loopLists, isLoopWiddershins, loopLists, pointBegin, pointEnd )
+				segments += getSegmentsFromPoints( aroundLists, loopLists, pointBegin, pointEnd )
 		perimeterPaths = []
 		path = []
 		muchSmallerThanRadius = 0.1 * radius

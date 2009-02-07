@@ -105,7 +105,7 @@ def getCarveGcode( fileName, carvePreferences = None ):
 		carvePreferences = CarvePreferences()
 		preferences.readPreferences( carvePreferences )
 	skein = CarveSkein()
-	skein.parseCarving( carvePreferences, carving )
+	skein.parseCarving( carvePreferences, carving, fileName )
 	return skein.output.getvalue()
 
 def getCarving( fileName ):
@@ -313,7 +313,7 @@ class CarveSkein:
 		endOfPathSectionIndex = self.svgTemplateLines.index( '<!--End of path section-->' )
 		self.addLines( self.svgTemplateLines[ endOfPathSectionIndex + 1 : ] )
 
-	def getReplacedSVGTemplateLines( self, rotatedBoundaryLayers ):
+	def getReplacedSVGTemplateLines( self, fileName, rotatedBoundaryLayers ):
 		"Get the lines of text from the svg_template.txt file."
 #( layers.length + 1 ) * (margin + sliceDimY * unitScale + txtHeight) + margin + txtHeight + margin + 110
 		svgTemplateText = gcodec.getFileTextInFileDirectory( __file__, 'svg_template.svg' )
@@ -337,6 +337,8 @@ class CarveSkein:
 		svgTemplateText = getReplacedWordAndInQuotes( 'maxZ', self.getRounded( self.cornerMaximum.z ), svgTemplateText )
 		svgTemplateText = getReplacedWordAndInQuotes( 'minZ', self.getRounded( self.cornerMinimum.z ), svgTemplateText )
 		svgTemplateText = getReplacedWordAndInQuotes( 'dimZ', self.getRounded( self.extent.z ), svgTemplateText )
+		summarizedFilename = gcodec.getSummarizedFilename( fileName ) + ' SVG Slice File'
+		svgTemplateText = getReplacedWordAndInQuotes( 'Title', summarizedFilename, svgTemplateText )
 		noJavascriptControlsTagString = '<g id="noJavascriptControls" fill="#000" transform="translate(%s, %s)">' % ( self.getRounded( self.margin ), self.getRounded( controlTop ) )
 		svgTemplateText = getReplacedTagString( noJavascriptControlsTagString, 'noJavascriptControls', svgTemplateText )
 #	<g id="noJavascriptControls" fill="#000" transform="translate(20, 1400)">
@@ -363,23 +365,24 @@ class CarveSkein:
 				stringBeginning = ' L '
 			roundedComplexString = self.getRoundedComplexString( point )
 			if roundedComplexString != oldRoundedComplexString:
-				svgLoopString += stringBeginning + self.getRoundedComplexString( point )
+				svgLoopString += stringBeginning + roundedComplexString
 			oldRoundedComplexString = roundedComplexString
 		if len( svgLoopString ) < 1:
 			return ''
 		return svgLoopString + ' z'
 
-	def parseCarving( self, carvePreferences, carving ):
+	def parseCarving( self, carvePreferences, carving, fileName ):
 		"Parse gnu triangulated surface text and store the carved gcode."
 		self.layerThickness = carvePreferences.layerThickness.value
 		self.setExtrusionDiameterWidth( carvePreferences )
 		if carvePreferences.infillDirectionBridge.value:
 			carving.setCarveBridgeLayerThickness( self.bridgeLayerThickness )
 		carving.setCarveLayerThickness( self.layerThickness )
-		carving.setCarveExtrusionWidth( self.extrusionWidth )
-		carving.setCarveImportCoarseness( carvePreferences.importCoarseness.value )
+		carving.setCarveImportRadius( 0.5 * carvePreferences.importCoarseness.value * self.extrusionWidth )
 		carving.setCarveIsCorrectMesh( carvePreferences.correctMesh.value )
 		rotatedBoundaryLayers = carving.getCarveRotatedBoundaryLayers()
+		if len( rotatedBoundaryLayers ) < 1:
+			return
 		self.cornerMaximum = carving.getCarveCornerMaximum()
 		self.cornerMinimum = carving.getCarveCornerMinimum()
 		#reset from slicable
@@ -387,7 +390,7 @@ class CarveSkein:
 		self.setExtrusionDiameterWidth( carvePreferences )
 		self.decimalPlacesCarried = int( max( 0.0, math.ceil( 1.0 - math.log10( self.layerThickness / carvePreferences.layerThicknessOverPrecision.value ) ) ) )
 		self.extent = self.cornerMaximum - self.cornerMinimum
-		self.svgTemplateLines = self.getReplacedSVGTemplateLines( rotatedBoundaryLayers )
+		self.svgTemplateLines = self.getReplacedSVGTemplateLines( fileName, rotatedBoundaryLayers )
 		self.addInitializationToOutputSVG()
 		self.addRotatedLoopLayersToOutput( rotatedBoundaryLayers )
 		self.addShutdownToOutput()

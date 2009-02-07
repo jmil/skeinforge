@@ -60,7 +60,7 @@ def addEdgePair( edgePairTable, edges, faceEdgeIndex, remainingEdgeIndex, remain
 		return
 	if not faceEdgeIndex in remainingEdgeTable:
 		return
-	edgePair = triangle_mesh.EdgePair().getFromIndexesEdges( [ remainingEdgeIndex, faceEdgeIndex ], edges )
+	edgePair = EdgePair().getFromIndexesEdges( [ remainingEdgeIndex, faceEdgeIndex ], edges )
 	edgePairTable[ str( edgePair ) ] = edgePair
 
 def addLoopToPointTable( loop, pointTable ):
@@ -73,6 +73,15 @@ def addPointsAtZ( edgePair, points, radius, vertices, z ):
 	carveIntersectionFirst = getCarveIntersectionFromEdge( edgePair.edges[ 0 ], vertices, z )
 	carveIntersectionSecond = getCarveIntersectionFromEdge( edgePair.edges[ 1 ], vertices, z )
 	intercircle.addPointsFromSegment( points, radius, carveIntersectionFirst, carveIntersectionSecond, 0.3 )
+
+def addToZoneArray( point, z, zoneArray, zZoneInterval ):
+	"Add a height to the zone array."
+	zoneLayer = int( round( ( point.z - z ) / zZoneInterval ) )
+	zoneAround = 2 * int( abs( zoneLayer ) )
+	if zoneLayer < 0:
+		zoneAround -= 1
+	if zoneAround < len( zoneArray ):
+		zoneArray[ zoneAround ] += 1
 
 def addWithLeastLength( loops, point, shortestAdditionalLength ):
 	"Insert a point into a loop, at the index at which the loop would be shortest."
@@ -109,6 +118,47 @@ def getAdditionalLoopLength( loop, point, pointIndex ):
 	afterPoint = loop[ pointIndex ]
 	beforePoint = loop[ ( pointIndex + len( loop ) - 1 ) % len( loop ) ]
 	return abs( point - beforePoint ) + abs( point - afterPoint ) - abs( afterPoint - beforePoint )
+
+def getBridgeDirection( belowLoops, layerLoops, layerThickness ):
+	"Get span direction for the majority of the overhanging extrusion perimeter, if any."
+	if len( belowLoops ) < 1:
+		return None
+	belowOutsetLoops = []
+	overhangInset = 1.875 * layerThickness
+	slightlyGreaterThanOverhang = 1.1 * overhangInset
+	muchGreaterThanOverhang = 2.5 * overhangInset
+	for loop in belowLoops:
+		centers = intercircle.getCentersFromLoopDirection( True, loop, slightlyGreaterThanOverhang )
+		for center in centers:
+			outset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, overhangInset )
+			if euclidean.isLargeSameDirection( outset, center, muchGreaterThanOverhang ):
+				belowOutsetLoops.append( outset )
+	bridgeDirection = complex()
+	for loop in layerLoops:
+		for pointIndex in xrange( len( loop ) ):
+			previousIndex = ( pointIndex + len( loop ) - 1 ) % len( loop )
+			bridgeDirection += getOverhangDirection( belowOutsetLoops, loop[ previousIndex ], loop[ pointIndex ] )
+	if abs( bridgeDirection ) < 0.75 * layerThickness:
+		return None
+	else:
+		bridgeDirection /= abs( bridgeDirection )
+		return cmath.sqrt( bridgeDirection )
+
+def getBridgeLoops( layerThickness, loop ):
+	"Get the inset bridge loops from the loop."
+	halfWidth = 1.5 * layerThickness
+	slightlyGreaterThanHalfWidth = 1.1 * halfWidth
+	muchGreaterThanHalfWIdth = 2.5 * halfWidth
+	extrudateLoops = []
+	circleNodes = intercircle.getCircleNodesFromLoop( loop, slightlyGreaterThanHalfWidth )
+	centers = intercircle.getCentersFromCircleNodes( circleNodes )
+	for center in centers:
+		extrudateLoop = intercircle.getSimplifiedInsetFromClockwiseLoop( center, halfWidth )
+		if euclidean.isLargeSameDirection( extrudateLoop, center, muchGreaterThanHalfWIdth ):
+			if euclidean.isPathInsideLoop( loop, extrudateLoop ) == euclidean.isWiddershins( loop ):
+				extrudateLoop.reverse()
+				extrudateLoops.append( extrudateLoop )
+	return extrudateLoops
 
 def getCommonVertexIndex( edgeFirst, edgeSecond ):
 	"Get the vertex index that both edges have in common."
@@ -152,6 +202,25 @@ def getDoubledRoundZ( overhangingSegment, segmentRoundZ ):
 	roundZLength = abs( roundZ )
 	return roundZ * roundZ / roundZLength
 
+def getInclusiveLoops( allPoints, corners, importRadius, isInteriorWanted ):
+	"Get loops which include most of the points."
+	circleNodes = intercircle.getCircleNodesFromPoints( allPoints, importRadius )
+	centers = intercircle.getCentersFromCircleNodes( circleNodes )
+	loops = intercircle.getLoopsFromLoopsDirection( True, centers )
+	pointTable = {}
+	for loop in loops:
+		addLoopToPointTable( loop, pointTable )
+	if not isInteriorWanted:
+		return getLoopsWithCorners( corners, importRadius, loops, pointTable )
+	clockwiseLoops = getLoopsInDescendingOrderOfArea( intercircle.getLoopsFromLoopsDirection( False, centers ) )
+	clockwiseLoops.reverse()
+	for clockwiseLoop in clockwiseLoops:
+		if len( clockwiseLoop ) > 2 and euclidean.getMaximumSpan( clockwiseLoop ) > 2.5 * importRadius:
+			if getOverlapRatio( clockwiseLoop, pointTable ) < 0.45:
+				loops.append( clockwiseLoop )
+				addLoopToPointTable( clockwiseLoop, pointTable )
+	return getLoopsWithCorners( corners, importRadius, loops, pointTable )
+
 def getLoopsFromCorrectMesh( edges, faces, vertices, z ):
 	"Get loops from a carve of a correct mesh."
 	remainingEdgeTable = getRemainingEdgeTable( edges, vertices, z )
@@ -181,42 +250,25 @@ def getLoopsFromCorrectMesh( edges, faces, vertices, z ):
 #		remainingLoops.append( untouchable.loop )
 #	return remainingLoops
 
-def getLoopsFromUnprovenMesh( edges, extrusionWidth, faces, importCoarseness, vertices, z ):
+def getLoopsFromUnprovenMesh( edges, faces, importRadius, vertices, z ):
 	"Get loops from a carve of an unproven mesh."
 	edgePairTable = {}
-	importRadius = importCoarseness * extrusionWidth
-	points = []
-	pointTable = {}
+	corners = []
 	remainingEdgeTable = getRemainingEdgeTable( edges, vertices, z )
 	remainingEdgeTableKeys = remainingEdgeTable.keys()
 	for remainingEdgeIndexKey in remainingEdgeTable:
 		edge = remainingEdgeTable[ remainingEdgeIndexKey ]
 		carveIntersection = getCarveIntersectionFromEdge( edge, vertices, z )
-		points.append( carveIntersection )
+		corners.append( carveIntersection )
 		for edgeFaceIndex in edge.faceIndexes:
 			face = faces[ edgeFaceIndex ]
 			for edgeIndex in face.edgeIndexes:
 				addEdgePair( edgePairTable, edges, edgeIndex, remainingEdgeIndexKey, remainingEdgeTable )
-	onlyPoints = points[ : ]
+	allPoints = corners[ : ]
 	for edgePairValue in edgePairTable.values():
-		addPointsAtZ( edgePairValue, points, importRadius, vertices, z )
-	circleNodes = intercircle.getCircleNodesFromPoints( points, importRadius )
-	centers = intercircle.getCentersFromCircleNodes( circleNodes )
-	loops = intercircle.getLoopsFromLoopsDirection( True, centers )
-	for loop in loops:
-		addLoopToPointTable( loop, pointTable )
-	clockwiseLoops = getLoopsInDescendingOrderOfArea( intercircle.getLoopsFromLoopsDirection( False, centers ) )
-	clockwiseLoops.reverse()
-	for clockwiseLoop in clockwiseLoops:
-		if len( clockwiseLoop ) > 2 and euclidean.getMaximumSpan( clockwiseLoop ) > 2.5 * importRadius:
-			if getOverlapRatio( clockwiseLoop, pointTable ) < 0.45:
-				loops.append( clockwiseLoop )
-				addLoopToPointTable( clockwiseLoop, pointTable )
-	shortestAdditionalLength = 0.85 * importRadius
-	for onlyPoint in onlyPoints:
-		if onlyPoint not in pointTable:
-			addWithLeastLength( loops, onlyPoint, shortestAdditionalLength )
-	return loops
+		addPointsAtZ( edgePairValue, allPoints, importRadius, vertices, z )
+	pointTable = {}
+	return getInclusiveLoops( allPoints, corners, importRadius, True )
 
 def getLoopsInDescendingOrderOfArea( loops ):
 	"Get the lowest zone index."
@@ -229,6 +281,14 @@ def getLoopsInDescendingOrderOfArea( loops ):
 	for loopArea in loopAreas:
 		loopsInDescendingOrderOfArea.append( loopArea.loop )
 	return loopsInDescendingOrderOfArea
+
+def getLoopsWithCorners( corners, importRadius, loops, pointTable ):
+	"Add corners to the loops."
+	shortestAdditionalLength = 0.85 * importRadius
+	for corner in corners:
+		if corner not in pointTable:
+			addWithLeastLength( loops, corner, shortestAdditionalLength )
+	return loops
 
 def getLowestZoneIndex( zoneArray, z ):
 	"Get the lowest zone index."
@@ -319,6 +379,11 @@ def getTriangleMesh( fileName = '' ):
 		return None
 	triangleMesh = TriangleMesh().getFromGNUTriangulatedSurfaceText( gnuTriangulatedSurfaceText )
 	return triangleMesh
+
+def getZoneInterval( layerThickness ):
+	"Get the zone interval around the slice height."
+	zZoneLayers = 99
+	return layerThickness / zZoneLayers / 100.0
 
 def isInline( beginComplex, centerComplex, endComplex ):
 	"Determine if the three complex points form a line."
@@ -478,67 +543,18 @@ class TriangleMesh:
 	"A triangle mesh."
 	def __init__( self ):
 		"Add empty lists."
-		self.belowLoops = None
+		self.belowLoops = []
 		self.bridgeLayerThickness = None
 		self.edges = []
 		self.faces = []
+		self.importCoarseness = 1.0
+		self.isCorrectMesh = True
 		self.rotatedBoundaryLayers = []
 		self.vertices = []
 	
 	def __repr__( self ):
 		"Get the string representation of this TriangleMesh."
 		return str( self.vertices ) + '\n' + str( self.edges ) + '\n' + str( self.faces )
-
-	def addToZoneArray( self, point, zoneArray, z ):
-		"Add a height to the zone array."
-		zoneLayer = int( round( ( point.z - z ) / self.zZoneInterval ) )
-		zoneAround = 2 * int( abs( zoneLayer ) )
-		if zoneLayer < 0:
-			zoneAround -= 1
-		if zoneAround < len( zoneArray ):
-			zoneArray[ zoneAround ] += 1
-
-	def getBridgeDirection( self, layerLoops ):
-		"Get span direction for the majority of the overhanging extrusion perimeter, if any."
-		if self.bridgeLayerThickness == None:
-			return None
-		if self.belowLoops == None:
-			return None
-		belowOutsetLoops = []
-		overhangInset = 1.25 * self.extrusionWidth
-		slightlyGreaterThanOverhang = 1.1 * overhangInset
-		muchGreaterThanOverhang = 2.5 * overhangInset
-		for loop in self.belowLoops:
-			centers = intercircle.getCentersFromLoopDirection( True, loop, slightlyGreaterThanOverhang )
-			for center in centers:
-				outset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, overhangInset )
-				if euclidean.isLargeSameDirection( outset, center, muchGreaterThanOverhang ):
-					belowOutsetLoops.append( outset )
-		bridgeDirection = complex()
-		for loop in layerLoops:
-			for pointIndex in xrange( len( loop ) ):
-				previousIndex = ( pointIndex + len( loop ) - 1 ) % len( loop )
-				bridgeDirection += getOverhangDirection( belowOutsetLoops, loop[ previousIndex ], loop[ pointIndex ] )
-		if abs( bridgeDirection ) < 0.5 * self.extrusionWidth:
-			return None
-		else:
-			bridgeDirection /= abs( bridgeDirection )
-			return cmath.sqrt( bridgeDirection )
-
-	def getBridgeLoops( self, loop ):
-		"Get the inset bridge loops from the loop."
-		slightlyGreaterThanHalfWidth = 1.1 * self.extrusionWidth
-		muchGreaterThanHalfWIdth = 2.5 * self.extrusionWidth
-		extrudateLoops = []
-		circleNodes = intercircle.getCircleNodesFromLoop( loop, slightlyGreaterThanHalfWidth )
-		centers = intercircle.getCentersFromCircleNodes( circleNodes )
-		for center in centers:
-			extrudateLoop = intercircle.getSimplifiedInsetFromClockwiseLoop( center, self.extrusionWidth )
-			if euclidean.isLargeSameDirection( extrudateLoop, center, muchGreaterThanHalfWIdth ):
-				if euclidean.isPathInsideLoop( loop, extrudateLoop ) == euclidean.isWiddershins( loop ):
-					extrudateLoop.reverse()
-					extrudateLoops.append( extrudateLoop )
-		return extrudateLoops
 
 	def getCarveCornerMaximum( self ):
 		"Get the corner maximum of the vertices."
@@ -560,8 +576,7 @@ class TriangleMesh:
 			self.cornerMaximum = euclidean.getPointMaximum( self.cornerMaximum, point )
 			self.cornerMinimum = euclidean.getPointMinimum( self.cornerMinimum, point )
 		halfHeight = 0.5 * self.layerThickness
-		zZoneLayers = 99
-		self.zZoneInterval = self.layerThickness / zZoneLayers / 100.0
+		self.zZoneInterval = getZoneInterval( self.layerThickness )
 		layerTop = self.cornerMaximum.z - halfHeight * 0.5
 		z = self.cornerMinimum.z + halfHeight
 		while z < layerTop:
@@ -589,10 +604,10 @@ class TriangleMesh:
 		if self.isCorrectMesh:
 			originalLoops = getLoopsFromCorrectMesh( self.edges, self.faces, self.vertices, z )
 		if len( originalLoops ) < 1:
-			originalLoops = getLoopsFromUnprovenMesh( self.edges, self.extrusionWidth, self.faces, self.importCoarseness, self.vertices, z )
+			originalLoops = getLoopsFromUnprovenMesh( self.edges, self.faces, self.importRadius, self.vertices, z )
 		simplifiedLoops = []
 		for originalLoop in originalLoops:
-			simplifiedLoops.append( euclidean.getSimplifiedLoop( originalLoop, self.extrusionWidth ) )
+			simplifiedLoops.append( euclidean.getSimplifiedLoop( originalLoop, self.importRadius ) )
 		loops = getLoopsInDescendingOrderOfArea( simplifiedLoops )
 		for loopIndex in xrange( len( loops ) ):
 			loop = loops[ loopIndex ]
@@ -610,7 +625,7 @@ class TriangleMesh:
 		"Get next z and add extruder loops."
 		zoneArray = []
 		for point in self.vertices:
-			self.addToZoneArray( point, zoneArray, z )
+			addToZoneArray( point, z, zoneArray, self.zZoneInterval )
 		lowestZoneIndex = getLowestZoneIndex( zoneArray, z )
 		halfAround = int( math.ceil( float( lowestZoneIndex ) / 2.0 ) )
 		zAround = float( halfAround ) * self.zZoneInterval
@@ -620,10 +635,12 @@ class TriangleMesh:
 		rotatedBoundaryLayer = euclidean.RotatedLoopLayer( zPlusAround )
 		self.rotatedBoundaryLayers.append( rotatedBoundaryLayer )
 		rotatedBoundaryLayer.loops = self.getLoopsFromMesh( zPlusAround )
+		if self.bridgeLayerThickness == None:
+			return z + self.layerThickness
 		allExtrudateLoops = []
 		for loop in rotatedBoundaryLayer.loops:
-			allExtrudateLoops += self.getBridgeLoops( loop )
-		rotatedBoundaryLayer.rotation = self.getBridgeDirection( allExtrudateLoops )
+			allExtrudateLoops += getBridgeLoops( self.layerThickness, loop )
+		rotatedBoundaryLayer.rotation = getBridgeDirection( self.belowLoops, allExtrudateLoops, self.layerThickness )
 		self.belowLoops = allExtrudateLoops
 		if rotatedBoundaryLayer.rotation == None:
 			return z + self.layerThickness
@@ -637,13 +654,9 @@ class TriangleMesh:
 		"Set the layer thickness."
 		self.layerThickness = layerThickness
 
-	def setCarveExtrusionWidth( self, extrusionWidth ):
-		"Set the extrusion width."
-		self.extrusionWidth = extrusionWidth
-
-	def setCarveImportCoarseness( self, importCoarseness ):
-		"Set the import coarseness."
-		self.importCoarseness = importCoarseness
+	def setCarveImportRadius( self, importRadius ):
+		"Set the import radius."
+		self.importRadius = importRadius
 
 	def setCarveIsCorrectMesh( self, isCorrectMesh ):
 		"Set the is correct mesh flag."
