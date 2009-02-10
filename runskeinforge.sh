@@ -12,7 +12,7 @@ dir=`dirname $1`
 file=`basename $1`
 
 for s in .gts .GTS .stl .STL; do
-  if [ ! `basename $file $s` == $file ]; then suffix=$s; fi
+  if [ ! `basename $file $s` = $file ]; then suffix=$s; fi
 done
 
 if [ -n $suffix ]; then 
