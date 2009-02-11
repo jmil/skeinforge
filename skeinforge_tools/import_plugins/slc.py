@@ -88,7 +88,6 @@ class SampleTableEntry:
 		self.layer_thickness = getLittleEndianFloatGivenFile( file )
 		self.beam_comp = getLittleEndianFloatGivenFile( file )
 		getLittleEndianFloatGivenFile( file )
-		print( self )
 
 	def __repr__( self ):
 		"Get the string representation of this sample table entry."
@@ -165,8 +164,6 @@ class SLCCarving:
 		if tableEntrySize == 0:
 			print( "Sampling table size is zero!" )
 			exit()
-#		print( "Sampling table size: %s\n", tableEntrySize )
-#		print( "Minimum z level, Layer thickness, Line width compensation, Reserved" )
 		for index in xrange( tableEntrySize ):
 			sampleTableEntry = SampleTableEntry( file )
 			self.layerThickness = sampleTableEntry.layer_thickness

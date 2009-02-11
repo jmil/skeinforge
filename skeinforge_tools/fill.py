@@ -102,28 +102,28 @@ __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
 #carve aoi xml
-#fix remove bug in inset
-#cut negative inset
 #user mcodes
-#skeinedge or viewpart
 #move extrusionDiameter from carve to inset
+#skeinedge or viewpart
+#cut negative inset
+#boundaries, center radius z bottom top, circular or rectangular
 #gang or concatenate, maybe from skeinedge?
 #hole sequence, probably made obsolete by CSGEvaluator
 #xml gcode
 #preferences in gcode or saved versions
 #pyramidal
-#oozebane reverse?
 #change material
+#email marius about bridge extrusion width http://reprap.org/bin/view/Main/ExtruderImprovementsAndAlternatives
 #bridge extrusion width, straighten out the use of layer thickness
-#email marcus about bridge extrusion width http://reprap.org/bin/view/Main/ExtruderImprovementsAndAlternatives
+#oozebane reverse?
 #xml & svg more forgiving, svg make defaults for layerThickness, maxZ, minZ, add layer z to svg_template, make the slider on the template track even when mouse is outside
-#boundaries, center radius z bottom top, circular or rectangular
 #compartmentalize addOrbit, maybe already done
 #distance option???
 #rulers, zoom & select field on skeinview
 #simulate
 #document gear script
 #mosaic
+#mill
 #transform
 #searchable help
 #pick and place
@@ -142,11 +142,11 @@ __license__ = "GPL 3.0"
 
 #stepper motor
 #tensile stuart platform
+#kayak
 #gear vacuum pump
 #gear turbine
 #heat engine
 #solar power
-#kayak
 #sailboat
 #yacht
 #house

@@ -9,18 +9,11 @@
 #
 
 dir=`dirname $1`
-file=`basename $1`
+file=`basename $1 .gts`
 
-for s in .gts .GTS .stl .STL; do
-  if [ ! `basename $file $s` = $file ]; then suffix=$s; fi
-done
-
-if [ -n $suffix ]; then 
-  filename=`basename $file $suffix`
-  newdir=$filename-`date +%m%d%H%M`
-  mkdir -p $newdir/skeinforge-prefs
-  cp $1 $newdir
-  cp ~/.skeinforge/*.csv $newdir/skeinforge-prefs
-  python skeinforge.py $newdir/$filename$suffix
-  echo $PWD/$newdir/${filename}_export.gcode
-fi
+newdir=$file-`date +%m%d%H%M`
+mkdir -p $newdir/skeinforge-prefs
+cp $1 $newdir
+cp ~/.skeinforge/*.csv $newdir/skeinforge-prefs
+python skeinforge.py $newdir/$file.gts
+echo $PWD/$newdir/${file}_export.gcode

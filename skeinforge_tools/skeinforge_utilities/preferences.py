@@ -46,6 +46,35 @@ def getArchiveText( preferences ):
 		preference.writeToArchiveWriter( archiveWriter )
 	return archiveWriter.getvalue()
 
+def getFileInGivenDirectory( directory, fileName ):
+	"Get the file from the fileName or the lowercase fileName in the given directory."
+	directoryListing = os.listdir( directory )
+	if fileName in directoryListing:
+		return getFileTextGivenDirectoryFileName( directory, fileName )
+	lowerFilename = fileName.lower()
+	if lowerFilename in directoryListing:
+		return getFileTextGivenDirectoryFileName( directory, lowerFilename )
+	return ''
+
+def getFileInGivenPreferencesDirectory( directory, fileName ):
+	"Get the file from the fileName or the lowercase fileName in the given directory, if there is no file look in the gcode_scripts folder in the preferences directory."
+	if directory == '':
+		directory = os.getcwd()
+	fileInGivenPreferencesDirectory = getFileInGivenDirectory( directory, fileName )
+	if fileInGivenPreferencesDirectory != '':
+		return fileInGivenPreferencesDirectory
+	gcodeDirectoryPath = os.path.join( getPreferencesDirectoryPath(), 'gcode_scripts' )
+	try:
+		os.mkdir( gcodeDirectoryPath )
+	except OSError:
+		pass
+	return getFileInGivenDirectory( gcodeDirectoryPath, fileName )
+
+def getFileTextGivenDirectoryFileName( directory, fileName ):
+	"Get the entire text of a file with the given file name in the given directory."
+	absoluteFilePath = os.path.join( directory, fileName )
+	return gcodec.getFileText( absoluteFilePath )
+
 def getPreferencesDirectoryPath():
 	"Get the preferences directory path, which is the home directory joined with .skeinforge."
 	return os.path.join( os.path.expanduser( '~' ), '.skeinforge' )

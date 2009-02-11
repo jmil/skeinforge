@@ -130,6 +130,10 @@ def isArchivable():
 	"Return whether or not this plugin is archivable."
 	return True
 
+def isReplacable():
+	"Return whether or not the output from this plugin is replacable.  This should be true if the output is text and false if it is binary."
+	return False
+
 def writeFileText( fileName, fileText ):
 	"Write a text to a file."
 	try:

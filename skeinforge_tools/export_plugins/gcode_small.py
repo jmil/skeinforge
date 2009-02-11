@@ -60,20 +60,9 @@ def isArchivable():
 	"Return whether or not this plugin is archivable."
 	return False
 
-def writeFileText( fileName, fileText ):
-	"Write a text to a file."
-	try:
-		file = open( fileName, 'w+' )
-		file.write( fileText )
-		file.close()
-	except IOError:
-		print( 'The file ' + fileName + ' can not be written to.' )
-
-def writeOutput( fileName, gcodeText ):
-	"Write the exported version of a gcode file.  This function, getOutput and isArchivable are the only necessary functions in a skeinforge export plugin."
-	output = getOutput( gcodeText )
-	writeFileText( fileName, output )
-	print( 'The exported file is saved as ' + getSummarizedFilename( fileName ) )
+def isReplacable():
+	"Return whether or not the output from this plugin is replacable.  This should be true if the output is text and false if it is binary."
+	return True
 
 
 class GcodeSmallSkein:

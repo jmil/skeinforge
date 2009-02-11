@@ -12,7 +12,7 @@ infill perimeter overlap method of calculation.  If the 'Calculate Overlap from 
 calculated from the average of the perimeter width and the infill width, this is the default choice.  If the 'Calculate Overlap from
 Perimeter Only' option is chosen, the overlap will be calculated from the perimeter width only.
 
-If the "Start at Home" preference is selected, the G28 gcode will be added at the beginning of the file.
+If the "Start at Home" preference is selected, the G28 gcode will be added at the beginning of the file, the default is off
 
 When inset is generating the code, if there is a file start.txt, it will add that to the very beginning of the gcode. After it has added some
 initialization code and just before it adds the extrusion gcode, it will add the file endofthebeginning.txt if it exists. At the very end, it will
@@ -95,7 +95,7 @@ def addAlreadyFilledArounds( alreadyFilledArounds, loop, radius ):
 def addSegmentOutline( isThick, outlines, pointBegin, pointEnd, width ):
 	"Add a diamond or hexagonal outline for a line segment."
 	exclusionWidth = 0.6 * width
-	slope = 0.3
+	slope = 0.2
 	if isThick:
 		slope = 3.0
 		exclusionWidth = 0.8 * width
@@ -108,7 +108,7 @@ def addSegmentOutline( isThick, outlines, pointBegin, pointEnd, width ):
 	segmentYMirror = complex( normalizedSegment.real, - normalizedSegment.imag )
 	pointBeginRotated = segmentYMirror * pointBegin
 	pointEndRotated = segmentYMirror * pointEnd
-	along = 0.01
+	along = 0.05
 	alongLength = along * segmentLength
 	if alongLength > 0.1 * exclusionWidth:
 		along *= 0.1 * exclusionWidth / alongLength
@@ -120,7 +120,7 @@ def addSegmentOutline( isThick, outlines, pointBegin, pointEnd, width ):
 	outline.append( pointBeginIntermediate )
 	verticalWidth = complex( 0.0, exclusionWidth )
 	if alongToWidth > 0.9 * remainingToHalf:
-		verticalWidth = complex( 0.0, slope * remainingToHalf )
+		verticalWidth = complex( 0.0, slope * remainingToHalf * segmentLength )
 		middle = ( pointBeginIntermediate + pointEndIntermediate ) * 0.5
 		middleDown = middle - verticalWidth
 		middleUp = middle + verticalWidth
@@ -189,14 +189,11 @@ def getSegmentsFromPoints( aroundLists, loopLists, pointBegin, pointEnd ):
 	segments = euclidean.getSegmentsFromXIntersectionIndexes( xIntersectionIndexList, pointBeginRotated.imag )
 	insideSegments = []
 	for segment in segments:
-		endpointBegin = segment[ 0 ]
-		endpointBegin.point = normalizedSegment * endpointBegin.point
-		endpointEnd = segment[ 1 ]
-		endpointEnd.point = normalizedSegment * endpointEnd.point
+		insideSegment = euclidean.getSegmentFromPoints( normalizedSegment * segment[ 0 ].point, normalizedSegment * segment[ 1 ].point )
 		if len( aroundLists ) < 1:
-			insideSegments.append( segment )
-		elif isSegmentInsideAround( aroundLists, segment ):
-			insideSegments.append( segment )
+			insideSegments.append( insideSegment )
+		elif isSegmentInsideAround( aroundLists, insideSegment ):
+			insideSegments.append( insideSegment )
 	return insideSegments
 
 def isCloseToLast( paths, point, radius ):
@@ -205,6 +202,17 @@ def isCloseToLast( paths, point, radius ):
 		return False
 	lastPath = paths[ - 1 ]
 	return abs( lastPath[ - 1 ] - point ) < radius
+
+def isIntersectingItself( loop, width ):
+	"Determine if the loop is intersecting itself."
+	outlines = []
+	for pointIndex in xrange( len( loop ) ):
+		pointBegin = loop[ pointIndex ]
+		pointEnd = loop[ ( pointIndex + 1 ) % len( loop ) ]
+		if euclidean.isLineIntersectingLoops( outlines, pointBegin, pointEnd ):
+			return True
+		addSegmentOutline( False, outlines, pointBegin, pointEnd, width )
+	return False
 
 def isIntersectingWithinList( loop, loopList ):
 	"Determine if the loop is intersecting or is within the loop list."
@@ -221,17 +229,6 @@ def isIntersectingWithinLists( loop, loopLists ):
 	for loopList in loopLists:
 		if isIntersectingWithinList( loop, loopList ):
 			return True
-	return False
-
-def isIntersectingItself( loop, width ):
-	"Determine if the loop is intersecting itself."
-	outlines = []
-	for pointIndex in xrange( len( loop ) ):
-		pointBegin = loop[ pointIndex ]
-		pointEnd = loop[ ( pointIndex + 1 ) % len( loop ) ]
-		if euclidean.isLineIntersectingLoops( outlines, pointBegin, pointEnd ):
-			return True
-		addSegmentOutline( False, outlines, pointBegin, pointEnd, width )
 	return False
 
 def isSegmentInsideAround( aroundLists, segment ):
@@ -284,7 +281,7 @@ class InsetPreferences:
 		self.archive.append( self.perimeterInfillPreference )
 		self.perimeterPreference = preferences.Radio().getFromRadio( 'Calculate Overlap from Perimeter Only', infillRadio, False )
 		self.archive.append( self.perimeterPreference )
-		self.startAtHome = preferences.BooleanPreference().getFromValue( 'Start at Home', True )
+		self.startAtHome = preferences.BooleanPreference().getFromValue( 'Start at Home', False )
 		self.archive.append( self.startAtHome )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Inset'
@@ -313,33 +310,14 @@ class InsetSkein:
 		self.rotatedBoundaryLayers = []
 		self.thread = None
 
-	def addFromFile( self, fileName ):
-		"Add lines of text from the fileName."
-		fileLines = gcodec.getTextLines( gcodec.getFileTextInFileDirectory( __file__, fileName ) )
-		for line in fileLines:
-			self.addLine( line )
-
 	def addFromUpperLowerFile( self, fileName ):
 		"Add lines of text from the fileName or the lowercase fileName, if there is no file by the original fileName in the directory."
-		directory = os.listdir( os.getcwd() )
-		if fileName in directory:
-			self.addFromFile( fileName )
+		fileText = preferences.getFileInGivenPreferencesDirectory( os.path.dirname( __file__ ), fileName )
+		if fileText == '':
 			return
-		lowerFilename = fileName.lower()
-		if lowerFilename in directory:
-			self.addFromFile( lowerFilename )
-			return
-		gcodeDirectoryPath = os.path.join( preferences.getPreferencesDirectoryPath(), 'gcode_scripts' )
-		try:
-			os.mkdir( gcodeDirectoryPath )
-		except OSError:
-			pass
-		directory = os.listdir( gcodeDirectoryPath )
-		if fileName in directory:
-			self.addFromFile( os.path.join( gcodeDirectoryPath, fileName ) )
-			return
-		if lowerFilename in directory:
-			self.addFromFile( os.path.join( gcodeDirectoryPath, fileName.lower() ) )
+		fileLines = gcodec.getTextLines( fileText )
+		for line in fileLines:
+			self.addLine( line )
 
 	def addGcodeFromPerimeterPaths( self, isIntersectingSelf, loop, loopLists, radius, z ):
 		"Add the perimeter paths to the output."
@@ -348,16 +326,16 @@ class InsetSkein:
 		thickOutlines = []
 		allLoopLists = loopLists[ : ] + [ thickOutlines ]
 		aroundLists = loopLists
-		if euclidean.isWiddershins( loop ):
-			aroundLists = []
+#		if euclidean.isWiddershins( loop ):
+#			aroundLists = []
 		for pointIndex in xrange( len( loop ) ):
 			pointBegin = loop[ pointIndex ]
 			pointEnd = loop[ ( pointIndex + 1 ) % len( loop ) ]
 			if isIntersectingSelf:
 				if euclidean.isLineIntersectingLoops( outlines, pointBegin, pointEnd ):
-					segments += getSegmentsFromPoints( aroundLists, allLoopLists, pointBegin, pointEnd )
+					segments += getSegmentsFromPoints( [], allLoopLists, pointBegin, pointEnd )
 				else:
-					segments += getSegmentsFromPoints( aroundLists, loopLists, pointBegin, pointEnd )
+					segments += getSegmentsFromPoints( [], loopLists, pointBegin, pointEnd )
 				addSegmentOutline( False, outlines, pointBegin, pointEnd, self.extrusionWidth )
 				addSegmentOutline( True, thickOutlines, pointBegin, pointEnd, self.extrusionWidth )
 			else:
@@ -390,9 +368,6 @@ class InsetSkein:
 		else:
 			self.addLine( '(<perimeter> )' ) # Indicate that a perimeter is beginning.
 			self.addGcodeFromThreadZ( loop + [ loop[ 0 ] ], z )
-#		if not ( isIntersectingWithinLists( loop, loopLists ) or isIntersectingSelf ):
-#			self.addLine( '(<perimeter> )' ) # Indicate that a perimeter is beginning.
-#			self.addGcodeFromThreadZ( loop + [ loop[ 0 ] ], z )
 		self.addLine( '(</surroundingLoop> )' )
 
 	def addGcodeFromThreadZ( self, thread, z ):
@@ -449,13 +424,13 @@ class InsetSkein:
 		if rotatedBoundaryLayer.rotation != None:
 			halfWidth *= self.bridgeExtrusionWidthOverSolid
 			self.addLine( '(<bridgeDirection> ' + str( rotatedBoundaryLayer.rotation ) + ' )' ) # Indicate the bridge direction.
-		allLoops = []
+#		allLoops = []
 		for loop in rotatedBoundaryLayer.loops:
 			extrudateLoops = self.getExtrudateLoops( halfWidth, loop )
 			for extrudateLoop in extrudateLoops:
 				self.addGcodeFromRemainingLoop( extrudateLoop, alreadyFilledArounds, halfWidth, rotatedBoundaryLayer.z )
 				addAlreadyFilledArounds( alreadyFilledArounds, extrudateLoop, self.fillInset )
-			allLoops += extrudateLoops
+#			allLoops += extrudateLoops
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."

@@ -85,11 +85,25 @@ def getExportGcode( gcodeText, exportPreferences = None ):
 	skein.parseGcode( exportPreferences, gcodeText )
 	return skein.output.getvalue()
 
+def getReplaced( exportText ):
+	"Get text with words replaced according to replace.csv file."
+	replaceText = preferences.getFileInGivenPreferencesDirectory( os.path.dirname( __file__ ), 'Replace.csv' )
+	if replaceText == '':
+		return exportText
+	lines = gcodec.getTextLines( replaceText )
+	for line in lines:
+		replacedLine = line.replace( ',', ' ' )
+		replacedLine = replacedLine.replace( '\t', ' ' )
+		splitLine = replacedLine.split()
+		if len( splitLine ) > 1:
+			exportText = exportText.replace( splitLine[ 0 ], splitLine[ 1 ] )
+	return exportText
+
 def getSelectedPlugin( exportPreferences ):
-	"Get the selected plugin."
+	"Get the selected plugin module."
 	for plugin in exportPreferences.exportPlugins:
 		if plugin.value:
-			return plugin
+			return gcodec.getModule( plugin.name, 'export_plugins', __file__ )
 	return None
 
 def writeOutput( fileName = '' ):
@@ -113,20 +127,23 @@ def writeOutput( fileName = '' ):
 		return
 	analyze.writeOutput( suffixFilename, gcodeText )
 	exportChainGcode = getExportGcode( gcodeText, exportPreferences )
-	pluginModule = None
-	selectedPlugin = getSelectedPlugin( exportPreferences )
-	if selectedPlugin == None:
-		gcodec.writeFileText( suffixFilename, exportChainGcode )
-		print( 'The exported file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
+	replacableExportChainGcode = None
+	selectedPluginModule = getSelectedPlugin( exportPreferences )
+	if selectedPluginModule == None:
+		replacableExportChainGcode = exportChainGcode
 	else:
-		pluginModule = gcodec.getModule( selectedPlugin.name, 'export_plugins', __file__ )
-		if pluginModule != None:
-			pluginModule.writeOutput( suffixFilename, exportChainGcode )
+		if selectedPluginModule.isReplacable():
+			replacableExportChainGcode = selectedPluginModule.getOutput( exportChainGcode )
+		else:
+			selectedPluginModule.writeOutput( suffixFilename, exportChainGcode )
+	if replacableExportChainGcode != None:
+		replacableExportChainGcode = getReplaced( replacableExportChainGcode )
+		gcodec.writeFileText( suffixFilename, replacableExportChainGcode )
+		print( 'The exported file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
 	if exportPreferences.alsoSendOutputTo.value != '':
-		alsoSendOutputToGcode = exportChainGcode
-		if pluginModule != None:
-			alsoSendOutputToGcode = pluginModule.getOutput( exportChainGcode )
-		exec( 'print >> ' + exportPreferences.alsoSendOutputTo.value + ', alsoSendOutputToGcode' )
+		if replacableExportChainGcode == None:
+			replacableExportChainGcode = selectedPluginModule.getOutput( exportChainGcode )
+		exec( 'print >> ' + exportPreferences.alsoSendOutputTo.value + ', replacableExportChainGcode' )
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to export the file.' )
 
 

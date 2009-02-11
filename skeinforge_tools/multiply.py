@@ -1,5 +1,5 @@
 """
-Multiply is a script to multiply the shape into an array of copies arranged in table.
+Multiply is a script to multiply the shape into an array of copies arranged in a table.
 
 The default 'Activate Multiply' checkbox is on.  When it is on, the functions described below will work, when it is off, the
 functions will not be called.  The multiply script sets the feedrate, and flowrate.  To run multiply, in a shell type:

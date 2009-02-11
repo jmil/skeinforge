@@ -97,32 +97,9 @@ def isArchivable():
 	"Return whether or not this plugin is archivable."
 	return True
 
-def writeFileText( fileName, fileText ):
-	"Write a text to a file."
-	try:
-		file = open( fileName, 'wb' )
-		file.write( fileText )
-		file.close()
-	except IOError:
-		print( 'The file ' + fileName + ' can not be written to.' )
-
-def writeOutput( fileName = '', gcodeText = '' ):
-	"Write the exported version of a gcode file.  This function, getOutput and isArchivable are the only necessary functions in a skeinforge export plugin."
-	if fileName == '':
-		unmodified = interpret.getGNUTranslatorFilesUnmodified()
-		if len( unmodified ) == 0:
-			print( "There are no unmodified gcode files in this folder." )
-			return
-		fileName = unmodified[ 0 ]
-	gcodeStepPreferences = GcodeStepPreferences()
-	preferences.readPreferences( gcodeStepPreferences )
-	if gcodeText == '':
-		if fileName[ - len( '.gcode' ) : ] == '.gcode':
-			gcodeText = gcodec.getFileText( fileName )
-			fileName = fileName[ : fileName.rfind( '.' ) ] + '_export.gcode'
-	output = getOutput( gcodeText, gcodeStepPreferences )
-	writeFileText( fileName, output )
-	print( 'The converted file is saved as ' + getSummarizedFilename( fileName ) )
+def isReplacable():
+	"Return whether or not the output from this plugin is replacable.  This should be true if the output is text and false if it is binary."
+	return True
 
 
 class GcodeStepPreferences:

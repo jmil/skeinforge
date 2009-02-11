@@ -155,7 +155,6 @@ def addToThreadsRemoveFromSurroundings( oldOrderedLocation, surroundingLoops, sk
 	"Add to threads from the last location from surrounding loops."
 	if len( surroundingLoops ) < 1:
 		return
-	oldOrderedLocation.z = surroundingLoops[ 0 ].z
 	while len( surroundingLoops ) > 0:
 		getTransferClosestSurroundingLoop( oldOrderedLocation, surroundingLoops, skein )
 
@@ -705,6 +704,8 @@ def getStepKey( x, y ):
 
 def getTransferClosestSurroundingLoop( oldOrderedLocation, remainingSurroundingLoops, skein ):
 	"Get and transfer the closest remaining surrounding loop."
+	if len( remainingSurroundingLoops ) > 0:
+		oldOrderedLocation.z = remainingSurroundingLoops[ 0 ].z
 	closestDistance = 999999999999999999.0
 	closestSurroundingLoop = None
 	for remainingSurroundingLoop in remainingSurroundingLoops:

@@ -30,6 +30,7 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
+#getFileTextInFileDirectory might not be needed anymore
 def createInitFile():
 	"Create the __init__.py file."
 	fileText = '__all__ = ' + str( getPythonFilenamesExceptInit() )
