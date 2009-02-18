@@ -216,6 +216,7 @@ class TowerSkein:
 		self.oldOrderedLocation = Vector3()
 		self.oldZ = - 999999999.0
 		self.output = cStringIO.StringIO()
+		self.outsideExtrudedFirst = True
 		self.shutdownLineIndex = sys.maxint
 		self.surroundingLoop = None
 		self.thread = None
@@ -413,10 +414,12 @@ class TowerSkein:
 				return
 			if firstWord == '(<decimalPlacesCarried>':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
-			elif firstWord == '(<layerThickness>':
-				self.halfLayerThickness = 0.5 * float( splitLine[ 1 ] )
 			elif firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
+			elif firstWord == '(<layerThickness>':
+				self.halfLayerThickness = 0.5 * float( splitLine[ 1 ] )
+			elif firstWord == '(<outsideExtrudedFirst>':
+				self.outsideExtrudedFirst = bool( splitLine[ 1 ] )
 			self.addLine( line )
 
 	def parseLine( self, lineIndex ):
@@ -452,7 +455,7 @@ class TowerSkein:
 		elif firstWord == '(<perimeter>':
 			self.isPerimeter = True
 		elif firstWord == '(<surroundingLoop>':
-			self.surroundingLoop = euclidean.SurroundingLoop()
+			self.surroundingLoop = euclidean.SurroundingLoop( self.outsideExtrudedFirst )
 			if self.threadLayer == None:
 				self.threadLayer = ThreadLayer()
 				if self.beforeExtrusionLines != None:

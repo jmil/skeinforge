@@ -5,6 +5,13 @@ The default 'Activate Speed' checkbox is on.  When it is on, the functions descr
 functions will not be called.  The speed script sets the feedrate, and flowrate.  To run speed, in a shell type:
 > python speed.py
 
+The 'Extrusion Diameter over Thickness is the ratio of the extrusion diameter over the layer thickness, the default is 1.25.  The
+extrusion fill density ratio that is printed to the console, ( it is derived quantity not a parameter ) is the area of the extrusion
+diameter over the extrusion width over the layer thickness.  Assuming the extrusion diameter is correct, a high value means the
+filament will be packed tightly, and the object will be almost as dense as the filament.  If the value is too high, there could be too
+little room for the filament, and the extruder will end up plowing through the extra filament.  A low value means the filaments will
+be far away from each other, the object will be leaky and light.  The value with the default extrusion preferences is around 0.82.
+
 The feedrate for the shape will be set to the 'Feedrate" preference.  The speed of the orbit compared to the operating extruder
 speed will be set to the "Orbital Feedrate over Operating Feedrate" preference.  If you want the orbit to be very short, set the
 "Orbital Feedrate over Operating Feedrate" preference to a low value like 0.1.
@@ -150,6 +157,8 @@ class SpeedPreferences:
 		self.archive = []
 		self.activateSpeed = preferences.BooleanPreference().getFromValue( 'Activate Speed:', True )
 		self.archive.append( self.activateSpeed )
+		self.extrusionDiameterOverThickness = preferences.FloatPreference().getFromValue( 'Extrusion Diameter over Thickness (ratio):', 1.25 )
+		self.archive.append( self.extrusionDiameterOverThickness )
 		self.feedrateSecond = preferences.FloatPreference().getFromValue( 'Feedrate (mm/s):', 16.0 )
 		self.archive.append( self.feedrateSecond )
 		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Speeded', '' )
@@ -247,6 +256,8 @@ class SpeedSkein:
 		self.parseInitialization()
 		for line in self.lines[ self.lineIndex : ]:
 			self.parseLine( line )
+		circleArea = self.extrusionDiameter * self.extrusionDiameter * math.pi / 4.0
+		print( 'The extrusion fill density ratio is ' + euclidean.getRoundedToThreePlaces( circleArea / self.extrusionWidth / self.layerThickness ) )
 
 	def parseInitialization( self ):
 		"Parse gcode initialization and store the parameters."
@@ -256,12 +267,14 @@ class SpeedSkein:
 			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == '(<decimalPlacesCarried>':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
-			elif firstWord == '(<extrusionDiameter>':
-				self.extrusionDiameter = float( splitLine[ 1 ] )
+			elif firstWord == '(<layerThickness>':
+				self.layerThickness = float( splitLine[ 1 ] )
+				self.extrusionDiameter = self.speedPreferences.extrusionDiameterOverThickness.value * self.layerThickness
 				self.flowrateCubicMillimetersPerSecond = math.pi * self.extrusionDiameter * self.extrusionDiameter / 4.0 * self.feedrateSecond
 				roundedFlowrate = euclidean.getRoundedToThreePlaces( self.flowrateCubicMillimetersPerSecond )
 				self.addLine( '(<flowrateCubicMillimetersPerSecond> ' + roundedFlowrate + ' )' )
 			elif firstWord == '(<extrusionWidth>':
+				self.extrusionWidth = float( splitLine[ 1 ] )
 				self.addLine( '(<feedrateMinute> %s )' % ( 60.0 * self.feedrateSecond ) )
 				self.addLine( '(<orbitalFeedratePerSecond> %s )' % self.orbitalFeedratePerSecond )
 			elif firstWord == '(<extrusionStart>':

@@ -101,20 +101,20 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-#carve aoi xml
-#user mcodes
-#move extrusionDiameter from carve to inset
-#skeinedge or viewpart
+#skeinedge or viewpart or panorama or perspective
+#carve aoi xml testing
+#user mcodes documentation
+#xml gcode
 #cut negative inset
 #boundaries, center radius z bottom top, circular or rectangular
 #gang or concatenate, maybe from skeinedge?
 #hole sequence, probably made obsolete by CSGEvaluator
-#xml gcode
 #preferences in gcode or saved versions
 #pyramidal
 #change material
 #email marius about bridge extrusion width http://reprap.org/bin/view/Main/ExtruderImprovementsAndAlternatives
 #bridge extrusion width, straighten out the use of layer thickness
+#maybe get a volume estimate in statistic from extrusionDiameter instead of width and thickness
 #oozebane reverse?
 #xml & svg more forgiving, svg make defaults for layerThickness, maxZ, minZ, add layer z to svg_template, make the slider on the template track even when mouse is outside
 #compartmentalize addOrbit, maybe already done
@@ -1196,6 +1196,7 @@ class FillSkein:
 			elif firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
 				self.interiorExtrusionWidth = self.extrusionWidth / self.fillPreferences.interiorInfillDensityOverExteriorDensity.value
+				self.addLine( '(<outsideExtrudedFirst> %s )' % self.fillPreferences.outsideExtrudedFirst.value )
 			elif firstWord == '(<extrusionStart>':
 				self.addLine( '(<procedureDone> fill )' )
 				self.addLine( line )

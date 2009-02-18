@@ -220,7 +220,8 @@ class CombSkein:
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		if not self.extruderActive and self.oldLocation != None:
 			if len( self.getBetweens() ) > 0:
-				self.addGcodePathZ( self.getAroundBetweenPath( location ), location.z )
+				highestZ = max( location.z, self.oldLocation.z )
+				self.addGcodePathZ( self.getAroundBetweenPath( location ), highestZ )
 		self.oldLocation = location
 
 	def addLine( self, line ):

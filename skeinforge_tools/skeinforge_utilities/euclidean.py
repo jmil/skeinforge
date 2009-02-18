@@ -147,7 +147,8 @@ def addSurroundingLoopBeginning( loop, skein, z ):
 def addToThreadsFromLoop( extrusionHalfWidth, gcodeType, loop, oldOrderedLocation, skein ):
 	"Add to threads from the last location from loop."
 	loop = getLoopStartingNearest( extrusionHalfWidth, oldOrderedLocation.dropAxis( 2 ), loop )
-	oldOrderedLocation.setToVec3( Vector3( loop[ 0 ].real, loop[ 0 ].imag, oldOrderedLocation.z ) )
+	oldOrderedLocation.x = loop[ 0 ].real
+	oldOrderedLocation.y = loop[ 0 ].imag
 	skein.addLine( gcodeType )
 	skein.addGcodeFromThreadZ( loop + [ loop[ 0 ] ], oldOrderedLocation.z ) # Turn extruder on and indicate that a loop is beginning.
 
@@ -953,7 +954,8 @@ def transferClosestPath( oldOrderedLocation, remainingPaths, skein ):
 			closestPath = remainingPath
 	remainingPaths.remove( closestPath )
 	skein.addGcodeFromThreadZ( closestPath, oldOrderedLocation.z )
-	oldOrderedLocation.setToVec3( Vector3( closestPath[ - 1 ].real, closestPath[ - 1 ].imag, oldOrderedLocation.z ) )
+	oldOrderedLocation.x = closestPath[ - 1 ].real
+	oldOrderedLocation.y = closestPath[ - 1 ].imag
 
 def transferClosestPaths( oldOrderedLocation, remainingPaths, skein ):
 	"Transfer the closest remaining paths."

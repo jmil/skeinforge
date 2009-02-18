@@ -1,6 +1,6 @@
 #! /usr/bin/env python
 """
-Inset is a script to inset the carves of a gcode file.
+Inset is a script to inset the carvings of an svg file.
 
 Inset insets the svg slices into gcode extrusion layers.  The 'Extrusion Perimeter Width over Thickness' ratio is the ratio of the
 extrusion perimeter width over the layer thickness.  The higher the value the more the perimeter will be inset, the default is 1.8.
@@ -402,7 +402,6 @@ class InsetSkein:
 		self.addLine( 'M105' ) # Custom code for temperature reading.
 		self.addFromUpperLowerFile( 'EndOfTheBeginning.txt' ) # Add a second start file if it exists.
 		self.addLine( '(<decimalPlacesCarried> ' + str( self.decimalPlacesCarried ) + ' )' ) # Set decimal places carried.
-		self.addLine( '(<extrusionDiameter> ' + self.getRounded( self.extrusionDiameter ) + ' )' ) # Set extrusion diameter.
 		self.addLine( '(<layerThickness> ' + self.getRounded( self.layerThickness ) + ' )' ) # Set layer thickness.
 		self.addLine( '(<extrusionPerimeterWidth> ' + self.getRounded( self.extrusionPerimeterWidth ) + ' )' ) # Set extrusion perimeter width.
 		self.addLine( '(<extrusionWidth> ' + self.getRounded( self.extrusionWidth ) + ' )' ) # Set extrusion width.
@@ -413,8 +412,6 @@ class InsetSkein:
 		self.addLine( '(<procedureDone> inset )' ) # The skein has been carved.
 		self.addLine( '(</extruderInitialization> )' ) # Initialization is finished, extrusion is starting.
 		self.addLine( '(<extrusionStart> )' ) # Initialization is finished, extrusion is starting.
-		circleArea = self.extrusionDiameter * self.extrusionDiameter * math.pi / 4.0
-		print( 'The extrusion fill density ratio is ' + euclidean.getRoundedToThreePlaces( circleArea / self.extrusionWidth / self.layerThickness ) )
 
 	def addInset( self, rotatedBoundaryLayer ):
 		"Add fill to the carve layer."
@@ -534,8 +531,6 @@ class InsetSkein:
 				self.bridgeExtrusionWidthOverSolid = float( splitLine[ 1 ] )
 			elif firstWord == 'decimalPlacesCarried':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
-			elif firstWord == 'extrusionDiameter':
-				self.extrusionDiameter = float( splitLine[ 1 ] )
 			elif firstWord == 'layerThickness':
 				self.layerThickness = float( splitLine[ 1 ] )
 				self.extrusionPerimeterWidth = self.insetPreferences.extrusionPerimeterWidthOverThickness.value * self.layerThickness

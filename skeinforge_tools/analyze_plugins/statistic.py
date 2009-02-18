@@ -211,7 +211,7 @@ class StatisticSkein:
 		self.extruderActive = False
 		self.extruderSpeed = 0.0
 		self.extruderToggled = 0
-		self.extrusionDiameter = 0.5
+		self.extrusionDiameter = None
 		self.extrusionWidth = 0.4
 		self.feedrateMinute = 600.0
 		self.layerThickness = 0.4
@@ -243,7 +243,8 @@ class StatisticSkein:
 		self.addLine( "The extruder speed is " + str( int( round( self.extruderSpeed ) ) ) )
 		self.addLine( "The extruder was extruding "  + str( int( round( 100.0 * self.totalDistanceExtruded / self.totalDistanceTraveled ) ) ) + "% of the time." )
 		self.addLine( "The extruder was toggled " + str( self.extruderToggled ) + " times." )
-		self.addLine( "The extrusion diameter is "  + str( self.extrusionDiameter ) + " mm." )
+		if self.extrusionDiameter != None:
+			self.addLine( "The extrusion diameter is "  + str( self.extrusionDiameter ) + " mm." )
 		self.addLine( "The extrusion width is "  + str( self.extrusionWidth ) + " mm." )
 		self.addLine( "The following procedures have been performed on the skein:" )
 		for procedure in self.procedures:

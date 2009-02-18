@@ -244,8 +244,6 @@ class MultiplySkein:
 			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == '(<decimalPlacesCarried>':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
-			elif firstWord == '(<extrusionDiameter>':
-				self.extrusionDiameter = float( splitLine[ 1 ] )
 			elif firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
 			elif firstWord == '(<extrusionStart>':

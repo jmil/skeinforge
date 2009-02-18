@@ -2,16 +2,9 @@
 Carve shape is a script to carve a list of slice layers.
 
 Carve carves a list of slices into svg slice layers.  The 'Layer Thickness' is the thickness the extrusion layer at default extruder speed,
-this is the most important carve preference.  The 'Extrusion Diameter over Thickness is the ratio of the extrusion diameter over the
-layer thickness, the default is 1.25.  The 'Extrusion Width over Thickness' is the ratio of the extrusion width over the layer thickness,
-the default is 1.5.  A ratio of one means the extrusion is a circle, a typical ratio of 1.5 means the extrusion is a wide oval.  These
-values should be measured from a test extrusion line.
-
-The extrusion fill density ratio that is printed to the console, ( it is derived quantity not a parameter ) is the area of the extrusion diameter
-over the extrusion width over the layer thickness.  Assuming the extrusion diameter is correct, a high value means the filament will be
-packed tightly, and the object will be almost as dense as the filament.  If the value is too high, there could be too little room for the
-filament, and the extruder will end up plowing through the extra filament.  A low value means the filaments will be far away from each
-other, the object will be leaky and light.  The value with the default extrusion preferences is around 0.82.
+this is the most important carve preference.  The 'Extrusion Width over Thickness' is the ratio of the extrusion width over the layer
+thickness, the default is 1.5.  A ratio of one means the extrusion is a circle, a typical ratio of 1.5 means the extrusion is a wide oval.
+These values should be measured from a test extrusion line.
 
 Rarely changed preferences are 'Import Coarseness', 'Mesh Type', 'Infill Bridge Width Over Thickness', 'Infill in Direction of Bridges' &
 'Layer Thickness over Precision'.  When a triangle mesh has holes in it, the triangle mesh slicer switches over to a slow algorithm that
@@ -195,8 +188,6 @@ class CarvePreferences:
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
-		self.extrusionDiameterOverThickness = preferences.FloatPreference().getFromValue( 'Extrusion Diameter over Thickness (ratio):', 1.25 )
-		self.archive.append( self.extrusionDiameterOverThickness )
 		self.extrusionWidthOverThickness = preferences.FloatPreference().getFromValue( 'Extrusion Width over Thickness (ratio):', 1.5 )
 		self.archive.append( self.extrusionWidthOverThickness )
 		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getTranslatorFileTypeTuples(), 'Open File to be Carved', '' )
@@ -245,7 +236,6 @@ class CarveSkein:
 		endOfSVGHeaderIndex = self.svgTemplateLines.index( '//End of svg header' )
 		self.addLines( self.svgTemplateLines[ : endOfSVGHeaderIndex ] )
 		self.addLine( '\tdecimalPlacesCarried = ' + str( self.decimalPlacesCarried ) ) # Set decimal places carried.
-		self.addLine( '\textrusionDiameter = ' + self.getRounded( self.extrusionDiameter ) ) # Set extrusion diameter.
 		self.addLine( '\tlayerThickness = ' + self.getRounded( self.layerThickness ) ) # Set layer thickness.
 		self.addLine( '\textrusionWidth = ' + self.getRounded( self.extrusionWidth ) ) # Set extrusion width.
 		# Set bridge extrusion width over solid extrusion width.
@@ -397,7 +387,6 @@ class CarveSkein:
 
 	def setExtrusionDiameterWidth( self, carvePreferences ):
 		"Set the extrusion diameter & width and the bridge thickness & width."
-		self.extrusionDiameter = carvePreferences.extrusionDiameterOverThickness.value * self.layerThickness
 		self.extrusionWidth = carvePreferences.extrusionWidthOverThickness.value * self.layerThickness
 		self.bridgeExtrusionWidth = carvePreferences.infillBridgeWidthOverThickness.value * self.layerThickness
 		self.bridgeLayerThickness = self.layerThickness * self.extrusionWidth / self.bridgeExtrusionWidth
