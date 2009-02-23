@@ -311,13 +311,13 @@ class OozebaneSkein:
 			self.addLine( line )
 			self.addLineSetShutdowns( 'M103' )
 			return True
-		if segmentLength > 0.0:
-			shutdownFlowRateMultiplier = self.getShutdownFlowRateMultiplier( 1.0 - distanceThreadEnd / self.earlyShutdownDistance, len( self.earlyShutdownDistances ) )
-			line = self.getLinearMoveWithFeedrate( self.feedrateMinute * shutdownFlowRateMultiplier, location )
-			if not self.isCloseToEither( locationBack, location, self.oldLocation ):
-				feedrate = self.feedrateMinute * self.earlyShutdownFlowRates[ self.shutdownStepIndex ]
-				line = self.getLinearMoveWithFeedrate( feedrate, locationBack )
-			self.addLine( line )
+		if self.isClose( locationBack, self.oldLocation ):
+			return True
+		feedrate = self.feedrateMinute * self.earlyShutdownFlowRates[ self.shutdownStepIndex ]
+		line = self.getLinearMoveWithFeedrate( feedrate, locationBack )
+		if self.isClose( locationBack, location ):
+			line = self.getLinearMoveWithFeedrate( feedrate, location )
+		self.addLine( line )
 		return True
 
 	def getAddShutSlowDownLines( self, line ):
