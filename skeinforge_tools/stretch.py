@@ -264,10 +264,8 @@ class StretchPreferences:
 		self.archive.append( self.perimeterStretchOverExtrusionWidth )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Stretch'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'stretch.csv' )
-		self.fileNameHelp = 'skeinforge_tools.stretch.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Stretch Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.stretch.html' )
 
 	def execute( self ):
 		"Stretch button has been clicked."
@@ -347,7 +345,7 @@ class StretchSkein:
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
+		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
 	def getStretchedLine( self, splitLine ):
 		"Get stretched gcode line."
@@ -415,8 +413,8 @@ class StretchSkein:
 				self.pathAbsoluteStretch = self.extrusionWidth * self.stretchPreferences.pathStretchOverExtrusionWidth.value
 				self.perimeterMaximumAbsoluteStretch = self.extrusionWidth * self.stretchPreferences.perimeterStretchOverExtrusionWidth.value
 				self.stretchFromDistance = self.stretchPreferences.stretchFromDistanceOverExtrusionWidth.value * extrusionWidth
-			elif firstWord == '(<extrusionStart>':
-				self.addLine( '(<procedureDone> stretch )' )
+			elif firstWord == '(</extruderInitialization>)':
+				self.addLine( '(<procedureDone> stretch </procedureDone>)' )
 				return
 			self.addLine( line )
 
@@ -438,14 +436,14 @@ class StretchSkein:
 			self.layerMaximumAbsoluteStretch = self.pathAbsoluteStretch * self.bridgeExtrusionWidthOverSolid
 			self.layerStretchFromDistance= self.stretchFromDistance * self.bridgeExtrusionWidthOverSolid
 			self.threadMaximumAbsoluteStretch = self.layerMaximumAbsoluteStretch
-		elif firstWord == '(<layerStart>':
+		elif firstWord == '(<layer>':
 			self.layerMaximumAbsoluteStretch = self.pathAbsoluteStretch
 			self.layerStretchFromDistance = self.stretchFromDistance
 			self.threadMaximumAbsoluteStretch = self.layerMaximumAbsoluteStretch
-		elif firstWord == '(<loop>':
+		elif firstWord == '(<loop>)':
 			self.isLoop = True
 			self.threadMaximumAbsoluteStretch = self.loopMaximumAbsoluteStretch
-		elif firstWord == '(<perimeter>':
+		elif firstWord == '(<perimeter>)':
 			self.isLoop = True
 			self.threadMaximumAbsoluteStretch = self.perimeterMaximumAbsoluteStretch
 		self.addLine( line )

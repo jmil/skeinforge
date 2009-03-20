@@ -134,10 +134,8 @@ class UnpausePreferences:
 		self.archive.append( self.maximumSpeed )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Unpause'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'unpause.csv' )
-		self.fileNameHelp = 'skeinforge_tools.unpause.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Unpause Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.unpause.html' )
 
 	def execute( self ):
 		"Unpause button has been clicked."
@@ -167,7 +165,7 @@ class UnpauseSkein:
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
+		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
 	def getUnpausedFeedrateMinute( self, location, splitLine ):
 		"Get the feedrate which will compensate for the pause."
@@ -210,8 +208,8 @@ class UnpauseSkein:
 			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == '(<decimalPlacesCarried>':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
-			elif firstWord == '(<extrusionStart>':
-				self.addLine( '(<procedureDone> unpause )' )
+			elif firstWord == '(</extruderInitialization>)':
+				self.addLine( '(<procedureDone> unpause </procedureDone>)' )
 				return
 			self.addLine( line )
 

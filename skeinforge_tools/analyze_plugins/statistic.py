@@ -110,10 +110,8 @@ class StatisticPreferences:
 		self.archive.append( self.saveStatistics )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Generate Statistics'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'statistic.csv' )
-		self.fileNameHelp = 'skeinforge_tools.analyze_plugins.statistic.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Statistic Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.analyze_plugins.statistic.html' )
 
 	def execute( self ):
 		"Write button has been clicked."

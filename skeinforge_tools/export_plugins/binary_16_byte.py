@@ -186,10 +186,8 @@ class Binary16BytePreferences:
 		self.archive.append( self.zOffset )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Convert to Binary 16 Byte'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'binary_16_byte.csv' )
-		self.fileNameHelp = 'skeinforge_tools.export_plugins.binary_16_byte.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Binary 16 Byte Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.export_plugins.binary_16_byte.html' )
 
 	def execute( self ):
 		"Convert to binary 16 byte button has been clicked."

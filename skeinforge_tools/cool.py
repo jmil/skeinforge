@@ -140,6 +140,34 @@ def writeOutput( fileName = '' ):
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to cool the file.' )
 
 
+class CoolPreferences:
+	"A class to handle the cool preferences."
+	def __init__( self ):
+		"Set the default preferences, execute title & preferences fileName."
+		#Set the default preferences.
+		self.archive = []
+		self.activateCool = preferences.BooleanPreference().getFromValue( 'Activate Cool', True )
+		self.archive.append( self.activateCool )
+		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Cooled', '' )
+		self.archive.append( self.fileNameInput )
+		self.minimumLayerTime = preferences.FloatPreference().getFromValue( 'Minimum Layer Time (seconds):', 60.0 )
+		self.archive.append( self.minimumLayerTime )
+		self.turnFanOnAtBeginning = preferences.BooleanPreference().getFromValue( 'Turn Fan On at Beginning', True )
+		self.archive.append( self.turnFanOnAtBeginning )
+		self.turnFanOffAtEnding = preferences.BooleanPreference().getFromValue( 'Turn Fan Off at Ending', True )
+		self.archive.append( self.turnFanOffAtEnding )
+		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
+		self.executeTitle = 'Cool'
+		self.saveTitle = 'Save Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.cool.html' )
+
+	def execute( self ):
+		"Cool button has been clicked."
+		fileNames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.fileNameInput.value, interpret.getImportPluginFilenames(), self.fileNameInput.wasCancelled )
+		for fileName in fileNames:
+			writeOutput( fileName )
+
+
 class CoolSkein:
 	"A class to cool a skein of extrusions."
 	def __init__( self ):
@@ -163,7 +191,7 @@ class CoolSkein:
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
+		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
 	def linearMove( self, splitLine ):
 		"Add line to time spent on layer."
@@ -197,8 +225,8 @@ class CoolSkein:
 					self.addLine( 'M106' )
 			elif firstWord == '(<extrusionPerimeterWidth>':
 				self.extrusionPerimeterWidth = float( splitLine[ 1 ] )
-			elif firstWord == '(<extrusionStart>':
-				self.addLine( '(<procedureDone> cool )' )
+			elif firstWord == '(</extruderInitialization>)':
+				self.addLine( '(<procedureDone> cool </procedureDone>)' )
 				return
 			elif firstWord == '(<orbitalFeedratePerSecond>':
 				self.orbitalFeedratePerSecond = float( splitLine[ 1 ] )
@@ -214,48 +242,18 @@ class CoolSkein:
 			self.linearMove( splitLine )
 		elif firstWord == '(<boundaryPoint>':
 			self.boundaryLoop.append( gcodec.getLocationFromSplitLine( None, splitLine ).dropAxis( 2 ) )
-		elif firstWord == '(<layerStart>':
+		elif firstWord == '(<layer>':
 			remainingOrbitTime = coolPreferences.minimumLayerTime.value - self.layerTime
 			if remainingOrbitTime > 0.0 and self.boundaryLayer != None:
-				intercircle.addOperatingOrbits( self.boundaryLayer.loops, self, remainingOrbitTime, self.highestZ )
+				intercircle.addOperatingOrbits( self.boundaryLayer.loops, euclidean.getXYComplexFromVector3( self.oldLocation ), self, remainingOrbitTime, self.highestZ )
 			z = euclidean.LoopLayer( float( splitLine[ 1 ] ) )
 			self.boundaryLayer = euclidean.LoopLayer( z )
 			self.highestZ = z
 			self.layerTime = 0.0
-		elif firstWord == '(<surroundingLoop>':
+		elif firstWord == '(<surroundingLoop>)':
 			self.boundaryLoop = []
 			self.boundaryLayer.loops.append( self.boundaryLoop )
 		self.addLine( line )
-
-
-class CoolPreferences:
-	"A class to handle the cool preferences."
-	def __init__( self ):
-		"Set the default preferences, execute title & preferences fileName."
-		#Set the default preferences.
-		self.archive = []
-		self.activateCool = preferences.BooleanPreference().getFromValue( 'Activate Cool', True )
-		self.archive.append( self.activateCool )
-		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Cooled', '' )
-		self.archive.append( self.fileNameInput )
-		self.minimumLayerTime = preferences.FloatPreference().getFromValue( 'Minimum Layer Time (seconds):', 60.0 )
-		self.archive.append( self.minimumLayerTime )
-		self.turnFanOnAtBeginning = preferences.BooleanPreference().getFromValue( 'Turn Fan On at Beginning', True )
-		self.archive.append( self.turnFanOnAtBeginning )
-		self.turnFanOffAtEnding = preferences.BooleanPreference().getFromValue( 'Turn Fan Off at Ending', True )
-		self.archive.append( self.turnFanOffAtEnding )
-		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
-		self.executeTitle = 'Cool'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'cool.csv' )
-		self.fileNameHelp = 'skeinforge_tools.cool.html'
-		self.saveTitle = 'Save Preferences'
-		self.title = 'Cool Preferences'
-
-	def execute( self ):
-		"Cool button has been clicked."
-		fileNames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.fileNameInput.value, interpret.getImportPluginFilenames(), self.fileNameInput.wasCancelled )
-		for fileName in fileNames:
-			writeOutput( fileName )
 
 
 def main( hashtable = None ):

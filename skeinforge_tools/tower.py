@@ -183,10 +183,8 @@ class TowerPreferences:
 		self.archive.append( self.towerStartLayer )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Tower'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'tower.csv' )
-		self.fileNameHelp = 'skeinforge_tools.tower.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Tower Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.tower.html' )
 
 	def execute( self ):
 		"Tower button has been clicked."
@@ -206,6 +204,7 @@ class TowerSkein:
 		self.feedrateTable = {}
 		self.halfLayerThickness = 0.4
 		self.islandLayers = []
+		self.isLayerStarted = False
 		self.isLoop = False
 		self.isPerimeter = False
 		self.layerIndex = 0
@@ -287,6 +286,16 @@ class TowerSkein:
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
+		if line == '':
+			return
+		splitLine = line.split()
+		firstWord = splitLine[ 0 ]
+		if firstWord == '(<layer>' or firstWord == '(</extrusion>)':
+			if self.isLayerStarted:
+				self.output.write( '(</layer>)\n' )
+			self.isLayerStarted = True
+		if firstWord == '(</layer>)':
+			self.isLayerStarted = False
 		self.output.write( line + "\n" )
 
 	def addShutdownToOutput( self ):
@@ -360,7 +369,7 @@ class TowerSkein:
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
+		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
 	def isInsideRemovedOutsideCone( self, island, removedBoundingLoop, untilLayerIndex ):
 		"Determine if the island is entirely inside the removed bounding loop and outside the collision cone of the remaining islands."
@@ -409,8 +418,8 @@ class TowerSkein:
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )
-			if firstWord == '(<extrusionStart>':
-				self.addLine( '(<procedureDone> tower )' )
+			if firstWord == '(</extruderInitialization>)':
+				self.addLine( '(<procedureDone> tower </procedureDone>)' )
 				return
 			if firstWord == '(<decimalPlacesCarried>':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
@@ -441,20 +450,20 @@ class TowerSkein:
 		elif firstWord == '(<boundaryPoint>':
 			location = gcodec.getLocationFromSplitLine( None, splitLine )
 			self.surroundingLoop.addToBoundary( location )
-		elif firstWord == '(</extrusionStart>':
+		elif firstWord == '(</extrusion>)':
 			self.shutdownLineIndex = lineIndex
-		elif firstWord == '(<layerStart>':
+		elif firstWord == '(<layer>':
 			if self.beforeExtrusionLines != None:
 				for beforeExtrusionLine in self.beforeExtrusionLines:
 					self.addLine( beforeExtrusionLine )
 			self.beforeExtrusionLines = []
 			self.threadLayer = None
 			self.thread = None
-		elif firstWord == '(<loop>':
+		elif firstWord == '(<loop>)':
 			self.isLoop = True
-		elif firstWord == '(<perimeter>':
+		elif firstWord == '(<perimeter>)':
 			self.isPerimeter = True
-		elif firstWord == '(<surroundingLoop>':
+		elif firstWord == '(<surroundingLoop>)':
 			self.surroundingLoop = euclidean.SurroundingLoop( self.outsideExtrudedFirst )
 			if self.threadLayer == None:
 				self.threadLayer = ThreadLayer()
@@ -464,7 +473,7 @@ class TowerSkein:
 				self.threadLayers.append( self.threadLayer )
 			self.threadLayer.surroundingLoops.append( self.surroundingLoop )
 			self.threadLayer.boundaries.append( self.surroundingLoop.boundary )
-		elif firstWord == '(</surroundingLoop>':
+		elif firstWord == '(</surroundingLoop>)':
 			self.surroundingLoop = None
 		if self.beforeExtrusionLines != None:
 			self.beforeExtrusionLines.append( line )

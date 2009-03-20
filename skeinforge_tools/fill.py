@@ -103,11 +103,12 @@ __license__ = "GPL 3.0"
 
 #skeinedge or viewpart or panorama or perspective
 #carve aoi xml testing
-#user mcodes documentation
-#xml gcode
+#user replace documentation in export, xml_parser renamed xml_parser_simple
+#check xml gcode
+#check exterior paths which should be combed
 #cut negative inset
 #boundaries, center radius z bottom top, circular or rectangular
-#gang or concatenate, maybe from skeinedge?
+#gang or concatenate or join, maybe from behold?
 #hole sequence, probably made obsolete by CSGEvaluator
 #preferences in gcode or saved versions
 #pyramidal
@@ -811,10 +812,8 @@ class FillPreferences:
 		self.archive.append( self.solidSurfaceThickness )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Fill'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'fill.csv' )
-		self.fileNameHelp = 'skeinforge_tools.fill.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Fill Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.fill.html' )
 
 	def execute( self ):
 		"Fill button has been clicked."
@@ -850,11 +849,11 @@ class FillSkein:
 		layerExtrusionWidth = self.extrusionWidth
 		layerFillInset = self.fillInset
 		rotatedLayer = self.rotatedLayers[ layerIndex ]
-		self.addLine( '(<layerStart> %s )' % rotatedLayer.z ) # Indicate that a new layer is starting.
+		self.addLine( '(<layer> %s )' % rotatedLayer.z ) # Indicate that a new layer is starting.
 		if rotatedLayer.rotation != None:
 			layerExtrusionWidth = self.extrusionWidth * self.bridgeExtrusionWidthOverSolid
 			layerFillInset = self.fillInset * self.bridgeExtrusionWidthOverSolid
-			self.addLine( '(<bridgeLayer> )' ) # Indicate that this is a bridge layer.
+			self.addLine( '(<bridgeLayer> </bridgeLayer>)' ) # Indicate that this is a bridge layer.
 		gridPointInsetX = 0.5 * layerFillInset
 		doubleExtrusionWidth = 2.0 * layerExtrusionWidth
 		muchGreaterThanLayerFillInset = 2.5 * layerFillInset
@@ -959,6 +958,7 @@ class FillSkein:
 			addPath( layerFillInset, fill, path, layerRotationAroundZAngle )
 		euclidean.transferPathsToSurroundingLoops( fill, surroundingLoops )
 		euclidean.addToThreadsRemoveFromSurroundings( self.oldOrderedLocation, surroundingLoops, self )
+		self.addLine( '(</layer>)' )
 
 	def addGcodeFromThreadZ( self, thread, z ):
 		"Add a gcode thread to the output."
@@ -1128,7 +1128,7 @@ class FillSkein:
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
+		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
 	def getCarveArea( self, layerIndex ):
 		"Get the area of the carve."
@@ -1196,9 +1196,9 @@ class FillSkein:
 			elif firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
 				self.interiorExtrusionWidth = self.extrusionWidth / self.fillPreferences.interiorInfillDensityOverExteriorDensity.value
-				self.addLine( '(<outsideExtrudedFirst> %s )' % self.fillPreferences.outsideExtrudedFirst.value )
-			elif firstWord == '(<extrusionStart>':
-				self.addLine( '(<procedureDone> fill )' )
+				self.addLine( '(<outsideExtrudedFirst> %s </outsideExtrudedFirst>)' % self.fillPreferences.outsideExtrudedFirst.value )
+			elif firstWord == '(</extruderInitialization>)':
+				self.addLine( '(<procedureDone> fill </procedureDone>)' )
 				self.addLine( line )
 				return
 			elif firstWord == '(<fillInset>':
@@ -1226,18 +1226,18 @@ class FillSkein:
 		elif firstWord == '(<bridgeDirection>':
 			secondWordWithoutBrackets = splitLine[ 1 ].replace( '(', '' ).replace( ')', '' )
 			self.rotatedLayer.rotation = complex( secondWordWithoutBrackets )
-		elif firstWord == '(</extrusionStart>':
+		elif firstWord == '(</extrusion>)':
 			self.shutdownLineIndex = lineIndex
-		elif firstWord == '(<layerStart>':
+		elif firstWord == '(<layer>':
 			self.rotatedLayer = RotatedLayer( float( splitLine[ 1 ] ) )
 			self.rotatedLayers.append( self.rotatedLayer )
 			self.thread = None
-		elif firstWord == '(<perimeter>':
+		elif firstWord == '(<perimeter>)':
 			self.isPerimeter = True
-		elif firstWord == '(<surroundingLoop>':
+		elif firstWord == '(<surroundingLoop>)':
 			self.surroundingLoop = euclidean.SurroundingLoop( self.fillPreferences.outsideExtrudedFirst.value )
 			self.rotatedLayer.surroundingLoops.append( self.surroundingLoop )
-		elif firstWord == '(</surroundingLoop>':
+		elif firstWord == '(</surroundingLoop>)':
 			self.surroundingLoop = None
 
 	def setGridVariables( self, fillPreferences ):

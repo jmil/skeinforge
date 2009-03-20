@@ -177,10 +177,8 @@ class OozebanePreferences:
 		self.archive.append( self.slowdownStartupSteps )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Oozebane'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'oozebane.csv' )
-		self.fileNameHelp = 'skeinforge_tools.oozebane.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Oozebane Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.oozebane.html' )
 
 	def execute( self ):
 		"Oozebane button has been clicked."
@@ -448,7 +446,7 @@ class OozebaneSkein:
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
+		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
 	def getShutdownFlowRateMultiplier( self, along, numberOfDistances ):
 		"Get the shut down flow rate multipler."
@@ -495,8 +493,8 @@ class OozebaneSkein:
 			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == '(<decimalPlacesCarried>':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
-			elif firstWord == '(<extrusionStart>':
-				self.addLine( '(<procedureDone> oozebane )' )
+			elif firstWord == '(</extruderInitialization>)':
+				self.addLine( '(<procedureDone> oozebane </procedureDone>)' )
 				return
 			elif firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )

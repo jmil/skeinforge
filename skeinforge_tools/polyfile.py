@@ -92,10 +92,8 @@ class PolyfilePreferences:
 		self.archive.append( self.filePreference )
 		#Create the archive, title of the dialog & preferences fileName.
 		self.executeTitle = None
-		self.fileNameHelp = 'skeinforge_tools.polyfile.html'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'polyfile.csv' )
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Polyfile Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.polyfile.html' )
 
 
 def main( hashtable = None ):

@@ -140,9 +140,9 @@ def addSegmentToPixelTable( beginComplex, endComplex, pixelTable, shortenDistanc
 
 def addSurroundingLoopBeginning( loop, skein, z ):
 	"Add surrounding loop beginning to gcode output."
-	skein.addLine( '(<surroundingLoop> )' )
+	skein.addLine( '(<surroundingLoop>)' )
 	for point in loop:
-		skein.addLine( '(<boundaryPoint> X%s Y%s Z%s )' % ( skein.getRounded( point.real ), skein.getRounded( point.imag ), skein.getRounded( z ) ) )
+		skein.addLine( '(<boundaryPoint> X%s Y%s Z%s </boundaryPoint>)' % ( skein.getRounded( point.real ), skein.getRounded( point.imag ), skein.getRounded( z ) ) )
 
 def addToThreadsFromLoop( extrusionHalfWidth, gcodeType, loop, oldOrderedLocation, skein ):
 	"Add to threads from the last location from loop."
@@ -151,6 +151,7 @@ def addToThreadsFromLoop( extrusionHalfWidth, gcodeType, loop, oldOrderedLocatio
 	oldOrderedLocation.y = loop[ 0 ].imag
 	skein.addLine( gcodeType )
 	skein.addGcodeFromThreadZ( loop + [ loop[ 0 ] ], oldOrderedLocation.z ) # Turn extruder on and indicate that a loop is beginning.
+	skein.addLine( gcodeType.replace( '(<', '(</' ) )
 
 def addToThreadsRemoveFromSurroundings( oldOrderedLocation, surroundingLoops, skein ):
 	"Add to threads from the last location from surrounding loops."
@@ -618,10 +619,13 @@ def getRoundedPoint( point ):
 	return Vector3( round( point.x ), round( point.y ), round( point.z ) )
 
 def getRoundedToDecimalPlaces( decimalPlaces, number ):
+	"Get number rounded to a number of decimal places."
+	decimalPlacesRounded = max( 1, int( round( decimalPlaces ) ) )
+	return round( number, decimalPlacesRounded )
+
+def getRoundedToDecimalPlacesString( decimalPlaces, number ):
 	"Get number rounded to a number of decimal places as a string."
-	decimalPlacesRounded = max( 1.0, round( decimalPlaces ) )
-	tenPowerInteger = round( math.pow( 10.0, decimalPlacesRounded ) )
-	return str( round( number * tenPowerInteger ) / tenPowerInteger )
+	return str( getRoundedToDecimalPlaces( decimalPlaces, number ) )
 
 def getRoundedToThreePlaces( number ):
 	"Get number rounded to three places as a string."
@@ -761,6 +765,12 @@ def getXIntersectionsFromIntersections( xIntersectionIndexList ):
 		if oldSolid != solid:
 			xIntersections.append( solidX.x )
 	return xIntersections
+
+def getXYComplexFromVector3( vector3 ):
+	"Get an xy complex from a vector3 if it exists, otherwise return None."
+	if vector3 == None:
+		return None
+	return vector3.dropAxis( 2 )
 
 def getWiddershinsDotGiven( complexFirst, complexSecond ):
 	"Get the magintude of the positive dot product plus one of the x and y components of a pair of complexes, with the reversed sign of the cross product."
@@ -940,7 +950,7 @@ def transferClosestFillLoop( extrusionHalfWidth, oldOrderedLocation, remainingFi
 			closestDistance = distance
 			closestFillLoop = remainingFillLoop
 	remainingFillLoops.remove( closestFillLoop )
-	addToThreadsFromLoop( extrusionHalfWidth, '(<loop> )', closestFillLoop[ : ], oldOrderedLocation, skein )
+	addToThreadsFromLoop( extrusionHalfWidth, '(<loop>)', closestFillLoop[ : ], oldOrderedLocation, skein )
 
 def transferClosestPath( oldOrderedLocation, remainingPaths, skein ):
 	"Transfer the closest remaining path."
@@ -1127,8 +1137,8 @@ class SurroundingLoop:
 		if self.loop == None:
 			transferClosestPaths( oldOrderedLocation, self.perimeterPaths[ : ], skein )
 		else:
-			addToThreadsFromLoop( self.extrusionHalfWidth, '(<perimeter> )', self.loop[ : ], oldOrderedLocation, skein )#later when comb is updated replace perimeter with loop
-		skein.addLine( '(</surroundingLoop> )' )
+			addToThreadsFromLoop( self.extrusionHalfWidth, '(<perimeter>)', self.loop[ : ], oldOrderedLocation, skein )#later when comb is updated replace perimeter with loop
+		skein.addLine( '(</surroundingLoop>)' )
 		addToThreadsRemoveFromSurroundings( oldOrderedLocation, self.innerSurroundings[ : ], skein )
 		if self.isOutsideExtrudedFirst:
 			self.transferClosestFillLoops( oldOrderedLocation, skein )

@@ -144,10 +144,8 @@ class SkeinviewPreferences:
 		self.archive.append( self.screenVerticalInset )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Skeinview'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'skeinview.csv' )
-		self.fileNameHelp = 'skeinforge_tools.analyze_plugins.skeinview.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Skeinview Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.analyze_plugins.skeinview.html' )
 
 	def execute( self ):
 		"Write button has been clicked."
@@ -187,7 +185,7 @@ class SkeinviewSkein:
 	def isLayerStart( self, firstWord, splitLine ):
 		"Parse a gcode line and add it to the vector output."
 		if self.isThereALayerStartWord:
-			return firstWord == '(<layerStart>'
+			return firstWord == '(<layer>'
 		if firstWord != 'G1' and firstWord != 'G2' and firstWord != 'G3':
 			return False
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
@@ -235,7 +233,7 @@ class SkeinviewSkein:
 		self.cornerLow = Vector3( 999999999.0, 999999999.0, 999999999.0 )
 		self.goAroundExtruderOffTravel = skeinviewPreferences.goAroundExtruderOffTravel.value
 		self.lines = gcodec.getTextLines( gcodeText )
-		self.isThereALayerStartWord = gcodec.isThereAFirstWord( '(<layerStart>', self.lines, 1 )
+		self.isThereALayerStartWord = gcodec.isThereAFirstWord( '(<layer>', self.lines, 1 )
 		for line in self.lines:
 			self.parseCorner( line )
 		self.scale = skeinviewPreferences.pixelsWidthExtrusion.value / self.extrusionWidth

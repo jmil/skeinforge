@@ -25,6 +25,10 @@ If&nbsp;the&nbsp;"Delete&nbsp;M110&nbsp;Gcode&nbsp;Line"&nbsp;checkbox&nbsp;is&n
 the&nbsp;gcode&nbsp;is&nbsp;generated&nbsp;by&nbsp;skeinforge.&nbsp;&nbsp;If&nbsp;the&nbsp;"Delete&nbsp;Comments"&nbsp;checkbox&nbsp;is&nbsp;true,&nbsp;export&nbsp;will&nbsp;delete&nbsp;the&nbsp;comments.&nbsp;&nbsp;The&nbsp;M110<br>
 gcode&nbsp;and&nbsp;the&nbsp;comments&nbsp;are&nbsp;not&nbsp;necessary&nbsp;to&nbsp;run&nbsp;a&nbsp;fabricator.<br>
 &nbsp;<br>
+When&nbsp;export&nbsp;is&nbsp;exporting&nbsp;the&nbsp;code,&nbsp;if&nbsp;there&nbsp;is&nbsp;a&nbsp;file&nbsp;replace.csv,&nbsp;it&nbsp;will&nbsp;replace&nbsp;the&nbsp;word&nbsp;in&nbsp;the&nbsp;first&nbsp;column&nbsp;be&nbsp;its&nbsp;replacement&nbsp;in<br>
+the&nbsp;second&nbsp;column.&nbsp;&nbsp;There&nbsp;is&nbsp;an&nbsp;example&nbsp;file&nbsp;replace_example.csv&nbsp;to&nbsp;demonstrate&nbsp;the&nbsp;comma&nbsp;separated&nbsp;format,&nbsp;which&nbsp;can&nbsp;be<br>
+edited&nbsp;in&nbsp;a&nbsp;text&nbsp;editor&nbsp;or&nbsp;a&nbsp;spreadsheet.<br>
+&nbsp;<br>
 An&nbsp;export&nbsp;plugin&nbsp;is&nbsp;a&nbsp;script&nbsp;in&nbsp;the&nbsp;export_plugins&nbsp;folder&nbsp;which&nbsp;has&nbsp;the&nbsp;functions&nbsp;getOuput&nbsp;and&nbsp;writeOutput.<br>
 &nbsp;<br>
 To&nbsp;run&nbsp;export,&nbsp;in&nbsp;a&nbsp;shell&nbsp;type:<br>
@@ -127,7 +131,8 @@ The&nbsp;exported&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nb
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><dl><dt><a name="-getExportGcode"><strong>getExportGcode</strong></a>(gcodeText, exportPreferences<font color="#909090">=None</font>)</dt><dd><tt>Export&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
- <dl><dt><a name="-getSelectedPlugin"><strong>getSelectedPlugin</strong></a>(exportPreferences)</dt><dd><tt>Get&nbsp;the&nbsp;selected&nbsp;plugin.</tt></dd></dl>
+ <dl><dt><a name="-getReplaced"><strong>getReplaced</strong></a>(exportText)</dt><dd><tt>Get&nbsp;text&nbsp;with&nbsp;words&nbsp;replaced&nbsp;according&nbsp;to&nbsp;replace.csv&nbsp;file.</tt></dd></dl>
+ <dl><dt><a name="-getSelectedPlugin"><strong>getSelectedPlugin</strong></a>(exportPreferences)</dt><dd><tt>Get&nbsp;the&nbsp;selected&nbsp;plugin&nbsp;module.</tt></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>(hashtable<font color="#909090">=None</font>)</dt><dd><tt>Display&nbsp;the&nbsp;export&nbsp;dialog.</tt></dd></dl>
  <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName<font color="#909090">=''</font>)</dt><dd><tt>Export&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;Chain&nbsp;export&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;exported.<br>
 If&nbsp;no&nbsp;fileName&nbsp;is&nbsp;specified,&nbsp;export&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>

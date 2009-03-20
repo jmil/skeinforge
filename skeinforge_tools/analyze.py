@@ -66,10 +66,8 @@ class AnalyzePreferences:
 		self.archive.append( self.fileNameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Analyze'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'analyze.csv' )
-		self.fileNameHelp = 'skeinforge_tools.analyze.html'
 		self.saveTitle = None
-		self.title = 'Analyze Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.analyze.html' )
 
 	def execute( self ):
 		"Analyze button has been clicked."

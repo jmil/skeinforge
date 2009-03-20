@@ -53,10 +53,8 @@ class MaterialPreferences:
 		#Create the archive, title of the dialog & preferences fileName.
 		self.archive = [ self.materialList, self.materialListbox, self.addListboxSelection, self.deleteListboxSelection ]
 		self.executeTitle = None
-		self.fileNameHelp = 'skeinforge_tools.material.html'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'material.csv' )
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Material Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.material.html' )
 
 
 def main( hashtable = None ):

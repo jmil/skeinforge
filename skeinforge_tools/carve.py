@@ -211,10 +211,8 @@ class CarvePreferences:
 		self.archive.append( self.layerThicknessOverPrecision )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Carve'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'carve.csv' )
-		self.fileNameHelp = 'skeinforge_tools.carve.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Carve Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.carve.html' )
 
 	def execute( self ):
 		"Carve button has been clicked."
@@ -336,7 +334,7 @@ class CarveSkein:
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
+		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
 	def getRoundedComplexString( self, point ):
 		"Get the rounded complex string."

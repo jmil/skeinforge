@@ -169,10 +169,8 @@ class WipePreferences:
 		self.archive.append( self.wipePeriod )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Wipe'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'wipe.csv' )
-		self.fileNameHelp = 'skeinforge_tools.wipe.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Wipe Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.wipe.html' )
 
 	def execute( self ):
 		"Wipe button has been clicked."
@@ -237,7 +235,7 @@ class WipeSkein:
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
+		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
 	def parseGcode( self, gcodeText, wipePreferences ):
 		"Parse gcode text and store the wipe gcode."
@@ -259,8 +257,8 @@ class WipeSkein:
 			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == '(<decimalPlacesCarried>':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
-			elif firstWord == '(<extrusionStart>':
-				self.addLine( '(<procedureDone> wipe )' )
+			elif firstWord == '(</extruderInitialization>)':
+				self.addLine( '(<procedureDone> wipe </procedureDone>)' )
 				return
 			elif firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
@@ -275,7 +273,7 @@ class WipeSkein:
 		if firstWord == 'G1':
 			self.addWipeTravel( splitLine )
 			self.oldLocation = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-		elif firstWord == '(<layerStart>':
+		elif firstWord == '(<layer>':
 			self.layerIndex += 1
 			if self.layerIndex % self.wipePeriod == 0:
 				self.shouldWipe = True

@@ -37,7 +37,7 @@ from __future__ import absolute_import
 import __init__
 
 from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
-from skeinforge_tools.skeinforge_utilities.xml_parser import XMLParser
+from skeinforge_tools.skeinforge_utilities.xml_simple_parser import XMLSimpleParser
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
@@ -436,7 +436,7 @@ class XMLCarving:
 		"Parse XML text and store the layers."
 		if xmlText == '':
 			return None
-		xmlParser = XMLParser()
+		xmlParser = XMLSimpleParser()
 		xmlParser.parseXMLText( xmlText )
 		artOfIllusionElement = xmlParser.rootElement.getFirstChildWithClassName( 'ArtOfIllusion' )
 		sceneElement = artOfIllusionElement.getFirstChildWithClassName( 'Scene' )

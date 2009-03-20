@@ -285,10 +285,8 @@ class InsetPreferences:
 		self.archive.append( self.startAtHome )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Inset'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'inset.csv' )
-		self.fileNameHelp = 'skeinforge_tools.inset.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Inset Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.inset.html' )
 
 	def execute( self ):
 		"Inset button has been clicked."
@@ -366,9 +364,10 @@ class InsetSkein:
 		if isIntersectingWithinLists( loop, loopLists ) or isIntersectingSelf:
 			self.addGcodeFromPerimeterPaths( isIntersectingSelf, loop, loopLists, radius, z )
 		else:
-			self.addLine( '(<perimeter> )' ) # Indicate that a perimeter is beginning.
+			self.addLine( '(<perimeter>)' ) # Indicate that a perimeter is beginning.
 			self.addGcodeFromThreadZ( loop + [ loop[ 0 ] ], z )
-		self.addLine( '(</surroundingLoop> )' )
+			self.addLine( '(</perimeter>)' ) # Indicate that a perimeter is beginning.
+		self.addLine( '(</surroundingLoop>)' )
 
 	def addGcodeFromThreadZ( self, thread, z ):
 		"Add a thread to the output."
@@ -391,9 +390,9 @@ class InsetSkein:
 	def addInitializationToOutput( self ):
 		"Add initialization gcode to the output."
 		self.addFromUpperLowerFile( 'Start.txt' ) # Add a start file if it exists.
-		self.addLine( '(<creator> skeinforge January 8, 2009 )' ) # GCode formatted comment
+		self.addLine( '(<creator> skeinforge June 8, 2009 </creator>)' ) # GCode formatted comment
 		self.addLine( 'M110' ) # GCode for compatibility with Nophead's code.
-		self.addLine( '(<extruderInitialization> )' ) # GCode formatted comment
+		self.addLine( '(<extruderInitialization>)' ) # GCode formatted comment
 		self.addLine( 'G21' ) # Set units to mm.
 		self.addLine( 'G90' ) # Set positioning to absolute.
 		if self.insetPreferences.startAtHome.value:
@@ -401,33 +400,32 @@ class InsetSkein:
 		self.addLine( 'M103' ) # Turn extruder off.
 		self.addLine( 'M105' ) # Custom code for temperature reading.
 		self.addFromUpperLowerFile( 'EndOfTheBeginning.txt' ) # Add a second start file if it exists.
-		self.addLine( '(<decimalPlacesCarried> ' + str( self.decimalPlacesCarried ) + ' )' ) # Set decimal places carried.
-		self.addLine( '(<layerThickness> ' + self.getRounded( self.layerThickness ) + ' )' ) # Set layer thickness.
-		self.addLine( '(<extrusionPerimeterWidth> ' + self.getRounded( self.extrusionPerimeterWidth ) + ' )' ) # Set extrusion perimeter width.
-		self.addLine( '(<extrusionWidth> ' + self.getRounded( self.extrusionWidth ) + ' )' ) # Set extrusion width.
-		self.addLine( '(<fillInset> ' + str( self.fillInset ) + ' )' ) # Set fill inset.
+		self.addLine( '(<decimalPlacesCarried> ' + str( self.decimalPlacesCarried ) + ' </decimalPlacesCarried>)' ) # Set decimal places carried.
+		self.addLine( '(<layerThickness> ' + self.getRounded( self.layerThickness ) + ' </layerThickness>)' ) # Set layer thickness.
+		self.addLine( '(<extrusionPerimeterWidth> ' + self.getRounded( self.extrusionPerimeterWidth ) + ' </extrusionPerimeterWidth>)' ) # Set extrusion perimeter width.
+		self.addLine( '(<extrusionWidth> ' + self.getRounded( self.extrusionWidth ) + ' </extrusionWidth>)' ) # Set extrusion width.
+		self.addLine( '(<fillInset> ' + str( self.fillInset ) + ' </fillInset>)' ) # Set fill inset.
 		# Set bridge extrusion width over solid extrusion width.
-		self.addLine( '(<bridgeExtrusionWidthOverSolid> ' + euclidean.getRoundedToThreePlaces( self.bridgeExtrusionWidthOverSolid ) + ' )' )
-		self.addLine( '(<procedureDone> carve )' ) # The skein has been carved.
-		self.addLine( '(<procedureDone> inset )' ) # The skein has been carved.
-		self.addLine( '(</extruderInitialization> )' ) # Initialization is finished, extrusion is starting.
-		self.addLine( '(<extrusionStart> )' ) # Initialization is finished, extrusion is starting.
+		self.addLine( '(<bridgeExtrusionWidthOverSolid> ' + euclidean.getRoundedToThreePlaces( self.bridgeExtrusionWidthOverSolid ) + ' </bridgeExtrusionWidthOverSolid>)' )
+		self.addLine( '(<procedureDone> carve </procedureDone>)' ) # The skein has been carved.
+		self.addLine( '(<procedureDone> inset </procedureDone>)' ) # The skein has been carved.
+		self.addLine( '(</extruderInitialization>)' ) # Initialization is finished, extrusion is starting.
+		self.addLine( '(<extrusion>)' ) # Initialization is finished, extrusion is starting.
 
 	def addInset( self, rotatedBoundaryLayer ):
-		"Add fill to the carve layer."
+		"Add inset to the carve layer."
 		alreadyFilledArounds = []
 		halfWidth = self.halfExtrusionPerimeterWidth
-		self.addLine( '(<layerStart> %s )' % rotatedBoundaryLayer.z ) # Indicate that a new layer is starting.
+		self.addLine( '(<layer> %s )' % rotatedBoundaryLayer.z ) # Indicate that a new layer is starting.
 		if rotatedBoundaryLayer.rotation != None:
 			halfWidth *= self.bridgeExtrusionWidthOverSolid
-			self.addLine( '(<bridgeDirection> ' + str( rotatedBoundaryLayer.rotation ) + ' )' ) # Indicate the bridge direction.
-#		allLoops = []
+			self.addLine( '(<bridgeDirection> ' + str( rotatedBoundaryLayer.rotation ) + ' </bridgeDirection>)' ) # Indicate the bridge direction.
 		for loop in rotatedBoundaryLayer.loops:
 			extrudateLoops = self.getExtrudateLoops( halfWidth, loop )
 			for extrudateLoop in extrudateLoops:
 				self.addGcodeFromRemainingLoop( extrudateLoop, alreadyFilledArounds, halfWidth, rotatedBoundaryLayer.z )
 				addAlreadyFilledArounds( alreadyFilledArounds, extrudateLoop, self.fillInset )
-#			allLoops += extrudateLoops
+		self.addLine( '(</layer>)' )
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
@@ -467,7 +465,7 @@ class InsetSkein:
 
 	def addShutdownToOutput( self ):
 		"Add shutdown gcode to the output."
-		self.addLine( '(</extrusionStart> )' ) # GCode formatted comment
+		self.addLine( '(</extrusion>)' ) # GCode formatted comment
 		self.addLine( 'M103' ) # Turn extruder motor off.
 		self.addLine( 'M104 S0' ) # Turn extruder heater off.
 		self.addFromUpperLowerFile( 'End.txt' ) # Add an end file if it exists.
@@ -505,7 +503,7 @@ class InsetSkein:
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
+		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
 	def parseGcode( self, insetPreferences, gcodeText ):
 		"Parse gcode text and store the bevel gcode."
@@ -556,11 +554,11 @@ class InsetSkein:
 		elif ( firstWord == '(<bridgeDirection>' or firstWord == '<!--bridgeDirection-->' ):
 			secondWordWithoutBrackets = splitLine[ 1 ].replace( '(', '' ).replace( ')', '' )
 			self.rotatedBoundaryLayer.rotation = complex( secondWordWithoutBrackets )
-		elif firstWord == '(<layerStart>':
+		elif firstWord == '(<layer>':
 			self.addRotatedLoopLayer( float( splitLine[ 1 ] ) )
 		elif firstWord == '<path':
 			self.addPathData( line )
-		elif firstWord == '(<surroundingLoop>':
+		elif firstWord == '(<surroundingLoop>)':
 			self.boundary = []
 			self.rotatedBoundaryLayer.loops.append( self.boundary )
 		elif firstWord == '<text':

@@ -142,10 +142,8 @@ class ClipPreferences:
 		self.archive.append( self.fileNameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Clip'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'clip.csv' )
-		self.fileNameHelp = 'skeinforge_tools.clip.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Clip Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.clip.html' )
 
 	def execute( self ):
 		"Clip button has been clicked."
@@ -197,7 +195,7 @@ class ClipSkein:
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
+		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
 	def isNextExtruderOn( self ):
 		"Determine if there is an extruder on command before a move command."
@@ -243,8 +241,8 @@ class ClipSkein:
 				self.clipLength = loopTailorPreferences.clipOverExtrusionWidth.value * self.extrusionWidth
 			elif firstWord == '(<decimalPlacesCarried>':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
-			elif firstWord == '(<extrusionStart>':
-				self.addLine( '(<procedureDone> clip )' )
+			elif firstWord == '(</extruderInitialization>)':
+				self.addLine( '(<procedureDone> clip </procedureDone>)' )
 				return
 			self.addLine( line )
 
@@ -260,7 +258,7 @@ class ClipSkein:
 			self.isLoopPerimeter = False
 			if self.loopPath != None:
 				self.addTailoredLoopPath()
-		if firstWord == '(<loop>' or firstWord == '(<perimeter>':
+		if firstWord == '(<loop>)' or firstWord == '(<perimeter>)':
 			self.isLoopPerimeter = True
 		if self.loopPath == None:
 			self.addLine( line )

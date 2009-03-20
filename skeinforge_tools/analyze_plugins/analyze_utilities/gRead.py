@@ -52,7 +52,7 @@ class gRead:
 
     def parseLine(self, line):
         if line.startswith( "(" ):
-            if line.startswith( "(<layerStart>" ):
+            if line.startswith( "(<layer>" ):
                 self.newLayer()
             return
         splitLine = line.split()

@@ -162,10 +162,8 @@ class VectorwritePreferences:
 		self.archive.append( self.pixelsWidthExtrusion )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Write Vector Graphics'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'vectorwrite.csv' )
-		self.fileNameHelp = 'skeinforge_tools.analyze_plugins.vectorwrite.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Vectorwrite Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.analyze_plugins.vectorwrite.html' )
 
 
 class VectorwriteSkein:
@@ -275,7 +273,7 @@ class VectorwriteSkein:
 			self.extruderActive = False
 		elif firstWord == '(<extrusionWidth>':
 			self.extrusionWidth = float( splitLine[ 1 ] )
-		elif firstWord == '(<layerStart>':
+		elif firstWord == '(<layer>':
 			self.numberOfLayers += 1
 
 	def parseGcode( self, gcodeText, vectorwritePreferences ):
@@ -314,7 +312,7 @@ class VectorwriteSkein:
 			self.extrusionNumber += 1
 		elif firstWord == 'M103':
 			self.extruderActive = False
-		elif firstWord == '(<layerStart>':
+		elif firstWord == '(<layer>':
 			self.extrusionNumber = 0
 			if self.layerIndex > 0:
 				if self.isMultiple:

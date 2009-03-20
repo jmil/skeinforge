@@ -364,7 +364,7 @@ class BevelSkein:
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
+		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
 	def linearMove( self, splitLine ):
 		"Bevel a linear move."
@@ -401,8 +401,8 @@ class BevelSkein:
 				self.bridgeExtrusionWidthOverSolid = float( splitLine[ 1 ] )
 			elif firstWord == '(<decimalPlacesCarried>':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
-			elif firstWord == '(<extrusionStart>':
-				self.addLine( '(<procedureDone> fillet )' )
+			elif firstWord == '(</extruderInitialization>)':
+				self.addLine( '(<procedureDone> fillet </procedureDone>)' )
 				return
 			self.addLine( line )
 
@@ -419,7 +419,7 @@ class BevelSkein:
 			self.extruderActive = True
 		if firstWord == 'M103':
 			self.extruderActive = False
-		elif firstWord == '(<layerStart>':
+		elif firstWord == '(<layer>':
 			self.layerFilletRadius = self.filletRadius
 		elif firstWord == '(<bridgeLayer>':
 			self.layerFilletRadius = self.filletRadius * self.bridgeExtrusionWidthOverSolid
@@ -494,7 +494,7 @@ class ArcSegmentSkein( BevelSkein ):
 		radiusOverBevelLength = radius / bevelLength
 		bevelLength = min( bevelLength, radius )
 		bevelLength = min( afterSegmentExtension, bevelLength )
-		beforePoint = oldLocation
+		beforePoint = self.oldLocation
 		if beforeSegmentLength < bevelLength:
 			bevelLength = beforeSegmentLength
 		else:
@@ -571,10 +571,8 @@ class FilletPreferences:
 		self.archive.append( self.useIntermediateFeedrateInCorners )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Fillet'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'fillet.csv' )
-		self.fileNameHelp = 'skeinforge_tools.fillet.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Fillet Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.fillet.html' )
 
 	def execute( self ):
 		"Fillet button has been clicked."

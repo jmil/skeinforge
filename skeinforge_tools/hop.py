@@ -140,10 +140,8 @@ class HopPreferences:
 		self.archive.append( self.minimumHopAngle )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Hop'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'hop.csv' )
-		self.fileNameHelp = 'skeinforge_tools.hop.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Hop Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.hop.html' )
 
 	def execute( self ):
 		"Hop button has been clicked."
@@ -214,7 +212,7 @@ class HopSkein:
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
+		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
 	def isNextTravel( self ):
 		"Determine if there is another linear travel before the thread ends."
@@ -255,8 +253,8 @@ class HopSkein:
 				self.bridgeExtrusionWidthOverSolid = float( splitLine[ 1 ] )
 			elif firstWord == '(<decimalPlacesCarried>':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
-			elif firstWord == '(<extrusionStart>':
-				self.addLine( '(<procedureDone> hop )' )
+			elif firstWord == '(</extruderInitialization>)':
+				self.addLine( '(<procedureDone> hop </procedureDone>)' )
 				return
 			self.addLine( line )
 
@@ -275,7 +273,7 @@ class HopSkein:
 		if firstWord == 'M103':
 			self.extruderActive = False
 			self.justDeactivated = True
-		elif firstWord == '(<layerStart>':
+		elif firstWord == '(<layer>':
 			self.layerHopHeight = self.hopHeight
 			self.layerHopDistance = self.layerHopHeight / self.minimumSlope
 		elif firstWord == '(<bridgeLayer>':

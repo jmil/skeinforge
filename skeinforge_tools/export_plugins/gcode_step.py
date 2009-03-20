@@ -134,10 +134,8 @@ class GcodeStepPreferences:
 		self.archive.append( self.zOffset )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Convert to Gcode Step'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'gcode_step.csv' )
-		self.fileNameHelp = 'skeinforge_tools.export_plugins.gcode_step.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Gcode Step Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.export_plugins.gcode_step.html' )
 
 	def execute( self ):
 		"Convert to gcode step button has been clicked."

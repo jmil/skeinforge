@@ -48,7 +48,7 @@ def addCircleIntersectionLoop( circleIntersectionPathComplexes, circleIntersecti
 	for circleIntersectionComplex in circleIntersections:
 		print( circleIntersectionComplex )
 
-def addOperatingOrbits( boundaryLoops, skein, temperatureChangeTime, z ):
+def addOperatingOrbits( boundaryLoops, pointComplex, skein, temperatureChangeTime, z ):
 	"Add the orbits before the operating layers."
 	if len( boundaryLoops ) < 1:
 		return
@@ -67,6 +67,8 @@ def addOperatingOrbits( boundaryLoops, skein, temperatureChangeTime, z ):
 					largestLoop = outset
 	if largestLoop == None:
 		return
+	if pointComplex != None:
+		largestLoop = euclidean.getLoopStartingNearest( skein.extrusionPerimeterWidth, pointComplex, largestLoop )
 	addOrbits( largestLoop, skein, temperatureChangeTime, z )
 
 def addOrbits( loop, skein, temperatureChangeTime, z ):

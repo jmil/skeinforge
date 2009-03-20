@@ -163,10 +163,8 @@ class CommentPreferences:
 		self.archive.append( self.fileNameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Write Comments'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'comment.csv' )
-		self.fileNameHelp = 'skeinforge_tools.analyze_plugins.comment.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Comment Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.analyze_plugins.comment.html' )
 
 	def execute( self ):
 		"Write button has been clicked."

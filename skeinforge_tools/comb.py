@@ -158,10 +158,8 @@ class CombPreferences:
 		self.archive.append( self.fileNameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Comb'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'comb.csv' )
-		self.fileNameHelp = 'skeinforge_tools.comb.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Comb Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.comb.html' )
 
 	def execute( self ):
 		"Comb button has been clicked."
@@ -414,7 +412,7 @@ class CombSkein:
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
+		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
 	def getStartIndex( self, xIntersections ):
 		"Get the start index of the intersections."
@@ -510,10 +508,10 @@ class CombSkein:
 			self.isLoopPerimeter = False
 			if self.loopPath != None:
 				self.addTailoredLoopPath()
-		elif firstWord == '(<layerStart>':
+		elif firstWord == '(<layer>':
 			self.layerGolden += 0.61803398874989479
 			self.layerJitter = self.jitter * ( math.fmod( self.layerGolden, 1.0 ) - 0.5 )
-		elif firstWord == '(<loop>' or firstWord == '(<perimeter>':
+		elif firstWord == '(<loop>)' or firstWord == '(<perimeter>)':
 			self.isLoopPerimeter = True
 		if self.loopPath == None:
 			self.addLine( line )
@@ -533,7 +531,7 @@ class CombSkein:
 			self.extruderActive = False
 		elif firstWord == '(<bridgeLayer>':
 			self.layerFillInset = self.fillInset * self.bridgeExtrusionWidthOverSolid
-		elif firstWord == '(<layerStart>':
+		elif firstWord == '(<layer>':
 			self.layerFillInset = self.fillInset
 			self.nextLayerZ = float( splitLine[ 1 ] )
 			if self.layerZ == None:
@@ -566,8 +564,8 @@ class CombSkein:
 				self.bridgeExtrusionWidthOverSolid = float( splitLine[ 1 ] )
 			elif firstWord == '(<decimalPlacesCarried>':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
-			elif firstWord == '(<extrusionStart>':
-				self.addLine( '(<procedureDone> comb )' )
+			elif firstWord == '(</extruderInitialization>)':
+				self.addLine( '(<procedureDone> comb </procedureDone>)' )
 				return
 			elif firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
@@ -594,11 +592,11 @@ class CombSkein:
 		elif firstWord == '(<boundaryPoint>':
 			location = gcodec.getLocationFromSplitLine( None, splitLine )
 			self.addToLoop( location )
-		elif firstWord == '(<layerStart>':
+		elif firstWord == '(<layer>':
 			self.boundaryLoop = None
 			self.layer = None
 			self.oldZ = float( splitLine[ 1 ] )
-		elif firstWord == '(<perimeter>':
+		elif firstWord == '(<perimeter>)':
 			self.isPerimeter = True
 
 

@@ -182,10 +182,8 @@ class SpeedPreferences:
 		self.archive.append( self.perimeterFlowrateOverOperatingFlowrate )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Speed'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'speed.csv' )
-		self.fileNameHelp = 'skeinforge_tools.speed.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Speed Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.speed.html' )
 
 	def execute( self ):
 		"Speed button has been clicked."
@@ -232,7 +230,7 @@ class SpeedSkein:
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
+		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
 	def getSpeededLine( self, splitLine ):
 		"Get elevated gcode line with operating feedrate."
@@ -272,13 +270,13 @@ class SpeedSkein:
 				self.extrusionDiameter = self.speedPreferences.extrusionDiameterOverThickness.value * self.layerThickness
 				self.flowrateCubicMillimetersPerSecond = math.pi * self.extrusionDiameter * self.extrusionDiameter / 4.0 * self.feedrateSecond
 				roundedFlowrate = euclidean.getRoundedToThreePlaces( self.flowrateCubicMillimetersPerSecond )
-				self.addLine( '(<flowrateCubicMillimetersPerSecond> ' + roundedFlowrate + ' )' )
+				self.addLine( '(<flowrateCubicMillimetersPerSecond> ' + roundedFlowrate + ' </flowrateCubicMillimetersPerSecond>)' )
 			elif firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
-				self.addLine( '(<feedrateMinute> %s )' % ( 60.0 * self.feedrateSecond ) )
-				self.addLine( '(<orbitalFeedratePerSecond> %s )' % self.orbitalFeedratePerSecond )
-			elif firstWord == '(<extrusionStart>':
-				self.addLine( '(<procedureDone> speed )' )
+				self.addLine( '(<feedrateMinute> %s </feedrateMinute>)' % ( 60.0 * self.feedrateSecond ) )
+				self.addLine( '(<orbitalFeedratePerSecond> %s </orbitalFeedratePerSecond>)' % self.orbitalFeedratePerSecond )
+			elif firstWord == '(</extruderInitialization>)':
+				self.addLine( '(<procedureDone> speed </procedureDone>)' )
 				self.addLine( line )
 				self.lineIndex += 1
 				return
@@ -294,7 +292,7 @@ class SpeedSkein:
 			line = self.getSpeededLine( splitLine )
 		elif firstWord == 'M103':
 			self.isSurroundingLoopBeginning = False
-		elif firstWord == '(<surroundingLoop>':
+		elif firstWord == '(<surroundingLoop>)':
 			self.isSurroundingLoopBeginning = True
 		self.addLine( line )
 

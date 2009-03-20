@@ -33,6 +33,11 @@ The default preferences are similar to those on Nophead's machine.  A preference
 'Extrusion Diameter' in carve.
 
 
+Alternative
+
+Another way to make gcode for a model is to use the Java RepRap host program, described at:
+http://dev.www.reprap.org/bin/view/Main/DriverSoftware#Creating_GCode_files_from_STL_fi
+
 
 Getting Started
 
@@ -111,14 +116,17 @@ http://forums.reprap.org/read.php?1,12143
 using the M-Apps package, which is at:
 http://forums.reprap.org/file.php?1,file=772
 
-Yet another way is to use Zach's GCode Host, written in Processing:
+Another way is to use Zach's ReplicatorG at:
+http://replicat.org/
+
+There is also an older Processing script at:
 http://reprap.svn.sourceforge.net/viewvc/reprap/trunk/users/hoeken/arduino/GCode_Host/
+
+Yet another way is to use the reprap host, written in Java, to load and print gcode:
+http://dev.www.reprap.org/bin/view/Main/DriverSoftware#Load_GCode
 
 For jogging, the Metalab group wrote their own exerciser, also in Processing:
 http://reprap.svn.sourceforge.net/viewvc/reprap/trunk/users/metalab/processing/GCode_Exerciser/
-
-There Zach's replicatorG to send parse gcdoe and send it to the machine, at:
-http://replicat.org/
 
 The Metalab group has descriptions of skeinforge in action and their adventures are described at:
 http://reprap.soup.io/
@@ -286,10 +294,8 @@ class SkeinforgePreferences:
 		self.archive.append( self.fileNameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Skeinforge'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'skeinforge.csv' )
-		self.fileNameHelp = 'skeinforge.html'
 		self.saveTitle = None
-		self.title = 'Skeinforge Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge.html' )
 
 	def execute( self ):
 		"Skeinforge button has been clicked."

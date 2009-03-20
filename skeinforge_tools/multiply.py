@@ -149,10 +149,8 @@ class MultiplyPreferences:
 		self.archive.append( self.separationOverExtrusionWidth )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Multiply'
-		self.fileNamePreferences = preferences.getPreferencesFilePath( 'multiply.csv' )
-		self.fileNameHelp = 'skeinforge_tools.multiply.html'
 		self.saveTitle = 'Save Preferences'
-		self.title = 'Multiply Preferences'
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.multiply.html' )
 
 	def execute( self ):
 		"Multiply button has been clicked."
@@ -222,7 +220,7 @@ class MultiplySkein:
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
+		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
 	def parseGcode( self, gcodeText, multiplyPreferences ):
 		"Parse gcode text and store the multiply gcode."
@@ -246,8 +244,8 @@ class MultiplySkein:
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
 			elif firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
-			elif firstWord == '(<extrusionStart>':
-				self.addLine( '(<procedureDone> multiply )' )
+			elif firstWord == '(</extruderInitialization>)':
+				self.addLine( '(<procedureDone> multiply </procedureDone>)' )
 				self.addLine( line )
 				self.lineIndex += 1
 				return
@@ -259,11 +257,11 @@ class MultiplySkein:
 		if len( splitLine ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
-		if firstWord == '(<layerStart>':
+		if firstWord == '(<layer>':
 			self.addLayer()
 			self.addLine( line )
 			return
-		elif firstWord == '(</extrusionStart>':
+		elif firstWord == '(</extrusion>)':
 			self.addLayer()
 			self.shouldAccumulate = False
 		if self.shouldAccumulate:

@@ -367,6 +367,8 @@ class RaftPreferences:
 		self.archive.append( self.temperatureShapeSupportLayers )
 		self.temperatureShapeSupportedLayers = preferences.FloatPreference().getFromValue( 'Temperature of Supported Layers (Celcius):', 230.0 )
 		self.archive.append( self.temperatureShapeSupportedLayers )
+		self.windowPositionRaftPreferences = preferences.WindowPosition().getFromValue( 'windowPositionRaft Preferences', '0+0' )
+		self.archive.append( self.windowPositionRaftPreferences )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Raft'
 		self.fileNamePreferences = preferences.getPreferencesFilePath( 'raft_' + materialName + '.csv' )
@@ -384,6 +386,7 @@ class RaftPreferences:
 class RaftSkein:
 	"A class to raft a skein of extrusions."
 	def __init__( self ):
+		self.addLineLayerStart = True
 		self.boundaryLayers = []
 		self.decimalPlacesCarried = 3
 		self.layerThickness = 0.4
@@ -396,10 +399,11 @@ class RaftSkein:
 		self.isStartupEarly = False
 		self.isSurroundingLoop = True
 		self.layerIndex = - 1
+		self.layerStarted = False
 		self.lineIndex = 0
 		self.lines = None
 		self.oldLocation = None
-		self.operatingLayerEndLine = '(<operatingLayerEnd> )'
+		self.operatingLayerEndLine = '(<operatingLayerEnd> </operatingLayerEnd>)'
 		self.operatingJump = None
 		self.output = cStringIO.StringIO()
 		self.supportLoops = []
@@ -424,7 +428,7 @@ class RaftSkein:
 		if len( segments ) < 1:
 			print( 'This should never happen, the base layer has a size of zero.' )
 			return
-		self.addLayerFromSegments( self.feedrateMinute / self.baseLayerThicknessOverLayerThickness / self.baseLayerThicknessOverLayerThickness, baseLayerThickness, segments, zCenter, z )
+		self.addLayerFromSegments( self.feedrateMinute / self.baseLayerThicknessOverLayerThickness / self.baseLayerThicknessOverLayerThickness, baseLayerThickness, segments, z )
 
 	def addGcodeFromFeedrateThreadZ( self, feedrateMinute, thread, z ):
 		"Add a thread to the output."
@@ -457,9 +461,9 @@ class RaftSkein:
 		if len( segments ) < 1:
 			print( 'This should never happen, the interface layer has a size of zero.' )
 			return
-		self.addLayerFromSegments( self.feedrateMinute / self.interfaceLayerThicknessOverLayerThickness / self.interfaceLayerThicknessOverLayerThickness, interfaceLayerThickness, segments, zCenter, z )
+		self.addLayerFromSegments( self.feedrateMinute / self.interfaceLayerThicknessOverLayerThickness / self.interfaceLayerThicknessOverLayerThickness, interfaceLayerThickness, segments, z )
 
-	def addLayerFromSegments( self, feedrateMinute, layerLayerThickness, segments, zCenter, z ):
+	def addLayerFromSegments( self, feedrateMinute, layerLayerThickness, segments, z ):
 		"Add a layer from segments and raise the extrusion top."
 		firstSegment = segments[ 0 ]
 		nearestPoint = firstSegment[ 1 ].point
@@ -474,9 +478,16 @@ class RaftSkein:
 			nextEndpoint = nextEndpoint.otherEndpoint
 			nearestPoint = nextEndpoint.point
 			path.append( nearestPoint )
-		self.addLine( '(<layerStart> ' + self.getRounded( zCenter ) + ' )' ) # Indicate that a new layer is starting.
+		self.addLayerLine( z )
 		self.addGcodeFromFeedrateThreadZ( feedrateMinute, path, z )
 		self.extrusionTop += layerLayerThickness
+
+	def addLayerLine( self, z ):
+		"Add the layer gcode line and close the last layer gcode block."
+		if self.layerStarted:
+			self.addLine( '(</layer>)' )
+		self.addLine( '(<layer> ' + self.getRounded( z ) + ' )' ) # Indicate that a new layer is starting.
+		self.layerStarted = True
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
@@ -511,7 +522,7 @@ class RaftSkein:
 			self.addTemperature( self.raftPreferences.temperatureRaft.value )
 		else:
 			self.addTemperature( self.raftPreferences.temperatureShapeFirstLayerOutline.value )
-		self.addLine( '(<layerStart> ' + self.getRounded( self.extrusionTop ) + ' )' ) # Indicate that a new layer is starting.
+		self.addLayerLine( zBegin )
 		intercircle.addOrbits( beginLoop, self, self.raftPreferences.temperatureChangeBeforeTimeRaft.value, zBegin )
 		for baseLayerIndex in xrange( self.raftPreferences.baseLayers.value ):
 			self.addBaseLayer( baseExtrusionWidth, baseStep, stepBegin, stepEnd )
@@ -521,9 +532,12 @@ class RaftSkein:
 		self.operatingJump = self.extrusionTop - self.cornerLow.z + halfLayerThickness + halfLayerThickness * self.raftPreferences.operatingNozzleLiftOverHalfLayerThickness.value
 		self.setBoundaryLayers()
 		if extrudeRaft and len( self.boundaryLayers ) > 0:
+			boundaryZ = self.boundaryLayers[ 0 ].z
+			self.addLayerLine( boundaryZ )
 			self.addTemperature( self.raftPreferences.temperatureShapeFirstLayerOutline.value )
 			squareLoop = getSquareLoop( stepBegin, stepEnd )
-			intercircle.addOrbits( squareLoop, self, self.raftPreferences.temperatureChangeTimeBeforeFirstLayerOutline.value, self.boundaryLayers[ 0 ].z )
+			intercircle.addOrbits( squareLoop, self, self.raftPreferences.temperatureChangeTimeBeforeFirstLayerOutline.value, boundaryZ )
+			self.addLineLayerStart = False
 
 	def addSupportSegmentTable( self, layerIndex ):
 		"Add support segments from the boundary layers."
@@ -638,7 +652,7 @@ class RaftSkein:
 		location = gcodec.getLocationFromSplitLine( None, splitLine )
 		if self.operatingJump != None:
 			location.z += self.operatingJump
-		return '(<boundaryPoint> X%s Y%s Z%s )' % ( self.getRounded( location.x ), self.getRounded( location.y ), self.getRounded( location.z ) )
+		return '(<boundaryPoint> X%s Y%s Z%s </boundaryPoint>)' % ( self.getRounded( location.x ), self.getRounded( location.y ), self.getRounded( location.z ) )
 
 	def getGcodeFromFeedrateMovementZ( self, feedrateMinute, point, z ):
 		"Get a gcode movement."
@@ -658,12 +672,12 @@ class RaftSkein:
 			if self.raftPreferences.addRaftElevateNozzleOrbitSetAltitude.value:
 				boundaryLoops = self.boundaryLayers[ self.layerIndex ].loops
 				if len( boundaryLoops ) > 1:
-					intercircle.addOperatingOrbits( boundaryLoops, self, self.raftPreferences.temperatureChangeTimeBeforeNextThreads.value, z )
+					intercircle.addOperatingOrbits( boundaryLoops, euclidean.getXYComplexFromVector3( self.oldLocation ), self, self.raftPreferences.temperatureChangeTimeBeforeNextThreads.value, z )
 		return self.getGcodeFromFeedrateMovementZ( self.feedrateMinute, location.dropAxis( 2 ), z )
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlaces( self.decimalPlacesCarried, number )
+		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
 	def getStepsUntilEnd( self, begin, end, stepSize ):
 		"Get steps from the beginning until the end."
@@ -722,8 +736,8 @@ class RaftSkein:
 				self.supportOutset = self.extrusionPerimeterWidth - self.extrusionPerimeterWidth * self.raftPreferences.supportInsetOverPerimeterExtrusionWidth.value
 			elif firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
-			elif firstWord == '(<extrusionStart>':
-				self.addLine( '(<procedureDone> raft )' )
+			elif firstWord == '(</extruderInitialization>)':
+				self.addLine( '(<procedureDone> raft /<procedureDone>)' )
 				self.addLine( line )
 				self.lineIndex += 1
 				return
@@ -748,30 +762,39 @@ class RaftSkein:
 				return
 		elif firstWord == '(<boundaryPoint>':
 			line = self.getBoundaryLine( splitLine )
-		elif firstWord == '(</extrusionStart>':
+		elif firstWord == '(</extrusion>)':
 			self.extrusionStart = False
 			self.addLine( self.operatingLayerEndLine )
-		elif firstWord == '(<layerStart>':
+		elif firstWord == '(<layer>':
 			self.layerIndex += 1
+			boundaryLayer = None
+			layerHeight = self.extrusionTop + float( splitLine[ 1 ] )
+			if len( self.boundaryLayers ) > 0:
+				boundaryLayer = self.boundaryLayers[ self.layerIndex ]
+				layerHeight = boundaryLayer.z
 			if self.operatingJump != None:
-				line = '(<layerStart> ' + self.getRounded( self.extrusionTop + float( splitLine[ 1 ] ) ) + ' )'
+				line = '(<layer> ' + self.getRounded( layerHeight ) + ' )'
+			if self.layerStarted and self.addLineLayerStart:
+				self.addLine( '(</layer>)' )
+			self.layerStarted = False
+			if self.layerIndex > len( self.supportSegmentTables ) + 1:
+				self.addLine( self.operatingLayerEndLine )
+				self.operatingLayerEndLine = ''
+			if self.addLineLayerStart:
+				self.addLine( line )
+			self.addLineLayerStart = True
+			line = ''
 			supportSegments = self.getSupportSegments()
 			if self.layerIndex == 1:
 				if len( supportSegments ) < 1:
 					self.addTemperature( self.raftPreferences.temperatureShapeNextLayers.value )
 					if self.raftPreferences.addRaftElevateNozzleOrbitSetAltitude.value:
-						boundaryLayer = self.boundaryLayers[ self.layerIndex ]
 						boundaryLoops = boundaryLayer.loops
 						if len( boundaryLoops ) > 0:
 							temperatureChangeTimeBeforeNextThreads = self.raftPreferences.temperatureChangeTimeBeforeNextThreads.value
-							intercircle.addOperatingOrbits( boundaryLoops, self, temperatureChangeTimeBeforeNextThreads, boundaryLayer.z )
-			if self.layerIndex > len( self.supportSegmentTables ) + 1:
-				self.addLine( self.operatingLayerEndLine )
-				self.operatingLayerEndLine = ''
-			self.addLine( line )
-			line = ''
+							intercircle.addOperatingOrbits( boundaryLoops, euclidean.getXYComplexFromVector3( self.oldLocation ), self, temperatureChangeTimeBeforeNextThreads, layerHeight )
 			if len( supportSegments ) > 0:
-				self.addSupportLayerTemperature( supportSegments, self.boundaryLayers[ self.layerIndex ].z )
+				self.addSupportLayerTemperature( supportSegments, layerHeight )
 		self.addLine( line )
 
 	def setBoundaryLayers( self ):
@@ -787,13 +810,13 @@ class RaftSkein:
 					boundaryLoop = []
 					boundaryLayer.loops.append( boundaryLoop )
 				boundaryLoop.append( location.dropAxis( 2 ) )
-			elif firstWord == '(<layerStart>':
+			elif firstWord == '(<layer>':
 				z = float( splitLine[ 1 ] )
 				if self.operatingJump != None:
 					z += self.operatingJump
 				boundaryLayer = euclidean.LoopLayer( z )
 				self.boundaryLayers.append( boundaryLayer )
-			elif firstWord == '(</surroundingLoop>':
+			elif firstWord == '(</surroundingLoop>)':
 				boundaryLoop = None
 		if self.raftPreferences.supportChoiceNoSupportMaterial.value:
 			return
@@ -833,7 +856,7 @@ class RaftSkein:
 				self.cornerHighComplex = euclidean.getMaximum( self.cornerHighComplex, location.dropAxis( 2 ) )
 				self.cornerLow = euclidean.getPointMinimum( self.cornerLow, location )
 				self.oldLocation = location
-			elif firstWord == '(<layerStart>':
+			elif firstWord == '(<layer>':
 				layerIndex += 1
 				if self.raftPreferences.supportChoiceNoSupportMaterial.value:
 					if layerIndex > 1:

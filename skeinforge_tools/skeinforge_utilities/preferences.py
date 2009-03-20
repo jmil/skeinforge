@@ -38,11 +38,11 @@ def displayDialog( displayPreferences ):
 	root.mainloop()
 	globalIsMainLoopRunning = False
 
-def getArchiveText( preferences ):
+def getArchiveText( archivablePreferences ):
 	"Get the text representation of the archive."
 	archiveWriter = cStringIO.StringIO()
 	archiveWriter.write( 'Format is tab separated preferences.\n' )
-	for preference in preferences.archive:
+	for preference in archivablePreferences.archive:
 		preference.writeToArchiveWriter( archiveWriter )
 	return archiveWriter.getvalue()
 
@@ -88,25 +88,25 @@ def getPreferencesFilePath( fileName ):
 		pass
 	return os.path.join( directoryName, fileName )
 
-def readPreferences( preferences ):
+def readPreferences( archivablePreferences ):
 	"Set an archive to the preferences read from a file."
-	text = gcodec.getFileText( preferences.fileNamePreferences )
+	text = gcodec.getFileText( archivablePreferences.fileNamePreferences )
 	if text == '':
 		print( 'Since the preferences file:' )
-		print( preferences.fileNamePreferences )
+		print( archivablePreferences.fileNamePreferences )
 		print( 'does not exist, the default preferences will be written to that file.' )
-		text = gcodec.getFileText( os.path.join( 'defaults', os.path.basename( preferences.fileNamePreferences ) ) )
+		text = gcodec.getFileText( os.path.join( 'defaults', os.path.basename( archivablePreferences.fileNamePreferences ) ) )
 		if text != '':
-			readPreferencesFromText( preferences, text )
-		writePreferences( preferences )
+			readPreferencesFromText( archivablePreferences, text )
+		writePreferences( archivablePreferences )
 		return
-	readPreferencesFromText( preferences, text )
+	readPreferencesFromText( archivablePreferences, text )
 
-def readPreferencesFromText( preferences, text ):
+def readPreferencesFromText( archivablePreferences, text ):
 	"Set an archive to the preferences read from a text."
 	lines = gcodec.getTextLines( text )
 	preferenceTable = {}
-	for preference in preferences.archive:
+	for preference in archivablePreferences.archive:
 		preference.addToPreferenceTable( preferenceTable )
 	for lineIndex in xrange( len( lines ) ):
 		setArchiveToLine( lineIndex, lines, preferenceTable )
@@ -121,9 +121,23 @@ def setArchiveToLine( lineIndex, lines, preferenceTable ):
 	if filePreferenceName in preferenceTable:
 		preferenceTable[ filePreferenceName ].setValueToSplitLine( lineIndex, lines, splitLine )
 
-def writePreferences( preferences ):
+def setHelpPreferencesFileNameTitleWindowPosition( displayPreferences, fileNameHelp ):
+	"Set the help & preferences file path, the title and the window position archiver."
+	DotIndex = fileNameHelp.rfind( '.' )
+	lastDotIndex = fileNameHelp.rfind( '.' )
+	lowerName = fileNameHelp[ : lastDotIndex ]
+	lastTruncatedDotIndex = lowerName.rfind( '.' )
+	lowerName = lowerName[ lastTruncatedDotIndex + 1 : ]
+	displayPreferences.title = lowerName.replace( '_', ' ' ).capitalize() + ' Preferences'
+	windowPositionName = 'windowPosition' + displayPreferences.title
+	displayPreferences.windowPositionBeholdPreferences = WindowPosition().getFromValue( 'windowPositionBehold Preferences', '0+0' )
+	displayPreferences.archive.append( displayPreferences.windowPositionBeholdPreferences )
+	displayPreferences.fileNamePreferences = getPreferencesFilePath( lowerName + '.csv' )
+	displayPreferences.fileNameHelp = fileNameHelp
+
+def writePreferences( archivablePreferences ):
 	"Write the preferences to a file."
-	gcodec.writeFileText( preferences.fileNamePreferences, getArchiveText( preferences ) )
+	gcodec.writeFileText( archivablePreferences.fileNamePreferences, getArchiveText( archivablePreferences ) )
 
 
 class AddListboxSelection:
@@ -173,14 +187,19 @@ class AddListboxSelection:
 		pass
 
 
-class BooleanPreference:
-	"A class to display, read & write a boolean."
+class StringPreference:
+	"A class to display, read & write a string."
+	def __init__( self ):
+		"Set the update function to none."
+		self.updateFunction = None
+
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.checkbutton = Tkinter.Checkbutton( preferencesDialog.master, command = self.toggleCheckbox, text = self.name )
-#toggleCheckbox is being used instead of a Tkinter IntVar because there is a weird bug where it doesn't work properly if this preference is not on the first window.
-		self.checkbutton.grid( row = preferencesDialog.row, columnspan = 4, sticky = Tkinter.W )
+		self.entry = Tkinter.Entry( preferencesDialog.master )
 		self.setStateToValue()
+		self.entry.grid( row = preferencesDialog.row, column = 2, columnspan = 2, sticky = Tkinter.W )
+		self.label = Tkinter.Label( preferencesDialog.master, text = self.name )
+		self.label.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky = Tkinter.W )
 		preferencesDialog.row += 1
 
 	def addToPreferenceTable( self, preferenceTable ):
@@ -194,6 +213,46 @@ class BooleanPreference:
 		return self
 
 	def setStateToValue( self ):
+		"Set the entry to the value."
+		try:
+			self.entry.delete( 0, Tkinter.END )
+			self.entry.insert( 0, self.value )
+		except:
+			pass
+
+	def setToDisplay( self ):
+		"Set the string to the entry field."
+		valueString = self.entry.get()
+		self.setValueToString( valueString )
+
+	def setUpdateFunction( self, updateFunction ):
+		"Set the update function."
+		self.updateFunction = updateFunction
+
+	def setValueToSplitLine( self, lineIndex, lines, splitLine ):
+		"Set the value to the second word of a split line."
+		self.setValueToString( splitLine[ 1 ] )
+
+	def setValueToString( self, valueString ):
+		"Set the string to the value string."
+		self.value = valueString
+
+	def writeToArchiveWriter( self, archiveWriter ):
+		"Write tab separated name and value to the archive writer."
+		archiveWriter.write( self.name + globalSpreadsheetSeparator + str( self.value ) + '\n' )
+
+
+class BooleanPreference( StringPreference ):
+	"A class to display, read & write a boolean."
+	def addToDialog( self, preferencesDialog ):
+		"Add this to the dialog."
+		self.checkbutton = Tkinter.Checkbutton( preferencesDialog.master, command = self.toggleCheckbox, text = self.name )
+#toggleCheckbox is being used instead of a Tkinter IntVar because there is a weird bug where it doesn't work properly if this preference is not on the first window.
+		self.checkbutton.grid( row = preferencesDialog.row, columnspan = 4, sticky = Tkinter.W )
+		self.setStateToValue()
+		preferencesDialog.row += 1
+
+	def setStateToValue( self ):
 		"Set the checkbox to the boolean."
 		if self.value:
 			self.checkbutton.select()
@@ -204,10 +263,6 @@ class BooleanPreference:
 		"Do nothing because toggleCheckbox is handling the value."
 		pass
 
-	def setValueToSplitLine( self, lineIndex, lines, splitLine ):
-		"Set the value to the second word of a split line."
-		self.setValueToString( splitLine[ 1 ] )
-
 	def setValueToString( self, valueString ):
 		"Set the boolean to the string."
 		self.value = ( valueString.lower() == 'true' )
@@ -216,10 +271,8 @@ class BooleanPreference:
 		"Workaround for Tkinter bug, toggle the value."
 		self.value = not self.value
 		self.setStateToValue()
-
-	def writeToArchiveWriter( self, archiveWriter ):
-		"Write tab separated name and value to the archive writer."
-		archiveWriter.write( self.name + globalSpreadsheetSeparator + str( self.value ) + '\n' )
+		if self.updateFunction != None:
+			self.updateFunction()
 
 
 class DeleteListboxSelection( AddListboxSelection ):
@@ -300,7 +353,7 @@ class DisplayToolButtonBesidePrevious( DisplayToolButton ):
 		self.displayButton.grid( row = preferencesDialog.row - 1, column = 2, columnspan = 2 )
 
 
-class Filename( BooleanPreference ):
+class Filename( StringPreference ):
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
 		preferencesDialog.executables.append( self )
@@ -351,15 +404,11 @@ class Filename( BooleanPreference ):
 		return self.fileTypes + allReadables
 
 	def setToDisplay( self ):
-		"Pass."
+		"Do nothing because the file dialog is handling the value."
 		pass
 
-	def setValueToString( self, valueString ):
-		"Set the fileName to the string."
-		self.value = valueString
 
-
-class FloatPreference( BooleanPreference ):
+class FloatPreference( StringPreference ):
 	"A class to display, read & write a float."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
@@ -370,10 +419,9 @@ class FloatPreference( BooleanPreference ):
 		self.label.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky = Tkinter.W )
 		preferencesDialog.row += 1
 
-	def setToDisplay( self ):
-		"Set the float to the entry field."
-		valueString = self.entry.get()
-		self.setValueToString( valueString )
+	def setUpdateFunction( self, updateFunction ):
+		"Set the update function."
+		self.entry.bind( '<Return>', updateFunction )
 
 	def setValueToString( self, valueString ):
 		"Set the float to the string."
@@ -426,7 +474,7 @@ class LabelDisplay:
 		pass
 
 
-class ListPreference( BooleanPreference ):
+class ListPreference( StringPreference ):
 	def addToDialog( self, preferencesDialog ):
 		"Do nothing because the list preference does not have a graphical interface."
 		pass
@@ -453,7 +501,7 @@ class ListPreference( BooleanPreference ):
 		archiveWriter.write( '\n' )
 
 
-class ListboxPreference( BooleanPreference ):
+class ListboxPreference( StringPreference ):
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
 #http://www.pythonware.com/library/tkinter/introduction/x5453-patterns.htm
@@ -484,10 +532,6 @@ class ListboxPreference( BooleanPreference ):
 		"Set the selection value to the listbox selection."
 		valueString = self.listbox.get( Tkinter.ACTIVE )
 		self.setValueToString( valueString )
-
-	def setValueToString( self, valueString ):
-		"Set the selection value to the string."
-		self.value = valueString
 
 
 class Radio( BooleanPreference ):
@@ -546,29 +590,38 @@ class RadioCapitalized( Radio ):
 		return self.name.lower()
 
 
-class StringPreference( BooleanPreference ):
-	"A class to display, read & write a string."
+class WindowPosition( StringPreference ):
+	"A class to display, read & write a window position."
 	def addToDialog( self, preferencesDialog ):
-		"Add this to the dialog."
-		self.entry = Tkinter.Entry( preferencesDialog.master )
-		self.entry.insert( 0, self.value )
-		self.entry.grid( row = preferencesDialog.row, column = 2, columnspan = 2, sticky = Tkinter.W )
-		self.label = Tkinter.Label( preferencesDialog.master, text = self.name )
-		self.label.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky = Tkinter.W )
-		preferencesDialog.row += 1
+		"Set the master to later get the geometry."
+		self.master = preferencesDialog.master
+		self.windowPositionName = 'windowPosition' + preferencesDialog.displayPreferences.title
+		self.setToDisplay()
 
 	def setToDisplay( self ):
-		"Set the string to the entry field."
-		valueString = self.entry.get()
-		self.setValueToString( valueString )
+		"Set the string to the window position."
+		if self.name != self.windowPositionName:
+			return
+		geometryString = self.master.geometry()
+		if geometryString == '1x1+0+0':
+			return
+		firstPlusIndexPlusOne = geometryString.find( '+' ) + 1
+		self.value = geometryString[ firstPlusIndexPlusOne : ]
 
-	def setValueToString( self, valueString ):
-		"Set the string to the value string."
-		self.value = valueString
+	def setWindowPosition( self ):
+		"Set the window position."
+		geometryString = self.master.geometry()
+		if geometryString == '1x1+0+0':
+			return
+		firstPlusIndexPlusOne = geometryString.find( '+' ) + 1
+		if self.value.count( '+' ) == 1:
+			geometryString = geometryString[ : firstPlusIndexPlusOne ] + self.value
+			self.master.geometry( geometryString )
 
 
 class PreferencesDialog:
 	def __init__( self, displayPreferences, master ):
+		"Add display preferences to the dialog."
 		self.column = 0
 		self.displayPreferences = displayPreferences
 		self.executables = []
@@ -598,8 +651,10 @@ class PreferencesDialog:
 		if displayPreferences.saveTitle != None:
 			saveButton = Tkinter.Button( master, activebackground = 'black', activeforeground = 'darkgreen', command = self.savePreferencesDestroy, fg = 'darkgreen', text = displayPreferences.saveTitle )
 			saveButton.grid( row = self.row, column = self.column )
+		self.setWindowPosition()
 
 	def execute( self ):
+		"The execute button was clicked."
 		for executable in self.executables:
 			executable.execute()
 		self.savePreferences()
@@ -607,6 +662,7 @@ class PreferencesDialog:
 		self.master.destroy()
 
 	def openBrowser( self ):
+		"Open the browser to the help page."
 		numberOfLevelsDeepInPackageHierarchy = 2
 		packageFilePath = os.path.abspath( __file__ )
 		for level in xrange( numberOfLevelsDeepInPackageHierarchy + 1 ):
@@ -615,89 +671,23 @@ class PreferencesDialog:
 		os.system( webbrowser.get().name + ' ' + documentationPath )#used this instead of webbrowser.open() to workaround webbrowser open() bug
 
 	def savePreferences( self ):
+		"Set the preferences to the dialog then write them."
 		for preference in self.displayPreferences.archive:
 			preference.setToDisplay()
 		writePreferences( self.displayPreferences )
 
 	def savePreferencesDestroy( self ):
+		"Set the preferences to the dialog, write them, then destroy the window."
 		self.savePreferences()
 		self.master.destroy()
 
-"""
-class Dialog(Toplevel):
-    def __init__(self, parent, title = None):
-        Toplevel.__init__(self, parent)
-        self.transient(parent)
-        if title:
-            self.title(title)
-        self.parent = parent
-        self.result = None
-        body = Tkinter.Frame(self)
-        self.initial_focus = self.body(body)
-        body.pack(padx=5, pady=5)
-        self.buttonbox()
-        self.grab_set()
-        if not self.initial_focus:
-            self.initial_focus = self
-        self.protocol("WM_DELETE_WINDOW", self.cancel)
-        self.geometry("+%d+%d" % (parent.winfo_rootx()+50,
-                                  parent.winfo_rooty()+50))
-        self.initial_focus.focus_set()
-        self.wait_window(self)
-
-    def body(self, master):
-        # create dialog body.  return widget that should have
-        # initial focus.  this method should be overridden
-
-        pass
-
-    def buttonbox(self):
-        # add standard button box. override if you don't want the
-        # standard buttons
-        
-        box = Tkinter.Frame(self)
-
-        w = Tkinter.Button(box, text="OK", width=10, command=self.ok, default=ACTIVE)
-        w.pack(side=Tkinter.LEFT, padx=5, pady=5)
-        w = Tkinter.Button(box, text="Cancel", width=10, command=self.cancel)
-        w.pack(side=Tkinter.LEFT, padx=5, pady=5)
-
-        self.bind("&lt;Return>", self.ok)
-        self.bind("&lt;Escape>", self.cancel)
-
-        box.pack()
-
-    #
-    # standard button semantics
-
-    def ok(self, event=None):
-
-        if not self.validate():
-            self.initial_focus.focus_set() # put focus back
-            return
-
-        self.withdraw()
-        self.update_idletasks()
-
-        self.apply()
-
-        self.cancel()
-
-    def cancel(self, event=None):
-
-        # put focus back to the parent window
-        self.parent.focus_set()
-        self.destroy()
-
-    #
-    # command hooks
-
-    def validate(self):
-
-        return 1 # override
-
-    def apply(self):
-
-        pass # override
-
-"""
+	def setWindowPosition( self ):
+		"Set the window position if that preference exists."
+		windowPositionName = 'windowPosition' + self.displayPreferences.title
+		for preference in self.displayPreferences.archive:
+			if isinstance( preference, WindowPosition ):
+				if preference.name == windowPositionName:
+					self.master.update_idletasks()
+					preference.setWindowPosition()
+					self.master.update_idletasks()
+					return
