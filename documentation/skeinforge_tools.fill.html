@@ -23,14 +23,19 @@ strong&nbsp;interleaved&nbsp;bond&nbsp;even&nbsp;if&nbsp;the&nbsp;perimeter&nbsp
 the&nbsp;sparse&nbsp;layers.&nbsp;&nbsp;The&nbsp;solid&nbsp;layers&nbsp;are&nbsp;those&nbsp;at&nbsp;the&nbsp;top&nbsp;&amp;&nbsp;bottom,&nbsp;and&nbsp;wherever&nbsp;the&nbsp;object&nbsp;has&nbsp;a&nbsp;plateau&nbsp;or&nbsp;overhang,&nbsp;the&nbsp;sparse&nbsp;layers&nbsp;are<br>
 the&nbsp;layers&nbsp;in&nbsp;between.&nbsp;&nbsp;Adding&nbsp;extra&nbsp;shells&nbsp;makes&nbsp;the&nbsp;object&nbsp;stronger&nbsp;&amp;&nbsp;heavier.<br>
 &nbsp;<br>
-The&nbsp;"Grid&nbsp;Extra&nbsp;Overlap"&nbsp;preference&nbsp;is&nbsp;the&nbsp;amount&nbsp;of&nbsp;extra&nbsp;overlap&nbsp;added&nbsp;when&nbsp;extruding&nbsp;the&nbsp;grid&nbsp;to&nbsp;compensate&nbsp;for&nbsp;the&nbsp;fact&nbsp;that&nbsp;when&nbsp;the<br>
-first&nbsp;thread&nbsp;going&nbsp;through&nbsp;a&nbsp;grid&nbsp;point&nbsp;is&nbsp;extruded,&nbsp;since&nbsp;there&nbsp;is&nbsp;nothing&nbsp;there&nbsp;yet&nbsp;for&nbsp;it&nbsp;to&nbsp;connect&nbsp;to&nbsp;it&nbsp;will&nbsp;shrink&nbsp;extra.&nbsp;&nbsp;The&nbsp;"Grid&nbsp;Square<br>
-Half&nbsp;Width&nbsp;over&nbsp;Extrusion&nbsp;Width"&nbsp;preference&nbsp;is&nbsp;the&nbsp;ratio&nbsp;of&nbsp;the&nbsp;amount&nbsp;the&nbsp;grid&nbsp;square&nbsp;is&nbsp;increased&nbsp;in&nbsp;each&nbsp;direction&nbsp;over&nbsp;the&nbsp;extrusion<br>
-width,&nbsp;the&nbsp;default&nbsp;is&nbsp;zero.&nbsp;&nbsp;With&nbsp;a&nbsp;value&nbsp;of&nbsp;one&nbsp;or&nbsp;so&nbsp;the&nbsp;grid&nbsp;pattern&nbsp;will&nbsp;have&nbsp;large&nbsp;squares&nbsp;to&nbsp;go&nbsp;with&nbsp;the&nbsp;octogons.&nbsp;&nbsp;The&nbsp;"Infill&nbsp;Pattern"<br>
-can&nbsp;be&nbsp;set&nbsp;to&nbsp;"Grid"&nbsp;or&nbsp;"Line".&nbsp;&nbsp;The&nbsp;grid&nbsp;option&nbsp;makes&nbsp;a&nbsp;funky&nbsp;octogon&nbsp;square&nbsp;honeycomb&nbsp;like&nbsp;pattern&nbsp;which&nbsp;gives&nbsp;the&nbsp;object&nbsp;extra&nbsp;strength.<br>
-However,&nbsp;the&nbsp;&nbsp;grid&nbsp;pattern&nbsp;means&nbsp;extra&nbsp;turns&nbsp;for&nbsp;the&nbsp;extruder&nbsp;and&nbsp;therefore&nbsp;extra&nbsp;wear&nbsp;&amp;&nbsp;tear,&nbsp;also&nbsp;it&nbsp;takes&nbsp;longer&nbsp;to&nbsp;generate,&nbsp;so&nbsp;the<br>
-default&nbsp;is&nbsp;line.&nbsp;&nbsp;The&nbsp;grid&nbsp;has&nbsp;extra&nbsp;diagonal&nbsp;lines,&nbsp;so&nbsp;when&nbsp;choosing&nbsp;the&nbsp;grid&nbsp;option,&nbsp;set&nbsp;the&nbsp;infill&nbsp;solidity&nbsp;to&nbsp;0.2&nbsp;or&nbsp;less&nbsp;so&nbsp;that&nbsp;there&nbsp;is&nbsp;not<br>
-too&nbsp;much&nbsp;plastic&nbsp;and&nbsp;the&nbsp;grid&nbsp;generation&nbsp;time,&nbsp;which&nbsp;increases&nbsp;with&nbsp;the&nbsp;fourth&nbsp;power&nbsp;of&nbsp;solidity,&nbsp;will&nbsp;be&nbsp;reasonable.<br>
+The&nbsp;"Infill&nbsp;Pattern"&nbsp;can&nbsp;be&nbsp;set&nbsp;to&nbsp;"Grid&nbsp;Hexagonal",&nbsp;"Grid&nbsp;Rectangular"&nbsp;or&nbsp;"Line".&nbsp;&nbsp;The&nbsp;grid&nbsp;rectangular&nbsp;option&nbsp;makes&nbsp;a&nbsp;funky&nbsp;octogon&nbsp;square<br>
+honeycomb&nbsp;like&nbsp;pattern&nbsp;which&nbsp;gives&nbsp;the&nbsp;object&nbsp;extra&nbsp;strength.&nbsp;&nbsp;However,&nbsp;the&nbsp;&nbsp;grid&nbsp;pattern&nbsp;means&nbsp;extra&nbsp;turns&nbsp;for&nbsp;the&nbsp;extruder&nbsp;and&nbsp;therefore<br>
+extra&nbsp;wear&nbsp;&amp;&nbsp;tear,&nbsp;also&nbsp;it&nbsp;takes&nbsp;longer&nbsp;to&nbsp;generate,&nbsp;so&nbsp;the&nbsp;default&nbsp;is&nbsp;line.&nbsp;&nbsp;The&nbsp;grid&nbsp;has&nbsp;extra&nbsp;diagonal&nbsp;lines,&nbsp;so&nbsp;when&nbsp;choosing&nbsp;the&nbsp;grid<br>
+option,&nbsp;set&nbsp;the&nbsp;infill&nbsp;solidity&nbsp;to&nbsp;0.2&nbsp;or&nbsp;less&nbsp;so&nbsp;that&nbsp;there&nbsp;is&nbsp;not&nbsp;too&nbsp;much&nbsp;plastic&nbsp;and&nbsp;the&nbsp;grid&nbsp;generation&nbsp;time,&nbsp;which&nbsp;increases&nbsp;with&nbsp;the&nbsp;fourth<br>
+power&nbsp;of&nbsp;solidity,&nbsp;will&nbsp;be&nbsp;reasonable.&nbsp;&nbsp;The&nbsp;grid&nbsp;hexagonal&nbsp;option&nbsp;makes&nbsp;a&nbsp;hexagonal&nbsp;grid,&nbsp;but&nbsp;because&nbsp;it&nbsp;is&nbsp;made&nbsp;with&nbsp;threads&nbsp;rather&nbsp;than<br>
+with&nbsp;molding&nbsp;or&nbsp;milling,&nbsp;only&nbsp;a&nbsp;partial&nbsp;hexagon&nbsp;is&nbsp;possible,&nbsp;so&nbsp;the&nbsp;rectangular&nbsp;grid&nbsp;pattern&nbsp;is&nbsp;generally&nbsp;better.&nbsp;&nbsp;The&nbsp;"Grid&nbsp;Extra&nbsp;Overlap"<br>
+preference&nbsp;is&nbsp;the&nbsp;amount&nbsp;of&nbsp;extra&nbsp;overlap&nbsp;added&nbsp;when&nbsp;extruding&nbsp;the&nbsp;grid&nbsp;to&nbsp;compensate&nbsp;for&nbsp;the&nbsp;fact&nbsp;that&nbsp;when&nbsp;the&nbsp;first&nbsp;thread&nbsp;going&nbsp;through<br>
+a&nbsp;grid&nbsp;point&nbsp;is&nbsp;extruded,&nbsp;since&nbsp;there&nbsp;is&nbsp;nothing&nbsp;there&nbsp;yet&nbsp;for&nbsp;it&nbsp;to&nbsp;connect&nbsp;to&nbsp;it&nbsp;will&nbsp;shrink&nbsp;extra.&nbsp;&nbsp;The&nbsp;"Grid&nbsp;Junction&nbsp;Separation&nbsp;over&nbsp;Octogon<br>
+Radius&nbsp;At&nbsp;End"&nbsp;preference&nbsp;is&nbsp;the&nbsp;ratio&nbsp;of&nbsp;the&nbsp;amount&nbsp;the&nbsp;grid&nbsp;square&nbsp;is&nbsp;increased&nbsp;in&nbsp;each&nbsp;direction&nbsp;over&nbsp;the&nbsp;extrusion&nbsp;width&nbsp;at&nbsp;the&nbsp;end,&nbsp;the<br>
+default&nbsp;is&nbsp;zero.&nbsp;&nbsp;With&nbsp;a&nbsp;value&nbsp;of&nbsp;one&nbsp;or&nbsp;so&nbsp;the&nbsp;grid&nbsp;pattern&nbsp;will&nbsp;have&nbsp;large&nbsp;squares&nbsp;to&nbsp;go&nbsp;with&nbsp;the&nbsp;octogons.&nbsp;&nbsp;The&nbsp;"Grid&nbsp;Junction&nbsp;Separation<br>
+over&nbsp;Octogon&nbsp;Radius&nbsp;At&nbsp;Middle"&nbsp;preference&nbsp;is&nbsp;the&nbsp;increase&nbsp;at&nbsp;the&nbsp;middle,&nbsp;the&nbsp;default&nbsp;is&nbsp;zero.&nbsp;&nbsp;If&nbsp;this&nbsp;value&nbsp;is&nbsp;different&nbsp;than&nbsp;the&nbsp;value&nbsp;at&nbsp;the<br>
+end,&nbsp;the&nbsp;grid&nbsp;would&nbsp;have&nbsp;an&nbsp;accordion&nbsp;pattern,&nbsp;which&nbsp;would&nbsp;give&nbsp;it&nbsp;a&nbsp;higher&nbsp;shear&nbsp;strength.&nbsp;&nbsp;The&nbsp;"Grid&nbsp;Junction&nbsp;Separation&nbsp;Band&nbsp;Height"&nbsp;is<br>
+the&nbsp;height&nbsp;of&nbsp;the&nbsp;bands&nbsp;of&nbsp;the&nbsp;accordion&nbsp;pattern.<br>
 &nbsp;<br>
 The&nbsp;"Infill&nbsp;Begin&nbsp;Rotation"&nbsp;preference&nbsp;is&nbsp;the&nbsp;amount&nbsp;the&nbsp;infill&nbsp;direction&nbsp;of&nbsp;the&nbsp;base&nbsp;and&nbsp;every&nbsp;second&nbsp;layer&nbsp;thereafter&nbsp;is&nbsp;rotated.&nbsp;&nbsp;The&nbsp;default<br>
 value&nbsp;of&nbsp;forty&nbsp;five&nbsp;degrees&nbsp;gives&nbsp;a&nbsp;diagonal&nbsp;infill.&nbsp;&nbsp;The&nbsp;"Infill&nbsp;Odd&nbsp;Layer&nbsp;Extra&nbsp;Rotation"&nbsp;preference&nbsp;is&nbsp;the&nbsp;extra&nbsp;amount&nbsp;the&nbsp;infill&nbsp;direction&nbsp;of<br>
@@ -144,7 +149,7 @@ It&nbsp;took&nbsp;3&nbsp;seconds&nbsp;to&nbsp;fill&nbsp;the&nbsp;file.</tt></p>
 
 <dl><dt><a name="FillSkein-addGcodeMovementZ"><strong>addGcodeMovementZ</strong></a>(self, point, z)</dt><dd><tt>Add&nbsp;a&nbsp;movement&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="FillSkein-addGrid"><strong>addGrid</strong></a>(self, alreadyFilledArounds, arounds, fillLoops, gridPointInsetX, paths, pixelTable, width, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingCarves)</dt></dl>
+<dl><dt><a name="FillSkein-addGrid"><strong>addGrid</strong></a>(self, alreadyFilledArounds, arounds, fillLoops, gridPointInsetX, layerIndex, paths, pixelTable, width, reverseZRotationAngle, rotatedExtruderLoops, surroundingCarves)</dt><dd><tt>Add&nbsp;the&nbsp;grid&nbsp;to&nbsp;the&nbsp;infill&nbsp;layer.</tt></dd></dl>
 
 <dl><dt><a name="FillSkein-addGridLinePoints"><strong>addGridLinePoints</strong></a>(self, alreadyFilledArounds, begin, end, gridPoints, gridRotationAngle, offset, rotatedExtruderLoops, surroundingCarves, y)</dt><dd><tt>Add&nbsp;the&nbsp;segments&nbsp;of&nbsp;one&nbsp;line&nbsp;of&nbsp;a&nbsp;grid&nbsp;to&nbsp;the&nbsp;infill.</tt></dd></dl>
 
@@ -152,7 +157,7 @@ It&nbsp;took&nbsp;3&nbsp;seconds&nbsp;to&nbsp;fill&nbsp;the&nbsp;file.</tt></p>
 
 <dl><dt><a name="FillSkein-addRemainingGridPoints"><strong>addRemainingGridPoints</strong></a>(self, arounds, gridPointInsetX, gridPointInsetY, gridPoints, isBothOrNone, paths, pixelTable, width)</dt><dd><tt>Add&nbsp;the&nbsp;remaining&nbsp;grid&nbsp;points&nbsp;to&nbsp;the&nbsp;grid&nbsp;point&nbsp;list.</tt></dd></dl>
 
-<dl><dt><a name="FillSkein-addRotatedCarve"><strong>addRotatedCarve</strong></a>(self, layerIndex, reverseRotationAroundZAngle, surroundingCarves)</dt><dd><tt>Add&nbsp;a&nbsp;rotated&nbsp;carve&nbsp;to&nbsp;the&nbsp;surrounding&nbsp;carves.</tt></dd></dl>
+<dl><dt><a name="FillSkein-addRotatedCarve"><strong>addRotatedCarve</strong></a>(self, layerIndex, reverseZRotationAngle, surroundingCarves)</dt><dd><tt>Add&nbsp;a&nbsp;rotated&nbsp;carve&nbsp;to&nbsp;the&nbsp;surrounding&nbsp;carves.</tt></dd></dl>
 
 <dl><dt><a name="FillSkein-addShutdownToOutput"><strong>addShutdownToOutput</strong></a>(self)</dt><dd><tt>Add&nbsp;shutdown&nbsp;gcode&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
@@ -162,7 +167,7 @@ It&nbsp;took&nbsp;3&nbsp;seconds&nbsp;to&nbsp;fill&nbsp;the&nbsp;file.</tt></p>
 
 <dl><dt><a name="FillSkein-getCarveArea"><strong>getCarveArea</strong></a>(self, layerIndex)</dt><dd><tt>Get&nbsp;the&nbsp;area&nbsp;of&nbsp;the&nbsp;carve.</tt></dd></dl>
 
-<dl><dt><a name="FillSkein-getGridPoints"><strong>getGridPoints</strong></a>(self, alreadyFilledArounds, fillLoops, reverseRotationAroundZAngle, rotatedExtruderLoops, surroundingCarves)</dt><dd><tt>Add&nbsp;a&nbsp;grid&nbsp;to&nbsp;the&nbsp;infill.</tt></dd></dl>
+<dl><dt><a name="FillSkein-getGridPoints"><strong>getGridPoints</strong></a>(self, alreadyFilledArounds, fillLoops, reverseZRotationAngle, rotatedExtruderLoops, surroundingCarves)</dt><dd><tt>Add&nbsp;a&nbsp;grid&nbsp;to&nbsp;the&nbsp;infill.</tt></dd></dl>
 
 <dl><dt><a name="FillSkein-getLayerRoundZ"><strong>getLayerRoundZ</strong></a>(self, layerIndex)</dt><dd><tt>Get&nbsp;the&nbsp;plane&nbsp;angle&nbsp;around&nbsp;z&nbsp;that&nbsp;the&nbsp;layer&nbsp;is&nbsp;rotated&nbsp;by.</tt></dd></dl>
 

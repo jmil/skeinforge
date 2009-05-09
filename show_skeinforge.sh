@@ -1,10 +1,8 @@
 #!/usr/bin/python
 #
-# Utility script for keeping track of which preference settings a file was processed
-# with, by copying the current preferences to a date-tagged directory together
-# with the output files.
+# Script to show the skeinforge dialog.
 #
-# Usage: runskeinforge.sh <model.gts>
+# Usage: set the executable property to true if it isn't already.  Then double click the file.
 #
 import skeinforge
 skeinforge.main()

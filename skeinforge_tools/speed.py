@@ -12,9 +12,12 @@ filament will be packed tightly, and the object will be almost as dense as the f
 little room for the filament, and the extruder will end up plowing through the extra filament.  A low value means the filaments will
 be far away from each other, the object will be leaky and light.  The value with the default extrusion preferences is around 0.82.
 
-The feedrate for the shape will be set to the 'Feedrate" preference.  The speed of the orbit compared to the operating extruder
-speed will be set to the "Orbital Feedrate over Operating Feedrate" preference.  If you want the orbit to be very short, set the
-"Orbital Feedrate over Operating Feedrate" preference to a low value like 0.1.
+The feedrate for the shape will be set to the 'Feedrate" preference.  The 'Bridge Feedrate Multiplier' is the ratio of the feedrate on
+the bridge layers over the feedrate of the typical non bridge layers, the default is 1.0.  The speed of the orbit compared to the
+operating extruder speed will be set to the "Orbital Feedrate over Operating Feedrate" preference.  If you want the orbit to be
+very short, set the "Orbital Feedrate over Operating Feedrate" preference to a low value like 0.1.  The 'Travel Feedrate' is the
+feedrate when the extruder is off.  The default is 16 mm / s and it could be set as high as the extruder can be moved, it does
+not have to be limited by the maximum extrusion rate.
 
 In the "Flowrate Choice" radio button group, if "Do Not Add Flowrate" is selected then speed will not add a flowrate to the gcode
 output.  If "Metric" is selected, the flowrate in cubic millimeters per second will be added to the output.  If "PWM Setting" is
@@ -157,10 +160,12 @@ class SpeedPreferences:
 		self.archive = []
 		self.activateSpeed = preferences.BooleanPreference().getFromValue( 'Activate Speed:', True )
 		self.archive.append( self.activateSpeed )
+		self.bridgeFeedrateMultiplier = preferences.FloatPreference().getFromValue( 'Bridge Feedrate Multiplier (ratio):', 1.0 )
+		self.archive.append( self.bridgeFeedrateMultiplier )
 		self.extrusionDiameterOverThickness = preferences.FloatPreference().getFromValue( 'Extrusion Diameter over Thickness (ratio):', 1.25 )
 		self.archive.append( self.extrusionDiameterOverThickness )
-		self.feedrateSecond = preferences.FloatPreference().getFromValue( 'Feedrate (mm/s):', 16.0 )
-		self.archive.append( self.feedrateSecond )
+		self.feedratePerSecond = preferences.FloatPreference().getFromValue( 'Feedrate (mm/s):', 16.0 )
+		self.archive.append( self.feedratePerSecond )
 		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Speeded', '' )
 		self.archive.append( self.fileNameInput )
 		flowrateRadio = []
@@ -180,6 +185,8 @@ class SpeedPreferences:
 		self.archive.append( self.perimeterFeedrateOverOperatingFeedrate )
 		self.perimeterFlowrateOverOperatingFlowrate = preferences.FloatPreference().getFromValue( 'Perimeter Flowrate over Operating Flowrate (ratio):', 1.0 )
 		self.archive.append( self.perimeterFlowrateOverOperatingFlowrate )
+		self.travelFeedratePerSecond = preferences.FloatPreference().getFromValue( 'Travel Feedrate (mm/s):', 16.0 )
+		self.archive.append( self.travelFeedratePerSecond )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Speed'
 		self.saveTitle = 'Save Preferences'
@@ -196,7 +203,9 @@ class SpeedSkein:
 	"A class to speed a skein of extrusions."
 	def __init__( self ):
 		self.decimalPlacesCarried = 3
-		self.feedrateSecond = 16.0
+		self.feedratePerSecond = 16.0
+		self.isExtruderActive = False
+		self.isBridgeLayer = False
 		self.isSurroundingLoopBeginning = False
 		self.lineIndex = 0
 		self.lines = None
@@ -204,9 +213,12 @@ class SpeedSkein:
 		self.oldLocation = None
 		self.output = cStringIO.StringIO()
 
-	def addFlowrateLine( self, flowrateString ):
+	def addFlowrateLineIfNecessary( self ):
 		"Add flowrate line."
-		self.addLine( 'M108 S' + flowrateString )
+		flowrateString = self.getFlowrateString()
+		if flowrateString != self.oldFlowrateString:
+			self.addLine( 'M108 S' + flowrateString )
+		self.oldFlowrateString = flowrateString
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
@@ -217,9 +229,7 @@ class SpeedSkein:
 		"Get the flowrate string."
 		if self.speedPreferences.flowrateDoNotAddFlowratePreference.value:
 			return None
-		flowrate = self.flowrateCubicMillimetersPerSecond
-		if self.speedPreferences.flowratePWMPreference.value:
-			flowrate = self.speedPreferences.flowratePWMSetting.value
+		flowrate = self.getOperatingFlowrate()
 		if self.isSurroundingLoopBeginning:
 			flowrate *= self.speedPreferences.perimeterFlowrateOverOperatingFlowrate.value
 		return euclidean.getRoundedToThreePlaces( flowrate )
@@ -228,28 +238,36 @@ class SpeedSkein:
 		"Get a gcode movement."
 		return "G1 X%s Y%s Z%s F%s" % ( self.getRounded( point.x ), self.getRounded( point.y ), self.getRounded( point.z ), self.getRounded( feedrateMinute ) )
 
+	def getOperatingFlowrate( self ):
+		"Get the operating flowrate."
+		if self.speedPreferences.flowratePWMPreference.value:
+			return self.speedPreferences.flowratePWMSetting.value
+		return self.flowrateCubicMillimetersPerSecond
+
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
 		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
 	def getSpeededLine( self, splitLine ):
-		"Get elevated gcode line with operating feedrate."
+		"Get gcode line with feedrate."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		self.oldLocation = location
-		feedrate = 60.0 * self.feedrateSecond
+		feedrate = 60.0 * self.feedratePerSecond
 		if self.isSurroundingLoopBeginning:
 			feedrate *= self.speedPreferences.perimeterFeedrateOverOperatingFeedrate.value
-		flowrateString = self.getFlowrateString()
-		if flowrateString != self.oldFlowrateString:
-			self.addFlowrateLine( flowrateString )
-		self.oldFlowrateString = flowrateString
+		self.addFlowrateLineIfNecessary()
+		if self.isBridgeLayer:
+			feedrate *= self.speedPreferences.bridgeFeedrateMultiplier.value
+		if not self.isExtruderActive:
+			feedrate = self.travelFeedratePerMinute
 		return self.getGcodeFromFeedrateMovement( feedrate, location )
 
 	def parseGcode( self, gcodeText, speedPreferences ):
 		"Parse gcode text and store the speed gcode."
 		self.speedPreferences = speedPreferences
-		self.feedrateSecond = speedPreferences.feedrateSecond.value
-		self.orbitalFeedratePerSecond = self.feedrateSecond * speedPreferences.orbitalFeedrateOverOperatingFeedrate.value
+		self.feedratePerSecond = speedPreferences.feedratePerSecond.value
+		self.orbitalFeedratePerSecond = self.feedratePerSecond * speedPreferences.orbitalFeedrateOverOperatingFeedrate.value
+		self.travelFeedratePerMinute = 60.0 * self.speedPreferences.travelFeedratePerSecond.value
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.parseInitialization()
 		for line in self.lines[ self.lineIndex : ]:
@@ -268,13 +286,14 @@ class SpeedSkein:
 			elif firstWord == '(<layerThickness>':
 				self.layerThickness = float( splitLine[ 1 ] )
 				self.extrusionDiameter = self.speedPreferences.extrusionDiameterOverThickness.value * self.layerThickness
-				self.flowrateCubicMillimetersPerSecond = math.pi * self.extrusionDiameter * self.extrusionDiameter / 4.0 * self.feedrateSecond
+				self.flowrateCubicMillimetersPerSecond = math.pi * self.extrusionDiameter * self.extrusionDiameter / 4.0 * self.feedratePerSecond
 				roundedFlowrate = euclidean.getRoundedToThreePlaces( self.flowrateCubicMillimetersPerSecond )
 				self.addLine( '(<flowrateCubicMillimetersPerSecond> ' + roundedFlowrate + ' </flowrateCubicMillimetersPerSecond>)' )
 			elif firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
-				self.addLine( '(<feedrateMinute> %s </feedrateMinute>)' % ( 60.0 * self.feedrateSecond ) )
+				self.addLine( '(<operatingFeedratePerSecond> %s </operatingFeedratePerSecond>)' % self.feedratePerSecond )
 				self.addLine( '(<orbitalFeedratePerSecond> %s </orbitalFeedratePerSecond>)' % self.orbitalFeedratePerSecond )
+				self.addLine( '(<travelFeedratePerSecond> %s </travelFeedratePerSecond>)' % self.speedPreferences.travelFeedratePerSecond.value )
 			elif firstWord == '(</extruderInitialization>)':
 				self.addLine( '(<procedureDone> speed </procedureDone>)' )
 				self.addLine( line )
@@ -290,8 +309,16 @@ class SpeedSkein:
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':
 			line = self.getSpeededLine( splitLine )
+		elif firstWord == 'M101':
+			self.isExtruderActive = True
 		elif firstWord == 'M103':
 			self.isSurroundingLoopBeginning = False
+			self.isExtruderActive = False
+		elif firstWord == '(<bridgeLayer>)':
+			self.isBridgeLayer = True
+		elif firstWord == '(<layer>':
+			self.isBridgeLayer = False
+			self.addFlowrateLineIfNecessary()
 		elif firstWord == '(<surroundingLoop>)':
 			self.isSurroundingLoopBeginning = True
 		self.addLine( line )

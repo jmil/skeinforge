@@ -101,6 +101,8 @@ the skeinforge.py directory, then type:
 
 Then move all the generated html files to the documentation folder.
 
+There is a list of tutorials at:
+http://dev.www.reprap.org/bin/view/Main/SkeinforgeTutorials
 
 
 Fabrication
@@ -166,11 +168,11 @@ it still doesn't carve, then follow the advice in the troubleshooting section.
 
 Getting Skeinforge
 
-The latest version is in the last reprap_python_beanshell.zip attachment in the "How to Print Gcode from Host" thread at:
-http://forums.reprap.org/read.php?12,10772
-
-a sometimes out of date version is at:
+The latest version is at:
 http://members.axion.net/~enrique/reprap_python_beanshell.zip
+
+a sometimes out of date version is in the last reprap_python_beanshell.zip attachment in the "Skeinforge Powwow" thread at:
+http://forums.reprap.org/read.php?12,20013
 
 another sometimes out of date version is at:
 https://reprap.svn.sourceforge.net/svnroot/reprap/trunk/reprap/miscellaneous/python-beanshell-scripts/

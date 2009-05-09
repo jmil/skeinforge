@@ -55,8 +55,10 @@ or&nbsp;impossible&nbsp;to&nbsp;remove,&nbsp;this&nbsp;option&nbsp;should&nbsp;o
 way&nbsp;to&nbsp;extract&nbsp;the&nbsp;support&nbsp;material.&nbsp;&nbsp;If&nbsp;"Support&nbsp;Material&nbsp;on&nbsp;Exterior&nbsp;Only"&nbsp;is&nbsp;selected,&nbsp;support&nbsp;material&nbsp;will&nbsp;be&nbsp;added&nbsp;only<br>
 the&nbsp;exterior&nbsp;of&nbsp;the&nbsp;object;&nbsp;this&nbsp;is&nbsp;the&nbsp;best&nbsp;option&nbsp;for&nbsp;most&nbsp;objects&nbsp;which&nbsp;require&nbsp;support&nbsp;material.&nbsp;&nbsp;The&nbsp;"Support&nbsp;Minimum<br>
 Angle"&nbsp;preference&nbsp;is&nbsp;the&nbsp;minimum&nbsp;angle&nbsp;that&nbsp;a&nbsp;surface&nbsp;overhangs&nbsp;before&nbsp;support&nbsp;material&nbsp;is&nbsp;added,&nbsp;the&nbsp;default&nbsp;is&nbsp;sixty<br>
-degrees.&nbsp;The&nbsp;"Support&nbsp;Inset&nbsp;over&nbsp;Perimeter&nbsp;Extrusion&nbsp;Width"&nbsp;is&nbsp;the&nbsp;amount&nbsp;that&nbsp;the&nbsp;support&nbsp;material&nbsp;is&nbsp;inset&nbsp;into&nbsp;the&nbsp;object<br>
-over&nbsp;the&nbsp;perimeter&nbsp;extrusion&nbsp;width,&nbsp;the&nbsp;default&nbsp;is&nbsp;zero.<br>
+degrees.&nbsp;The&nbsp;"Support&nbsp;Flowrate&nbsp;over&nbsp;Operating&nbsp;Flowrate"&nbsp;is&nbsp;the&nbsp;ratio&nbsp;of&nbsp;the&nbsp;flowrate&nbsp;when&nbsp;the&nbsp;support&nbsp;is&nbsp;extruded&nbsp;over&nbsp;the<br>
+operating&nbsp;flowrate.&nbsp;&nbsp;With&nbsp;a&nbsp;number&nbsp;less&nbsp;than&nbsp;one,&nbsp;the&nbsp;support&nbsp;flowrate&nbsp;will&nbsp;be&nbsp;smaller&nbsp;so&nbsp;the&nbsp;support&nbsp;will&nbsp;be&nbsp;thinner&nbsp;and<br>
+easier&nbsp;to&nbsp;remove,&nbsp;the&nbsp;default&nbsp;is&nbsp;0.9.&nbsp;&nbsp;The&nbsp;"Support&nbsp;Gap&nbsp;over&nbsp;Perimeter&nbsp;Extrusion&nbsp;Width"&nbsp;is&nbsp;the&nbsp;gap&nbsp;between&nbsp;the&nbsp;support<br>
+material&nbsp;and&nbsp;the&nbsp;object&nbsp;over&nbsp;the&nbsp;perimeter&nbsp;extrusion&nbsp;width,&nbsp;the&nbsp;default&nbsp;is&nbsp;0.5.<br>
 &nbsp;<br>
 The&nbsp;extruder&nbsp;will&nbsp;orbit&nbsp;for&nbsp;at&nbsp;least&nbsp;"Temperature&nbsp;Change&nbsp;Time&nbsp;Before&nbsp;Raft"&nbsp;seconds&nbsp;before&nbsp;extruding&nbsp;the&nbsp;raft.&nbsp;&nbsp;It&nbsp;will&nbsp;orbit&nbsp;for<br>
 at&nbsp;least&nbsp;"Temperature&nbsp;Change&nbsp;Time&nbsp;Before&nbsp;First&nbsp;Layer&nbsp;Outline"&nbsp;seconds&nbsp;before&nbsp;extruding&nbsp;the&nbsp;outline&nbsp;of&nbsp;the&nbsp;first&nbsp;layer&nbsp;of&nbsp;the<br>
@@ -179,6 +181,8 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 
 <dl><dt><a name="RaftSkein-addBaseLayer"><strong>addBaseLayer</strong></a>(self, baseExtrusionWidth, baseStep, stepBegin, stepEnd)</dt><dd><tt>Add&nbsp;a&nbsp;base&nbsp;layer.</tt></dd></dl>
 
+<dl><dt><a name="RaftSkein-addFlowrateLineIfNecessary"><strong>addFlowrateLineIfNecessary</strong></a>(self, flowrateString)</dt><dd><tt>Add&nbsp;a&nbsp;line&nbsp;of&nbsp;flowrate&nbsp;if&nbsp;different.</tt></dd></dl>
+
 <dl><dt><a name="RaftSkein-addGcodeFromFeedrateMovementZ"><strong>addGcodeFromFeedrateMovementZ</strong></a>(self, feedrateMinute, point, z)</dt><dd><tt>Add&nbsp;a&nbsp;movement&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
 <dl><dt><a name="RaftSkein-addGcodeFromFeedrateThreadZ"><strong>addGcodeFromFeedrateThreadZ</strong></a>(self, feedrateMinute, thread, z)</dt><dd><tt>Add&nbsp;a&nbsp;thread&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
@@ -230,6 +234,8 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 <dl><dt><a name="RaftSkein-setCornersZ"><strong>setCornersZ</strong></a>(self)</dt><dd><tt>Set&nbsp;maximum&nbsp;and&nbsp;minimum&nbsp;corners&nbsp;and&nbsp;z.</tt></dd></dl>
 
 <dl><dt><a name="RaftSkein-setInterfaceVariables"><strong>setInterfaceVariables</strong></a>(self, interfaceExtrusionWidth, stepBegin, stepEnd)</dt><dd><tt>Set&nbsp;the&nbsp;interface&nbsp;variables.</tt></dd></dl>
+
+<dl><dt><a name="RaftSkein-setOperatingFlowString"><strong>setOperatingFlowString</strong></a>(self, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;operating&nbsp;flow&nbsp;string&nbsp;from&nbsp;the&nbsp;split&nbsp;line.</tt></dd></dl>
 
 <dl><dt><a name="RaftSkein-subtractJoinedFill"><strong>subtractJoinedFill</strong></a>(self, fillXIntersectionIndexTables, supportSegmentTableIndex)</dt><dd><tt>Join&nbsp;the&nbsp;fill&nbsp;then&nbsp;subtract&nbsp;it&nbsp;from&nbsp;the&nbsp;support&nbsp;layer&nbsp;table.</tt></dd></dl>
 

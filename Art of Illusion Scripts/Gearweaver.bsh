@@ -131,22 +131,6 @@ void addFacesBetweenPolygons( Vector bottomPolygon, Vector faceVector, Vector to
 }
 
 /**
-Add faces in two layers of a convex polygon.  The number of faces is the number of sides of the polygon minus two.  The faces go from one point to all the other points of the polygon.
-
-@param  bottomPolygon bottom convex polygon
-@param  faceVector faces of the trimesh
-@param  topPolygon top convex polygon
-*/
-
-void addFacesInPolygon( Vector bottomPolygon, Vector faceVector, Vector topPolygon )
-{
-  for ( int pointIndex = 0; pointIndex < bottomPolygon.size() - 2; pointIndex++ ) {
-    addFace( bottomPolygon.elementAt( 0 ), bottomPolygon.elementAt( pointIndex + 1 ), bottomPolygon.elementAt( pointIndex + 2 ), faceVector );
-    addFace( topPolygon.elementAt( 0 ), topPolygon.elementAt( pointIndex + 2 ), topPolygon.elementAt( pointIndex + 1 ), faceVector );
-  }
-}
-
-/**
 Add gear outline to scene.
 
 @param  coordinateSystem coordinate system of the gear
@@ -157,8 +141,9 @@ Add gear outline to scene.
 
 void addGear( CoordinateSystem coordinateSystem, String name, double numberOfTeeth, Vec2[] toothProfile )
 {
-  Vec3[] gearVertexPositions = new Vec3[ toothProfile.length * numberOfTeeth ];
-  float[] smoothness = new float[ toothProfile.length * numberOfTeeth ];
+  int numberOfCircumferencePoints = toothProfile.length * numberOfTeeth;
+  Vec3[] gearVertexPositions = new Vec3[ numberOfCircumferencePoints ];
+  float[] smoothness = new float[ numberOfCircumferencePoints ];
   int index = 0;
   double toothAngleRadian = 2.0 * Math.PI / numberOfTeeth;
 
@@ -230,16 +215,24 @@ Add triangle pairs in two layers of a convex polygon.
 
 void addTrianglePairsInPolygon( Vector bottomPolygon, Vector faceVector, Vector topPolygon )
 {
-  for ( int begin = 0; begin < bottomPolygon.size() / 2; begin++ ) {
+  for ( int begin = 0; begin < ( bottomPolygon.size() - 1 ) / 2; begin++ ) {
     end = bottomPolygon.size() - begin - 1;
     centerIndex = bottomPolygon.elementAt( end - 1 );
     quadrilateralBegin = bottomPolygon.elementAt( begin );
     addFace( quadrilateralBegin, centerIndex, bottomPolygon.elementAt( end ), faceVector );
+    centerIndex = topPolygon.elementAt( end - 1 );
+    quadrilateralBegin = topPolygon.elementAt( begin );
+    addFace( quadrilateralBegin, topPolygon.elementAt( end ), centerIndex, faceVector );
+  }
+
+  for ( int begin = 0; begin < bottomPolygon.size() / 2 - 1; begin++ ) {
+    end = bottomPolygon.size() - begin - 1;
+    centerIndex = bottomPolygon.elementAt( end - 1 );
+    quadrilateralBegin = bottomPolygon.elementAt( begin );
     addFace( quadrilateralBegin, bottomPolygon.elementAt( begin + 1 ), centerIndex, faceVector );
     centerIndex = topPolygon.elementAt( end - 1 );
     quadrilateralBegin = topPolygon.elementAt( begin );
-    addFace( quadrilateralBegin, centerIndex, topPolygon.elementAt( end ), faceVector );
-    addFace( quadrilateralBegin, topPolygon.elementAt( begin + 1 ), centerIndex, faceVector );
+    addFace( quadrilateralBegin, centerIndex, topPolygon.elementAt( begin + 1 ), faceVector );
   }
 }
 
@@ -472,7 +465,7 @@ void convertToSolid( CoordinateSystem coordinateSystem, int numberOfTeeth, doubl
   }
 
   if ( shaftRadius == 0.0 ) {
-    addFacesInPolygon( bottomRim, gearFaceVector, topRim );
+    addTrianglePairsInPolygon( bottomRim, gearFaceVector, topRim );
   }
   else {
     addFacesBetweenConcentricPolygons( bottomShaftVector, bottomRim, gearFaceVector, gearNodeVector, topShaftVector, topRim );
@@ -481,7 +474,6 @@ void convertToSolid( CoordinateSystem coordinateSystem, int numberOfTeeth, doubl
 
   int[][] gearFaceArray = gearFaceVector.toArray( new int[ gearFaceVector.size() ][ 3 ] );
   Vec3[] gearNodeArray = gearNodeVector.toArray( new Vec3[ gearNodeVector.size() ] );
-
   mesh = new TriangleMesh ( gearNodeArray, gearFaceArray );
   mesh.setSmoothingMethod( Mesh.NO_SMOOTHING );
   window.addObject( mesh, coordinateSystem, thickName, null );
@@ -611,7 +603,7 @@ int getClosestInnerIndex( Vector innerPolygon, Vector nodes, int outerPolygonFir
 }
 
 /**
-Get number of teeth from the field value if it is not zero bounded to a minimum of 4, otherwise get number from the prime list.
+Get number of teeth from the field value if it is not zero bounded to a minimum of 3, otherwise get number from the prime list.
 
 @param  primeList scroll list of prime numbers
 @param  numberOfTeethValueField number of gear teeth value field
@@ -624,7 +616,7 @@ double getNumberOfTeeth( BList primeList, ValueField numberOfTeethValueField )
     return Double.valueOf( primeList.getSelectedValue() );
   }
 
-  return Math.max( 4, Math.round( numberOfTeethValueField.getValue() ) );
+  return Math.max( 2, Math.round( numberOfTeethValueField.getValue() ) );
 }
 
 /**
@@ -1202,7 +1194,7 @@ double pitchRadiusFirstGear = pitchRadiusFirstGearValueField.getValue();
 double pitchRadiusSecondGear = getPitchRadiusSecondGear( numberOfTeethFirstGear, numberOfTeethSecondGear, pitchRadiusFirstGear );
 double minimumRimCutoutRadius = minimumRimCutoutRadiusValueField.getValue();
 double minimumRimThickness = minimumRimThicknessValueField.getValue();
-int profileDefinitionSurfaces = ( int )Math.max( 5.0, Math.min( 30.0, profileDefinitionValueField.getValue() ) );
+int profileDefinitionSurfaces = ( int )Math.max( 1.0, Math.min( 30.0, profileDefinitionValueField.getValue() ) );
 double pressureAngle = pressureAngleDegreeValueField.getValue() * Math.PI / 180.0;
 double shaftRadius = shaftRadiusValueField.getValue();
 int shaftSides = ( int )Math.max( 3.0, shaftSidesValueField.getValue() );
