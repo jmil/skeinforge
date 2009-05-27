@@ -54,7 +54,7 @@ function displayLayer(layerNum){
 		layers[currentLayer].setAttributeNS(null,'visibility','hidden');
 		layers[layerNum].setAttributeNS(null,'visibility','visible');
 		currentLayer = layerNum;
-		setText('layerNum',currentLayer+1);
+		setText('layerNum',currentLayer);
 		//Slider
 		if (!sliding) {
 			// 150 = width of sliderbar 14 = width circle

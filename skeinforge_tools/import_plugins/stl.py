@@ -103,7 +103,7 @@ def getCarving( fileName = '' ):
 		return None
 	triangleMesh = triangle_mesh.TriangleMesh()
 	vertexIndexTable = {}
-	binarySolidworksHeaderErrorString = 'solid binary STL from Solid Edge, Unigraphics Solutions Inc.'
+	binarySolidworksHeaderErrorString = 'solid binary'
 	binarySolidworksHeaderError = stlData[ : len( binarySolidworksHeaderErrorString ) ] == binarySolidworksHeaderErrorString
 	if binarySolidworksHeaderError:
 		print( 'The solidworks file has the incorrect header:' )
