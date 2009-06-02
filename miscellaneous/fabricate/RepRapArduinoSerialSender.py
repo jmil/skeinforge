@@ -24,9 +24,14 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 
 """
 
-import sys
+try:
+	import serial	# Import the pySerial modules.
+except:
+	print( 'You do not have pySerial installed, which is needed to control the serial port.' )
+	print( 'Information on pySerial is at:\nhttp://pyserial.wiki.sourceforge.net/pySerial' )
+
 import os
-import serial	# Import the pySerial modules.
+import sys
 import time
 
 

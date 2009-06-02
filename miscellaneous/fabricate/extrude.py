@@ -154,13 +154,18 @@ reprap.cartesian.homeReset( 600, True )
 reprap.cartesian.free()
 """
 
+try:
+	import serial	# Import the pySerial modules.
+except:
+	print( 'You do not have pySerial installed, which is needed to control the serial port.' )
+	print( 'Information on pySerial is at:\nhttp://pyserial.wiki.sourceforge.net/pySerial' )
+
 from euclidean import *
 from skeinforge_utilities.vec3 import vec3
 from skeinforge_utilities import gcodec
 import math
 import os
 import reprap	# Import the reprap module.
-import serial	# Import the pySerial modules.
 import time
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"

@@ -106,12 +106,11 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-#profiles
-#change support gap in raft +.5
-#
+#document profile a bit better
+#fix cross over bug
 #cross hatch support
 #short continue in oozebane
-#add dave's step files
+#make interpret
 #
 #make fill optional by changing <bridgeLayer>
 #cooling modification from http://makerhahn.blogspot.com/2008/10/yay-minimug.html

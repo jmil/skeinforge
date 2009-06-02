@@ -91,7 +91,11 @@ def getFileTextGivenDirectoryFileName( directory, fileName ):
 def getFolders( directory ):
 	"Get the folder list in a directory."
 	makeDirectory( directory )
-	directoryListing = os.listdir( directory )
+	directoryListing = []
+	try:
+		directoryListing = os.listdir( directory )
+	except OSError:
+		pass
 	folders = []
 	for fileName in directoryListing:
 		if os.path.isdir( os.path.join( directory, fileName ) ):
