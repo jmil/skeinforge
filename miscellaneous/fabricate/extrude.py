@@ -154,15 +154,19 @@ reprap.cartesian.homeReset( 600, True )
 reprap.cartesian.free()
 """
 
+from __future__ import absolute_import
+#Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
+import __init__
+
 try:
 	import serial	# Import the pySerial modules.
 except:
 	print( 'You do not have pySerial installed, which is needed to control the serial port.' )
 	print( 'Information on pySerial is at:\nhttp://pyserial.wiki.sourceforge.net/pySerial' )
 
-from euclidean import *
-from skeinforge_utilities.vec3 import vec3
-from skeinforge_utilities import gcodec
+from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
+from skeinforge_tools.skeinforge_utilities import euclidean
+from skeinforge_tools.skeinforge_utilities import gcodec
 import math
 import os
 import reprap	# Import the reprap module.
@@ -256,32 +260,32 @@ class displaySkein:
 		"Parse a helical move gcode line and send the commands to the extruder."
 		if self.oldLocation == None:
 			return
-		location = vec3().getFromvec3( self.oldLocation )
+		location = Vector3( self.oldLocation )
 		self.setFeedrate( splitLine )
 		setPointToSplitLine( location, splitLine )
-		location = location.plus( self.oldLocation )
-		center = vec3().getFromvec3( self.oldLocation )
+		location = location + self.oldLocation
+		center = Vector3( self.oldLocation )
 		indexOfR = indexOfStartingWithSecond( "R", splitLine )
 		if indexOfR > 0:
 			radius = getDoubleAfterFirstLetter( splitLine[ indexOfR ] )
-			halfLocationMinusOld = location.minus( self.oldLocation )
-			halfLocationMinusOld.scale( 0.5 )
+			halfLocationMinusOld = location - self.oldLocation
+			halfLocationMinusOld *= 0.5
 			halfLocationMinusOldLength = halfLocationMinusOld.length()
 			centerMidpointDistance = math.sqrt( radius * radius - halfLocationMinusOldLength * halfLocationMinusOldLength )
 			centerMinusMidpoint = getRotatedWiddershinsQuarterAroundZAxis( halfLocationMinusOld )
 			centerMinusMidpoint.normalize()
-			centerMinusMidpoint.scale( centerMidpointDistance )
+			centerMinusMidpoint *= centerMidpointDistance
 			if isCounterclockwise:
-				center.getFromvec3( halfLocationMinusOld.plus( centerMinusMidpoint ) )
+				center.setToVec3( halfLocationMinusOld + centerMinusMidpoint )
 			else:
-				center.getFromvec3( halfLocationMinusOld.minus( centerMinusMidpoint ) )
+				center.setToVec3( halfLocationMinusOld - centerMinusMidpoint )
 		else:
 			center.x = getDoubleForLetter( "I", splitLine )
 			center.y = getDoubleForLetter( "J", splitLine )
 		curveSection = 0.5
-		center = center.plus( self.oldLocation )
-		afterCenterSegment = location.minus( center )
-		beforeCenterSegment = self.oldLocation.minus( center )
+		center += self.oldLocation
+		afterCenterSegment = location - center
+		beforeCenterSegment = self.oldLocation - center
 		afterCenterDifferenceAngle = getAngleAroundZAxisDifference( afterCenterSegment, beforeCenterSegment )
 		absoluteDifferenceAngle = abs( afterCenterDifferenceAngle )
 		steps = int( math.ceil( max( absoluteDifferenceAngle * 2.4, absoluteDifferenceAngle * beforeCenterSegment.length() / curveSection ) ) )
@@ -290,7 +294,7 @@ class displaySkein:
 		for step in range( 1, steps ):
 			beforeCenterSegment = getRoundZAxisByPlaneAngle( stepPlaneAngle, beforeCenterSegment )
 			beforeCenterSegment.z += zIncrement
-			arcPoint = center.plus( beforeCenterSegment )
+			arcPoint = center + beforeCenterSegment
 			self.moveExtruder( arcPoint )
 		self.moveExtruder( location )
 		self.oldLocation = location
@@ -302,7 +306,7 @@ class displaySkein:
 
 	def linearMove( self, splitLine ):
 		"Parse a linear move gcode line and send the commands to the extruder."
-		location = vec3()
+		location = Vector3()
 		if self.oldLocation != None:
 			location = self.oldLocation
 		self.setFeedrate( splitLine )
