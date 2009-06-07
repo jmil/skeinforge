@@ -140,7 +140,7 @@ def getProfilesDirectoryPath( subfolder = '' ):
 def getSelectedProfile():
 	"Get the selected profile."
 	profilePreferences = ProfilePreferences()
-	readPreferencesForProfile( profilePreferences )
+	readPreferences( profilePreferences )
 	return profilePreferences.profileListbox.value
 
 def getSubfolderWithBasename( basename, directory ):
@@ -173,22 +173,6 @@ def readPreferences( archivablePreferences ):
 		if archivablePreferences.title[ : len( 'Profile' ) ].lower() != 'profile':
 			aboveSelectedProfileDirectory = os.path.join( aboveSelectedProfileDirectory, getSelectedProfile() )
 		text = gcodec.getFileText( os.path.join( aboveSelectedProfileDirectory, baseFileNamePreferences ) )
-		if text != '':
-			readPreferencesFromText( archivablePreferences, text )
-		writePreferences( archivablePreferences )
-		return
-	readPreferencesFromText( archivablePreferences, text )
-
-def readPreferencesForProfile( archivablePreferences ):
-	"Set an archive to the preferences read from a file."
-	readPreferences( archivablePreferences )
-	return
-	text = gcodec.getFileText( archivablePreferences.fileNamePreferences )
-	if text == '':
-		baseFileNamePreferences = os.path.basename( archivablePreferences.fileNamePreferences )
-		print( 'The default preferences for %s will be written in the .skeinforge folder in the home directory.' % baseFileNamePreferences )
-		aboveProfileDirectory = getDirectoryInAboveDirectory( 'profiles' )
-		text = gcodec.getFileText( os.path.join( aboveProfileDirectory, baseFileNamePreferences ) )
 		if text != '':
 			readPreferencesFromText( archivablePreferences, text )
 		writePreferences( archivablePreferences )

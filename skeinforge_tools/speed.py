@@ -93,7 +93,6 @@ from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
 from skeinforge_tools.skeinforge_utilities import interpret
-from skeinforge_tools import material
 from skeinforge_tools import multiply
 from skeinforge_tools import polyfile
 import cStringIO

@@ -106,15 +106,14 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-#document profile a bit better
-#fix cross over bug
 #cross hatch support
 #short continue in oozebane
-#make interpret
+#cooling modification from http://makerhahn.blogspot.com/2008/10/yay-minimug.html
+#add Edistance
 #
 #make fill optional by changing <bridgeLayer>
-#cooling modification from http://makerhahn.blogspot.com/2008/10/yay-minimug.html
-#incorporate
+#make interpret
+#incorporate scripts
 #boundaries, center radius z bottom top, circular or rectangular
 #update windowPosition in behold dynamic preferences when closing
 #carve aoi xml testing
@@ -122,10 +121,10 @@ __license__ = "GPL 3.0"
 #straighten out the use of layer thickness
 #gang or concatenate or join, maybe from behold?
 #check exterior paths which should be combed when changing layers, sometimes in tower
+#pick and place
 #hole sequence, probably made obsolete by CSGEvaluator
 #cut tool head
 #preferences in gcode or saved versions
-#change material from raft?
 #email marius about bridge extrusion width http://reprap.org/bin/view/Main/ExtruderImprovementsAndAlternatives
 #maybe get a volume estimate in statistic from extrusionDiameter instead of width and thickness
 #oozebane reverse?
@@ -139,7 +138,6 @@ __license__ = "GPL 3.0"
 #mill
 #transform
 #searchable help
-#pick and place
 #stack
 #infill first option
 #extrude loops I guess make circles? and/or run along sparse infill

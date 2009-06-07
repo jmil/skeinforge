@@ -139,7 +139,6 @@ __license__ = "GPL 3.0"
 
 
 #maybe later wide support
-#rename supportLoops to supportLayer or something
 def addXIntersectionsFromSegment( index, segment, xIntersectionIndexList ):
 	"Add the x intersections from the segment."
 	for endpoint in segment:
@@ -149,14 +148,6 @@ def addXIntersectionsFromSegments( index, segments, xIntersectionIndexList ):
 	"Add the x intersections from the segments."
 	for segment in segments:
 		addXIntersectionsFromSegment( index, segment, xIntersectionIndexList )
-
-def getEndpointsFromSegments( segments ):
-	"Get the endpoints from the segments."
-	endpoints = []
-	for segment in segments:
-		for endpoint in segment:
-			endpoints.append( endpoint )
-	return endpoints
 
 def getExtendedLineSegment( extensionDistance, lineSegment, loopXIntersections ):
 	"Get extended line segment."
@@ -339,6 +330,8 @@ class RaftPreferences:
 		self.archive.append( self.operatingNozzleLiftOverHalfLayerThickness )
 		self.raftOutsetRadiusOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Raft Outset Radius over Extrusion Width (ratio):', 15.0 )
 		self.archive.append( self.raftOutsetRadiusOverExtrusionWidth )
+		self.supportCrossHatch = preferences.BooleanPreference().getFromValue( 'Support Cross Hatch:', False )
+		self.archive.append( self.supportCrossHatch )
 		self.supportFlowrateOverOperatingFlowrate = preferences.FloatPreference().getFromValue( 'Support Flowrate over Operating Flowrate (ratio):', 1.0 )
 		self.archive.append( self.supportFlowrateOverOperatingFlowrate )
 		self.supportGapOverPerimeterExtrusionWidth = preferences.FloatPreference().getFromValue( 'Support Gap over Perimeter Extrusion Width (ratio):', 1.0 )
@@ -415,7 +408,7 @@ class RaftSkein:
 		self.operatingJump = None
 		self.output = cStringIO.StringIO()
 		self.supportFlowrateString = None
-		self.supportLoops = []
+		self.supportLayers = []
 		self.supportSegmentTables = []
 
 	def addBaseLayer( self, baseExtrusionWidth, baseStep, stepBegin, stepEnd ):
@@ -586,10 +579,9 @@ class RaftSkein:
 				horizontalSegmentTable[ y ] = lineSegments
 		self.supportSegmentTables.append( horizontalSegmentTable )
 
-	def addSupportLayerTemperature( self, supportSegments, z ):
+	def addSupportLayerTemperature( self, endpoints, z ):
 		"Add support layer and temperature before the object layer."
-		self.addTemperatureOrbits( supportSegments, self.raftPreferences.temperatureShapeSupportLayers, self.raftPreferences.temperatureChangeTimeBeforeSupportLayers, z )
-		endpoints = getEndpointsFromSegments( supportSegments )
+		self.addTemperatureOrbits( endpoints, self.raftPreferences.temperatureShapeSupportLayers, self.raftPreferences.temperatureChangeTimeBeforeSupportLayers, z )
 		aroundPixelTable = {}
 		layerFillInset = 0.9 * self.extrusionWidth
 		aroundWidth = 0.12 * layerFillInset
@@ -603,20 +595,19 @@ class RaftSkein:
 		for path in paths:
 			self.addGcodeFromFeedrateThreadZ( self.feedrateMinute, path, z )
 		self.addFlowrateLineIfNecessary( self.operatingFlowrateString )
-		self.addTemperatureOrbits( supportSegments, self.raftPreferences.temperatureShapeSupportedLayers, self.raftPreferences.temperatureChangeTimeBeforeSupportedLayers, z )
+		self.addTemperatureOrbits( endpoints, self.raftPreferences.temperatureShapeSupportedLayers, self.raftPreferences.temperatureChangeTimeBeforeSupportedLayers, z )
 
 	def addTemperature( self, temperature ):
 		"Add a line of temperature."
 		self.addLine( 'M104 S' + euclidean.getRoundedToThreePlaces( temperature ) ) # Set temperature.
 
-	def addTemperatureOrbits( self, segments, temperaturePreference, temperatureTimeChangePreference, z ):
+	def addTemperatureOrbits( self, endpoints, temperaturePreference, temperatureTimeChangePreference, z ):
 		"Add the temperature and orbits around the support layer."
 		if self.layerIndex < 0:
 			return
 		boundaryLoops = self.boundaryLayers[ self.layerIndex ].loops
 		self.addTemperature( temperaturePreference.value )
 		if len( boundaryLoops ) < 1:
-			endpoints = getEndpointsFromSegments( segments )
 			layerCornerHigh = complex( - 999999999.0, - 999999999.0 )
 			layerCornerLow = complex( 999999999.0, 999999999.0 )
 			for endpoint in endpoints:
@@ -634,7 +625,7 @@ class RaftSkein:
 
 	def addToFillXIntersectionIndexTables( self, fillXIntersectionIndexTables, layerIndex ):
 		"Add fill segments from the boundary layers."
-		supportLoops = self.supportLoops[ layerIndex ]
+		supportLoops = self.supportLayers[ layerIndex ]
 		if len( supportLoops ) < 1:
 			fillXIntersectionIndexTables.append( {} )
 			return
@@ -715,17 +706,30 @@ class RaftSkein:
 			step += stepSize
 		return steps
 
-	def getSupportSegments( self ):
+	def getSupportEndpoints( self ):
 		"Get the support layer segments."
 		if len( self.supportSegmentTables ) <= self.layerIndex:
 			return []
 		supportSegmentTable = self.supportSegmentTables[ self.layerIndex ]
-		segments = []
+		endpoints = []
 		segmentTableKeys = supportSegmentTable.keys()
 		segmentTableKeys.sort()
 		for segmentTableKey in segmentTableKeys:
-			segments += supportSegmentTable[ segmentTableKey ]
-		return segments
+			for segment in supportSegmentTable[ segmentTableKey ]:
+				for endpoint in segment:
+					endpoints.append( endpoint )
+		if self.layerIndex % 2 == 0 or not self.raftPreferences.supportCrossHatch.value:
+			return endpoints
+		return endpoints
+		print( self.layerIndex )
+		for endpoint in endpoints:
+			self.interfaceStep
+			print( endpoint )
+			segmentBeginX = self.interfaceStep * math.ceil( min( endpoint.point.real, endpoint.otherEndpoint.point.real ) / self.interfaceStep )
+			print( segmentBeginX )
+			segmentEndX = self.interfaceStep * math.ceil( max( endpoint.point.real, endpoint.otherEndpoint.point.real ) / self.interfaceStep )
+			print( segmentEndX )
+		return endpoints
 
 	def joinSegments( self, supportSegmentTableIndex ):
 		"Join the support segments of this layer with those of the layer above."
@@ -817,17 +821,17 @@ class RaftSkein:
 				self.addLine( line )
 			self.addLineLayerStart = True
 			line = ''
-			supportSegments = self.getSupportSegments()
+			endpoints = self.getSupportEndpoints()
 			if self.layerIndex == 1:
-				if len( supportSegments ) < 1:
+				if len( endpoints ) < 1:
 					self.addTemperature( self.raftPreferences.temperatureShapeNextLayers.value )
 					if self.raftPreferences.addRaftElevateNozzleOrbitSetAltitude.value:
 						boundaryLoops = boundaryLayer.loops
 						if len( boundaryLoops ) > 0:
 							temperatureChangeTimeBeforeNextThreads = self.raftPreferences.temperatureChangeTimeBeforeNextThreads.value
 							intercircle.addOperatingOrbits( boundaryLoops, euclidean.getXYComplexFromVector3( self.oldLocation ), self, temperatureChangeTimeBeforeNextThreads, layerHeight )
-			if len( supportSegments ) > 0:
-				self.addSupportLayerTemperature( supportSegments, layerHeight )
+			if len( endpoints ) > 0:
+				self.addSupportLayerTemperature( endpoints, layerHeight )
 		self.addLine( line )
 
 	def setBoundaryLayers( self ):
@@ -859,8 +863,8 @@ class RaftSkein:
 			return
 		for boundaryLayer in self.boundaryLayers:
 			supportLoops = intercircle.getInsetSeparateLoopsFromLoops( - self.supportOutset, boundaryLayer.loops )
-			self.supportLoops.append( supportLoops )
-		for layerIndex in xrange( len( self.supportLoops ) - 1 ):
+			self.supportLayers.append( supportLoops )
+		for layerIndex in xrange( len( self.supportLayers ) - 1 ):
 			self.addSupportSegmentTable( layerIndex )
 		self.truncateSupportSegmentTables()
 		for supportSegmentTableIndex in xrange( len( self.supportSegmentTables ) ):
@@ -874,7 +878,7 @@ class RaftSkein:
 		for supportSegmentTableIndex in xrange( len( self.supportSegmentTables ) - 2, - 1, - 1 ):
 			self.joinSegments( supportSegmentTableIndex )
 		for supportSegmentTableIndex in xrange( len( self.supportSegmentTables ) ):
-			self.extendSegments( self.supportLoops[ supportSegmentTableIndex ], self.raftOutsetRadius, supportSegmentTableIndex )
+			self.extendSegments( self.supportLayers[ supportSegmentTableIndex ], self.raftOutsetRadius, supportSegmentTableIndex )
 		for supportSegmentTableIndex in xrange( len( self.supportSegmentTables ) ):
 			subtractFill( fillXIntersectionIndexTables[ supportSegmentTableIndex ], self.supportSegmentTables[ supportSegmentTableIndex ] )
 
