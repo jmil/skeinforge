@@ -27,7 +27,7 @@ To&nbsp;run&nbsp;unpause,&nbsp;in&nbsp;a&nbsp;shell&nbsp;type:<br>
 &nbsp;<br>
 The&nbsp;following&nbsp;examples&nbsp;unpause&nbsp;the&nbsp;files&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains<br>
 Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;&amp;&nbsp;unpause.py.&nbsp;&nbsp;The&nbsp;function&nbsp;writeOutput&nbsp;checks&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text&nbsp;has&nbsp;been&nbsp;unpaused,&nbsp;if&nbsp;not&nbsp;they&nbsp;call<br>
-getFilletChainGcode&nbsp;in&nbsp;fillet.py&nbsp;to&nbsp;fillet&nbsp;the&nbsp;text;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;filleted&nbsp;text,&nbsp;then&nbsp;it&nbsp;unpauses.<br>
+getChainGcode&nbsp;in&nbsp;home.py&nbsp;to&nbsp;home&nbsp;the&nbsp;text;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;homed&nbsp;text,&nbsp;then&nbsp;it&nbsp;unpauses.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python&nbsp;unpause.py<br>
@@ -63,15 +63,16 @@ The&nbsp;equation&nbsp;to&nbsp;set&nbsp;the&nbsp;feedrate&nbsp;is&nbsp;from&nbsp
 <a href="skeinforge_tools.analyze.html">skeinforge_tools.analyze</a><br>
 <a href="cStringIO.html">cStringIO</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.euclidean.html">skeinforge_tools.skeinforge_utilities.euclidean</a><br>
-</td><td width="25%" valign=top><a href="skeinforge_tools.fillet.html">skeinforge_tools.fillet</a><br>
-<a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
+</td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
+<a href="skeinforge_tools.home.html">skeinforge_tools.home</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.intercircle.html">skeinforge_tools.skeinforge_utilities.intercircle</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.interpret.html">skeinforge_tools.skeinforge_utilities.interpret</a><br>
-</td><td width="25%" valign=top><a href="os.html">os</a><br>
+</td><td width="25%" valign=top><a href="math.html">math</a><br>
+<a href="os.html">os</a><br>
 <a href="skeinforge_tools.polyfile.html">skeinforge_tools.polyfile</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.preferences.html">skeinforge_tools.skeinforge_utilities.preferences</a><br>
-<a href="sys.html">sys</a><br>
-</td><td width="25%" valign=top><a href="time.html">time</a><br>
+</td><td width="25%" valign=top><a href="sys.html">sys</a><br>
+<a href="time.html">time</a><br>
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ee77aa">
@@ -109,15 +110,11 @@ The&nbsp;equation&nbsp;to&nbsp;set&nbsp;the&nbsp;feedrate&nbsp;is&nbsp;from&nbsp
 <td width="100%">Methods defined here:<br>
 <dl><dt><a name="UnpauseSkein-__init__"><strong>__init__</strong></a>(self)</dt></dl>
 
-<dl><dt><a name="UnpauseSkein-addLine"><strong>addLine</strong></a>(self, line)</dt><dd><tt>Add&nbsp;a&nbsp;line&nbsp;of&nbsp;text&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
-
-<dl><dt><a name="UnpauseSkein-getLinearMoveWithFeedrate"><strong>getLinearMoveWithFeedrate</strong></a>(self, feedrate, location)</dt><dd><tt>Get&nbsp;a&nbsp;linear&nbsp;move&nbsp;line&nbsp;with&nbsp;the&nbsp;feedrate.</tt></dd></dl>
-
-<dl><dt><a name="UnpauseSkein-getRounded"><strong>getRounded</strong></a>(self, number)</dt><dd><tt>Get&nbsp;number&nbsp;rounded&nbsp;to&nbsp;the&nbsp;number&nbsp;of&nbsp;carried&nbsp;decimal&nbsp;places&nbsp;as&nbsp;a&nbsp;string.</tt></dd></dl>
+<dl><dt><a name="UnpauseSkein-getUnpausedArcMovement"><strong>getUnpausedArcMovement</strong></a>(self, line, splitLine)</dt><dd><tt>Get&nbsp;an&nbsp;unpaused&nbsp;arc&nbsp;movement.</tt></dd></dl>
 
 <dl><dt><a name="UnpauseSkein-getUnpausedFeedrateMinute"><strong>getUnpausedFeedrateMinute</strong></a>(self, location, splitLine)</dt><dd><tt>Get&nbsp;the&nbsp;feedrate&nbsp;which&nbsp;will&nbsp;compensate&nbsp;for&nbsp;the&nbsp;pause.</tt></dd></dl>
 
-<dl><dt><a name="UnpauseSkein-getUnpausedLine"><strong>getUnpausedLine</strong></a>(self, splitLine)</dt><dd><tt>Bevel&nbsp;a&nbsp;linear&nbsp;move.</tt></dd></dl>
+<dl><dt><a name="UnpauseSkein-getUnpausedLinearMovement"><strong>getUnpausedLinearMovement</strong></a>(self, splitLine)</dt><dd><tt>Get&nbsp;an&nbsp;unpaused&nbsp;linear&nbsp;movement.</tt></dd></dl>
 
 <dl><dt><a name="UnpauseSkein-parseGcode"><strong>parseGcode</strong></a>(self, unpausePreferences, gcodeText)</dt><dd><tt>Parse&nbsp;gcode&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;unpause&nbsp;gcode.</tt></dd></dl>
 

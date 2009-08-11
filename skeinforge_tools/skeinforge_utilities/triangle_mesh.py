@@ -24,7 +24,7 @@ The carved file is saved as Screw Holder Bottom_carve.gcode
 It took 3 seconds to carve the file.
 
 
->>> carve.getCarveGcode("
+>>> carve.getGcode("
 54 162 108 Number of Vertices,Number of Edges,Number of Faces
 -5.800000000000001 5.341893939393939 4.017841892579603 Vertex Coordinates XYZ
 5.800000000000001 5.341893939393939 4.017841892579603
@@ -586,16 +586,16 @@ class TriangleMesh:
 	def getGNUTriangulatedSurfaceText( self ):
 		"Get this mesh in the GNU Triangulated Surface (.gts) format."
 		output = cStringIO.StringIO()
-		output.write( '%s %s %s Number of Vertices,Number of Edges,Number of Faces\n' % ( len( self.vertices ), len( self.edges ), len( self.faces ) ) )
-		output.write( '%s %s %s Vertex Coordinates XYZ\n' % ( self.vertices[ 0 ].x, self.vertices[ 0 ].y, self.vertices[ 0 ].z ) )
+		distanceFeedRate.output.write( '%s %s %s Number of Vertices,Number of Edges,Number of Faces\n' % ( len( self.vertices ), len( self.edges ), len( self.faces ) ) )
+		distanceFeedRate.output.write( '%s %s %s Vertex Coordinates XYZ\n' % ( self.vertices[ 0 ].x, self.vertices[ 0 ].y, self.vertices[ 0 ].z ) )
 		for vertex in self.vertices[ 1 : ]:
-			output.write( '%s %s %s\n' % ( vertex.x, vertex.y, vertex.z ) )
-		output.write( '%s Edge Vertex Indices Starting from 1\n' % self.edges[ 0 ].getGNUTriangulatedSurfaceLine() )
+			distanceFeedRate.output.write( '%s %s %s\n' % ( vertex.x, vertex.y, vertex.z ) )
+		distanceFeedRate.output.write( '%s Edge Vertex Indices Starting from 1\n' % self.edges[ 0 ].getGNUTriangulatedSurfaceLine() )
 		for edge in self.edges[ 1 : ]:
-			output.write( '%s\n' % edge.getGNUTriangulatedSurfaceLine() )
-		output.write( '%s Face Edge Indices Starting from 1\n' % self.faces[ 0 ].getGNUTriangulatedSurfaceLine() )
+			distanceFeedRate.output.write( '%s\n' % edge.getGNUTriangulatedSurfaceLine() )
+		distanceFeedRate.output.write( '%s Face Edge Indices Starting from 1\n' % self.faces[ 0 ].getGNUTriangulatedSurfaceLine() )
 		for face in self.faces[ 1 : ]:
-			output.write( '%s\n' % face.getGNUTriangulatedSurfaceLine() )
+			distanceFeedRate.output.write( '%s\n' % face.getGNUTriangulatedSurfaceLine() )
 		return output.getvalue()
 
 	def getLoopsFromMesh( self, z ):
@@ -612,7 +612,7 @@ class TriangleMesh:
 		for loopIndex in xrange( len( loops ) ):
 			loop = loops[ loopIndex ]
 			leftPoint = euclidean.getLeftPoint( loop )
-			isInFilledRegion = euclidean.isInFilledRegion( leftPoint, loops[ : loopIndex ] + loops[ loopIndex + 1 : ] )
+			isInFilledRegion = euclidean.isInFilledRegion( loops[ : loopIndex ] + loops[ loopIndex + 1 : ], leftPoint )
 			if isInFilledRegion == euclidean.isWiddershins( loop ):
 				loop.reverse()
 		return loops

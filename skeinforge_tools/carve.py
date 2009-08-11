@@ -49,7 +49,7 @@ The carved file is saved as Screw Holder Bottom_carve.svg
 It took 3 seconds to carve the file.
 
 
->>> carve.getCarveGcode("
+>>> carve.getGcode("
 54 162 108 Number of Vertices,Number of Edges,Number of Faces
 -5.800000000000001 5.341893939393939 4.017841892579603 Vertex Coordinates XYZ
 5.800000000000001 5.341893939393939 4.017841892579603
@@ -89,7 +89,7 @@ __date__ = "$Date: 2008/02/05 $"
 __license__ = "GPL 3.0"
 
 
-def getCarveGcode( fileName, carvePreferences = None ):
+def getGcode( fileName, carvePreferences = None ):
 	"Carve a shape file."
 	carving = getCarving( fileName )
 	if carving == None:
@@ -165,20 +165,14 @@ def writeOutput( fileName = '' ):
 	carvePreferences = CarvePreferences()
 	preferences.readPreferences( carvePreferences )
 	print( 'File ' + gcodec.getSummarizedFilename( fileName ) + ' is being carved.' )
-	carveGcode = getCarveGcode( fileName, carvePreferences )
+	carveGcode = getGcode( fileName, carvePreferences )
 	if carveGcode == '':
 		return
 	suffixFilename = fileName[ : fileName.rfind( '.' ) ] + '_carve.svg'
 	suffixFilename = suffixFilename.replace( ' ', '_' )
 	gcodec.writeFileText( suffixFilename, carveGcode )
 	print( 'The carved file is saved as ' + gcodec.getSummarizedFilename( suffixFilename ) )
-#		packageFilePath = os.path.abspath( __file__ )
-#		for level in xrange( numberOfLevelsDeepInPackageHierarchy + 1 ):
-#			packageFilePath = os.path.dirname( packageFilePath )
-#		documentationPath = os.path.join( os.path.join( packageFilePath, 'documentation' ), self.displayPreferences.fileNameHelp )
-#		os.system( webbrowser.get().name + ' ' + documentationPath )#used this instead of webbrowser.open() to workaround webbrowser open() bug
-#	analyze.writeOutput( suffixFilename, carveGcode )
-	os.system( webbrowser.get().name + ' ' + suffixFilename )#used this instead of webbrowser.open() to workaround webbrowser open() bug
+	preferences.openWebPage( suffixFilename )
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to carve the file.' )
 
 

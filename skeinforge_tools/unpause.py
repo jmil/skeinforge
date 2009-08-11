@@ -17,7 +17,7 @@ To run unpause, in a shell type:
 
 The following examples unpause the files Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains
 Screw Holder Bottom.stl & unpause.py.  The function writeOutput checks to see if the text has been unpaused, if not they call
-getFilletChainGcode in fillet.py to fillet the text; once they have the filleted text, then it unpauses.
+getChainGcode in home.py to home the text; once they have the homed text, then it unpauses.
 
 
 > python unpause.py
@@ -53,10 +53,11 @@ from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
-from skeinforge_tools import fillet
+from skeinforge_tools import home
 from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools import polyfile
 import cStringIO
+import math
 import os
 import sys
 import time
@@ -70,8 +71,8 @@ __license__ = "GPL 3.0"
 def getUnpauseChainGcode( fileName, gcodeText, unpausePreferences = None ):
 	"Unpause a gcode linear move text.  Chain unpause the gcode if it is not already unpaused."
 	gcodeText = gcodec.getGcodeFileText( fileName, gcodeText )
-	if not gcodec.isProcedureDone( gcodeText, 'fillet' ):
-		gcodeText = fillet.getFilletChainGcode( fileName, gcodeText )
+	if not gcodec.isProcedureDone( gcodeText, 'home' ):
+		gcodeText = home.getChainGcode( fileName, gcodeText )
 	return getUnpauseGcode( gcodeText, unpausePreferences )
 
 def getUnpauseGcode( gcodeText, unpausePreferences = None ):
@@ -87,7 +88,7 @@ def getUnpauseGcode( gcodeText, unpausePreferences = None ):
 		return gcodeText
 	skein = UnpauseSkein()
 	skein.parseGcode( unpausePreferences, gcodeText )
-	return skein.output.getvalue()
+	return skein.distanceFeedRate.output.getvalue()
 
 def getSelectedPlugin( unpausePreferences ):
 	"Get the selected plugin."
@@ -98,12 +99,9 @@ def getSelectedPlugin( unpausePreferences ):
 
 def writeOutput( fileName = '' ):
 	"Unpause a gcode linear move file.  Chain unpause the gcode if it is not already unpaused.  If no fileName is specified, unpause the first unmodified gcode file in this folder."
+	fileName = interpret.getFirstTranslatorFileNameUnmodified( fileName )
 	if fileName == '':
-		unmodified = interpret.getGNUTranslatorFilesUnmodified()
-		if len( unmodified ) == 0:
-			print( "There are no unmodified gcode files in this folder." )
-			return
-		fileName = unmodified[ 0 ]
+		return
 	unpausePreferences = UnpausePreferences()
 	preferences.readPreferences( unpausePreferences )
 	startTime = time.time()
@@ -147,25 +145,12 @@ class UnpausePreferences:
 class UnpauseSkein:
 	"A class to unpause a skein of extrusions."
 	def __init__( self ):
-		self.decimalPlacesCarried = 3
+		self.distanceFeedRate = gcodec.DistanceFeedRate()
 		self.extruderActive = False
 		self.feedrateMinute = 959.0
 		self.lineIndex = 0
 		self.lines = None
 		self.oldLocation = None
-		self.output = cStringIO.StringIO()
-
-	def addLine( self, line ):
-		"Add a line of text and a newline to the output."
-		self.output.write( line + '\n' )
-
-	def getLinearMoveWithFeedrate( self, feedrate, location ):
-		"Get a linear move line with the feedrate."
-		return 'G1 X%s Y%s Z%s F%s' % ( self.getRounded( location.x ), self.getRounded( location.y ), self.getRounded( location.z ), self.getRounded( feedrate ) )
-
-	def getRounded( self, number ):
-		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
 	def getUnpausedFeedrateMinute( self, location, splitLine ):
 		"Get the feedrate which will compensate for the pause."
@@ -181,12 +166,45 @@ class UnpauseSkein:
 			return self.feedrateMinute * self.maximumSpeed
 		return self.feedrateMinute / resultantReciprocal
 
-	def getUnpausedLine( self, splitLine ):
-		"Bevel a linear move."
+	def getUnpausedArcMovement( self, line, splitLine ):
+		"Get an unpaused arc movement."
+		if self.oldLocation == None:
+			return line
+		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
+		relativeLocation = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
+		location = self.oldLocation + relativeLocation
+		self.oldLocation = location
+		halfPlaneLineDistance = 0.5 * abs( relativeLocation.dropAxis( 2 ) )
+		radius = gcodec.getDoubleFromCharacterSplitLine( 'R', splitLine )
+		if radius == None:
+			relativeCenter = complex( gcodec.getDoubleFromCharacterSplitLine( 'I', splitLine ), gcodec.getDoubleFromCharacterSplitLine( 'J', splitLine ) )
+			radius = abs( relativeCenter )
+		angle = 0.0
+		if radius > 0.0:
+			angle = math.pi
+			if halfPlaneLineDistance < radius:
+				angle = 2.0 * math.asin( halfPlaneLineDistance / radius )
+			else:
+				angle *= halfPlaneLineDistance / radius
+		deltaZ = abs( relativeLocation.z )
+		arcDistanceZ = complex( abs( angle ) * radius, relativeLocation.z )
+		distance = abs( arcDistanceZ )
+		if distance <= 0.0:
+			return ''
+		feedRateMinute = self.distanceFeedRate.getZLimitedFeedrate( deltaZ, distance, self.feedrateMinute )
+		indexOfF = gcodec.indexOfStartingWithSecond( "F", splitLine )
+		if indexOfF > 0 and feedRateMinute != self.feedrateMinute:
+			feedRateStringOriginal = splitLine[ indexOfF ]
+			feedRateStringReplacement = 'F' + self.distanceFeedRate.getRounded( feedRateMinute )
+			return line.replace( feedRateStringOriginal, feedRateStringReplacement )
+		return line
+
+	def getUnpausedLinearMovement( self, splitLine ):
+		"Get an unpaused linear movement."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		unpausedFeedrateMinute = self.getUnpausedFeedrateMinute( location, splitLine )
 		self.oldLocation = location
-		return self.getLinearMoveWithFeedrate( unpausedFeedrateMinute, location )
+		return self.distanceFeedRate.getLinearGcodeMovementWithFeedrate( unpausedFeedrateMinute, location.dropAxis( 2 ), location.z )
 
 	def parseGcode( self, unpausePreferences, gcodeText ):
 		"Parse gcode text and store the unpause gcode."
@@ -206,12 +224,11 @@ class UnpauseSkein:
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )
-			if firstWord == '(<decimalPlacesCarried>':
-				self.decimalPlacesCarried = int( splitLine[ 1 ] )
-			elif firstWord == '(</extruderInitialization>)':
-				self.addLine( '(<procedureDone> unpause </procedureDone>)' )
+			self.distanceFeedRate.parseSplitLine( firstWord, splitLine )
+			if firstWord == '(</extruderInitialization>)':
+				self.distanceFeedRate.addLine( '(<procedureDone> unpause </procedureDone>)' )
 				return
-			self.addLine( line )
+			self.distanceFeedRate.addLine( line )
 
 	def parseLine( self, line ):
 		"Parse a gcode line."
@@ -220,8 +237,10 @@ class UnpauseSkein:
 			return
 		firstWord = splitLine[ 0 ]
 		if firstWord == 'G1':
-			line = self.getUnpausedLine( splitLine )
-		self.addLine( line )
+			line = self.getUnpausedLinearMovement( splitLine )
+		if firstWord == 'G2' or firstWord == 'G3':
+			line = self.getUnpausedArcMovement( line, splitLine )
+		self.distanceFeedRate.addLine( line )
 
 
 def main( hashtable = None ):

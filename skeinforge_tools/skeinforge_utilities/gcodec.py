@@ -21,6 +21,8 @@ from __future__ import absolute_import
 import __init__
 
 from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
+from skeinforge_tools.skeinforge_utilities import euclidean
+import cStringIO
 import os
 import sys
 
@@ -61,12 +63,23 @@ def getDoubleForLetter( letter, splitLine ):
 	"Get the double value of the word after the first occurence of the letter in the split line."
 	return getDoubleAfterFirstLetter( splitLine[ indexOfStartingWithSecond( letter, splitLine ) ] )
 
-def getDoubleFromCharacterSplitLineValue( character, splitLine, value ):
+def getDoubleFromCharacterSplitLine( character, splitLine ):
 	"Get the double value of the string after the first occurence of the character in the split line."
 	indexOfCharacter = indexOfStartingWithSecond( character, splitLine )
 	if indexOfCharacter < 0:
+		return None
+	floatString = splitLine[ indexOfCharacter ][ 1 : ]
+	try:
+		return float( floatString )
+	except ValueError:
+		return None
+
+def getDoubleFromCharacterSplitLineValue( character, splitLine, value ):
+	"Get the double value of the string after the first occurence of the character in the split line, if it does not exist return the value."
+	splitLineFloat = getDoubleFromCharacterSplitLine( character, splitLine )
+	if splitLineFloat == None:
 		return value
-	return float( splitLine[ indexOfCharacter ][ 1 : ] )
+	return splitLineFloat
 
 def getFeedrateMinute( feedrateMinute, splitLine ):
 	"Get the feedrate per minute if the split line has a feedrate."
@@ -253,6 +266,10 @@ def getUnmodifiedGCodeFiles( fileInDirectory = '' ):
 	words = ' carve clip comb comment cool fill fillet hop inset oozebane raft stretch tower wipe'.replace( ' ', ' _' ).split()
 	return getFilesWithFileTypeWithoutWords( 'gcode', words, fileInDirectory )
 
+def getVersionFileName():
+	"Get the file name of the version date."
+	return '/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/skeinforge_utilities/version.txt'
+
 def getWithoutBracketsEqualTab( line ):
 	"Get a string without the greater than sign, the bracket and less than sign, the equal sign or the tab."
 	line = line.replace( '=', ' ' )
@@ -336,3 +353,188 @@ def writeFileText( fileName, fileText, writeMode = 'w+' ):
 		file.close()
 	except IOError:
 		print( 'The file ' + fileName + ' can not be written to.' )
+
+
+class DistanceFeedRate:
+	"A class to limit the z feed rate and round values."
+	def __init__( self ):
+		self.decimalPlacesCarried = 3
+		self.extrusionDistanceFormat = ''
+		self.maximumZFeedRatePerSecond = None
+		self.resetLocationOutput()
+
+	def addExtrusionDistanceRatio( self, extrusionDistanceRatio ):
+		"Add an extrusion distance ratio tag bracketed line."
+		self.addTagBracketedLine( 'extrusionDistanceRatio', euclidean.getRoundedToDecimalPlacesString( 3, extrusionDistanceRatio ) )
+
+	def addGcodeFromFeedRateThreadZ( self, feedRateMinute, thread, z ):
+		"Add a thread to the output."
+		if len( thread ) > 0:
+			self.addGcodeMovementZWithFeedRate( feedRateMinute, thread[ 0 ], z )
+		else:
+			print( "zero length vertex positions array which was skipped over, this should never happen" )
+		if len( thread ) < 2:
+			print( "thread of only one point in gcodec, this should never happen" )
+			print( thread )
+			return
+		self.addLine( "M101" ) # Turn extruder on.
+		for point in thread[ 1 : ]:
+			self.addGcodeMovementZWithFeedRate( feedRateMinute, point, z )
+		self.addLine( "M103" ) # Turn extruder off.
+
+	def addGcodeFromThreadZ( self, thread, z ):
+		"Add a thread to the output."
+		if len( thread ) > 0:
+			self.addGcodeMovementZ( thread[ 0 ], z )
+		else:
+			print( "zero length vertex positions array which was skipped over, this should never happen" )
+		if len( thread ) < 2:
+			print( "thread of only one point in gcodec, this should never happen" )
+			print( thread )
+			return
+		self.addLine( "M101" ) # Turn extruder on.
+		for point in thread[ 1 : ]:
+			self.addGcodeMovementZ( point, z )
+		self.addLine( "M103" ) # Turn extruder off.
+
+	def addGcodeMovementZ( self, point, z ):
+		"Add a movement to the output."
+		self.addLine( self.getLinearGcodeMovement( point, z ) )
+
+	def addGcodeMovementZWithFeedRate( self, feedRateMinute, point, z ):
+		"Add a movement to the output."
+		self.addLine( self.getLinearGcodeMovementWithFeedrate( feedRateMinute, point, z ) )
+
+	def addLine( self, line ):
+		"Add a line of text and a newline to the output."
+		if len( line ) <= 0:
+			return
+		splitLine = line.split()
+		firstWord = getFirstWord( splitLine )
+		if firstWord == '(<extrusionDistanceRatio>':
+			self.extrusionDistanceRatio = float( splitLine[ 1 ] )
+		elif firstWord == 'G1':
+			feedRateMinute = getFeedrateMinute( None, splitLine )
+			location = getLocationFromSplitLine( self.oldAddedLocation, splitLine )
+			line = self.getLinearGcodeMovementWithZLimitedFeedRate( feedRateMinute, location )
+			self.oldAddedLocation = location
+		elif firstWord == 'G92':
+			self.oldAddedLocation = getLocationFromSplitLine( self.oldAddedLocation, splitLine )
+		elif firstWord == 'M101':
+			self.isAddedExtruderActive = True
+		elif firstWord == 'M103':
+			self.isAddedExtruderActive = False
+			self.extrusionDistanceRatio = 1.0
+		self.output.write( line + "\n" )
+
+	def addLines( self, lines ):
+		"Add lines of text to the output."
+		for line in lines:
+			self.addLine( line )
+
+	def addPerimeterBlock( self, loop, z ):
+		"Add the perimeter gcode block for the loop."
+		self.addLine( '(<perimeter>)' ) # Indicate that a perimeter is beginning.
+		self.addGcodeFromThreadZ( loop + [ loop[ 0 ] ], z )
+		self.addLine( '(</perimeter>)' ) # Indicate that a perimeter is beginning.
+
+	def addTagBracketedLine( self, tagName, value ):
+		"Add a begin tag, balue and end tag."
+		self.addLine( '(<%s> %s </%s>)' % ( tagName, value, tagName ) )
+
+	def getArcFeedRateString( self, afterCenterDifferenceAngle, afterPointMinusBefore, centerMinusBefore, feedRateMinute ):
+		"Get the start of the arc line."
+		if feedRateMinute == None:
+			return ''
+		deltaZ = abs( afterPointMinusBefore.z )
+		radius = abs( centerMinusBefore )
+		arcDistanceZ = complex( abs( afterCenterDifferenceAngle ) * radius, afterPointMinusBefore.z )
+		distance = abs( arcDistanceZ )
+		if distance <= 0.0:
+			return ''
+		feedRateMinute = self.getZLimitedFeedrate( deltaZ, distance, feedRateMinute )
+		return self.getExtrusionDistanceString( distance ) + ' F' + self.getRounded( feedRateMinute )
+
+	def getBoundaryLine( self, location ):
+		"Get boundary gcode line."
+		return '(<boundaryPoint> X%s Y%s Z%s </boundaryPoint>)' % ( self.getRounded( location.x ), self.getRounded( location.y ), self.getRounded( location.z ) )
+
+	def getExtrusionDistanceString( self, distance ):
+		"Get a z limited gcode movement."
+		if self.extrusionDistanceFormat == '':
+			return ''
+		extrusionDistance = 0.0
+		if self.isAddedExtruderActive:
+			extrusionDistance = self.extrusionDistanceRatio * distance
+		if extrusionDistance <= 0.0:
+			return ''
+		if self.extrusionDistanceFormat == 'relative':
+			return ' E' + self.getRounded( extrusionDistance )
+		self.totalExtrusionDistance += extrusionDistance
+		return ' E' + self.getRounded( self.totalExtrusionDistance )
+
+	def getFirstWordMovement( self, firstWord, location ):
+		"Get the start of the arc line."
+		return '%s X%s Y%s Z%s' % ( firstWord, self.getRounded( location.x ), self.getRounded( location.y ), self.getRounded( location.z ) )
+
+	def getLinearGcodeMovement( self, point, z ):
+		"Get a linear gcode movement."
+		return "G1 X%s Y%s Z%s" % ( self.getRounded( point.real ), self.getRounded( point.imag ), self.getRounded( z ) )
+
+	def getLinearGcodeMovementWithFeedrate( self, feedRateMinute, point, z ):
+		"Get a z limited gcode movement."
+		addedLocation = Vector3( point.real, point.imag, z )
+		if addedLocation == self.oldAddedLocation:
+			return ''
+		linearGcodeMovement = self.getLinearGcodeMovement( point, z )
+		if feedRateMinute == None:
+			return linearGcodeMovement
+		return linearGcodeMovement + ' F' + self.getRounded( feedRateMinute )
+
+	def getLinearGcodeMovementWithZLimitedFeedRate( self, feedRateMinute, location ):
+		"Get a z limited gcode movement."
+		if location == self.oldAddedLocation:
+			return ''
+		distance = 0.0
+		extrusionDistanceString = ''
+		if self.oldAddedLocation != None:
+			distance = abs( location - self.oldAddedLocation )
+			extrusionDistanceString = self.getExtrusionDistanceString( distance )
+		linearGcodeMovement = self.getLinearGcodeMovement( location.dropAxis( 2 ), location.z ) + extrusionDistanceString
+		if feedRateMinute == None:
+			return linearGcodeMovement
+		if self.oldAddedLocation != None:
+			deltaZ = abs( location.z - self.oldAddedLocation.z )
+			feedRateMinute = self.getZLimitedFeedrate( deltaZ, distance, feedRateMinute )
+		return linearGcodeMovement + ' F' + self.getRounded( feedRateMinute )
+
+	def getRounded( self, number ):
+		"Get number rounded to the number of carried decimal places as a string."
+		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
+
+	def getZLimitedFeedrate( self, deltaZ, distance, feedRateMinute ):
+		"Get the z limited feed rate."
+		if self.maximumZFeedRatePerSecond == None:
+			return feedRateMinute
+		zFeedRateSecond = feedRateMinute * deltaZ / distance / 60.0
+		if zFeedRateSecond > self.maximumZFeedRatePerSecond:
+			feedRateMinute *= self.maximumZFeedRatePerSecond / zFeedRateSecond
+		return feedRateMinute
+
+	def parseSplitLine( self, firstWord, splitLine ):
+		"Parse gcode split line and store the parameters."
+		firstWord = getWithoutBracketsEqualTab( firstWord )
+		if firstWord == 'decimalPlacesCarried':
+			self.decimalPlacesCarried = int( splitLine[ 1 ] )
+		elif firstWord == 'extrusionDistanceFormat':
+			self.extrusionDistanceFormat = splitLine[ 1 ]
+		elif firstWord == 'maximumZFeedratePerSecond':
+			self.maximumZFeedRatePerSecond = float( splitLine[ 1 ] )
+
+	def resetLocationOutput( self ):
+		"Reset the added location and the output."
+		self.extrusionDistanceRatio = 1.0
+		self.isAddedExtruderActive = False
+		self.oldAddedLocation = None
+		self.output = cStringIO.StringIO()
+		self.totalExtrusionDistance = 0.0

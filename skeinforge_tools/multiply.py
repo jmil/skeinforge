@@ -18,7 +18,7 @@ The following examples multiply the files Screw Holder Bottom.gcode & Screw Hold
 terminal in the folder which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and multiply.py.  The multiply
 function will multiply if "Activate Multiply" is true, which can be set in the dialog or by changing the preferences file
 'multiply.csv' with a text editor or a spreadsheet program set to separate tabs.  The functions writeOutput and
-getMultiplyChainGcode check to see if the text has been multiplied, if not they call getFillChainGcode in fill.py to get filled
+getMultiplyChainGcode check to see if the text has been multiplied, if not they call getChainGcode in fill.py to get filled
 gcode; once they have the filled text, then they multiply.
 
 
@@ -71,6 +71,7 @@ from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
+from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools import analyze
 from skeinforge_tools import fill
 from skeinforge_tools.skeinforge_utilities import interpret
@@ -90,7 +91,7 @@ def getMultiplyChainGcode( fileName, gcodeText, multiplyPreferences = None ):
 	"Multiply a gcode linear move text.  Chain multiply the gcode if it is not already multiplied."
 	gcodeText = gcodec.getGcodeFileText( fileName, gcodeText )
 	if not gcodec.isProcedureDone( gcodeText, 'fill' ):
-		gcodeText = fill.getFillChainGcode( fileName, gcodeText )
+		gcodeText = fill.getChainGcode( fileName, gcodeText )
 	return getMultiplyGcode( gcodeText, multiplyPreferences )
 
 def getMultiplyGcode( gcodeText, multiplyPreferences = None ):
@@ -106,17 +107,14 @@ def getMultiplyGcode( gcodeText, multiplyPreferences = None ):
 		return gcodeText
 	skein = MultiplySkein()
 	skein.parseGcode( gcodeText, multiplyPreferences )
-	return skein.output.getvalue()
+	return skein.distanceFeedRate.output.getvalue()
 
 def writeOutput( fileName = '' ):
 	"""Multiply a gcode linear move file.  Chain multiply the gcode if it is not already multiplied.
 	If no fileName is specified, multiply the first unmodified gcode file in this folder."""
+	fileName = interpret.getFirstTranslatorFileNameUnmodified( fileName )
 	if fileName == '':
-		unmodified = interpret.getGNUTranslatorFilesUnmodified()
-		if len( unmodified ) == 0:
-			print( "There are no unmodified gcode files in this folder." )
-			return
-		fileName = unmodified[ 0 ]
+		return
 	multiplyPreferences = MultiplyPreferences()
 	preferences.readPreferences( multiplyPreferences )
 	startTime = time.time()
@@ -166,13 +164,12 @@ class MultiplyPreferences:
 class MultiplySkein:
 	"A class to multiply a skein of extrusions."
 	def __init__( self ):
-		self.decimalPlacesCarried = 3
+		self.distanceFeedRate = gcodec.DistanceFeedRate()
 		self.layerIndex = 0
 		self.layerLines = []
 		self.lineIndex = 0
 		self.lines = None
 		self.oldLocation = None
-		self.output = cStringIO.StringIO()
 		self.rowIndex = 0
 		self.shouldAccumulate = True
 
@@ -183,14 +180,15 @@ class MultiplySkein:
 			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == 'G1':
 				movedLocation = self.getMovedLocationSetOldLocation( offset, splitLine )
-				line = self.getGcodeFromMovementZ( movedLocation, self.oldLocation.z )
+				line = self.distanceFeedRate.getLinearGcodeMovement( movedLocation.dropAxis( 2 ), movedLocation.z )
 			elif firstWord == '(<boundaryPoint>':
 				movedLocation = self.getMovedLocationSetOldLocation( offset, splitLine )
-				line = '(<boundaryPoint> X%s Y%s Z%s )' % ( self.getRounded( movedLocation.real ), self.getRounded( movedLocation.imag ), self.getRounded( self.oldLocation.z ) )
-			self.addLine( line )
+				line = self.distanceFeedRate.getBoundaryLine( movedLocation )
+			self.distanceFeedRate.addLine( line )
 
 	def addLayer( self ):
 		"Add multiplied layer to the output."
+		self.addRemoveThroughLayer()
 		offset = self.centerOffset - self.arrayCenter - self.shapeCenter
 		for rowIndex in xrange( self.multiplyPreferences.numberOfRows.value ):
 			yRowOffset = float( rowIndex ) * self.extentPlusSeparation.imag
@@ -207,24 +205,22 @@ class MultiplySkein:
 			self.layerIndex += 1
 		self.layerLines = []
 
-	def addLine( self, line ):
-		"Add a line of text and a newline to the output."
-		if len( line ) > 0:
-			self.output.write( line + "\n" )
-
-	def getGcodeFromMovementZ( self, point, z ):
-		"Get a gcode movement."
-		return "G1 X%s Y%s Z%s" % ( self.getRounded( point.real ), self.getRounded( point.imag ), self.getRounded( z ) )
+	def addRemoveThroughLayer( self ):
+		"Parse gcode initialization and store the parameters."
+		for layerLineIndex in xrange( len( self.layerLines ) ):
+			line = self.layerLines[ layerLineIndex ]
+			splitLine = line.split()
+			firstWord = gcodec.getFirstWord( splitLine )
+			self.distanceFeedRate.addLine( line )
+			if firstWord == '(<layer>':
+				self.layerLines = self.layerLines[ layerLineIndex + 1 : ]
+				return
 
 	def getMovedLocationSetOldLocation( self, offset, splitLine ):
 		"Get the moved location and set the old location."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		self.oldLocation = location
-		return location.dropAxis( 2 ) + offset
-
-	def getRounded( self, number ):
-		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
+		return Vector3( location.x + offset.real, location.y + offset.imag, location.z )
 
 	def parseGcode( self, gcodeText, multiplyPreferences ):
 		"Parse gcode text and store the multiply gcode."
@@ -244,16 +240,15 @@ class MultiplySkein:
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )
-			if firstWord == '(<decimalPlacesCarried>':
-				self.decimalPlacesCarried = int( splitLine[ 1 ] )
-			elif firstWord == '(<extrusionWidth>':
+			self.distanceFeedRate.parseSplitLine( firstWord, splitLine )
+			if firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
 			elif firstWord == '(</extruderInitialization>)':
-				self.addLine( '(<procedureDone> multiply </procedureDone>)' )
-				self.addLine( line )
+				self.distanceFeedRate.addLine( '(<procedureDone> multiply </procedureDone>)' )
+				self.distanceFeedRate.addLine( line )
 				self.lineIndex += 1
 				return
-			self.addLine( line )
+			self.distanceFeedRate.addLine( line )
 
 	def parseLine( self, line ):
 		"Parse a gcode line and add it to the multiply skein."
@@ -261,17 +256,16 @@ class MultiplySkein:
 		if len( splitLine ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
-		if firstWord == '(<layer>':
+		if firstWord == '(</layer>)':
 			self.addLayer()
-			self.addLine( line )
+			self.distanceFeedRate.addLine( line )
 			return
 		elif firstWord == '(</extrusion>)':
-			self.addLayer()
 			self.shouldAccumulate = False
 		if self.shouldAccumulate:
 			self.layerLines.append( line )
 			return
-		self.addLine( line )
+		self.distanceFeedRate.addLine( line )
 
 	def setCorners( self ):
 		"Set maximum and minimum corners and z."

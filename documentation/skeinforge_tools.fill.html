@@ -9,7 +9,10 @@
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="skeinforge_tools.html"><font color="#ffffff">skeinforge_tools</font></a>.fill</strong></big></big> ($Date: 2008/28/04 $)</font></td
 ><td align=right valign=bottom
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/fill.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/fill.py</a></font></td></tr></table>
-    <p><tt>Fill&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;fill&nbsp;the&nbsp;carves&nbsp;of&nbsp;a&nbsp;gcode&nbsp;file.<br>
+    <p><tt>Fill&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;fill&nbsp;the&nbsp;inset&nbsp;outlines&nbsp;of&nbsp;a&nbsp;gcode&nbsp;file.<br>
+&nbsp;<br>
+Allan&nbsp;Ecker&nbsp;aka&nbsp;The&nbsp;Masked&nbsp;Retriever's&nbsp;has&nbsp;written&nbsp;the&nbsp;following&nbsp;quicktip&nbsp;for&nbsp;fill.<br>
+"Skeinforge&nbsp;Quicktip:&nbsp;Fill"&nbsp;at:&nbsp;<a href="http://blog.thingiverse.com/2009/07/21/mysteries-of-skeinforge-fill/">http://blog.thingiverse.com/2009/07/21/mysteries-of-skeinforge-fill/</a><br>
 &nbsp;<br>
 The&nbsp;diaphragm&nbsp;is&nbsp;a&nbsp;solid&nbsp;group&nbsp;of&nbsp;layers,&nbsp;at&nbsp;regular&nbsp;intervals.&nbsp;&nbsp;It&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;a&nbsp;sparse&nbsp;infill&nbsp;to&nbsp;give&nbsp;the&nbsp;object&nbsp;watertight,&nbsp;horizontal<br>
 compartments&nbsp;and/or&nbsp;a&nbsp;higher&nbsp;shear&nbsp;strength.&nbsp;&nbsp;The&nbsp;"Diaphragm&nbsp;Period"&nbsp;is&nbsp;the&nbsp;number&nbsp;of&nbsp;layers&nbsp;between&nbsp;diaphrams.&nbsp;&nbsp;The&nbsp;"Diaphragm<br>
@@ -147,19 +150,13 @@ It&nbsp;took&nbsp;3&nbsp;seconds&nbsp;to&nbsp;fill&nbsp;the&nbsp;file.</tt></p>
 
 <dl><dt><a name="FillSkein-addGcodeFromThreadZ"><strong>addGcodeFromThreadZ</strong></a>(self, thread, z)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;thread&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="FillSkein-addGcodeMovementZ"><strong>addGcodeMovementZ</strong></a>(self, point, z)</dt><dd><tt>Add&nbsp;a&nbsp;movement&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
-
 <dl><dt><a name="FillSkein-addGrid"><strong>addGrid</strong></a>(self, alreadyFilledArounds, arounds, fillLoops, gridPointInsetX, layerIndex, paths, pixelTable, width, reverseZRotationAngle, rotatedExtruderLoops, surroundingCarves)</dt><dd><tt>Add&nbsp;the&nbsp;grid&nbsp;to&nbsp;the&nbsp;infill&nbsp;layer.</tt></dd></dl>
 
 <dl><dt><a name="FillSkein-addGridLinePoints"><strong>addGridLinePoints</strong></a>(self, alreadyFilledArounds, begin, end, gridPoints, gridRotationAngle, offset, rotatedExtruderLoops, surroundingCarves, y)</dt><dd><tt>Add&nbsp;the&nbsp;segments&nbsp;of&nbsp;one&nbsp;line&nbsp;of&nbsp;a&nbsp;grid&nbsp;to&nbsp;the&nbsp;infill.</tt></dd></dl>
 
-<dl><dt><a name="FillSkein-addLine"><strong>addLine</strong></a>(self, line)</dt><dd><tt>Add&nbsp;a&nbsp;line&nbsp;of&nbsp;text&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
-
 <dl><dt><a name="FillSkein-addRemainingGridPoints"><strong>addRemainingGridPoints</strong></a>(self, arounds, gridPointInsetX, gridPointInsetY, gridPoints, isBothOrNone, paths, pixelTable, width)</dt><dd><tt>Add&nbsp;the&nbsp;remaining&nbsp;grid&nbsp;points&nbsp;to&nbsp;the&nbsp;grid&nbsp;point&nbsp;list.</tt></dd></dl>
 
 <dl><dt><a name="FillSkein-addRotatedCarve"><strong>addRotatedCarve</strong></a>(self, layerIndex, reverseZRotationAngle, surroundingCarves)</dt><dd><tt>Add&nbsp;a&nbsp;rotated&nbsp;carve&nbsp;to&nbsp;the&nbsp;surrounding&nbsp;carves.</tt></dd></dl>
-
-<dl><dt><a name="FillSkein-addShutdownToOutput"><strong>addShutdownToOutput</strong></a>(self)</dt><dd><tt>Add&nbsp;shutdown&nbsp;gcode&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
 <dl><dt><a name="FillSkein-addThreadsBridgeLayer"><strong>addThreadsBridgeLayer</strong></a>(self, rotatedLayer, surroundingLoops)</dt><dd><tt>Add&nbsp;the&nbsp;threads,&nbsp;add&nbsp;the&nbsp;bridge&nbsp;end&nbsp;&amp;&nbsp;the&nbsp;layer&nbsp;end&nbsp;tag.</tt></dd></dl>
 
@@ -174,8 +171,6 @@ It&nbsp;took&nbsp;3&nbsp;seconds&nbsp;to&nbsp;fill&nbsp;the&nbsp;file.</tt></p>
 <dl><dt><a name="FillSkein-getLayerRoundZ"><strong>getLayerRoundZ</strong></a>(self, layerIndex)</dt><dd><tt>Get&nbsp;the&nbsp;plane&nbsp;angle&nbsp;around&nbsp;z&nbsp;that&nbsp;the&nbsp;layer&nbsp;is&nbsp;rotated&nbsp;by.</tt></dd></dl>
 
 <dl><dt><a name="FillSkein-getNextGripXStep"><strong>getNextGripXStep</strong></a>(self, gridXStep)</dt><dd><tt>Get&nbsp;the&nbsp;next&nbsp;grid&nbsp;x&nbsp;step,&nbsp;increment&nbsp;by&nbsp;an&nbsp;extra&nbsp;one&nbsp;every&nbsp;three&nbsp;if&nbsp;hexagonal&nbsp;grid&nbsp;is&nbsp;chosen.</tt></dd></dl>
-
-<dl><dt><a name="FillSkein-getRounded"><strong>getRounded</strong></a>(self, number)</dt><dd><tt>Get&nbsp;number&nbsp;rounded&nbsp;to&nbsp;the&nbsp;number&nbsp;of&nbsp;carried&nbsp;decimal&nbsp;places&nbsp;as&nbsp;a&nbsp;string.</tt></dd></dl>
 
 <dl><dt><a name="FillSkein-isGridToBeExtruded"><strong>isGridToBeExtruded</strong></a>(self)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;grid&nbsp;is&nbsp;to&nbsp;be&nbsp;extruded.</tt></dd></dl>
 
@@ -243,10 +238,10 @@ It&nbsp;took&nbsp;3&nbsp;seconds&nbsp;to&nbsp;fill&nbsp;the&nbsp;file.</tt></p>
  <dl><dt><a name="-createExtraFillLoops"><strong>createExtraFillLoops</strong></a>(radius, surroundingLoop)</dt><dd><tt>Create&nbsp;extra&nbsp;fill&nbsp;loops.</tt></dd></dl>
  <dl><dt><a name="-createFillForSurroundings"><strong>createFillForSurroundings</strong></a>(radius, surroundingLoops)</dt><dd><tt>Create&nbsp;extra&nbsp;fill&nbsp;loops&nbsp;for&nbsp;surrounding&nbsp;loops.</tt></dd></dl>
  <dl><dt><a name="-getAdditionalLength"><strong>getAdditionalLength</strong></a>(path, point, pointIndex)</dt><dd><tt>Get&nbsp;the&nbsp;additional&nbsp;length&nbsp;added&nbsp;by&nbsp;inserting&nbsp;a&nbsp;point&nbsp;into&nbsp;a&nbsp;path.</tt></dd></dl>
+ <dl><dt><a name="-getChainGcode"><strong>getChainGcode</strong></a>(fileName, gcodeText, fillPreferences<font color="#909090">=None</font>)</dt><dd><tt>Fill&nbsp;the&nbsp;carves&nbsp;of&nbsp;a&nbsp;gcode&nbsp;text.&nbsp;&nbsp;Chain&nbsp;fill&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;carved.</tt></dd></dl>
  <dl><dt><a name="-getClosestOppositeIntersectionPaths"><strong>getClosestOppositeIntersectionPaths</strong></a>(yIntersectionPaths)</dt><dd><tt>Get&nbsp;the&nbsp;close&nbsp;to&nbsp;center&nbsp;paths,&nbsp;starting&nbsp;with&nbsp;the&nbsp;first&nbsp;and&nbsp;an&nbsp;additional&nbsp;opposite&nbsp;if&nbsp;it&nbsp;exists.</tt></dd></dl>
  <dl><dt><a name="-getExtraFillLoops"><strong>getExtraFillLoops</strong></a>(insideLoops, outsideLoop, radius)</dt><dd><tt>Get&nbsp;extra&nbsp;loops&nbsp;between&nbsp;inside&nbsp;and&nbsp;outside&nbsp;loops.</tt></dd></dl>
- <dl><dt><a name="-getFillChainGcode"><strong>getFillChainGcode</strong></a>(fileName, gcodeText, fillPreferences<font color="#909090">=None</font>)</dt><dd><tt>Fill&nbsp;the&nbsp;carves&nbsp;of&nbsp;a&nbsp;gcode&nbsp;text.&nbsp;&nbsp;Chain&nbsp;fill&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;carved.</tt></dd></dl>
- <dl><dt><a name="-getFillGcode"><strong>getFillGcode</strong></a>(gcodeText, fillPreferences<font color="#909090">=None</font>)</dt><dd><tt>Fill&nbsp;the&nbsp;carves&nbsp;of&nbsp;a&nbsp;gcode&nbsp;text.</tt></dd></dl>
+ <dl><dt><a name="-getGcode"><strong>getGcode</strong></a>(gcodeText, fillPreferences<font color="#909090">=None</font>)</dt><dd><tt>Fill&nbsp;the&nbsp;carves&nbsp;of&nbsp;a&nbsp;gcode&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-getHorizontalSegmentsFromLoopLists"><strong>getHorizontalSegmentsFromLoopLists</strong></a>(fillLoops, alreadyFilledArounds, y)</dt><dd><tt>Get&nbsp;horizontal&nbsp;segments&nbsp;inside&nbsp;loops.</tt></dd></dl>
  <dl><dt><a name="-getIntersectionOfXIntersectionIndexes"><strong>getIntersectionOfXIntersectionIndexes</strong></a>(totalSolidSurfaceThickness, xIntersectionIndexList)</dt><dd><tt>Get&nbsp;x&nbsp;intersections&nbsp;from&nbsp;surrounding&nbsp;layers.</tt></dd></dl>
  <dl><dt><a name="-getNonIntersectingGridPointLine"><strong>getNonIntersectingGridPointLine</strong></a>(gridPointInsetX, isJunctionWide, paths, pixelTable, yIntersectionPath, width)</dt><dd><tt>Get&nbsp;the&nbsp;points&nbsp;around&nbsp;the&nbsp;grid&nbsp;point&nbsp;that&nbsp;is&nbsp;junction&nbsp;wide&nbsp;that&nbsp;do&nbsp;not&nbsp;intersect.</tt></dd></dl>

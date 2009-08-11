@@ -30,8 +30,8 @@ To&nbsp;run&nbsp;wipe,&nbsp;in&nbsp;a&nbsp;shell&nbsp;which&nbsp;wipe&nbsp;is&nb
 &nbsp;<br>
 The&nbsp;following&nbsp;examples&nbsp;wipes&nbsp;the&nbsp;files&nbsp;Screw&nbsp;Holder&nbsp;Bottom.gcode&nbsp;&amp;&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a<br>
 terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains&nbsp;Screw&nbsp;Holder&nbsp;Bottom.gcode,&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;and&nbsp;wipe.py.&nbsp;&nbsp;The&nbsp;wipe&nbsp;function<br>
-will&nbsp;wipe&nbsp;if&nbsp;the&nbsp;'Activate&nbsp;Wipe'&nbsp;checkbox&nbsp;is&nbsp;on.&nbsp;&nbsp;The&nbsp;functions&nbsp;writeOutput&nbsp;and&nbsp;getWipeChainGcode&nbsp;check&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text<br>
-has&nbsp;been&nbsp;wiped,&nbsp;if&nbsp;not&nbsp;they&nbsp;call&nbsp;the&nbsp;getHopChainGcode&nbsp;in&nbsp;hop.py&nbsp;to&nbsp;hop&nbsp;the&nbsp;text;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;hopped&nbsp;text,&nbsp;then&nbsp;they<br>
+will&nbsp;wipe&nbsp;if&nbsp;the&nbsp;'Activate&nbsp;Wipe'&nbsp;checkbox&nbsp;is&nbsp;on.&nbsp;&nbsp;The&nbsp;functions&nbsp;writeOutput&nbsp;and&nbsp;getChainGcode&nbsp;check&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text<br>
+has&nbsp;been&nbsp;wiped,&nbsp;if&nbsp;not&nbsp;they&nbsp;call&nbsp;the&nbsp;getChainGcode&nbsp;in&nbsp;hop.py&nbsp;to&nbsp;hop&nbsp;the&nbsp;text;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;hopped&nbsp;text,&nbsp;then&nbsp;they<br>
 wipe.<br>
 &nbsp;<br>
 &nbsp;<br>
@@ -60,7 +60,7 @@ File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;w
 The&nbsp;wiped&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_wipe.gcode<br>
 &nbsp;<br>
 &nbsp;<br>
-&gt;&gt;&gt;&nbsp;wipe.<a href="#-getWipeGcode">getWipeGcode</a>("<br>
+&gt;&gt;&gt;&nbsp;wipe.<a href="#-getGcode">getGcode</a>("<br>
 (&nbsp;GCode&nbsp;generated&nbsp;by&nbsp;May&nbsp;8,&nbsp;2008&nbsp;carve.py&nbsp;)<br>
 (&nbsp;Extruder&nbsp;Initialization&nbsp;)<br>
 ..<br>
@@ -69,7 +69,7 @@ many&nbsp;lines&nbsp;of&nbsp;gcode<br>
 ")<br>
 Many&nbsp;line&nbsp;of&nbsp;wiped&nbsp;gcode.<br>
 &nbsp;<br>
-&gt;&gt;&gt;&nbsp;wipe.<a href="#-getWipeChainGcode">getWipeChainGcode</a>("<br>
+&gt;&gt;&gt;&nbsp;wipe.<a href="#-getChainGcode">getChainGcode</a>("<br>
 (&nbsp;GCode&nbsp;generated&nbsp;by&nbsp;May&nbsp;8,&nbsp;2008&nbsp;carve.py&nbsp;)<br>
 (&nbsp;Extruder&nbsp;Initialization&nbsp;)<br>
 ..<br>
@@ -135,13 +135,9 @@ Many&nbsp;line&nbsp;of&nbsp;wiped&nbsp;gcode.</tt></p>
 
 <dl><dt><a name="WipeSkein-addHop"><strong>addHop</strong></a>(self, begin, end)</dt><dd><tt>Add&nbsp;hop&nbsp;to&nbsp;highest&nbsp;point.</tt></dd></dl>
 
-<dl><dt><a name="WipeSkein-addLine"><strong>addLine</strong></a>(self, line)</dt><dd><tt>Add&nbsp;a&nbsp;line&nbsp;of&nbsp;text&nbsp;and&nbsp;a&nbsp;newline&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
-
 <dl><dt><a name="WipeSkein-addWipeTravel"><strong>addWipeTravel</strong></a>(self, splitLine)</dt><dd><tt>Add&nbsp;the&nbsp;wipe&nbsp;travel&nbsp;gcode.</tt></dd></dl>
 
 <dl><dt><a name="WipeSkein-getLinearMoveWithFeedrate"><strong>getLinearMoveWithFeedrate</strong></a>(self, feedrate, location)</dt><dd><tt>Get&nbsp;a&nbsp;linear&nbsp;move&nbsp;line&nbsp;with&nbsp;the&nbsp;feedrate.</tt></dd></dl>
-
-<dl><dt><a name="WipeSkein-getRounded"><strong>getRounded</strong></a>(self, number)</dt><dd><tt>Get&nbsp;number&nbsp;rounded&nbsp;to&nbsp;the&nbsp;number&nbsp;of&nbsp;carried&nbsp;decimal&nbsp;places&nbsp;as&nbsp;a&nbsp;string.</tt></dd></dl>
 
 <dl><dt><a name="WipeSkein-parseGcode"><strong>parseGcode</strong></a>(self, gcodeText, wipePreferences)</dt><dd><tt>Parse&nbsp;gcode&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;wipe&nbsp;gcode.</tt></dd></dl>
 
@@ -156,8 +152,8 @@ Many&nbsp;line&nbsp;of&nbsp;wiped&nbsp;gcode.</tt></p>
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-getWipeChainGcode"><strong>getWipeChainGcode</strong></a>(fileName, gcodeText, wipePreferences<font color="#909090">=None</font>)</dt><dd><tt>Wipe&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.&nbsp;&nbsp;Chain&nbsp;wipe&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;wiped.</tt></dd></dl>
- <dl><dt><a name="-getWipeGcode"><strong>getWipeGcode</strong></a>(gcodeText, wipePreferences<font color="#909090">=None</font>)</dt><dd><tt>Wipe&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
+<td width="100%"><dl><dt><a name="-getChainGcode"><strong>getChainGcode</strong></a>(fileName, gcodeText, wipePreferences<font color="#909090">=None</font>)</dt><dd><tt>Wipe&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.&nbsp;&nbsp;Chain&nbsp;wipe&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;wiped.</tt></dd></dl>
+ <dl><dt><a name="-getGcode"><strong>getGcode</strong></a>(gcodeText, wipePreferences<font color="#909090">=None</font>)</dt><dd><tt>Wipe&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>(hashtable<font color="#909090">=None</font>)</dt><dd><tt>Display&nbsp;the&nbsp;wipe&nbsp;dialog.</tt></dd></dl>
  <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName<font color="#909090">=''</font>)</dt><dd><tt>Wipe&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;Chain&nbsp;wipe&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;wiped.&nbsp;If&nbsp;no&nbsp;fileName&nbsp;is&nbsp;specified,&nbsp;wipe&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
 </td></tr></table><p>

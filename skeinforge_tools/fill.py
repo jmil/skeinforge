@@ -1,6 +1,9 @@
 #! /usr/bin/env python
 """
-Fill is a script to fill the carves of a gcode file.
+Fill is a script to fill the inset outlines of a gcode file.
+
+Allan Ecker aka The Masked Retriever's has written the following quicktip for fill.
+"Skeinforge Quicktip: Fill" at: http://blog.thingiverse.com/2009/07/21/mysteries-of-skeinforge-fill/
 
 The diaphragm is a solid group of layers, at regular intervals.  It can be used with a sparse infill to give the object watertight, horizontal
 compartments and/or a higher shear strength.  The "Diaphragm Period" is the number of layers between diaphrams.  The "Diaphragm
@@ -106,33 +109,43 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-#cross hatch support
-#short continue in oozebane
-#cooling modification from http://makerhahn.blogspot.com/2008/10/yay-minimug.html
-#add Edistance
+#test and publish
 #
+#chain, then cut
+#
+#add Ddistance option in preface
+#replace feedrate instead of sometimes using getLinearFeedrate, set addedLocation after arc move
+#fillet radius zero bug
+#add hook start in oozebane
+#cooling temperature lowering on small areas
 #make fill optional by changing <bridgeLayer>
-#make interpret
-#incorporate scripts
+#make skeinview and behold more robust readers
+#prune carve
+#after behold join modify models
+#cooling modification from http://makerhahn.blogspot.com/2008/10/yay-minimug.html
+#fan off
+#incorporate scripts???
 #boundaries, center radius z bottom top, circular or rectangular
 #update windowPosition in behold dynamic preferences when closing
 #carve aoi xml testing
 #check xml gcode
+#cross hatch support polishing???
 #straighten out the use of layer thickness
 #gang or concatenate or join, maybe from behold?
 #check exterior paths which should be combed when changing layers, sometimes in tower
 #pick and place
 #hole sequence, probably made obsolete by CSGEvaluator
-#cut tool head
+#laminate tool head
 #preferences in gcode or saved versions
+#maybe add layer updates in behold, skeinview and maybe others
 #email marius about bridge extrusion width http://reprap.org/bin/view/Main/ExtruderImprovementsAndAlternatives
 #maybe get a volume estimate in statistic from extrusionDiameter instead of width and thickness
-#oozebane reverse?
 #xml & svg more forgiving, svg make defaults for layerThickness, maxZ, minZ, add layer z to svg_template, make the slider on the template track even when mouse is outside
 #compartmentalize addOrbit, maybe already done
 #distance option???
 #rulers, zoom & select field on skeinview
 #simulate
+#short continue in oozebane
 #document gear script
 #mosaic
 #mill
@@ -347,6 +360,13 @@ def getAdditionalLength( path, point, pointIndex ):
 		return abs( point - path[ - 1 ] )
 	return abs( point - path[ pointIndex - 1 ] ) + abs( point - path[ pointIndex ] ) - abs( path[ pointIndex ] - path[ pointIndex - 1 ] )
 
+def getChainGcode( fileName, gcodeText, fillPreferences = None ):
+	"Fill the carves of a gcode text.  Chain fill the gcode if it is not already carved."
+	gcodeText = gcodec.getGcodeFileText( fileName, gcodeText )
+	if not gcodec.isProcedureDone( gcodeText, 'inset' ):
+		gcodeText = inset.getChainGcode( fileName, gcodeText )
+	return getGcode( gcodeText, fillPreferences )
+
 def getClosestOppositeIntersectionPaths( yIntersectionPaths ):
 	"Get the close to center paths, starting with the first and an additional opposite if it exists."
 	yIntersectionPaths.sort( compareDistanceFromCenter )
@@ -379,14 +399,7 @@ def getExtraFillLoops( insideLoops, outsideLoop, radius ):
 						extraFillLoops.append( inset )
 	return extraFillLoops
 
-def getFillChainGcode( fileName, gcodeText, fillPreferences = None ):
-	"Fill the carves of a gcode text.  Chain fill the gcode if it is not already carved."
-	gcodeText = gcodec.getGcodeFileText( fileName, gcodeText )
-	if not gcodec.isProcedureDone( gcodeText, 'inset' ):
-		gcodeText = inset.getInsetChainGcode( fileName, gcodeText )
-	return getFillGcode( gcodeText, fillPreferences )
-
-def getFillGcode( gcodeText, fillPreferences = None ):
+def getGcode( gcodeText, fillPreferences = None ):
 	"Fill the carves of a gcode text."
 	if gcodeText == '':
 		return ''
@@ -397,7 +410,7 @@ def getFillGcode( gcodeText, fillPreferences = None ):
 		preferences.readPreferences( fillPreferences )
 	skein = FillSkein()
 	skein.parseGcode( fillPreferences, gcodeText )
-	return skein.output.getvalue()
+	return skein.distanceFeedRate.output.getvalue()
 
 def getHorizontalSegmentsFromLoopLists( fillLoops, alreadyFilledArounds, y ):
 	"Get horizontal segments inside loops."
@@ -601,7 +614,7 @@ def isIntersectingLoopsPaths( loops, paths, pointBegin, pointEnd ):
 def isPathAlwaysInsideLoop( loop, path ):
 	"Determine if all points of a path are inside another loop."
 	for point in path:
-		if euclidean.getNumberOfIntersectionsToLeft( point, loop ) % 2 == 0:
+		if euclidean.getNumberOfIntersectionsToLeft( loop, point ) % 2 == 0:
 			return False
 	return True
 
@@ -609,7 +622,7 @@ def isPathAlwaysOutsideLoops( loops, path ):
 	"Determine if all points in a path are outside another loop in a list."
 	for loop in loops:
 		for point in path:
-			if euclidean.getNumberOfIntersectionsToLeft( point, loop ) % 2 == 1:
+			if euclidean.getNumberOfIntersectionsToLeft( loop, point ) % 2 == 1:
 				return False
 	return True
 
@@ -755,18 +768,15 @@ def setIsOutside( yCloseToCenterPath, yIntersectionPaths ):
 
 def writeOutput( fileName = '' ):
 	"Fill the carves of a gcode file.  Chain carve the file if it is a GNU TriangulatedSurface file.  If no fileName is specified, fill the first unmodified gcode file in this folder."
+	fileName = interpret.getFirstTranslatorFileNameUnmodified( fileName )
 	if fileName == '':
-		unmodified = interpret.getGNUTranslatorFilesUnmodified()
-		if len( unmodified ) == 0:
-			print( "There are no unmodified gcode files in this folder." )
-			return
-		fileName = unmodified[ 0 ]
+		return
 	startTime = time.time()
 	fillPreferences = FillPreferences()
 	preferences.readPreferences( fillPreferences )
 	print( 'File ' + gcodec.getSummarizedFilename( fileName ) + ' is being chain filled.' )
 	suffixFilename = fileName[ : fileName.rfind( '.' ) ] + '_fill.gcode'
-	fillGcode = getFillChainGcode( fileName, '', fillPreferences )
+	fillGcode = getChainGcode( fileName, '', fillPreferences )
 	if fillGcode == '':
 		return
 	gcodec.writeFileText( suffixFilename, fillGcode )
@@ -839,7 +849,7 @@ class FillPreferences:
 class FillSkein:
 	"A class to fill a skein of extrusions."
 	def __init__( self ):
-		self.decimalPlacesCarried = 3
+		self.distanceFeedRate = gcodec.DistanceFeedRate()
 		self.extruderActive = False
 		self.fillInset = 0.18
 		self.infillBridgeWidthOverExtrusionWidth = 1.0
@@ -848,7 +858,6 @@ class FillSkein:
 		self.lineIndex = 0
 		self.oldLocation = None
 		self.oldOrderedLocation = Vector3()
-		self.output = cStringIO.StringIO()
 		self.rotatedLayer = None
 		self.rotatedLayers = []
 		self.shutdownLineIndex = sys.maxint
@@ -857,18 +866,17 @@ class FillSkein:
 
 	def addFill( self, layerIndex ):
 		"Add fill to the carve layer."
-#		if layerIndex != 17 and layerIndex != 18:
-#			return
+#		print( layerIndex )
 		alreadyFilledArounds = []
 		arounds = []
 		layerExtrusionWidth = self.extrusionWidth
 		layerFillInset = self.fillInset
 		rotatedLayer = self.rotatedLayers[ layerIndex ]
-		self.addLine( '(<layer> %s )' % rotatedLayer.z ) # Indicate that a new layer is starting.
+		self.distanceFeedRate.addLine( '(<layer> %s )' % rotatedLayer.z ) # Indicate that a new layer is starting.
 		if rotatedLayer.rotation != None:
 			layerExtrusionWidth = self.extrusionWidth * self.infillBridgeWidthOverExtrusionWidth
 			layerFillInset = self.fillInset * self.infillBridgeWidthOverExtrusionWidth
-			self.addLine( '(<bridgeLayer>)' ) # Indicate that this is a bridge layer.
+			self.distanceFeedRate.addLine( '(<bridgeLayer>)' ) # Indicate that this is a bridge layer.
 		gridPointInsetX = 0.5 * layerFillInset
 		doubleExtrusionWidth = 2.0 * layerExtrusionWidth
 		muchGreaterThanLayerFillInset = 2.5 * layerFillInset
@@ -977,20 +985,7 @@ class FillSkein:
 
 	def addGcodeFromThreadZ( self, thread, z ):
 		"Add a gcode thread to the output."
-		if len( thread ) > 0:
-			self.addGcodeMovementZ( thread[ 0 ], z )
-		else:
-			print( "zero length vertex positions array which was skipped over, this should never happen" )
-		if len( thread ) < 2:
-			return
-		self.addLine( 'M101' )
-		for point in thread[ 1 : ]:
-			self.addGcodeMovementZ( point, z )
-		self.addLine( "M103" ) # Turn extruder off.
-
-	def addGcodeMovementZ( self, point, z ):
-		"Add a movement to the output."
-		self.addLine( "G1 X%s Y%s Z%s" % ( self.getRounded( point.real ), self.getRounded( point.imag ), self.getRounded( z ) ) )
+		self.distanceFeedRate.addGcodeFromThreadZ( thread, z )
 
 	def addGrid( self, alreadyFilledArounds, arounds, fillLoops, gridPointInsetX, layerIndex, paths, pixelTable, width, reverseZRotationAngle, rotatedExtruderLoops, surroundingCarves ):
 		"Add the grid to the infill layer."
@@ -1034,11 +1029,6 @@ class FillSkein:
 			gridXStep = self.getNextGripXStep( gridXStep )
 			gridXOffset = offset + gridWidth * float( gridXStep )
 
-	def addLine( self, line ):
-		"Add a line of text and a newline to the output."
-		if len( line ) > 0:
-			self.output.write( line + "\n" )
-
 	def addRemainingGridPoints( self, arounds, gridPointInsetX, gridPointInsetY, gridPoints, isBothOrNone, paths, pixelTable, width ):
 		"Add the remaining grid points to the grid point list."
 		for gridPointIndex in xrange( len( gridPoints ) - 1, - 1, - 1 ):
@@ -1056,17 +1046,12 @@ class FillSkein:
 			rotatedCarve.append( planeRotatedLoop )
 		surroundingCarves.append( rotatedCarve )
 
-	def addShutdownToOutput( self ):
-		"Add shutdown gcode to the output."
-		for line in self.lines[ self.shutdownLineIndex : ]:
-			self.addLine( line )
-
 	def addThreadsBridgeLayer( self, rotatedLayer, surroundingLoops ):
 		"Add the threads, add the bridge end & the layer end tag."
 		euclidean.addToThreadsRemoveFromSurroundings( self.oldOrderedLocation, surroundingLoops, self )
 		if rotatedLayer.rotation != None:
-			self.addLine( '(</bridgeLayer>)' ) # Indicate that this is a bridge layer.
-		self.addLine( '(</layer>)' )
+			self.distanceFeedRate.addLine( '(</bridgeLayer>)' ) # Indicate that this is a bridge layer.
+		self.distanceFeedRate.addLine( '(</layer>)' )
 
 	def addToThread( self, location ):
 		"Add a location to thread."
@@ -1157,10 +1142,6 @@ class FillSkein:
 				gridXStep += 1
 		return gridXStep
 
-	def getRounded( self, number ):
-		"Get number rounded to the number of carried decimal places as a string."
-		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
-
 	def getCarveArea( self, layerIndex ):
 		"Get the area of the carve."
 		if layerIndex < 0 or layerIndex >= len( self.rotatedLayers ):
@@ -1212,35 +1193,32 @@ class FillSkein:
 			self.parseLine( lineIndex )
 		for layerIndex in xrange( len( self.rotatedLayers ) ):
 			self.addFill( layerIndex )
-		self.addShutdownToOutput()
+		self.distanceFeedRate.addLines( self.lines[ self.shutdownLineIndex : ] )
 
 	def parseInitialization( self ):
 		"Parse gcode initialization and store the parameters."
 		for self.lineIndex in xrange( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			splitLine = line.split()
-			firstWord = ''
-			if len( splitLine ) > 0:
-				firstWord = splitLine[ 0 ]
-			if firstWord == '(<infillBridgeWidthOverExtrusionWidth>':
-				self.infillBridgeWidthOverExtrusionWidth = float( splitLine[ 1 ] )
-			elif firstWord == '(<decimalPlacesCarried>':
-				self.decimalPlacesCarried = int( splitLine[ 1 ] )
-			elif firstWord == '(<extrusionPerimeterWidth>':
+			firstWord = gcodec.getFirstWord( splitLine )
+			self.distanceFeedRate.parseSplitLine( firstWord, splitLine )
+			if firstWord == '(<extrusionPerimeterWidth>':
 				self.extrusionPerimeterWidth = float( splitLine[ 1 ] )
 			elif firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
 				self.interiorExtrusionWidth = self.extrusionWidth
 				if self.fillPreferences.interiorInfillDensityOverExteriorDensity.value > 0:
 					self.interiorExtrusionWidth /= self.fillPreferences.interiorInfillDensityOverExteriorDensity.value
-				self.addLine( '(<outsideExtrudedFirst> %s </outsideExtrudedFirst>)' % self.fillPreferences.outsideExtrudedFirst.value )
+				self.distanceFeedRate.addLine( '(<outsideExtrudedFirst> %s </outsideExtrudedFirst>)' % self.fillPreferences.outsideExtrudedFirst.value )
 			elif firstWord == '(</extruderInitialization>)':
-				self.addLine( '(<procedureDone> fill </procedureDone>)' )
-				self.addLine( line )
+				self.distanceFeedRate.addLine( '(<procedureDone> fill </procedureDone>)' )
+				self.distanceFeedRate.addLine( line )
 				return
 			elif firstWord == '(<fillInset>':
 				self.fillInset = float( splitLine[ 1 ] )
-			self.addLine( line )
+			elif firstWord == '(<infillBridgeWidthOverExtrusionWidth>':
+				self.infillBridgeWidthOverExtrusionWidth = float( splitLine[ 1 ] )
+			self.distanceFeedRate.addLine( line )
  
 	def parseLine( self, lineIndex ):
 		"Parse a gcode line and add it to the fill skein."

@@ -140,18 +140,19 @@ def addSegmentToPixelTable( beginComplex, endComplex, pixelTable, shortenDistanc
 
 def addSurroundingLoopBeginning( loop, skein, z ):
 	"Add surrounding loop beginning to gcode output."
-	skein.addLine( '(<surroundingLoop>)' )
+	skein.distanceFeedRate.addLine( '(<surroundingLoop>)' )
 	for point in loop:
-		skein.addLine( '(<boundaryPoint> X%s Y%s Z%s </boundaryPoint>)' % ( skein.getRounded( point.real ), skein.getRounded( point.imag ), skein.getRounded( z ) ) )
+		pointVector3 = Vector3( point.real, point.imag, z )
+		skein.distanceFeedRate.addLine( skein.distanceFeedRate.getBoundaryLine( pointVector3 ) )
 
 def addToThreadsFromLoop( extrusionHalfWidth, gcodeType, loop, oldOrderedLocation, skein ):
 	"Add to threads from the last location from loop."
 	loop = getLoopStartingNearest( extrusionHalfWidth, oldOrderedLocation.dropAxis( 2 ), loop )
 	oldOrderedLocation.x = loop[ 0 ].real
 	oldOrderedLocation.y = loop[ 0 ].imag
-	skein.addLine( gcodeType )
+	skein.distanceFeedRate.addLine( gcodeType )
 	skein.addGcodeFromThreadZ( loop + [ loop[ 0 ] ], oldOrderedLocation.z ) # Turn extruder on and indicate that a loop is beginning.
-	skein.addLine( gcodeType.replace( '(<', '(</' ) )
+	skein.distanceFeedRate.addLine( gcodeType.replace( '(<', '(</' ) )
 
 def addToThreadsRemoveFromSurroundings( oldOrderedLocation, surroundingLoops, skein ):
 	"Add to threads from the last location from surrounding loops."
@@ -497,16 +498,16 @@ def getNormalized( complexNumber ):
 		return complexNumber / complexNumberLength
 	return complexNumber
 
-def getNumberOfIntersectionsToLeft( leftPointComplex, loopComplex ):
+def getNumberOfIntersectionsToLeft( loopComplex, pointComplex ):
 	"Get the number of intersections through the loop for the line starting from the left point and going left."
 	numberOfIntersectionsToLeft = 0
 	for pointIndex in xrange( len( loopComplex ) ):
 		firstPointComplex = loopComplex[ pointIndex ]
 		secondPointComplex = loopComplex[ ( pointIndex + 1 ) % len( loopComplex ) ]
-		isLeftAboveFirst = leftPointComplex.imag > firstPointComplex.imag
-		isLeftAboveSecond = leftPointComplex.imag > secondPointComplex.imag
+		isLeftAboveFirst = pointComplex.imag > firstPointComplex.imag
+		isLeftAboveSecond = pointComplex.imag > secondPointComplex.imag
 		if isLeftAboveFirst != isLeftAboveSecond:
-			if getXIntersection( firstPointComplex, secondPointComplex, leftPointComplex.imag ) < leftPointComplex.real:
+			if getXIntersection( firstPointComplex, secondPointComplex, pointComplex.imag ) < pointComplex.real:
 				numberOfIntersectionsToLeft += 1
 	return numberOfIntersectionsToLeft
 
@@ -708,6 +709,14 @@ def getSimplifiedPath( path, radius ):
 		pointIndex += pointIndex
 	return getAwayPoints( path, radius )
 
+def getSquareLoop( beginComplex, endComplex ):
+	"Get a square loop from the beginning to the end and back."
+	loop = [ beginComplex ]
+	loop.append( complex( beginComplex.real, endComplex.imag ) )
+	loop.append( endComplex )
+	loop.append( complex( endComplex.real, beginComplex.imag ) )
+	return loop
+
 def getSquareValues( pixelTable, x, y ):
 	"Get a list of the values in a square around the x and y pixel coordinates."
 	squareValues = []
@@ -806,11 +815,11 @@ def isCloseXYPlane( overlapDistance, pixelTable, pointComplex, x, y ):
 			return True
 	return False
 
-def isInFilledRegion( leftPoint, loops ):
+def isInFilledRegion( loops, pointComplex ):
 	"Determine if the left point is in the filled region of the loops."
 	totalNumberOfIntersectionsToLeft = 0
 	for loop in loops:
-		totalNumberOfIntersectionsToLeft += getNumberOfIntersectionsToLeft( leftPoint, loop )
+		totalNumberOfIntersectionsToLeft += getNumberOfIntersectionsToLeft( loop, pointComplex )
 	return totalNumberOfIntersectionsToLeft % 2 == 1
 
 def isInsideOtherLoops( loopIndex, loops ):
@@ -890,7 +899,7 @@ def isPixelTableIntersecting( bigTable, littleTable, maskTable = {} ):
 
 def isPointInsideLoop( loop, point ):
 	"Determine if a point is inside another loop."
-	return getNumberOfIntersectionsToLeft( point, loop ) % 2 == 1
+	return getNumberOfIntersectionsToLeft( loop, point ) % 2 == 1
 
 def isPointInsideLoops( loops, point ):
 	"Determine if a point is inside a loop list."
@@ -1055,7 +1064,6 @@ class Endpoint:
 	def getNearestMiss( self, endpoints, path, pixelTable, width ):
 		"Get the nearest endpoint which the segment to that endpoint misses the other extrusions."
 		smallestDistance = 9999999999.0
-		nearestMiss = None
 		penultimateMinusPoint = complex( 0.0, 0.0 )
 		if len( path ) > 1:
 			penultimateMinusPoint = path[ - 2 ] - self.point
@@ -1073,13 +1081,13 @@ class Endpoint:
 				print( path )
 				return
 		endpoints.sort( compareSegmentLength )
-		for endpoint in endpoints:
+		for endpoint in endpoints[ : 15 ]: # increasing the number of searched endpoints increases the search time, with 20 fill took 600 seconds for cilinder.gts, with 10 fill took 533 seconds
 			if getDotProduct( penultimateMinusPoint, endpoint.segment / endpoint.segmentLength ) < 0.9:
 				segmentTable = {}
 				addSegmentToPixelTable( endpoint.point, self.point, segmentTable, 4, 4, width )
 				if not isPixelTableIntersecting( pixelTable, segmentTable ):
 					return endpoint
-		return nearestMiss
+		return None
 
 
 class LoopLayer:
@@ -1154,7 +1162,7 @@ class SurroundingLoop:
 			transferClosestPaths( oldOrderedLocation, self.perimeterPaths[ : ], skein )
 		else:
 			addToThreadsFromLoop( self.extrusionHalfWidth, '(<perimeter>)', self.loop[ : ], oldOrderedLocation, skein )#later when comb is updated replace perimeter with loop
-		skein.addLine( '(</surroundingLoop>)' )
+		skein.distanceFeedRate.addLine( '(</surroundingLoop>)' )
 		addToThreadsRemoveFromSurroundings( oldOrderedLocation, self.innerSurroundings[ : ], skein )
 		if self.isOutsideExtrudedFirst:
 			self.transferClosestFillLoops( oldOrderedLocation, skein )

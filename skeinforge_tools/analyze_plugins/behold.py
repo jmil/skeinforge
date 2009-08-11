@@ -328,7 +328,7 @@ class BeholdSkein:
 	def getLayerTop( self ):
 		"Get the layer top."
 		if len( self.layerTops ) < 1:
-			return - 999999999999.9
+			return - 9123456789123.9
 		return self.layerTops[ - 1 ]
 
 	def getLayerZoneIndex( self, z ):
@@ -369,10 +369,6 @@ class BeholdSkein:
 		if self.extruderActive or self.goAroundExtruderOffTravel:
 			self.cornerHigh = euclidean.getPointMaximum( self.cornerHigh, location )
 			self.cornerLow = euclidean.getPointMinimum( self.cornerLow, location )
-		if self.extruderActive and self.hasASurroundingLoopBeenReached:
-			if location.z > self.getLayerTop():
-				layerTop = location.z + 0.33333333333 * self.layerThickness
-				self.layerTops.append( layerTop )
 		self.oldLocation = location
 
 	def linearMove( self, line, splitLine ):
@@ -425,10 +421,14 @@ class BeholdSkein:
 			self.extruderActive = False
 		elif firstWord == '(<extrusionWidth>':
 			self.extrusionWidth = float( splitLine[ 1 ] )
+		elif firstWord == '(<layer>':
+			self.layerTopZ = float( splitLine[ 1 ] ) + self.thirdLayerThickness
 		elif firstWord == '(<layerThickness>':
 			self.layerThickness = float( splitLine[ 1 ] )
+			self.thirdLayerThickness = 0.33333333333 * self.layerThickness
 		elif firstWord == '(<surroundingLoop>)':
-			self.hasASurroundingLoopBeenReached = True
+			if self.layerTopZ > self.getLayerTop():
+				self.layerTops.append( self.layerTopZ )
 
 	def parseGcode( self, gcodeText, beholdPreferences ):
 		"Parse gcode text and store the vector output."
@@ -441,9 +441,11 @@ class BeholdSkein:
 		self.isThereALayerStartWord = gcodec.isThereAFirstWord( '(<layer>', self.lines, 1 )
 		for line in self.lines:
 			self.parseCorner( line )
-		self.oneMinusBrightnessOverTopLayerIndex = ( 1.0 - beholdPreferences.bottomLayerBrightness.value ) / float( len( self.layerTops ) - 1 )
+		if len( self.layerTops ) > 0:
+			self.layerTops[ - 1 ] += 912345678.9
+		if len( self.layerTops ) > 1:
+			self.oneMinusBrightnessOverTopLayerIndex = ( 1.0 - beholdPreferences.bottomLayerBrightness.value ) / float( len( self.layerTops ) - 1 )
 		self.firstTopLayer = len( self.layerTops ) - self.beholdPreferences.numberOfFillTopLayers.value
-		self.hasASurroundingLoopBeenReached = False
 		self.centerComplex = 0.5 * ( self.cornerHigh.dropAxis( 2 ) + self.cornerLow.dropAxis( 2 ) )
 		self.centerBottom = Vector3( self.centerComplex.real, self.centerComplex.imag, self.cornerLow.z )
 		self.scale = beholdPreferences.pixelsWidthExtrusion.value / self.extrusionWidth

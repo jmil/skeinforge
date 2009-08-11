@@ -38,7 +38,6 @@ def displayDialog( displayPreferences ):
 	root = Tkinter.Tk()
 	preferencesDialog = PreferencesDialog( displayPreferences, root )
 	global globalIsMainLoopRunning
-#	print( globalIsMainLoopRunning )
 	if globalIsMainLoopRunning:
 		return
 	globalIsMainLoopRunning = True
@@ -48,7 +47,8 @@ def displayDialog( displayPreferences ):
 def getArchiveText( archivablePreferences ):
 	"Get the text representation of the archive."
 	archiveWriter = cStringIO.StringIO()
-	archiveWriter.write( 'Format is tab separated preferences.\n' )
+	archiveWriter.write( 'Format is tab separated %s.\n' % archivablePreferences.title.lower() )
+	archiveWriter.write( 'Name                          %sValue\n' % globalSpreadsheetSeparator )
 	for preference in archivablePreferences.archive:
 		preference.writeToArchiveWriter( archiveWriter )
 	return archiveWriter.getvalue()
@@ -162,6 +162,21 @@ def makeDirectory( directory ):
 		os.makedirs( directory )
 	except OSError:
 		print( 'Skeinforge can not make the directory %s so give it read/write permission for that directory and the containing directory.' % directory )
+
+def openWebPage( webPagePath ):
+	"Open a web page in a browser."
+	webPagePath = os.path.normpath( webPagePath )
+	try:
+		os.startfile( webPagePath )#this is available on some python environments, but not all
+		return
+	except:
+		pass
+	webbrowserName = webbrowser.get().name
+	if webbrowserName == '':
+		print( 'Skeinforge was not able to open the documentation file in a web browser.  To see the documentation, open the following file in a web browser:' )
+		print( webPagePath )
+		return
+	os.system( webbrowser.get().name + ' ' + webPagePath )#used this instead of webbrowser.open() to workaround webbrowser open() bug
 
 def readPreferences( archivablePreferences ):
 	"Set an archive to the preferences read from a file."
@@ -357,7 +372,7 @@ class StringPreference:
 
 	def writeToArchiveWriter( self, archiveWriter ):
 		"Write tab separated name and value to the archive writer."
-		archiveWriter.write( self.name + globalSpreadsheetSeparator + str( self.value ) + '\n' )
+		archiveWriter.write( '%s%s%s\n' % ( self.name, globalSpreadsheetSeparator, self.value ) )
 
 
 class BooleanPreference( StringPreference ):
@@ -513,12 +528,13 @@ class DisplayToolButtonBesidePrevious( DisplayToolButton ):
 
 
 class Filename( StringPreference ):
+	"A class to display, read & write a fileName."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
 		preferencesDialog.executables.append( self )
 
-	"A class to display, read & write a fileName."
 	def execute( self ):
+		"Open the file picker."
 		try:
 			import tkFileDialog
 			summarized = gcodec.getSummarizedFilename( self.value )
@@ -528,12 +544,15 @@ class Filename( StringPreference ):
 			else:
 				initialDirectory = "."
 			fileName = tkFileDialog.askopenfilename( filetypes = self.getFilenameFirstTypes(), initialdir = initialDirectory, initialfile = os.path.basename( summarized ), title = self.name )
-			if ( str( fileName ) == '()' or str( fileName ) == '' ):
-				self.wasCancelled = True
-			else:
-				self.value = fileName
+			self.setCancelledValue( fileName )
+			return
 		except:
-			print( 'Oops, ' + self.name + ' could not get fileName.' )
+			print( 'Could not get the old directory in preferences, so the file picker will be opened in the default directory.' )
+		try:
+			fileName = tkFileDialog.askopenfilename( filetypes = self.getFilenameFirstTypes(), initialdir = '.', initialfile = '', title = self.name )
+			self.setCancelledValue( fileName )
+		except:
+			print( 'Error in execute in Filename in preferences, ' + self.name )
 
 	def getFromFilename( self, fileTypes, name, value ):
 		"Initialize."
@@ -544,23 +563,33 @@ class Filename( StringPreference ):
 
 	def getFilenameFirstTypes( self ):
 		"Get the file types with the file type of the fileName moved to the front of the list."
-		basename = os.path.basename( self.value )
-		splitFile = basename.split( '.' )
-		allReadables = []
-		if len( self.fileTypes ) > 1:
+		try:
+			basename = os.path.basename( self.value )
+			splitFile = basename.split( '.' )
+			allReadables = []
+			if len( self.fileTypes ) > 1:
+				for fileType in self.fileTypes:
+					allReadable = ( ( 'All Readable', fileType[ 1 ] ) )
+					allReadables.append( allReadable )
+			if len( splitFile ) < 1:
+				return self.fileTypes + allReadables
+			baseExtension = splitFile[ - 1 ]
 			for fileType in self.fileTypes:
-				allReadable = ( ( 'All Readable', fileType[ 1 ] ) )
-				allReadables.append( allReadable )
-		if len( splitFile ) < 1:
+				fileExtension = fileType[ 1 ].split( '.' )[ - 1 ]
+				if fileExtension == baseExtension:
+					fileNameFirstTypes = self.fileTypes[ : ]
+					fileNameFirstTypes.remove( fileType )
+					return [ fileType ] + fileNameFirstTypes + allReadables
 			return self.fileTypes + allReadables
-		baseExtension = splitFile[ - 1 ]
-		for fileType in self.fileTypes:
-			fileExtension = fileType[ 1 ].split( '.' )[ - 1 ]
-			if fileExtension == baseExtension:
-				fileNameFirstTypes = self.fileTypes[ : ]
-				fileNameFirstTypes.remove( fileType )
-				return [ fileType ] + fileNameFirstTypes + allReadables
-		return self.fileTypes + allReadables
+		except:
+			return [ ( 'All', '*.*' ) ]
+
+	def setCancelledValue( self, fileName ):
+		"Set the value to the file name and wasCancelled true if a file was not picked."
+		if ( str( fileName ) == '()' or str( fileName ) == '' ):
+			self.wasCancelled = True
+		else:
+			self.value = fileName
 
 	def setToDisplay( self ):
 		"Do nothing because the file dialog is handling the value."
@@ -760,13 +789,14 @@ class MenuRadio( BooleanPreference ):
 	"A class to display, read & write a boolean with associated menu radio button."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
+		self.menuButtonDisplay.menuButton.menu.add_radiobutton( label = self.name, command = self.clickRadio, value = self.name, variable = self.getStringVar() )
 		self.menuLength = self.menuButtonDisplay.menuButton.menu.index( Tkinter.END )
-		if self.menuLength == None:
-			self.menuLength = 0
-		else:
-			self.menuLength += 1
-		self.menuButtonDisplay.menuButton.menu.add_radiobutton( label = self.name, value = self.menuLength, variable = self.getIntVar() )
 		self.setDisplayState()
+
+	def clickRadio( self ):
+		"Workaround for Tkinter bug, invoke and set the value when clicked."
+		if self.getStringVar().get() != self.name:
+			self.invokeSetString()
 
 	def getFromMenuButtonDisplay( self, menuButtonDisplay, name, value ):
 		"Initialize."
@@ -774,21 +804,25 @@ class MenuRadio( BooleanPreference ):
 		self.menuButtonDisplay = menuButtonDisplay
 		return self
 
-	def getIntVar( self ):
-		"Get the IntVar for this radio button group."
+	def getStringVar( self ):
+		"Get the StringVar for this radio button group."
 		if self.menuButtonDisplay.radioVar == None:
-			self.menuButtonDisplay.radioVar = Tkinter.IntVar()
+			self.menuButtonDisplay.radioVar = Tkinter.StringVar()
 		return self.menuButtonDisplay.radioVar
+
+	def invokeSetString( self ):
+		"Workaround for Tkinter bug, invoke and set the value."
+		self.getStringVar().set( self.name )
+		self.menuButtonDisplay.menuButton.menu.invoke( self.menuLength )
 
 	def setToDisplay( self ):
 		"Set the boolean to the checkbox."
-		self.value = ( self.getIntVar().get() == self.menuLength )
+		self.value = ( self.getStringVar().get() == self.name )
 
 	def setDisplayState( self ):
 		"Set the checkbox to the boolean."
 		if self.value:
-			self.getIntVar().set( self.menuLength )
-			self.menuButtonDisplay.menuButton.menu.invoke( self.menuLength )
+			self.invokeSetString()
 
 
 class ProfileList:
@@ -917,7 +951,6 @@ class WindowPosition( StringPreference ):
 class PreferencesDialog:
 	def __init__( self, displayPreferences, master ):
 		"Add display preferences to the dialog."
-		self.column = 0
 		self.displayPreferences = displayPreferences
 		self.displayToolButtonStart = True
 		self.executables = []
@@ -925,30 +958,38 @@ class PreferencesDialog:
 		self.row = 0
 		master.title( displayPreferences.title )
 		frame = Tkinter.Frame( master )
+		if len( displayPreferences.archive ) > 25:
+			self.addButtons( displayPreferences, master )
 		for preference in displayPreferences.archive:
 			preference.addToDialog( self )
 		if self.row < 20:
 			Tkinter.Label( master ).grid( row = self.row )
 			self.row += 1
+		self.addButtons( displayPreferences, master )
+		self.setWindowPositionDeiconify()
+		self.master.update_idletasks()
+
+	def addButtons( self, displayPreferences, master ):
+		"Add buttons to the dialog."
+		columnIndex = 0
 		cancelColor = 'red'
 		cancelTitle = 'Close'
 		if displayPreferences.saveTitle != None:
 			cancelTitle = 'Cancel'
 		if displayPreferences.executeTitle != None:
 			executeButton = Tkinter.Button( master, activebackground = 'black', activeforeground = 'blue', text = displayPreferences.executeTitle, command = self.execute )
-			executeButton.grid( row = self.row, column = self.column )
-			self.column += 1
-		helpButton = Tkinter.Button( master, activebackground = 'black', activeforeground = 'white', text = "       ?       ", command = self.openBrowser )
-		helpButton.grid( row = self.row, column = self.column )
-		self.column += 1
+			executeButton.grid( row = self.row, column = columnIndex )
+			columnIndex += 1
+		helpButton = Tkinter.Button( master, activebackground = 'black', activeforeground = 'white', text = "       ?       ", command = self.openHelpPage )
+		helpButton.grid( row = self.row, column = columnIndex )
+		columnIndex += 1
 		cancelButton = Tkinter.Button( master, activebackground = 'black', activeforeground = cancelColor, command = master.destroy, fg = cancelColor, text = cancelTitle )
-		cancelButton.grid( row = self.row, column = self.column )
-		self.column += 1
+		cancelButton.grid( row = self.row, column = columnIndex )
+		columnIndex += 1
 		if displayPreferences.saveTitle != None:
 			saveButton = Tkinter.Button( master, activebackground = 'black', activeforeground = 'darkgreen', command = self.savePreferencesDestroy, fg = 'darkgreen', text = displayPreferences.saveTitle )
-			saveButton.grid( row = self.row, column = self.column )
-		self.setWindowPositionDeiconify()
-		self.master.update_idletasks()
+			saveButton.grid( row = self.row, column = columnIndex )
+		self.row += 1
 
 	def execute( self ):
 		"The execute button was clicked."
@@ -958,14 +999,14 @@ class PreferencesDialog:
 		self.displayPreferences.execute()
 		self.master.destroy()
 
-	def openBrowser( self ):
+	def openHelpPage( self ):
 		"Open the browser to the help page."
 		numberOfLevelsDeepInPackageHierarchy = 2
 		packageFilePath = os.path.abspath( __file__ )
 		for level in xrange( numberOfLevelsDeepInPackageHierarchy + 1 ):
 			packageFilePath = os.path.dirname( packageFilePath )
 		documentationPath = os.path.join( os.path.join( packageFilePath, 'documentation' ), self.displayPreferences.fileNameHelp )
-		os.system( webbrowser.get().name + ' ' + documentationPath )#used this instead of webbrowser.open() to workaround webbrowser open() bug
+		openWebPage( documentationPath )
 
 	def savePreferences( self ):
 		"Set the preferences to the dialog then write them."

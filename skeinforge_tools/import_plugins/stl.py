@@ -105,18 +105,20 @@ def getCarving( fileName = '' ):
 	vertexIndexTable = {}
 	numberOfVertexStrings = stlData.count( 'vertex' )
 	requiredVertexStringsForText = max( 2, len( stlData ) / 8000 )
-#	binarySolidworksHeaderErrorString = 'solid binary'
-#	binarySolidworksHeaderError = stlData[ : len( binarySolidworksHeaderErrorString ) ] == binarySolidworksHeaderErrorString
-#	if binarySolidworksHeaderError:
-#		print( 'The solidworks file has the incorrect header:' )
-#		print( binarySolidworksHeaderErrorString )
-#		print( 'A binary stl should never start with the word "solid".  Because this error is common the file is been parsed as binary regardless.' )
 	if numberOfVertexStrings > requiredVertexStringsForText:
 		addFacesGivenText( stlData, triangleMesh, vertexIndexTable )
 	else:
+#	A binary stl should never start with the word "solid".  Because this error is common the file is been parsed as binary regardless.
 		addFacesGivenBinary( stlData, triangleMesh, vertexIndexTable )
 	triangleMesh.setEdgesForAllFaces()
 	return triangleMesh
+
+def getFloat( floatString ):
+	"Get the float, replacing commas if necessary because an inferior program is using a comma instead of a point for the decimal point."
+	try:
+		return float( floatString )
+	except:
+		return float( floatString.replace( ',', '.' ) )
 
 def getVertexGivenBinary( byteIndex, stlData ):
 	"Get vertex given stl vertex line."
@@ -125,4 +127,4 @@ def getVertexGivenBinary( byteIndex, stlData ):
 def getVertexGivenLine( line ):
 	"Get vertex given stl vertex line."
 	splitLine = line.split()
-	return Vector3( float( splitLine[ 1 ] ), float( splitLine[ 2 ] ), float( splitLine[ 3 ] ) )
+	return Vector3( getFloat( splitLine[ 1 ] ), getFloat( splitLine[ 2 ] ), getFloat( splitLine[ 3 ] ) )

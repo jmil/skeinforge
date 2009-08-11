@@ -11,6 +11,11 @@
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/analyze_plugins/skeinview.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/analyze_plugins/skeinview.py</a></font></td></tr></table>
     <p><tt>Skeinview&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;display&nbsp;each&nbsp;layer&nbsp;of&nbsp;a&nbsp;gcode&nbsp;file.<br>
 &nbsp;<br>
+Skeinview&nbsp;is&nbsp;derived&nbsp;from&nbsp;Nophead's&nbsp;preview&nbsp;script.&nbsp;&nbsp;The&nbsp;extruded&nbsp;lines&nbsp;are&nbsp;in&nbsp;the&nbsp;resistor&nbsp;colors&nbsp;red,&nbsp;orange,&nbsp;yellow,&nbsp;green,<br>
+blue,&nbsp;purple&nbsp;&amp;&nbsp;brown.&nbsp;&nbsp;When&nbsp;the&nbsp;extruder&nbsp;is&nbsp;off,&nbsp;the&nbsp;travel&nbsp;line&nbsp;is&nbsp;grey.&nbsp;&nbsp;Skeinview&nbsp;is&nbsp;useful&nbsp;for&nbsp;a&nbsp;detailed&nbsp;view&nbsp;of&nbsp;the&nbsp;extrusion,<br>
+behold&nbsp;is&nbsp;better&nbsp;to&nbsp;see&nbsp;the&nbsp;orientation&nbsp;of&nbsp;the&nbsp;shape.&nbsp;&nbsp;To&nbsp;get&nbsp;an&nbsp;initial&nbsp;overview&nbsp;of&nbsp;the&nbsp;skein,&nbsp;when&nbsp;the&nbsp;skeinview&nbsp;display&nbsp;window<br>
+appears,&nbsp;click&nbsp;the&nbsp;Soar&nbsp;button.<br>
+&nbsp;<br>
 The&nbsp;default&nbsp;'Activate&nbsp;Skeinview'&nbsp;checkbox&nbsp;is&nbsp;on.&nbsp;&nbsp;When&nbsp;it&nbsp;is&nbsp;on,&nbsp;the&nbsp;functions&nbsp;described&nbsp;below&nbsp;will&nbsp;work&nbsp;when&nbsp;called&nbsp;from&nbsp;the<br>
 skeinforge&nbsp;toolchain,&nbsp;when&nbsp;it&nbsp;is&nbsp;off,&nbsp;the&nbsp;functions&nbsp;will&nbsp;not&nbsp;be&nbsp;called&nbsp;from&nbsp;the&nbsp;toolchain.&nbsp;&nbsp;The&nbsp;functions&nbsp;will&nbsp;still&nbsp;be&nbsp;called,&nbsp;whether<br>
 or&nbsp;not&nbsp;the&nbsp;'Activate&nbsp;Skeinview'&nbsp;checkbox&nbsp;is&nbsp;on,&nbsp;when&nbsp;skeinview&nbsp;is&nbsp;run&nbsp;directly.&nbsp;&nbsp;Skeinview&nbsp;has&nbsp;trouble&nbsp;separating&nbsp;the&nbsp;layers<br>
@@ -21,12 +26,15 @@ Off&nbsp;Travel"&nbsp;is&nbsp;selected,&nbsp;the&nbsp;display&nbsp;will&nbsp;inc
 path&nbsp;if&nbsp;any.&nbsp;&nbsp;The&nbsp;"Pixels&nbsp;over&nbsp;Extrusion&nbsp;Width"&nbsp;preference&nbsp;is&nbsp;the&nbsp;scale&nbsp;of&nbsp;the&nbsp;image,&nbsp;the&nbsp;higher&nbsp;the&nbsp;number,&nbsp;the&nbsp;greater&nbsp;the<br>
 size&nbsp;of&nbsp;the&nbsp;display.&nbsp;&nbsp;The&nbsp;"Screen&nbsp;Horizontal&nbsp;Inset"&nbsp;determines&nbsp;how&nbsp;much&nbsp;the&nbsp;display&nbsp;will&nbsp;be&nbsp;inset&nbsp;in&nbsp;the&nbsp;horizontal&nbsp;direction<br>
 from&nbsp;the&nbsp;edge&nbsp;of&nbsp;screen,&nbsp;the&nbsp;higher&nbsp;the&nbsp;number&nbsp;the&nbsp;more&nbsp;it&nbsp;will&nbsp;be&nbsp;inset&nbsp;and&nbsp;the&nbsp;smaller&nbsp;it&nbsp;will&nbsp;be,&nbsp;the&nbsp;default&nbsp;is&nbsp;one&nbsp;hundred.<br>
-The&nbsp;"Screen&nbsp;Vertical&nbsp;Inset"&nbsp;determines&nbsp;how&nbsp;much&nbsp;the&nbsp;display&nbsp;will&nbsp;be&nbsp;inset&nbsp;in&nbsp;the&nbsp;vertical&nbsp;direction&nbsp;from&nbsp;the&nbsp;edge&nbsp;of&nbsp;screen,<br>
-the&nbsp;default&nbsp;is&nbsp;fifty.<br>
+The&nbsp;"Screen&nbsp;Vertical&nbsp;Inset"&nbsp;determines&nbsp;how&nbsp;much&nbsp;the&nbsp;display&nbsp;will&nbsp;be&nbsp;inset&nbsp;in&nbsp;the&nbsp;vertical&nbsp;direction&nbsp;from&nbsp;the&nbsp;edge&nbsp;of&nbsp;screen,&nbsp;the<br>
+default&nbsp;is&nbsp;fifty.&nbsp;&nbsp;The&nbsp;"Slide&nbsp;Show&nbsp;Rate"&nbsp;determines&nbsp;how&nbsp;fast&nbsp;the&nbsp;layer&nbsp;index&nbsp;changes&nbsp;when&nbsp;soar&nbsp;or&nbsp;dive&nbsp;is&nbsp;operating.<br>
 &nbsp;<br>
-On&nbsp;the&nbsp;skeinview&nbsp;display&nbsp;window,&nbsp;the&nbsp;up&nbsp;button&nbsp;increases&nbsp;the&nbsp;layer&nbsp;index&nbsp;shown&nbsp;by&nbsp;one,&nbsp;and&nbsp;the&nbsp;down&nbsp;button&nbsp;decreases&nbsp;the<br>
+On&nbsp;the&nbsp;skeinview&nbsp;display&nbsp;window,&nbsp;the&nbsp;Up&nbsp;button&nbsp;increases&nbsp;the&nbsp;layer&nbsp;index&nbsp;shown&nbsp;by&nbsp;one,&nbsp;and&nbsp;the&nbsp;Down&nbsp;button&nbsp;decreases&nbsp;the<br>
 layer&nbsp;index&nbsp;by&nbsp;one.&nbsp;&nbsp;When&nbsp;the&nbsp;index&nbsp;displayed&nbsp;in&nbsp;the&nbsp;index&nbsp;field&nbsp;is&nbsp;changed&nbsp;then&nbsp;"&lt;return&gt;"&nbsp;is&nbsp;hit,&nbsp;the&nbsp;layer&nbsp;index&nbsp;shown&nbsp;will<br>
-be&nbsp;set&nbsp;to&nbsp;the&nbsp;index&nbsp;field,&nbsp;to&nbsp;a&nbsp;mimimum&nbsp;of&nbsp;zero&nbsp;and&nbsp;to&nbsp;a&nbsp;maximum&nbsp;of&nbsp;the&nbsp;highest&nbsp;index&nbsp;layer.<br>
+be&nbsp;set&nbsp;to&nbsp;the&nbsp;index&nbsp;field,&nbsp;to&nbsp;a&nbsp;mimimum&nbsp;of&nbsp;zero&nbsp;and&nbsp;to&nbsp;a&nbsp;maximum&nbsp;of&nbsp;the&nbsp;highest&nbsp;index&nbsp;layer.&nbsp;&nbsp;The&nbsp;Soar&nbsp;button&nbsp;increases&nbsp;the<br>
+layer&nbsp;index&nbsp;at&nbsp;the&nbsp;"Slide&nbsp;Show&nbsp;Rate",&nbsp;and&nbsp;the&nbsp;Dive&nbsp;button&nbsp;decreases&nbsp;the&nbsp;layer&nbsp;index&nbsp;at&nbsp;the&nbsp;slide&nbsp;show&nbsp;rate.&nbsp;&nbsp;The&nbsp;soaring&nbsp;and<br>
+diving&nbsp;stop&nbsp;when&nbsp;return&nbsp;is&nbsp;hit&nbsp;in&nbsp;the&nbsp;index&nbsp;field,&nbsp;or&nbsp;when&nbsp;the&nbsp;up&nbsp;or&nbsp;down&nbsp;button&nbsp;is&nbsp;hit,&nbsp;or&nbsp;when&nbsp;the&nbsp;top&nbsp;or&nbsp;bottom&nbsp;layer&nbsp;is<br>
+reached.<br>
 &nbsp;<br>
 To&nbsp;run&nbsp;skeinview,&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;skeinview&nbsp;is&nbsp;in&nbsp;type:<br>
 &gt;&nbsp;python&nbsp;skeinview.py<br>
@@ -77,6 +85,7 @@ This&nbsp;brings&nbsp;up&nbsp;a&nbsp;skein&nbsp;window&nbsp;to&nbsp;view&nbsp;ea
 </td><td width="25%" valign=top><a href="skeinforge_tools.polyfile.html">skeinforge_tools.polyfile</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.preferences.html">skeinforge_tools.skeinforge_utilities.preferences</a><br>
 </td><td width="25%" valign=top><a href="sys.html">sys</a><br>
+<a href="threading.html">threading</a><br>
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ee77aa">
@@ -112,13 +121,19 @@ This&nbsp;brings&nbsp;up&nbsp;a&nbsp;skein&nbsp;window&nbsp;to&nbsp;view&nbsp;ea
     
 <tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
-<dl><dt><a name="SkeinWindow-__init__"><strong>__init__</strong></a>(self, arrowType, screenHorizontalInset, screenVerticalInset, size, skeinPanes)</dt></dl>
+<dl><dt><a name="SkeinWindow-__init__"><strong>__init__</strong></a>(self, arrowType, size, skeinPanes, skeinviewPreferences)</dt></dl>
 
 <dl><dt><a name="SkeinWindow-buttonOneClicked"><strong>buttonOneClicked</strong></a>(self, event)</dt></dl>
+
+<dl><dt><a name="SkeinWindow-cancelTimer"><strong>cancelTimer</strong></a>(self)</dt><dd><tt>Cancel&nbsp;the&nbsp;timer&nbsp;and&nbsp;set&nbsp;it&nbsp;to&nbsp;none.</tt></dd></dl>
+
+<dl><dt><a name="SkeinWindow-dive"><strong>dive</strong></a>(self)</dt><dd><tt>Dive,&nbsp;go&nbsp;down&nbsp;periodically.</tt></dd></dl>
 
 <dl><dt><a name="SkeinWindow-down"><strong>down</strong></a>(self)</dt></dl>
 
 <dl><dt><a name="SkeinWindow-indexEntryReturnPressed"><strong>indexEntryReturnPressed</strong></a>(self, event)</dt></dl>
+
+<dl><dt><a name="SkeinWindow-soar"><strong>soar</strong></a>(self)</dt><dd><tt>Soar,&nbsp;go&nbsp;up&nbsp;periodically.</tt></dd></dl>
 
 <dl><dt><a name="SkeinWindow-up"><strong>up</strong></a>(self)</dt></dl>
 

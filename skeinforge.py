@@ -195,8 +195,20 @@ http://forums.reprap.org/profile.php?12,488
 or posting in the "Skeinforge Powwow" thread at:
 http://forums.reprap.org/read.php?12,20013
 
+or you can email me at:
+perez_enrique@yahoo.com
+
 When asking for help please include your object and your zipped skeinforge preferences.  The skeinforge preferences are in
 the .skeinforge folder in your home directory.
+
+If the dialog window is too big for the screen, on most Linux window managers you can move a window by holding down the
+Alt key and then drag the window with the left mouse button to get to the off screen widgets.
+
+If you can't use the graphical interface, you can change the preferences for skeinforge by using a text editor or spreadsheet
+to change the preferences in the profiles folder in the .skeinforge folder in your home directory.
+
+Comments and suggestions are welcome, however, I usually won't reply because developing takes all my time and as of the
+time of this writing I have at least eight months of features to implement.
 
 
 Examples

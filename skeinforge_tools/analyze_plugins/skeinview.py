@@ -1,6 +1,11 @@
 """
 Skeinview is a script to display each layer of a gcode file.
 
+Skeinview is derived from Nophead's preview script.  The extruded lines are in the resistor colors red, orange, yellow, green,
+blue, purple & brown.  When the extruder is off, the travel line is grey.  Skeinview is useful for a detailed view of the extrusion,
+behold is better to see the orientation of the shape.  To get an initial overview of the skein, when the skeinview display window
+appears, click the Soar button.
+
 The default 'Activate Skeinview' checkbox is on.  When it is on, the functions described below will work when called from the
 skeinforge toolchain, when it is off, the functions will not be called from the toolchain.  The functions will still be called, whether
 or not the 'Activate Skeinview' checkbox is on, when skeinview is run directly.  Skeinview has trouble separating the layers
@@ -11,12 +16,15 @@ Off Travel" is selected, the display will include the travel when the extruder i
 path if any.  The "Pixels over Extrusion Width" preference is the scale of the image, the higher the number, the greater the
 size of the display.  The "Screen Horizontal Inset" determines how much the display will be inset in the horizontal direction
 from the edge of screen, the higher the number the more it will be inset and the smaller it will be, the default is one hundred.
-The "Screen Vertical Inset" determines how much the display will be inset in the vertical direction from the edge of screen,
-the default is fifty.
+The "Screen Vertical Inset" determines how much the display will be inset in the vertical direction from the edge of screen, the
+default is fifty.  The "Slide Show Rate" determines how fast the layer index changes when soar or dive is operating.
 
-On the skeinview display window, the up button increases the layer index shown by one, and the down button decreases the
+On the skeinview display window, the Up button increases the layer index shown by one, and the Down button decreases the
 layer index by one.  When the index displayed in the index field is changed then "<return>" is hit, the layer index shown will
-be set to the index field, to a mimimum of zero and to a maximum of the highest index layer.
+be set to the index field, to a mimimum of zero and to a maximum of the highest index layer.  The Soar button increases the
+layer index at the "Slide Show Rate", and the Dive button decreases the layer index at the slide show rate.  The soaring and
+diving stop when return is hit in the index field, or when the up or down button is hit, or when the top or bottom layer is
+reached.
 
 To run skeinview, in a shell in the folder which skeinview is in type:
 > python skeinview.py
@@ -67,7 +75,7 @@ from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import polyfile
 import cStringIO
 import sys
-
+import threading
 
 __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/21/04 $"
@@ -83,7 +91,7 @@ def displaySkeinviewFileGivenText( gcodeText, skeinviewPreferences = None ):
 		preferences.readPreferences( skeinviewPreferences )
 	skein = SkeinviewSkein()
 	skein.parseGcode( gcodeText, skeinviewPreferences )
-	SkeinWindow( skein.arrowType, skeinviewPreferences.screenHorizontalInset.value, skeinviewPreferences.screenVerticalInset.value, skein.scaleSize, skein.skeinPanes )
+	SkeinWindow( skein.arrowType, skein.scaleSize, skein.skeinPanes, skeinviewPreferences )
 
 def skeinviewFile( fileName = '' ):
 	"Skeinview a gcode file.  If no fileName is specified, skeinview the first gcode file in this folder that is not modified."
@@ -142,6 +150,8 @@ class SkeinviewPreferences:
 		self.archive.append( self.screenHorizontalInset )
 		self.screenVerticalInset = preferences.IntPreference().getFromValue( 'Screen Vertical Inset (pixels):', 50 )
 		self.archive.append( self.screenVerticalInset )
+		self.slideShowRate = preferences.FloatPreference().getFromValue( 'Slide Show Rate (layers/second):', 1.0 )
+		self.archive.append( self.slideShowRate )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Skeinview'
 		self.saveTitle = 'Save Preferences'
@@ -271,12 +281,19 @@ class SkeinviewSkein:
 
 
 class SkeinWindow:
-	def __init__( self, arrowType, screenHorizontalInset, screenVerticalInset, size, skeinPanes ):
+	def __init__( self, arrowType, size, skeinPanes, skeinviewPreferences ):
+		screenHorizontalInset = skeinviewPreferences.screenHorizontalInset.value
+		screenVerticalInset = skeinviewPreferences.screenVerticalInset.value
 		self.arrowType = arrowType
 		self.index = 0
 		self.skeinPanes = skeinPanes
 		self.root = preferences.Tkinter.Tk()
 		self.root.title( "Skeinview from HydraRaptor" )
+		skeinviewPreferences.slideShowRate.value = max( skeinviewPreferences.slideShowRate.value, 0.01 )
+		skeinviewPreferences.slideShowRate.value = min( skeinviewPreferences.slideShowRate.value, 85.0 )
+		self.slideShowDelay = int( round( 1000.0 / skeinviewPreferences.slideShowRate.value ) )
+		self.slideShowDelay = max( self.slideShowDelay, 1 )
+		self.timerID = None
 		frame = preferences.Tkinter.Frame( self.root )
 		xScrollbar = preferences.Tkinter.Scrollbar( self.root, orient = preferences.Tkinter.HORIZONTAL )
 		yScrollbar = preferences.Tkinter.Scrollbar( self.root )
@@ -290,15 +307,19 @@ class SkeinWindow:
 		yScrollbar.config( command = self.canvas.yview )
 		self.canvas[ 'xscrollcommand' ] = xScrollbar.set
 		self.canvas[ 'yscrollcommand' ] = yScrollbar.set
-		self.exitButton = preferences.Tkinter.Button( self.root, text = 'Exit', activebackground = 'black', activeforeground = 'red', command = self.root.quit, fg = 'red' )
-		self.exitButton.grid( row = 99, column = 95, columnspan = 5, sticky = preferences.Tkinter.W )
+		self.diveButton = preferences.Tkinter.Button( self.root, activebackground = 'black', activeforeground = 'purple', command = self.dive, text = 'Dive \\/\\/' )
+		self.diveButton.grid( row = 99, column = 0, sticky = preferences.Tkinter.W )
 		self.downButton = preferences.Tkinter.Button( self.root, activebackground = 'black', activeforeground = 'purple', command = self.down, text = 'Down \\/' )
-		self.downButton.grid( row = 99, column = 0, sticky = preferences.Tkinter.W )
+		self.downButton.grid( row = 99, column = 1, sticky = preferences.Tkinter.W )
 		self.upButton = preferences.Tkinter.Button( self.root, activebackground = 'black', activeforeground = 'purple', command = self.up, text = 'Up /\\' )
-		self.upButton.grid( row = 99, column = 1, sticky = preferences.Tkinter.W )
+		self.upButton.grid( row = 99, column = 3, sticky = preferences.Tkinter.W )
+		self.soarButton = preferences.Tkinter.Button( self.root, activebackground = 'black', activeforeground = 'purple', command = self.soar, text = 'Soar /\\/\\' )
+		self.soarButton.grid( row = 99, column = 4, sticky = preferences.Tkinter.W )
 		self.indexEntry = preferences.Tkinter.Entry( self.root )
 		self.indexEntry.bind( '<Return>', self.indexEntryReturnPressed )
-		self.indexEntry.grid( row = 99, column = 2, columnspan = 10, sticky = preferences.Tkinter.W )
+		self.indexEntry.grid( row = 99, column = 5, columnspan = 10, sticky = preferences.Tkinter.W )
+		self.exitButton = preferences.Tkinter.Button( self.root, text = 'Exit', activebackground = 'black', activeforeground = 'red', command = self.root.quit, fg = 'red' )
+		self.exitButton.grid( row = 99, column = 95, columnspan = 5, sticky = preferences.Tkinter.W )
 		self.canvas.bind('<Button-1>', self.buttonOneClicked )
 		self.update()
 		if preferences.globalIsMainLoopRunning:
@@ -317,19 +338,46 @@ class SkeinWindow:
 		if len( tags ) > 0:
 			print( tags )
 
+	def cancelTimer( self ):
+		"Cancel the timer and set it to none."
+		if self.timerID != None:
+			self.canvas.after_cancel ( self.timerID )
+			self.timerID = None
+
+	def dive( self ):
+		"Dive, go down periodically."
+		self.cancelTimer()
+		self.index -= 1
+		self.update()
+		if self.index < 1:
+			return
+		self.timerID = self.canvas.after( self.slideShowDelay, self.dive )
+
 	def down( self ):
+		self.cancelTimer()
 		self.index -= 1
 		self.update()
 
 	def indexEntryReturnPressed( self, event ):
+		self.cancelTimer()
 		self.index = int( self.indexEntry.get() )
 		self.index = max( 0, self.index )
 		self.index = min( len( self.skeinPanes ) - 1, self.index )
 		self.update()
 
 	def up( self ):
+		self.cancelTimer()
 		self.index += 1
 		self.update()
+
+	def soar( self ):
+		"Soar, go up periodically."
+		self.cancelTimer()
+		self.index += 1
+		self.update()
+		if self.index > len( self.skeinPanes ) - 2:
+			return
+		self.timerID = self.canvas.after( self.slideShowDelay, self.soar )
 
 	def update( self ):
 		if len( self.skeinPanes ) < 1:
@@ -349,13 +397,17 @@ class SkeinWindow:
 				tags = 'The line clicked is: %s %s' % ( coloredLine.lineIndex, coloredLine.line ),
 				width = coloredLine.width )
 		if self.index < len( self.skeinPanes ) - 1:
+			self.soarButton.config( state = preferences.Tkinter.NORMAL )
 			self.upButton.config( state = preferences.Tkinter.NORMAL )
 		else:
+			self.soarButton.config( state = preferences.Tkinter.DISABLED )
 			self.upButton.config( state = preferences.Tkinter.DISABLED )
 		if self.index > 0:
 			self.downButton.config( state = preferences.Tkinter.NORMAL )
+			self.diveButton.config( state = preferences.Tkinter.NORMAL )
 		else:
 			self.downButton.config( state = preferences.Tkinter.DISABLED )
+			self.diveButton.config( state = preferences.Tkinter.DISABLED )
 		self.indexEntry.delete( 0, preferences.Tkinter.END )
 		self.indexEntry.insert( 0, str( self.index ) )
 

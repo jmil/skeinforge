@@ -21,9 +21,8 @@ To&nbsp;print&nbsp;the&nbsp;output&nbsp;to&nbsp;a&nbsp;file,&nbsp;add&nbsp;the&n
 the&nbsp;output&nbsp;in&nbsp;the&nbsp;shell&nbsp;screen.&nbsp;&nbsp;Another&nbsp;common&nbsp;choice&nbsp;is&nbsp;sys.stderr.&nbsp;&nbsp;The&nbsp;default&nbsp;is&nbsp;nothing,&nbsp;in&nbsp;which&nbsp;case&nbsp;the&nbsp;output&nbsp;will&nbsp;not&nbsp;be<br>
 printed&nbsp;to&nbsp;a&nbsp;file.&nbsp;&nbsp;The&nbsp;'File&nbsp;Extension'&nbsp;field&nbsp;determines&nbsp;the&nbsp;file&nbsp;extension&nbsp;added&nbsp;to&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;output&nbsp;file,&nbsp;the&nbsp;default&nbsp;is&nbsp;gcode.<br>
 &nbsp;<br>
-If&nbsp;the&nbsp;"Delete&nbsp;M110&nbsp;Gcode&nbsp;Line"&nbsp;checkbox&nbsp;is&nbsp;true,&nbsp;export&nbsp;will&nbsp;delete&nbsp;the&nbsp;M110&nbsp;gcode&nbsp;line,&nbsp;whose&nbsp;only&nbsp;purpose&nbsp;is&nbsp;to&nbsp;indicate&nbsp;that<br>
-the&nbsp;gcode&nbsp;is&nbsp;generated&nbsp;by&nbsp;skeinforge.&nbsp;&nbsp;If&nbsp;the&nbsp;"Delete&nbsp;Comments"&nbsp;checkbox&nbsp;is&nbsp;true,&nbsp;export&nbsp;will&nbsp;delete&nbsp;the&nbsp;comments.&nbsp;&nbsp;The&nbsp;M110<br>
-gcode&nbsp;and&nbsp;the&nbsp;comments&nbsp;are&nbsp;not&nbsp;necessary&nbsp;to&nbsp;run&nbsp;a&nbsp;fabricator.<br>
+If&nbsp;the&nbsp;"Delete&nbsp;Comments"&nbsp;checkbox&nbsp;is&nbsp;true,&nbsp;export&nbsp;will&nbsp;delete&nbsp;the&nbsp;comments.&nbsp;&nbsp;The&nbsp;comments&nbsp;are&nbsp;not&nbsp;necessary&nbsp;to&nbsp;run&nbsp;a<br>
+fabricator.<br>
 &nbsp;<br>
 When&nbsp;export&nbsp;is&nbsp;exporting&nbsp;the&nbsp;code,&nbsp;if&nbsp;there&nbsp;is&nbsp;a&nbsp;file&nbsp;replace.csv,&nbsp;it&nbsp;will&nbsp;replace&nbsp;the&nbsp;word&nbsp;in&nbsp;the&nbsp;first&nbsp;column&nbsp;by&nbsp;its&nbsp;replacement&nbsp;in<br>
 the&nbsp;second&nbsp;column.&nbsp;&nbsp;There&nbsp;is&nbsp;an&nbsp;example&nbsp;file&nbsp;replace_example.csv&nbsp;to&nbsp;demonstrate&nbsp;the&nbsp;comma&nbsp;separated&nbsp;format,&nbsp;which&nbsp;can&nbsp;be<br>
@@ -130,7 +129,8 @@ The&nbsp;exported&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nb
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-getExportGcode"><strong>getExportGcode</strong></a>(gcodeText, exportPreferences<font color="#909090">=None</font>)</dt><dd><tt>Export&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
+<td width="100%"><dl><dt><a name="-getDistanceGcode"><strong>getDistanceGcode</strong></a>(exportText)</dt><dd><tt>Get&nbsp;gcode&nbsp;lines&nbsp;with&nbsp;distance&nbsp;variable&nbsp;added.G2&nbsp;X-0.148&nbsp;Y-0.062&nbsp;Z0.0&nbsp;I-0.148&nbsp;J0.148G2&nbsp;X-0.148&nbsp;Y-0.062&nbsp;Z0.0&nbsp;R0.21</tt></dd></dl>
+ <dl><dt><a name="-getGcode"><strong>getGcode</strong></a>(gcodeText, exportPreferences<font color="#909090">=None</font>)</dt><dd><tt>Export&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-getReplaced"><strong>getReplaced</strong></a>(exportText)</dt><dd><tt>Get&nbsp;text&nbsp;with&nbsp;words&nbsp;replaced&nbsp;according&nbsp;to&nbsp;replace.csv&nbsp;file.</tt></dd></dl>
  <dl><dt><a name="-getSelectedPlugin"><strong>getSelectedPlugin</strong></a>(exportPreferences)</dt><dd><tt>Get&nbsp;the&nbsp;selected&nbsp;plugin&nbsp;module.</tt></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>(hashtable<font color="#909090">=None</font>)</dt><dd><tt>Display&nbsp;the&nbsp;export&nbsp;dialog.</tt></dd></dl>
