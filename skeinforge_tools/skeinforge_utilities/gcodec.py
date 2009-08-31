@@ -146,9 +146,13 @@ def getGcodeFileText( fileName, gcodeText ):
 	"Get the gcode text from a file if it the gcode text is empty and if the file is a gcode file."
 	if gcodeText != '':
 		return gcodeText
-	if fileName[ - len( '.gcode' ) : ] == '.gcode':
+	if getHasSuffix( fileName, '.gcode' ):
 		return getFileText( fileName )
 	return ''
+
+def getHasSuffix( name, suffix ):
+	"Determine if the word ends with the suffix."
+	return name[ - len( suffix ) : ] == suffix
 
 #def getGNUGcode( fileInDirectory = '' ):
 #	"Get GNU Triangulated Surface files and gcode files which are not modified."
@@ -256,6 +260,12 @@ def getSummarizedFilename( fileName ):
 		return os.path.basename( fileName )
 	return fileName
 
+def getTextIfEmpty( fileName, text ):
+	"Get the text from a file if it the text is empty."
+	if text != '':
+		return text
+	return getFileText( fileName )
+
 def getTextLines( text ):
 	"Get the all the lines of text of a text."
 	return text.replace( '\r', '\n' ).replace( '\n\n', '\n' ).split( '\n' )
@@ -268,7 +278,7 @@ def getUnmodifiedGCodeFiles( fileInDirectory = '' ):
 
 def getVersionFileName():
 	"Get the file name of the version date."
-	return '/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/skeinforge_utilities/version.txt'
+	return os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'version.txt' )
 
 def getWithoutBracketsEqualTab( line ):
 	"Get a string without the greater than sign, the bracket and less than sign, the equal sign or the tab."
@@ -295,7 +305,7 @@ def isFileWithFileTypeWithoutWords( fileType, fileName, words ):
 	words -- list of words which the fileName must not have"""
 	fileName = os.path.basename( fileName )
 	fileTypeDot = '.' + fileType
-	if fileName[ - len( fileTypeDot ) : ] != fileTypeDot:
+	if not getHasSuffix( fileName, fileTypeDot ):
 		return False
 	for word in words:
 		if fileName.find( word ) >= 0:
@@ -308,7 +318,8 @@ def isProcedureDone( gcodeText, procedure ):
 		return False
 	lines = getTextLines( gcodeText )
 	for line in lines:
-		splitLine = getWithoutBracketsEqualTab( line ).split()
+		withoutBracketsEqualTabQuotes = getWithoutBracketsEqualTab( line ).replace( '"', '' )
+		splitLine = getWithoutBracketsEqualTab( withoutBracketsEqualTabQuotes ).split()
 		firstWord = getFirstWord( splitLine )
 		if firstWord == 'procedureDone':
 			if splitLine[ 1 ].find( procedure ) != - 1:
@@ -316,6 +327,12 @@ def isProcedureDone( gcodeText, procedure ):
 		elif firstWord == 'extrusionStart':
 			return False
 	return False
+
+def isProcedureDoneOrFileIsEmpty( gcodeText, procedure ):
+	"Determine if the procedure has been done on the gcode text or the file is empty."
+	if gcodeText == '':
+		return True
+	return isProcedureDone( gcodeText, procedure )
 
 def isThereAFirstWord( firstWord, lines, startIndex ):
 	"Parse gcode until the first word if there is one."

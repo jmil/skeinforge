@@ -55,13 +55,8 @@ class AnalyzePreferences:
 		self.archive = []
 		self.analyzeLabel = preferences.LabelDisplay().getFromName( 'Open Preferences: ' )
 		self.archive.append( self.analyzeLabel )
-		analyzePluginFilenames = getAnalyzePluginFilenames()
-		self.analyzePlugins = []
-		for analyzePluginFilename in analyzePluginFilenames:
-			analyzePlugin = preferences.DisplayToolButton().getFromFolderName( 'analyze_plugins', __file__, analyzePluginFilename )
-			self.analyzePlugins.append( analyzePlugin )
-#		self.analyzePlugins.sort( key = preferences.RadioCapitalized.getLowerName )
-		self.archive += self.analyzePlugins
+		importantFilenames = [ 'behold', 'skeinview', 'statistic' ]
+		self.archive += preferences.getDisplayToolButtons( 'analyze_plugins', importantFilenames, __file__, getAnalyzePluginFilenames(), [] )
 		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Analyzed', '' )
 		self.archive.append( self.fileNameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.

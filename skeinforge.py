@@ -241,11 +241,11 @@ This brings up the skeinforge dialog.
 
 from __future__ import absolute_import
 
+from skeinforge_tools import craft
+from skeinforge_tools import polyfile
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities import interpret
-from skeinforge_tools import polyfile
-import cStringIO
 import sys
 
 
@@ -278,16 +278,8 @@ def getSkeinforgeToolFilenames():
 	return gcodec.getPluginFilenames( 'skeinforge_tools', __file__ )
 
 def writeOutput( fileName = '' ):
-	"Skeinforge a gcode file.  If no fileName is specified, skeinforge the first gcode file in this folder that is not modified."
-	skeinforgePluginFilenames = getSkeinforgeToolFilenames()
-	toolNames = 'export unpause fillet oozebane wipe hop stretch clip comb tower raft speed multiply fill inset carve'.split()
-	for toolName in toolNames:
-		for skeinforgePluginFilename in skeinforgePluginFilenames:
-			if skeinforgePluginFilename == toolName:
-				pluginModule = gcodec.getModule( skeinforgePluginFilename, 'skeinforge_tools', __file__ )
-				if pluginModule != None:
-					pluginModule.writeOutput( fileName )
-				return
+	"Craft a gcode file."
+	craft.writeOutput( fileName )
 
 
 class SkeinforgePreferences:
@@ -298,12 +290,9 @@ class SkeinforgePreferences:
 		self.archive = []
 		self.skeinforgeLabel = preferences.LabelDisplay().getFromName( 'Open Preferences: ' )
 		self.archive.append( self.skeinforgeLabel )
-		skeinforgePluginFilenames = getSkeinforgeToolFilenames()
-		self.skeinforgeDisplayToolButtons = []
-		for skeinforgePluginFilename in skeinforgePluginFilenames:
-			skeinforgeDisplayToolButton = preferences.DisplayToolButton().getFromFolderName( 'skeinforge_tools', __file__, skeinforgePluginFilename )
-			self.skeinforgeDisplayToolButtons.append( skeinforgeDisplayToolButton )
-		self.archive += self.skeinforgeDisplayToolButtons
+		importantFilenames = [ 'craft', 'profile' ]
+		visibleFilenames = [ 'profile' ]
+		self.archive += preferences.getDisplayToolButtons( 'skeinforge_tools', importantFilenames, __file__, getSkeinforgeToolFilenames(), visibleFilenames )
 		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Skeinforged', '' )
 		self.archive.append( self.fileNameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.

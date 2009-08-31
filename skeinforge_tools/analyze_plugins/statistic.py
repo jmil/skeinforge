@@ -125,6 +125,7 @@ class StatisticSkein:
 	def __init__( self ):
 		self.oldLocation = None
 		self.output = cStringIO.StringIO()
+		self.version = None
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
@@ -169,7 +170,8 @@ class StatisticSkein:
 			halfLocationMinusOld = location - self.oldLocation
 			halfLocationMinusOld *= 0.5
 			halfLocationMinusOldLength = halfLocationMinusOld.magnitude()
-			centerMidpointDistance = math.sqrt( radius * radius - halfLocationMinusOldLength * halfLocationMinusOldLength )
+			centerMidpointDistanceSquared = radius * radius - halfLocationMinusOldLength * halfLocationMinusOldLength
+			centerMidpointDistance = math.sqrt( max( centerMidpointDistanceSquared, 0.0 ) )
 			centerMinusMidpoint = euclidean.getRotatedWiddershinsQuarterAroundZAxis( halfLocationMinusOld )
 			centerMinusMidpoint.normalize()
 			centerMinusMidpoint *= centerMidpointDistance
@@ -252,6 +254,8 @@ class StatisticSkein:
 		self.addLine( "The total build time is " + str( int( round( self.totalBuildTime ) ) ) + " s." )
 		self.addLine( "The total distance extruded is " + str( int( round( self.totalDistanceExtruded ) ) ) + " mm." )
 		self.addLine( "The total distance traveled is " + str( int( round( self.totalDistanceTraveled ) ) ) + " mm." )
+		if self.version != None:
+			self.addLine( "The version is "  + self.version )
 		self.addLine( "The volume extruded is "  + str( int( round( volumeExtruded ) ) ) + " cc." )
 
 	def parseLine( self, line ):
@@ -284,6 +288,8 @@ class StatisticSkein:
 			self.layerThickness = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
 		elif firstWord == '(<procedureDone>':
 			self.procedures.append( splitLine[ 1 ] )
+		elif firstWord == '(<version>':
+			self.version = splitLine[ 1 ]
 
 
 def main():

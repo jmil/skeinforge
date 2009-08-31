@@ -154,6 +154,15 @@ def getSubfolderWithBasename( basename, directory ):
 				return joinedFileName
 	return None
 
+def getDisplayToolButtons( folderName, importantFilenames, moduleFilename, toolFileNames, visibleFilenames ):
+	"Get the display tool buttons."
+	displayToolButtons = []
+	for toolFileName in toolFileNames:
+		displayToolButton = DisplayToolButton().getFromFolderName( folderName, moduleFilename, toolFileName )
+		displayToolButton.setImportantVisible( toolFileName in importantFilenames, toolFileName in visibleFilenames )
+		displayToolButtons.append( displayToolButton )
+	return displayToolButtons
+
 def makeDirectory( directory ):
 	"Make a directory if it does not already exist."
 	if os.path.isdir( directory ):
@@ -193,6 +202,7 @@ def readPreferences( archivablePreferences ):
 		writePreferences( archivablePreferences )
 		return
 	readPreferencesFromText( archivablePreferences, text )
+	return archivablePreferences
 
 def readPreferencesFromText( archivablePreferences, text ):
 	"Set an archive to the preferences read from a text."
@@ -464,24 +474,12 @@ class DeleteProfile( AddProfile ):
 		self.listboxPreference.listbox.delete( 0, Tkinter.END )
 		self.listboxPreference.setListboxItems()
 
-class DisplayToolButton:
-	"A class to display the tool preferences dialog."
+class DisplayToolButtonBesidePrevious:
+	"A class to display the tool preferences dialog beside the previous preference dialog element."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		withSpaces = self.name.lower().replace( '_', ' ' )
-		words = withSpaces.split( ' ' )
-		capitalizedStrings = []
-		for word in words:
-			capitalizedStrings.append( word.capitalize() )
-		capitalizedName = ' '.join( capitalizedStrings )
-		self.displayButton = Tkinter.Button( preferencesDialog.master, activebackground = 'black', activeforeground = 'violet', command = self.displayTool, text = capitalizedName )
-		if preferencesDialog.displayToolButtonStart:
-			self.displayButton.grid( row = preferencesDialog.row, column = 0 )
-			preferencesDialog.row += 1
-			preferencesDialog.displayToolButtonStart = False
-		else:
-			self.displayButton.grid( row = preferencesDialog.row - 1, column = 3 )
-			preferencesDialog.displayToolButtonStart = True
+		self.displayButton = Tkinter.Button( preferencesDialog.master, text = self.getCapitalizedName(), command = self.displayTool )
+		self.displayButton.grid( row = preferencesDialog.row - 1, column = 2, columnspan = 2 )
 
 	def addToPreferenceTable( self, preferenceTable ):
 		"Do nothing because the add listbox selection is not archivable."
@@ -492,6 +490,15 @@ class DisplayToolButton:
 		pluginModule = gcodec.getModule( self.name, self.folderName, self.moduleFilename )
 		if pluginModule != None:
 			pluginModule.main()
+
+	def getCapitalizedName( self ):
+		"Get the capitalized name."
+		withSpaces = self.name.lower().replace( '_', ' ' )
+		words = withSpaces.split( ' ' )
+		capitalizedStrings = []
+		for word in words:
+			capitalizedStrings.append( word.capitalize() )
+		return ' '.join( capitalizedStrings )
 
 	def getFromFolderName( self, folderName, moduleFilename, name ):
 		"Initialize."
@@ -504,6 +511,11 @@ class DisplayToolButton:
 		"Get the lower case name."
 		return self.name.lower()
 
+	def setImportantVisible( self, important, visible ):
+		"Set important and visible."
+		self.important = important
+		self.visible = visible
+
 	def setToDisplay( self ):
 		"Do nothing because the display tool button is not archivable."
 		pass
@@ -513,18 +525,26 @@ class DisplayToolButton:
 		pass
 
 
-class DisplayToolButtonBesidePrevious( DisplayToolButton ):
-	"A class to display the tool preferences dialog beside the previous preference dialog element."
+class DisplayToolButton( DisplayToolButtonBesidePrevious ):
+	"A class to display the tool preferences dialog, in a two column wide table."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		withSpaces = self.name.lower().replace( '_', ' ' )
-		words = withSpaces.split( ' ' )
-		capitalizedStrings = []
-		for word in words:
-			capitalizedStrings.append( word.capitalize() )
-		capitalizedName = ' '.join( capitalizedStrings )
-		self.displayButton = Tkinter.Button( preferencesDialog.master, text = capitalizedName, command = self.displayTool )
-		self.displayButton.grid( row = preferencesDialog.row - 1, column = 2, columnspan = 2 )
+		self.displayButton = Tkinter.Button( preferencesDialog.master, activebackground = 'black', activeforeground = 'violet', command = self.displayTool, text = self.getCapitalizedName() )
+		try:
+			weightString = 'normal'
+			if self.important:
+				weightString = 'bold'
+			splitFont = self.displayButton[ 'font' ].split()
+			self.displayButton[ 'font' ] = ( splitFont[ 0 ], splitFont[ 1 ], weightString )
+		except:
+			pass
+		if preferencesDialog.displayToolButtonStart:
+			self.displayButton.grid( row = preferencesDialog.row, column = 0 )
+			preferencesDialog.row += 1
+			preferencesDialog.displayToolButtonStart = False
+		else:
+			self.displayButton.grid( row = preferencesDialog.row - 1, column = 3 )
+			preferencesDialog.displayToolButtonStart = True
 
 
 class Filename( StringPreference ):
@@ -1048,3 +1068,4 @@ class ProfilePreferences:
 		directoryName = getProfilesDirectoryPath()
 		makeDirectory( directoryName )
 		self.fileNamePreferences = os.path.join( directoryName, getLowerNameSetHelpTitleWindowPosition( self, 'skeinforge_tools.profile.html' ) )
+		self.windowPositionPreferences.value = '0+200'

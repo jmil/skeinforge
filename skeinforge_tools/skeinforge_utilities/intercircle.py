@@ -251,7 +251,8 @@ def getInsetLoopsFromLoops( inset, loops ):
 		arounds = getAroundsFromLoop( loop, radius )
 		for around in arounds:
 			leftPoint = euclidean.getLeftPoint( around )
-			if isInset == euclidean.isPointInsideLoop( loop, leftPoint ):
+			shouldBeWithin = ( isInset == euclidean.isWiddershins( loop ) )
+			if euclidean.isPointInsideLoop( loop, leftPoint ) == shouldBeWithin:
 				around.reverse()
 				insetSeparateLoops.append( around )
 	return insetSeparateLoops

@@ -207,7 +207,7 @@ class BeholdPreferences:
 		self.layersFrom = preferences.IntPreference().getFromValue( 'Layers From (index):', 0 )
 		self.archive.append( self.layersFrom )
 		self.updatePreferences.append( self.layersFrom )
-		self.layersTo = preferences.IntPreference().getFromValue( 'Layers To (index):', 999999 )
+		self.layersTo = preferences.IntPreference().getFromValue( 'Layers To (index):', 999999999 )
 		self.archive.append( self.layersTo )
 		self.updatePreferences.append( self.layersTo )
 		self.numberOfFillBottomLayers = preferences.IntPreference().getFromValue( 'Number of Fill Bottom Layers (integer):', 1 )
