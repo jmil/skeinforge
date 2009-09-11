@@ -98,7 +98,6 @@ from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
-import cStringIO
 import math
 import sys
 
@@ -107,51 +106,48 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-#chain, hide/show windows & dim buttons
-#	make skein.parseGcode( prefacePreferences, gcodeText )
-#	return skein.distanceFeedRate.output.getvalue() function
-#craft type, extrusion cutting
-#subfolders for profiles
-#
-#cut, chop, outset, later split speed into speed and orbital
-#
-#rename readPreferences, getReadPreferences
-#rename parseGcode, getCraftedGcode
-#layers from and to in carve documentation
-#fix multiply tower bug
+#cutting, chop, outset, later split speed into speed and orbital, add raise and whittle
 #change call documentation
-#remove unnecessary import cStringIO
 #add documentation about bold in skeinforge, craft and analyze
-#add documentation about script names in home and preface
 #
 #
 #
+#version in skeinforge window
+#fix window geometry height in behold
+#select list when profile window is brought forward
+#look into self.root.destroy() and withdraw in close
+#dot on skeinview line
+#fix multiply tower bug
 #find files in alterations etc.. by lower case
-#fix behold exit when not opening a file
 #export constant/variable
+#bed, chamber temperature m110
+#stretch different inner / outer
 #optional comb loops
 #make buttons on top of behold and skeinview
-#add Ddistance option in preface
 #replace feedrate instead of sometimes using getLinearFeedrate, set addedLocation after arc move
 #fillet radius zero bug
-#add hook start in oozebane
 #cooling temperature lowering on small areas
-#make fill optional by changing <bridgeLayer>
-#profile restart craft
 #
 #mill
 #
+#remove some of the warnings when there is no preference
+#order of loops, infill setting
+#add hook start in oozebane
+#make fill optional by changing <bridgeLayer>
 #make skeinview and behold more robust readers
 #prune carve
 #after behold join modify models
 #fan off
 #boundaries, center radius z bottom top, circular or rectangular
-#make function for making a list of DisplayToolButtons
 #update windowPosition in behold dynamic preferences when closing
 #carve aoi xml testing
 #check xml gcode
 #cross hatch support polishing???
 #straighten out the use of layer thickness
+#fix behold exit when not opening a file
+#add Ddistance option in preface
+#make stl instead of essentially gts the default format
+#
 #gang or concatenate or join, maybe from behold?
 #check exterior paths which should be combed when changing layers, sometimes in tower
 #pick and place
@@ -202,6 +198,12 @@ __license__ = "GPL 3.0"
 #stepper rotor with ceramic disk magnet in middle, electromagnet with long thin spool line?
 #pipe clamp lathe
 #version info for module should be in the window header  http://dev.forums.reprap.org/read.php?12,20013,26921,page=6#msg-26921
+#make one piece electromagnet spool
+#later maybe rename some extrusionHalfWidths to perimeterHalfWidths
+#maybe m111? countdown
+#maybe option of using G0 when extruder is off
+#iconify the first window when it is closed if another window exists
+#maybe variable flowrate for base: http://dev.forums.reprap.org/read.php?12,27293,27293#msg-27293
 
 def addAroundGridPoint( arounds, gridPoint, gridPointInsetX, gridPointInsetY, gridPoints, gridSearchRadius, isBothOrNone, isDoubleJunction, isJunctionWide, paths, pixelTable, width ):
 	"Add the path around the grid point."
@@ -394,7 +396,7 @@ def getCraftedTextFromText( gcodeText, fillPreferences = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'fill' ):
 		return gcodeText
 	if fillPreferences == None:
-		fillPreferences = preferences.readPreferences( FillPreferences() )
+		fillPreferences = preferences.getReadPreferences( FillPreferences() )
 	return FillSkein().getCraftedGcode( fillPreferences, gcodeText )
 
 def getClosestOppositeIntersectionPaths( yIntersectionPaths ):
@@ -409,14 +411,19 @@ def getClosestOppositeIntersectionPaths( yIntersectionPaths ):
 			return yCloseToCenterPaths
 	return yCloseToCenterPaths
 
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( FillPreferences() )
+
 def getExtraFillLoops( insideLoops, outsideLoop, radius ):
 	"Get extra loops between inside and outside loops."
 	greaterThanRadius = 1.4 * radius
 	muchGreaterThanRadius = 2.5 * radius
 	extraFillLoops = []
-	circleNodes = intercircle.getCircleNodesFromLoop( outsideLoop, greaterThanRadius )
+	pointComplexes = intercircle.getPointsFromLoop( outsideLoop, greaterThanRadius )
 	for inside in insideLoops:
-		circleNodes += intercircle.getCircleNodesFromLoop( inside, greaterThanRadius )
+		pointComplexes += intercircle.getPointsFromLoop( inside, greaterThanRadius )
+	circleNodes = intercircle.getCircleNodesFromPoints( pointComplexes, greaterThanRadius )
 	centers = intercircle.getCentersFromCircleNodes( circleNodes )
 	otherLoops = insideLoops + [ outsideLoop ]
 	for center in centers:
@@ -927,7 +934,7 @@ class FillSkein:
 		for extraShellIndex in xrange( extraShells ):
 			radius = layerExtrusionWidth
 			if extraShellIndex == 0:
-				radius = 0.5  * ( layerExtrusionWidth + self.extrusionPerimeterWidth )
+				radius = 0.5  * ( layerExtrusionWidth + self.perimeterWidth )
 			createFillForSurroundings( radius, surroundingLoops )
 		fillLoops = euclidean.getFillOfSurroundings( surroundingLoops )
 		aroundPixelTable = {}
@@ -1209,8 +1216,8 @@ class FillSkein:
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )
 			self.distanceFeedRate.parseSplitLine( firstWord, splitLine )
-			if firstWord == '(<extrusionPerimeterWidth>':
-				self.extrusionPerimeterWidth = float( splitLine[ 1 ] )
+			if firstWord == '(<perimeterWidth>':
+				self.perimeterWidth = float( splitLine[ 1 ] )
 			elif firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
 				self.interiorExtrusionWidth = self.extrusionWidth
@@ -1309,12 +1316,12 @@ class YIntersectionPath:
 		return self.pointIndex + 1
 
 
-def main( hashtable = None ):
+def main():
 	"Display the fill dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( FillPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

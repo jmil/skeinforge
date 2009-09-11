@@ -54,11 +54,15 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( VectorwritePreferences() )
+
 #add open webbrowser first time file is created choice
 def writeOutput( fileName, gcodeText = '' ):
 	"Write scalable vector graphics for a skeinforge gcode file, if 'Write Scalable Vector Graphics for Skeinforge Chain' is selected."
 	vectorwritePreferences = VectorwritePreferences()
-	preferences.readPreferences( vectorwritePreferences )
+	preferences.getReadPreferences( vectorwritePreferences )
 	if gcodeText == '':
 		gcodeText = gcodec.getFileText( fileName )
 	if vectorwritePreferences.activateVectorwrite.value:
@@ -73,7 +77,7 @@ def writeVectorFile( fileName = '' ):
 			return
 		fileName = unmodified[ 0 ]
 	vectorwritePreferences = VectorwritePreferences()
-	preferences.readPreferences( vectorwritePreferences )
+	preferences.getReadPreferences( vectorwritePreferences )
 	gcodeText = gcodec.getFileText( fileName )
 	writeVectorFileGivenText( fileName, gcodeText, vectorwritePreferences )
 
@@ -169,8 +173,8 @@ class VectorwritePreferences:
 class VectorwriteSkein:
 	"A class to write a get a scalable vector graphics text for a gcode skein."
 	def __init__( self ):
+		self.absolutePerimeterWidth = 0.4
 		self.extrusionNumber = 0
-		self.extrusionWidth = 0.4
 		self.fontSize = 24
 		self.layerIndex = 0
 		self.numberOfLayers = 0
@@ -194,7 +198,7 @@ class VectorwriteSkein:
 				segment = endComplex - beginningComplex
 				segmentLength = abs( segment )
 				if segmentLength > 0.0:
-					truncation = 0.3 * min( segmentLength, self.extrusionWidth )
+					truncation = 0.3 * min( segmentLength, self.absolutePerimeterWidth )
 					endComplex -= segment / segmentLength * truncation
 		self.vectorWindow.addColoredLine( self.scale * beginningComplex, self.scale * endComplex, colorName )
 
@@ -271,10 +275,10 @@ class VectorwriteSkein:
 			self.extruderActive = True
 		elif firstWord == 'M103':
 			self.extruderActive = False
-		elif firstWord == '(<extrusionWidth>':
-			self.extrusionWidth = float( splitLine[ 1 ] )
 		elif firstWord == '(<layer>':
 			self.numberOfLayers += 1
+		elif firstWord == '(<perimeterWidth>':
+			self.absolutePerimeterWidth = abs( float( splitLine[ 1 ] ) )
 
 	def parseGcode( self, gcodeText, vectorwritePreferences ):
 		"Parse gcode text and store the vector output."
@@ -284,7 +288,7 @@ class VectorwriteSkein:
 		lines = gcodec.getTextLines( gcodeText )
 		for line in lines:
 			self.parseCorner( line )
-		self.scale = vectorwritePreferences.pixelsWidthExtrusion.value / self.extrusionWidth
+		self.scale = vectorwritePreferences.pixelsWidthExtrusion.value / self.absolutePerimeterWidth
 		self.scaleCornerHigh = self.scale * self.cornerHigh.dropAxis( 2 )
 		self.scaleCornerLow = self.scale * self.cornerLow.dropAxis( 2 )
 		self.isMultiple = self.numberOfLayers >= vectorwritePreferences.minimumNumberLayersMultipleFiles.value
@@ -364,12 +368,12 @@ class VectorwriteSkein:
 			writeVectorFile( fileName )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the vectorwrite dialog."
 	if len( sys.argv ) > 1:
 		writeVectorFile( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( VectorwritePreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

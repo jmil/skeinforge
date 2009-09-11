@@ -14,7 +14,11 @@
 The&nbsp;default&nbsp;'Activate&nbsp;Home'&nbsp;checkbox&nbsp;is&nbsp;on.&nbsp;&nbsp;When&nbsp;it&nbsp;is&nbsp;on,&nbsp;the&nbsp;functions&nbsp;described&nbsp;below&nbsp;will&nbsp;work,&nbsp;when&nbsp;it&nbsp;is&nbsp;off,&nbsp;the&nbsp;functions<br>
 will&nbsp;not&nbsp;be&nbsp;called.<br>
 &nbsp;<br>
-At&nbsp;the&nbsp;beginning&nbsp;of&nbsp;a&nbsp;each&nbsp;layer,&nbsp;home&nbsp;will&nbsp;add&nbsp;the&nbsp;commands&nbsp;of&nbsp;a&nbsp;gcode&nbsp;script&nbsp;called&nbsp;homing.text,&nbsp;if&nbsp;it&nbsp;exists.<br>
+At&nbsp;the&nbsp;beginning&nbsp;of&nbsp;a&nbsp;each&nbsp;layer,&nbsp;home&nbsp;will&nbsp;add&nbsp;the&nbsp;commands&nbsp;of&nbsp;a&nbsp;gcode&nbsp;script&nbsp;with&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;"Name&nbsp;of&nbsp;Homing&nbsp;File"<br>
+setting,&nbsp;if&nbsp;one&nbsp;exists.&nbsp;&nbsp;The&nbsp;default&nbsp;name&nbsp;is&nbsp;homing.text.&nbsp;&nbsp;Home&nbsp;does&nbsp;not&nbsp;care&nbsp;if&nbsp;the&nbsp;text&nbsp;file&nbsp;names&nbsp;are&nbsp;capitalized,&nbsp;but&nbsp;some&nbsp;file<br>
+systems&nbsp;do&nbsp;not&nbsp;handle&nbsp;file&nbsp;name&nbsp;cases&nbsp;properly,&nbsp;so&nbsp;to&nbsp;be&nbsp;on&nbsp;the&nbsp;safe&nbsp;side&nbsp;you&nbsp;should&nbsp;give&nbsp;them&nbsp;lower&nbsp;case&nbsp;names.&nbsp;&nbsp;Home<br>
+looks&nbsp;for&nbsp;those&nbsp;files&nbsp;in&nbsp;the&nbsp;alterations&nbsp;folder&nbsp;in&nbsp;the&nbsp;.skeinforge&nbsp;folder&nbsp;in&nbsp;the&nbsp;home&nbsp;directory.&nbsp;If&nbsp;it&nbsp;doesn't&nbsp;find&nbsp;the&nbsp;file&nbsp;it&nbsp;then&nbsp;looks<br>
+in&nbsp;the&nbsp;alterations&nbsp;folder&nbsp;in&nbsp;the&nbsp;skeinforge_tools&nbsp;folder.&nbsp;&nbsp;If&nbsp;it&nbsp;doesn't&nbsp;find&nbsp;anything&nbsp;there&nbsp;it&nbsp;looks&nbsp;in&nbsp;the&nbsp;craft_plugins&nbsp;folder.<br>
 &nbsp;<br>
 To&nbsp;run&nbsp;home,&nbsp;in&nbsp;a&nbsp;shell&nbsp;which&nbsp;home&nbsp;is&nbsp;in&nbsp;type:<br>
 &gt;&nbsp;python&nbsp;home.py<br>
@@ -48,26 +52,7 @@ This&nbsp;brings&nbsp;up&nbsp;the&nbsp;home&nbsp;dialog.<br>
 &nbsp;<br>
 &gt;&gt;&gt;&nbsp;home.<a href="#-writeOutput">writeOutput</a>()<br>
 File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;homed.<br>
-The&nbsp;homed&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_home.gcode<br>
-&nbsp;<br>
-&nbsp;<br>
-&gt;&gt;&gt;&nbsp;home.<a href="#-getGcode">getGcode</a>("<br>
-(&nbsp;GCode&nbsp;generated&nbsp;by&nbsp;May&nbsp;8,&nbsp;2008&nbsp;carve.py&nbsp;)<br>
-(&nbsp;Extruder&nbsp;Initialization&nbsp;)<br>
-..<br>
-many&nbsp;lines&nbsp;of&nbsp;gcode<br>
-..<br>
-")<br>
-Many&nbsp;line&nbsp;of&nbsp;homed&nbsp;gcode.<br>
-&nbsp;<br>
-&gt;&gt;&gt;&nbsp;home.<a href="#-getChainGcode">getChainGcode</a>("<br>
-(&nbsp;GCode&nbsp;generated&nbsp;by&nbsp;May&nbsp;8,&nbsp;2008&nbsp;carve.py&nbsp;)<br>
-(&nbsp;Extruder&nbsp;Initialization&nbsp;)<br>
-..<br>
-many&nbsp;lines&nbsp;of&nbsp;gcode<br>
-..<br>
-")<br>
-Many&nbsp;line&nbsp;of&nbsp;homed&nbsp;gcode.</tt></p>
+The&nbsp;homed&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_home.gcode</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -76,18 +61,15 @@ Many&nbsp;line&nbsp;of&nbsp;homed&nbsp;gcode.</tt></p>
     
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="__init__.html">__init__</a><br>
-<a href="skeinforge_tools.analyze.html">skeinforge_tools.analyze</a><br>
-<a href="cStringIO.html">cStringIO</a><br>
+<a href="skeinforge_tools.skeinforge_utilities.consecution.html">skeinforge_tools.skeinforge_utilities.consecution</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.euclidean.html">skeinforge_tools.skeinforge_utilities.euclidean</a><br>
-</td><td width="25%" valign=top><a href="skeinforge_tools.craft_plugins.fillet.html">skeinforge_tools.craft_plugins.fillet</a><br>
-<a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
+</td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.interpret.html">skeinforge_tools.skeinforge_utilities.interpret</a><br>
 <a href="math.html">math</a><br>
 </td><td width="25%" valign=top><a href="os.html">os</a><br>
 <a href="skeinforge_tools.polyfile.html">skeinforge_tools.polyfile</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.preferences.html">skeinforge_tools.skeinforge_utilities.preferences</a><br>
-<a href="sys.html">sys</a><br>
-</td><td width="25%" valign=top><a href="time.html">time</a><br>
+</td><td width="25%" valign=top><a href="sys.html">sys</a><br>
 </td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ee77aa">
@@ -131,7 +113,7 @@ Many&nbsp;line&nbsp;of&nbsp;homed&nbsp;gcode.</tt></p>
 
 <dl><dt><a name="HomeSkein-addHopUp"><strong>addHopUp</strong></a>(self, location)</dt><dd><tt>Add&nbsp;hop&nbsp;to&nbsp;highest&nbsp;point.</tt></dd></dl>
 
-<dl><dt><a name="HomeSkein-parseGcode"><strong>parseGcode</strong></a>(self, gcodeText, homePreferences)</dt><dd><tt>Parse&nbsp;gcode&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;home&nbsp;gcode.</tt></dd></dl>
+<dl><dt><a name="HomeSkein-getCraftedGcode"><strong>getCraftedGcode</strong></a>(self, gcodeText, homePreferences)</dt><dd><tt>Parse&nbsp;gcode&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;home&nbsp;gcode.</tt></dd></dl>
 
 <dl><dt><a name="HomeSkein-parseInitialization"><strong>parseInitialization</strong></a>(self, homePreferences)</dt><dd><tt>Parse&nbsp;gcode&nbsp;initialization&nbsp;and&nbsp;store&nbsp;the&nbsp;parameters.</tt></dd></dl>
 
@@ -144,9 +126,10 @@ Many&nbsp;line&nbsp;of&nbsp;homed&nbsp;gcode.</tt></p>
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-getChainGcode"><strong>getChainGcode</strong></a>(fileName, gcodeText, homePreferences<font color="#909090">=None</font>)</dt><dd><tt>Home&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.&nbsp;&nbsp;Chain&nbsp;home&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;homed.</tt></dd></dl>
- <dl><dt><a name="-getGcode"><strong>getGcode</strong></a>(gcodeText, homePreferences<font color="#909090">=None</font>)</dt><dd><tt>Home&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
- <dl><dt><a name="-main"><strong>main</strong></a>(hashtable<font color="#909090">=None</font>)</dt><dd><tt>Display&nbsp;the&nbsp;home&nbsp;dialog.</tt></dd></dl>
+<td width="100%"><dl><dt><a name="-getCraftedText"><strong>getCraftedText</strong></a>(fileName, text, homePreferences<font color="#909090">=None</font>)</dt><dd><tt>Home&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file&nbsp;or&nbsp;text.</tt></dd></dl>
+ <dl><dt><a name="-getCraftedTextFromText"><strong>getCraftedTextFromText</strong></a>(gcodeText, homePreferences<font color="#909090">=None</font>)</dt><dd><tt>Home&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
+ <dl><dt><a name="-getDisplayedPreferences"><strong>getDisplayedPreferences</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;displayed&nbsp;preferences.</tt></dd></dl>
+ <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>Display&nbsp;the&nbsp;home&nbsp;dialog.</tt></dd></dl>
  <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName<font color="#909090">=''</font>)</dt><dd><tt>Home&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;Chain&nbsp;home&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;homed.&nbsp;If&nbsp;no&nbsp;fileName&nbsp;is&nbsp;specified,&nbsp;home&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">

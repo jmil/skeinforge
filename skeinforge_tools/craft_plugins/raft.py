@@ -119,7 +119,6 @@ from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
-import cStringIO
 import math
 import os
 import sys
@@ -151,7 +150,7 @@ def getCraftedTextFromText( gcodeText, raftPreferences = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'raft' ):
 		return gcodeText
 	if raftPreferences == None:
-		raftPreferences = preferences.readPreferences( RaftPreferences() )
+		raftPreferences = preferences.getReadPreferences( RaftPreferences() )
 	if not raftPreferences.activateRaft.value:
 		return gcodeText
 	return RaftSkein().getCraftedGcode( gcodeText, raftPreferences )
@@ -161,6 +160,10 @@ def getCrossHatchPointLine( crossHatchPointLineTable, y ):
 	if not crossHatchPointLineTable.has_key( y ):
 		crossHatchPointLineTable[ y ] = {}
 	return crossHatchPointLineTable[ y ]
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( RaftPreferences() )
 
 def getEndpointsFromYIntersections( x, yIntersections ):
 	"Get endpoints from the y intersections."
@@ -373,7 +376,6 @@ class RaftSkein:
 		self.distanceFeedRate = gcodec.DistanceFeedRate()
 		self.extrusionStart = True
 		self.extrusionTop = 0.0
-		self.extrusionWidth = 0.6
 		self.feedrateMinute = 961.0
 		self.interfaceStepsUntilEnd = []
 		self.isFirstLayerWithinTemperatureAdded = False
@@ -390,6 +392,7 @@ class RaftSkein:
 		self.operatingLayerEndLine = '(<operatingLayerEnd> </operatingLayerEnd>)'
 		self.operatingJump = None
 		self.orbitalFeedratePerSecond = 2.01
+		self.perimeterWidth = 0.6
 		self.supportFlowrateString = None
 		self.supportLayers = []
 		self.supportSegmentTables = []
@@ -475,10 +478,10 @@ class RaftSkein:
 		self.extrusionTop = self.raftPreferences.bottomAltitude.value
 		complexRadius = complex( self.raftOutsetRadius, self.raftOutsetRadius )
 		self.baseLayerThicknessOverLayerThickness = self.raftPreferences.baseLayerThicknessOverLayerThickness.value
-		baseExtrusionWidth = self.extrusionWidth * self.baseLayerThicknessOverLayerThickness
+		baseExtrusionWidth = self.perimeterWidth * self.baseLayerThicknessOverLayerThickness
 		baseStep = baseExtrusionWidth / self.raftPreferences.baseInfillDensity.value
 		self.interfaceLayerThicknessOverLayerThickness = self.raftPreferences.interfaceLayerThicknessOverLayerThickness.value
-		interfaceExtrusionWidth = self.extrusionWidth * self.interfaceLayerThicknessOverLayerThickness
+		interfaceExtrusionWidth = self.perimeterWidth * self.interfaceLayerThicknessOverLayerThickness
 		self.interfaceStep = interfaceExtrusionWidth / self.raftPreferences.interfaceInfillDensity.value
 		self.setCornersZ()
 		self.cornerLowComplex = self.cornerLow.dropAxis( 2 )
@@ -551,7 +554,7 @@ class RaftSkein:
 		self.distanceFeedRate.addLines( self.supportStartLines )
 		self.addTemperatureOrbits( endpoints, self.raftPreferences.temperatureShapeSupportLayers, self.raftPreferences.temperatureChangeTimeBeforeSupportLayers, z )
 		aroundPixelTable = {}
-		layerFillInset = 0.9 * self.extrusionWidth
+		layerFillInset = 0.9 * self.perimeterWidth
 		aroundWidth = 0.12 * layerFillInset
 		boundaryLoops = self.boundaryLayers[ self.layerIndex ].loops
 		halfSupportOutset = 0.5 * self.supportOutset
@@ -585,7 +588,7 @@ class RaftSkein:
 			squareLoop = euclidean.getSquareLoop( layerCornerLow, layerCornerHigh )
 			intercircle.addOrbits( squareLoop, self, temperatureTimeChangePreference.value, z )
 			return
-		perimeterInset = 0.4 * self.extrusionPerimeterWidth
+		perimeterInset = 0.4 * self.perimeterWidth
 		insetBoundaryLoops = intercircle.getInsetLoopsFromLoops( perimeterInset, boundaryLoops )
 		if len( insetBoundaryLoops ) < 1:
 			insetBoundaryLoops = boundaryLoops
@@ -642,7 +645,7 @@ class RaftSkein:
 		self.supportStartText = preferences.getFileInGivenPreferencesDirectory( os.path.dirname( __file__ ), 'Support_Start.txt' )
 		self.supportStartLines = gcodec.getTextLines( self.supportStartText )
 		self.minimumSupportRatio = math.tan( math.radians( raftPreferences.supportMinimumAngle.value ) )
-		self.raftOutsetRadius = self.raftPreferences.raftOutsetRadiusOverExtrusionWidth.value * self.extrusionWidth
+		self.raftOutsetRadius = self.raftPreferences.raftOutsetRadiusOverExtrusionWidth.value * self.perimeterWidth
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.parseInitialization()
 		if raftPreferences.addRaftElevateNozzleOrbitSetAltitude.value:
@@ -744,11 +747,6 @@ class RaftSkein:
 			self.distanceFeedRate.parseSplitLine( firstWord, splitLine )
 			if firstWord == 'M108':
 				self.setOperatingFlowString( splitLine )
-			elif firstWord == '(<extrusionPerimeterWidth>':
-				self.extrusionPerimeterWidth = float( splitLine[ 1 ] )
-				self.supportOutset = self.extrusionPerimeterWidth + self.extrusionPerimeterWidth * self.raftPreferences.supportGapOverPerimeterExtrusionWidth.value
-			elif firstWord == '(<extrusionWidth>':
-				self.extrusionWidth = float( splitLine[ 1 ] )
 			elif firstWord == '(</extruderInitialization>)':
 				self.distanceFeedRate.addLine( '(<procedureDone> raft </procedureDone>)' )
 			elif firstWord == '(<layer>':
@@ -759,7 +757,9 @@ class RaftSkein:
 				self.orbitalFeedratePerSecond = float( splitLine[ 1 ] )
 			elif firstWord == '(<operatingFeedratePerSecond>':
 				self.feedrateMinute = 60.0 * float( splitLine[ 1 ] )
-				self.supportFlowrateString = self.distanceFeedRate.getRounded( self.feedrateMinute * self.raftPreferences.supportFlowrateOverOperatingFlowrate.value )
+			elif firstWord == '(<perimeterWidth>':
+				self.perimeterWidth = float( splitLine[ 1 ] )
+				self.supportOutset = self.perimeterWidth + self.perimeterWidth * self.raftPreferences.supportGapOverPerimeterExtrusionWidth.value
 			elif firstWord == '(<travelFeedratePerSecond>':
 				self.travelFeedratePerMinute = 60.0 * float( splitLine[ 1 ] )
 			self.distanceFeedRate.addLine( line )
@@ -894,6 +894,7 @@ class RaftSkein:
 	def setOperatingFlowString( self, splitLine ):
 		"Set the operating flow string from the split line."
 		self.operatingFlowrateString = splitLine[ 1 ][ 1 : ]
+		self.supportFlowrateString = self.distanceFeedRate.getRounded( float( self.operatingFlowrateString ) * self.raftPreferences.supportFlowrateOverOperatingFlowrate.value )
 
 	def subtractJoinedFill( self, fillXIntersectionIndexTables, supportSegmentTableIndex ):
 		"Join the fill then subtract it from the support layer table."
@@ -919,7 +920,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( RaftPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

@@ -38,6 +38,10 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( PolyfilePreferences() )
+
 def getFileOrGcodeDirectory( fileName, wasCancelled, words = [] ):
 	"Get the gcode files in the directory the file is in if directory preference is true.  Otherwise, return the file in a list."
 	if isEmptyOrCancelled( fileName, wasCancelled ):
@@ -65,7 +69,7 @@ def getFileOrDirectoryTypesUnmodifiedGcode( fileName, fileTypes, wasCancelled ):
 def isDirectoryPreference():
 	"Determine if the directory preference is true."
 	polyfilePreferences = PolyfilePreferences()
-	preferences.readPreferences( polyfilePreferences )
+	preferences.getReadPreferences( polyfilePreferences )
 #	if polyfilePreferences.directoryPreference.value:
 #		print( '"Execute All Unmodified Files in a Directory" is selected, so all the unmodified files in the directory will be executed.  To only execute one file, change the preference in polyfile.' )
 #	else:
@@ -96,9 +100,12 @@ class PolyfilePreferences:
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.polyfile.html' )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the file or directory dialog."
-	preferences.displayDialog( PolyfilePreferences() )
+	if len( sys.argv ) > 1:
+		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
+	else:
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

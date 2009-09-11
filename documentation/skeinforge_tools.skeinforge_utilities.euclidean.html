@@ -153,7 +153,7 @@ Below&nbsp;are&nbsp;examples&nbsp;of&nbsp;euclidean&nbsp;use.<br>
 
 <dl><dt><a name="SurroundingLoop-getFillLoops"><strong>getFillLoops</strong></a>(self)</dt><dd><tt>Get&nbsp;last&nbsp;fill&nbsp;loops&nbsp;from&nbsp;the&nbsp;outside&nbsp;loop&nbsp;and&nbsp;the&nbsp;loops&nbsp;inside&nbsp;the&nbsp;inside&nbsp;loops.</tt></dd></dl>
 
-<dl><dt><a name="SurroundingLoop-getFromInsideSurroundings"><strong>getFromInsideSurroundings</strong></a>(self, extrusionWidth, inputSurroundingInsides)</dt><dd><tt>Initialize&nbsp;from&nbsp;inside&nbsp;surrounding&nbsp;loops.</tt></dd></dl>
+<dl><dt><a name="SurroundingLoop-getFromInsideSurroundings"><strong>getFromInsideSurroundings</strong></a>(self, inputSurroundingInsides, perimeterWidth)</dt><dd><tt>Initialize&nbsp;from&nbsp;inside&nbsp;surrounding&nbsp;loops.</tt></dd></dl>
 
 <dl><dt><a name="SurroundingLoop-getLoopsToBeFilled"><strong>getLoopsToBeFilled</strong></a>(self)</dt><dd><tt>Get&nbsp;last&nbsp;fill&nbsp;loops&nbsp;from&nbsp;the&nbsp;outside&nbsp;loop&nbsp;and&nbsp;the&nbsp;loops&nbsp;inside&nbsp;the&nbsp;inside&nbsp;loops.</tt></dd></dl>
 
@@ -235,7 +235,7 @@ subtractVec3&nbsp;--&nbsp;Vector3&nbsp;whose&nbsp;angle&nbsp;will&nbsp;be&nbsp;s
  <dl><dt><a name="-getNearestPointOnSegment"><strong>getNearestPointOnSegment</strong></a>(segmentBegin, segmentEnd, point)</dt><dd><tt>Get&nbsp;the&nbsp;nearest&nbsp;point&nbsp;on&nbsp;the&nbsp;segment.</tt></dd></dl>
  <dl><dt><a name="-getNormalized"><strong>getNormalized</strong></a>(complexNumber)</dt><dd><tt>Get&nbsp;the&nbsp;normalized&nbsp;complex.</tt></dd></dl>
  <dl><dt><a name="-getNumberOfIntersectionsToLeft"><strong>getNumberOfIntersectionsToLeft</strong></a>(loopComplex, pointComplex)</dt><dd><tt>Get&nbsp;the&nbsp;number&nbsp;of&nbsp;intersections&nbsp;through&nbsp;the&nbsp;loop&nbsp;for&nbsp;the&nbsp;line&nbsp;starting&nbsp;from&nbsp;the&nbsp;left&nbsp;point&nbsp;and&nbsp;going&nbsp;left.</tt></dd></dl>
- <dl><dt><a name="-getOrderedSurroundingLoops"><strong>getOrderedSurroundingLoops</strong></a>(extrusionWidth, surroundingLoops)</dt><dd><tt>Get&nbsp;ordered&nbsp;surrounding&nbsp;loops&nbsp;from&nbsp;surrounding&nbsp;loops.</tt></dd></dl>
+ <dl><dt><a name="-getOrderedSurroundingLoops"><strong>getOrderedSurroundingLoops</strong></a>(perimeterWidth, surroundingLoops)</dt><dd><tt>Get&nbsp;ordered&nbsp;surrounding&nbsp;loops&nbsp;from&nbsp;surrounding&nbsp;loops.</tt></dd></dl>
  <dl><dt><a name="-getPathLength"><strong>getPathLength</strong></a>(path)</dt><dd><tt>Get&nbsp;the&nbsp;length&nbsp;of&nbsp;a&nbsp;path&nbsp;(&nbsp;an&nbsp;open&nbsp;polyline&nbsp;).</tt></dd></dl>
  <dl><dt><a name="-getPathsFromEndpoints"><strong>getPathsFromEndpoints</strong></a>(endpoints, fillInset, pixelTable, width)</dt><dd><tt>Get&nbsp;paths&nbsp;from&nbsp;endpoints.</tt></dd></dl>
  <dl><dt><a name="-getPlaneDot"><strong>getPlaneDot</strong></a>(vec3First, vec3Second)</dt><dd><tt>Get&nbsp;the&nbsp;dot&nbsp;product&nbsp;of&nbsp;the&nbsp;x&nbsp;and&nbsp;y&nbsp;components&nbsp;of&nbsp;a&nbsp;pair&nbsp;of&nbsp;Vector3s.</tt></dd></dl>

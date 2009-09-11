@@ -73,6 +73,10 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( Binary16BytePreferences() )
+
 def getIntegerFromCharacterLengthLineOffset( character, offset, splitLine, stepLength ):
 	"Get the integer after the first occurence of the character in the split line."
 	lineFromCharacter = getStringFromCharacterSplitLine( character, splitLine )
@@ -95,7 +99,7 @@ def getOutput( gcodeText, binary16BytePreferences = None ):
 		return ''
 	if binary16BytePreferences == None:
 		binary16BytePreferences = Binary16BytePreferences()
-		preferences.readPreferences( binary16BytePreferences )
+		preferences.getReadPreferences( binary16BytePreferences )
 	skein = Binary16ByteSkein()
 	skein.parseGcode( gcodeText, binary16BytePreferences )
 	return skein.output.getvalue()
@@ -152,7 +156,7 @@ def writeOutput( fileName = '', gcodeText = '' ):
 			return
 		fileName = unmodified[ 0 ]
 	binary16BytePreferences = Binary16BytePreferences()
-	preferences.readPreferences( binary16BytePreferences )
+	preferences.getReadPreferences( binary16BytePreferences )
 	gcodeText = gcodec.getGcodeFileText( fileName, gcodeText )
 	skeinOutput = getOutput( gcodeText, binary16BytePreferences )
 	suffixFilename = fileName[ : fileName.rfind( '.' ) ] + '_export.' + binary16BytePreferences.fileExtension.value
@@ -187,7 +191,7 @@ class Binary16BytePreferences:
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Convert to Binary 16 Byte'
 		self.saveTitle = 'Save Preferences'
-		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.export_plugins.binary_16_byte.html' )
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.export_plugins.binary_16_byte.html' )
 
 	def execute( self ):
 		"Convert to binary 16 byte button has been clicked."
@@ -239,12 +243,12 @@ class Binary16ByteSkein:
 		self.output.write( packedString )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the export dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( Binary16BytePreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

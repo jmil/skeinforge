@@ -10,8 +10,8 @@ beginning of the file, the default is on.  If the "Turn Extruder Heater Off at S
 line will be added to the end of the file to turn the extruder heater off by setting the extruder heater temperature to 0, this is the
 default choice.
 
-The 'Extrusion Perimeter Width over Thickness' is the ratio of the extrusion perimeter width to the layer thickness.  The higher the
-value the more the perimeter will be inset, the default is 1.8.
+The 'Extrusion Width over Thickness' is the ratio of the extrusion width over the layer thickness, the default is 1.5.  Infill bridge
+width over thickness ratio is the ratio of the extrusion width over the layer thickness on a bridge layer.
 
 The 'Infill Perimeter Overlap' ratio is the amount the infill overlaps the perimeter over the extrusion width.  The higher the value the
 more the infill will overlap the perimeter, and the thicker join between the infill and the perimeter.  If the value is too high, the join will
@@ -67,7 +67,6 @@ from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools import polyfile
-import cStringIO
 import math
 import os
 import sys
@@ -154,8 +153,17 @@ def getCraftedTextFromText( gcodeText, insetPreferences = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'inset' ):
 		return gcodeText
 	if insetPreferences == None:
-		insetPreferences = preferences.readPreferences( InsetPreferences() )
+		insetPreferences = preferences.getReadPreferences( InsetPreferences() )
 	return InsetSkein().getCraftedGcode( insetPreferences, gcodeText )
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( InsetPreferences() )
+
+def getLargestInsetLoopFromLoop( loop, radius ):
+	"Get the largest inset loop from the loop."
+	loops = intercircle.getInsetLoopsFromLoop( radius, loop )
+	return euclidean.getLargestLoop( loops )
 
 def getSegmentsFromPoints( aroundLists, loopLists, pointBegin, pointEnd ):
 	"Get endpoint segments from the beginning and end of a line segment."
@@ -248,10 +256,12 @@ class InsetPreferences:
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.addCustomCodeForTemperatureReading = preferences.BooleanPreference().getFromValue( 'Add Custom Code for Temperature Reading', True )
 		self.archive.append( self.addCustomCodeForTemperatureReading )
-		self.extrusionPerimeterWidthOverThickness = preferences.FloatPreference().getFromValue( 'Extrusion Perimeter Width over Thickness (ratio):', 1.8 )
-		self.archive.append( self.extrusionPerimeterWidthOverThickness )
+		self.extrusionWidthOverThickness = preferences.FloatPreference().getFromValue( 'Extrusion Width over Thickness (ratio):', 1.5 )
+		self.archive.append( self.extrusionWidthOverThickness )
 		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Insetted', '' )
 		self.archive.append( self.fileNameInput )
+		self.infillBridgeWidthOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Infill Bridge Width over Extrusion Width (ratio):', 1.0 )
+		self.archive.append( self.infillBridgeWidthOverExtrusionWidth )
 		self.infillPerimeterOverlap = preferences.FloatPreference().getFromValue( 'Infill Perimeter Overlap (ratio):', 0.05 )
 		self.archive.append( self.infillPerimeterOverlap )
 		self.infillPerimeterOverlapMethodOfCalculationLabel = preferences.LabelDisplay().getFromName( 'Infill Perimeter Overlap Method of Calculation: ' )
@@ -329,7 +339,16 @@ class InsetSkein:
 
 	def addGcodeFromRemainingLoop( self, loop, loopLists, radius, z ):
 		"Add the remainder of the loop which does not overlap the alreadyFilledArounds loops."
-		euclidean.addSurroundingLoopBeginning( loop, self, z )
+		boundary = getLargestInsetLoopFromLoop( loop, - radius )
+		if boundary == None:
+			boundary = getLargestInsetLoopFromLoop( loop, - 0.55 * radius )
+		if boundary == None:
+			boundary = getLargestInsetLoopFromLoop( loop, - 0.35 * radius )
+		if boundary == None:
+			print( 'This should never happen, there should always be a boundary in addGcodeFromRemainingLoop in inset.' )
+			print( loop )
+			boundary = loop
+		euclidean.addSurroundingLoopBeginning( boundary, self, z )
 		self.addGcodePerimeterBlockFromRemainingLoop( loop, loopLists, radius, z )
 		self.distanceFeedRate.addLine( '(</surroundingLoop>)' )
 
@@ -352,10 +371,10 @@ class InsetSkein:
 	def addInset( self, rotatedBoundaryLayer ):
 		"Add inset to the layer."
 		alreadyFilledArounds = []
-		halfWidth = self.halfExtrusionPerimeterWidth
+		halfWidth = self.halfPerimeterWidth
 		self.distanceFeedRate.addLine( '(<layer> %s )' % rotatedBoundaryLayer.z ) # Indicate that a new layer is starting.
 		if rotatedBoundaryLayer.rotation != None:
-			halfWidth *= self.infillBridgeWidthOverExtrusionWidth
+			halfWidth *= self.insetPreferences.infillBridgeWidthOverExtrusionWidth.value
 			self.distanceFeedRate.addTagBracketedLine( 'bridgeDirection', rotatedBoundaryLayer.rotation ) # Indicate the bridge direction.
 		extrudateLoops = intercircle.getInsetLoopsFromLoops( halfWidth, rotatedBoundaryLayer.loops )
 		for extrudateLoop in extrudateLoops:
@@ -403,16 +422,14 @@ class InsetSkein:
 			self.distanceFeedRate.parseSplitLine( firstWord, splitLine )
 			if firstWord == '(<decimalPlacesCarried>':
 				self.addInitializationToOutput()
-			elif firstWord == '(<infillBridgeWidthOverExtrusionWidth>':
-				self.infillBridgeWidthOverExtrusionWidth = float( splitLine[ 1 ] )
 			elif firstWord == '(</extruderInitialization>)':
 				self.distanceFeedRate.addTagBracketedLine( 'procedureDone', 'inset' )
-			elif firstWord == '(<extrusionWidth>':
-				self.extrusionWidth = float( splitLine[ 1 ] )
-				self.fillInset = self.extrusionPerimeterWidth - self.extrusionPerimeterWidth * self.insetPreferences.infillPerimeterOverlap.value
+			elif firstWord == '(<perimeterWidth>':
+				self.perimeterWidth = float( splitLine[ 1 ] )
+				self.halfPerimeterWidth = 0.5 * self.perimeterWidth
+				self.fillInset = self.perimeterWidth - self.perimeterWidth * self.insetPreferences.infillPerimeterOverlap.value
 				if self.insetPreferences.perimeterInfillPreference.value:
-					self.fillInset = self.halfExtrusionPerimeterWidth + 0.5 * self.extrusionWidth - self.extrusionWidth * self.insetPreferences.infillPerimeterOverlap.value
-				self.distanceFeedRate.addTagBracketedLine( 'extrusionPerimeterWidth', self.distanceFeedRate.getRounded( self.extrusionPerimeterWidth ) ) # Set extrusion perimeter width.
+					self.fillInset = self.halfPerimeterWidth + 0.5 * self.extrusionWidth - self.extrusionWidth * self.insetPreferences.infillPerimeterOverlap.value
 				self.distanceFeedRate.addTagBracketedLine( 'fillInset', self.fillInset )
 		# Set bridge extrusion width
 			elif firstWord == '(<layer>':
@@ -420,8 +437,9 @@ class InsetSkein:
 				return
 			elif firstWord == '(<layerThickness>':
 				self.layerThickness = float( splitLine[ 1 ] )
-				self.extrusionPerimeterWidth = self.insetPreferences.extrusionPerimeterWidthOverThickness.value * self.layerThickness
-				self.halfExtrusionPerimeterWidth = 0.5 * self.extrusionPerimeterWidth
+				self.extrusionWidth = self.insetPreferences.extrusionWidthOverThickness.value * self.layerThickness
+				self.distanceFeedRate.addTagBracketedLine( 'extrusionWidth', self.distanceFeedRate.getRounded( self.extrusionWidth ) ) # Set extrusion width.
+				self.distanceFeedRate.addTagBracketedLine( 'infillBridgeWidthOverExtrusionWidth', self.distanceFeedRate.getRounded( self.insetPreferences.infillBridgeWidthOverExtrusionWidth.value ) )
 			self.distanceFeedRate.addLine( line )
 
 	def parseLine( self, lineIndex ):
@@ -448,12 +466,12 @@ class InsetSkein:
 			self.shutdownLines.append( line )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the inset dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( InsetPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

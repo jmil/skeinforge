@@ -81,7 +81,6 @@ from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
 from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools import polyfile
-import cStringIO
 import math
 import sys
 
@@ -100,10 +99,14 @@ def getCraftedTextFromText( gcodeText, speedPreferences = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'speed' ):
 		return gcodeText
 	if speedPreferences == None:
-		speedPreferences = preferences.readPreferences( SpeedPreferences() )
+		speedPreferences = preferences.getReadPreferences( SpeedPreferences() )
 	if not speedPreferences.activateSpeed.value:
 		return gcodeText
 	return SpeedSkein().getCraftedGcode( gcodeText, speedPreferences )
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( SpeedPreferences() )
 
 def writeOutput( fileName = '' ):
 	"""Speed a gcode linear move file.  Chain speed the gcode if it is not already speeded.
@@ -194,7 +197,7 @@ class SpeedSkein:
 		for line in self.lines[ self.lineIndex : ]:
 			self.parseLine( line )
 		circleArea = self.extrusionDiameter * self.extrusionDiameter * math.pi / 4.0
-		print( 'The extrusion fill density ratio is ' + euclidean.getRoundedToThreePlaces( circleArea / self.extrusionWidth / self.layerThickness ) )
+		print( 'The perimeter extrusion fill density ratio is ' + euclidean.getRoundedToThreePlaces( circleArea / self.absolutePerimeterWidth / self.layerThickness ) )
 		return self.distanceFeedRate.output.getvalue()
 
 	def getFlowrateString( self ):
@@ -239,17 +242,17 @@ class SpeedSkein:
 				self.flowrateCubicMillimetersPerSecond = math.pi * self.extrusionDiameter * self.extrusionDiameter / 4.0 * self.feedratePerSecond
 				roundedFlowrate = euclidean.getRoundedToThreePlaces( self.flowrateCubicMillimetersPerSecond )
 				self.distanceFeedRate.addLine( '(<flowrateCubicMillimetersPerSecond> ' + roundedFlowrate + ' </flowrateCubicMillimetersPerSecond>)' )
-			elif firstWord == '(<extrusionWidth>':
-				self.extrusionWidth = float( splitLine[ 1 ] )
-				self.distanceFeedRate.addLine( '(<maximumZFeedratePerSecond> %s </maximumZFeedratePerSecond>)' % self.speedPreferences.maximumZFeedratePerSecond.value )
-				self.distanceFeedRate.addLine( '(<operatingFeedratePerSecond> %s </operatingFeedratePerSecond>)' % self.feedratePerSecond )
-				self.distanceFeedRate.addLine( '(<orbitalFeedratePerSecond> %s </orbitalFeedratePerSecond>)' % self.orbitalFeedratePerSecond )
-				self.distanceFeedRate.addLine( '(<travelFeedratePerSecond> %s </travelFeedratePerSecond>)' % self.speedPreferences.travelFeedratePerSecond.value )
 			elif firstWord == '(</extruderInitialization>)':
 				self.distanceFeedRate.addLine( '(<procedureDone> speed </procedureDone>)' )
 				self.distanceFeedRate.addLine( line )
 				self.lineIndex += 1
 				return
+			elif firstWord == '(<perimeterWidth>':
+				self.absolutePerimeterWidth = abs( float( splitLine[ 1 ] ) )
+				self.distanceFeedRate.addLine( '(<maximumZFeedratePerSecond> %s </maximumZFeedratePerSecond>)' % self.speedPreferences.maximumZFeedratePerSecond.value )
+				self.distanceFeedRate.addLine( '(<operatingFeedratePerSecond> %s </operatingFeedratePerSecond>)' % self.feedratePerSecond )
+				self.distanceFeedRate.addLine( '(<orbitalFeedratePerSecond> %s </orbitalFeedratePerSecond>)' % self.orbitalFeedratePerSecond )
+				self.distanceFeedRate.addLine( '(<travelFeedratePerSecond> %s </travelFeedratePerSecond>)' % self.speedPreferences.travelFeedratePerSecond.value )
 			self.distanceFeedRate.addLine( line )
 
 	def parseLine( self, line ):
@@ -280,7 +283,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( SpeedPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

@@ -22,11 +22,12 @@ The extrusion distance format is either "Do Not Add Extrusion Distance", which g
 default choice.  If "Extrusion Distance Absolute" is chosen, the extrusion distance output will be the total extrusion distance to that gcode
 line.  If "Extrusion Distance Relative" is chosen, the extrusion distance output will be the extrusion distance from the last gcode line.
 
-When preface is generating the code, if there is a file start.txt, it will add that to the very beginning of the gcode.  At the very end, it will
-add the file end.txt if it exists. Preface does not care if the text file names are capitalized, but some file systems do not handle file name
-cases properly, so to be on the safe side you should give them lower case names.  Preface looks for those files in the alterations folder
-in the .skeinforge folder in the home directory. If it doesn't find the file it then looks in the alterations folder in the skeinforge_tools folder.
-If it doesn't find anything there looks in the skeinforge_tools folder.
+When preface is generating the code, if there is a file with the name of the "Name of Start File" setting, the default being start.txt, it will be
+added that to the very beginning of the gcode.  If there is a file with the name of the "Name of End File" setting, the default being end.txt,
+it will be added to the very end.  Preface does not care if the text file names are capitalized, but some file systems do not handle file
+name cases properly, so to be on the safe side you should give them lower case names.  Preface looks for those files in the alterations
+folder in the .skeinforge folder in the home directory. If it doesn't find the file it then looks in the alterations folder in the skeinforge_tools
+folder.  If it doesn't find anything there it looks in the craft_plugins folder.
 
 The following examples preface the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in
 the folder which contains Screw Holder Bottom.stl and preface.py.
@@ -91,8 +92,12 @@ def getCraftedTextFromText( text, prefacePreferences = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( text, 'preface' ):
 		return text
 	if prefacePreferences == None:
-		prefacePreferences = preferences.readPreferences( PrefacePreferences() )
+		prefacePreferences = preferences.getReadPreferences( PrefacePreferences() )
 	return PrefaceSkein().getCraftedGcode( prefacePreferences, text )
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( PrefacePreferences() )
 
 def writeOutput( fileName = '' ):
 	"Preface the carving of a gcode file.  If no fileName is specified, preface the first unmodified gcode file in this folder."
@@ -195,8 +200,7 @@ class PrefaceSkein:
 		if self.distanceFeedRate.extrusionDistanceFormat != '':
 			self.distanceFeedRate.addTagBracketedLine( 'extrusionDistanceFormat', self.distanceFeedRate.extrusionDistanceFormat )
 		self.distanceFeedRate.addTagBracketedLine( 'layerThickness', self.distanceFeedRate.getRounded( self.layerThickness ) )
-		self.distanceFeedRate.addTagBracketedLine( 'extrusionWidth', self.distanceFeedRate.getRounded( self.extrusionWidth ) )
-		self.distanceFeedRate.addTagBracketedLine( 'infillBridgeWidthOverExtrusionWidth', euclidean.getRoundedToThreePlaces( self.infillBridgeWidthOverExtrusionWidth ) )
+		self.distanceFeedRate.addTagBracketedLine( 'perimeterWidth', self.distanceFeedRate.getRounded( self.perimeterWidth ) )
 		self.distanceFeedRate.addTagBracketedLine( 'procedureDone', 'carve' )
 		self.distanceFeedRate.addTagBracketedLine( 'procedureDone', 'preface' )
 		self.distanceFeedRate.addLine( '(</extruderInitialization>)' ) # Initialization is finished, extrusion is starting.
@@ -287,14 +291,12 @@ class PrefaceSkein:
 			splitLine = gcodec.getWithoutBracketsEqualTab( line ).split()
 			firstWord = gcodec.getFirstWord( splitLine )
 			self.distanceFeedRate.parseSplitLine( firstWord, splitLine )
-			if firstWord == 'infillBridgeWidthOverExtrusionWidth':
-				self.infillBridgeWidthOverExtrusionWidth = float( splitLine[ 1 ] )
-			elif firstWord == 'layerThickness':
+			if firstWord == 'layerThickness':
 				self.layerThickness = float( splitLine[ 1 ] )
-			elif firstWord == 'extrusionWidth':
-				self.extrusionWidth = float( splitLine[ 1 ] )
 			elif firstWord == 'extrusionStart':
 				return
+			elif firstWord == 'perimeterWidth':
+				self.perimeterWidth = float( splitLine[ 1 ] )
 
 	def parseLine( self, lineIndex ):
 		"Parse a gcode line and add it to the preface skein."
@@ -312,12 +314,12 @@ class PrefaceSkein:
 			self.addTextData( line )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the preface dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( PrefacePreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

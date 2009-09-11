@@ -52,13 +52,13 @@ def addOperatingOrbits( boundaryLoops, pointComplex, skein, temperatureChangeTim
 	"Add the orbits before the operating layers."
 	if len( boundaryLoops ) < 1:
 		return
-	perimeterOutset = - 0.4 * skein.extrusionPerimeterWidth
+	perimeterOutset = - 0.4 * skein.perimeterWidth
 	outsetBoundaryLoops = getInsetLoopsFromLoops( perimeterOutset, boundaryLoops )
 	if len( outsetBoundaryLoops ) < 1:
 		outsetBoundaryLoops = boundaryLoops
 	largestLoop = euclidean.getLargestLoop( outsetBoundaryLoops )
 	if pointComplex != None:
-		largestLoop = euclidean.getLoopStartingNearest( skein.extrusionPerimeterWidth, pointComplex, largestLoop )
+		largestLoop = euclidean.getLoopStartingNearest( skein.perimeterWidth, pointComplex, largestLoop )
 	addOrbits( largestLoop, skein, temperatureChangeTime, z )
 
 def addOrbits( loop, skein, temperatureChangeTime, z ):
@@ -97,14 +97,14 @@ def addPointsFromSegment( pointComplexes, radius, pointBeginComplex, pointEndCom
 
 def getAroundsFromLoop( loop, radius ):
 	"Get the arounds from the loop, later combine with get arounds."
-	slightlyGreaterThanRadius = 1.01 * radius
+	slightlyGreaterThanRadius = 1.01 * abs( radius )
 	points = getPointsFromLoop( loop, slightlyGreaterThanRadius )
 	return getAroundsFromPoints( points, radius )
 
 def getAroundsFromLoops( loops, radius ):
 	"Get the arounds from the loops."
 	points = []
-	slightlyGreaterThanRadius = 1.01 * radius
+	slightlyGreaterThanRadius = 1.01 * abs( radius )
 	for loop in loops:
 		points += getPointsFromLoop( loop, slightlyGreaterThanRadius )
 	return getAroundsFromPoints( points, radius )
@@ -112,11 +112,11 @@ def getAroundsFromLoops( loops, radius ):
 def getAroundsFromPoints( points, radius ):
 	"Get the arounds from the points."
 	arounds = []
-	muchGreaterThanRadius = 2.5 * radius
-	circleNodes = getCircleNodesFromPoints( points, radius )
+	muchGreaterThanRadius = 2.5 * abs( radius )
+	circleNodes = getCircleNodesFromPoints( points, abs( radius ) )
 	centers = getCentersFromCircleNodes( circleNodes )
 	for center in centers:
-		inset = getSimplifiedInsetFromClockwiseLoop( center, radius )
+		inset = getSimplifiedInsetFromClockwiseLoop( center, abs( radius ) )
 		if isLargeSameDirection( inset, center, muchGreaterThanRadius ):
 			arounds.append( inset )
 	return arounds
@@ -242,20 +242,25 @@ def getInsetFromClockwiseLoop( loop, radius ):
 		insetLoopComplex.append( getInsetFromClockwiseTriple( aheadAbsoluteComplex, behindAbsoluteComplex, centerComplex, radius ) )
 	return insetLoopComplex
 
-def getInsetLoopsFromLoops( inset, loops ):
+def getInsetLoopsFromLoop( inset, loop ):
 	"Get the inset loops, which might overlap."
 	isInset = inset > 0
-	insetSeparateLoops = []
-	radius = abs( inset )
+	insetLoops = []
+	arounds = getAroundsFromLoop( loop, inset )
+	for around in arounds:
+		leftPoint = euclidean.getLeftPoint( around )
+		shouldBeWithin = ( isInset == euclidean.isWiddershins( loop ) )
+		if euclidean.isPointInsideLoop( loop, leftPoint ) == shouldBeWithin:
+			around.reverse()
+			insetLoops.append( around )
+	return insetLoops
+
+def getInsetLoopsFromLoops( inset, loops ):
+	"Get the inset loops, which might overlap."
+	insetLoops = []
 	for loop in loops:
-		arounds = getAroundsFromLoop( loop, radius )
-		for around in arounds:
-			leftPoint = euclidean.getLeftPoint( around )
-			shouldBeWithin = ( isInset == euclidean.isWiddershins( loop ) )
-			if euclidean.isPointInsideLoop( loop, leftPoint ) == shouldBeWithin:
-				around.reverse()
-				insetSeparateLoops.append( around )
-	return insetSeparateLoops
+		insetLoops += getInsetLoopsFromLoop( inset, loop )
+	return insetLoops
 
 def getInsetSeparateLoopsFromLoops( inset, loops ):
 	"Get the separate inset loops."

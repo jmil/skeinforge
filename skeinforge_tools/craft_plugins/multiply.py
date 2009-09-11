@@ -58,7 +58,6 @@ from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools import polyfile
-import cStringIO
 import math
 import sys
 
@@ -77,10 +76,14 @@ def getCraftedTextFromText( gcodeText, multiplyPreferences = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'multiply' ):
 		return gcodeText
 	if multiplyPreferences == None:
-		multiplyPreferences = preferences.readPreferences( MultiplyPreferences() )
+		multiplyPreferences = preferences.getReadPreferences( MultiplyPreferences() )
 	if not multiplyPreferences.activateMultiply.value:
 		return gcodeText
 	return MultiplySkein().getCraftedGcode( gcodeText, multiplyPreferences )
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( MultiplyPreferences() )
 
 def writeOutput( fileName = '' ):
 	"""Multiply a gcode linear move file.  Chain multiply the gcode if it is not already multiplied.
@@ -204,13 +207,13 @@ class MultiplySkein:
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )
 			self.distanceFeedRate.parseSplitLine( firstWord, splitLine )
-			if firstWord == '(<extrusionWidth>':
-				self.extrusionWidth = float( splitLine[ 1 ] )
-			elif firstWord == '(</extruderInitialization>)':
+			if firstWord == '(</extruderInitialization>)':
 				self.distanceFeedRate.addLine( '(<procedureDone> multiply </procedureDone>)' )
 				self.distanceFeedRate.addLine( line )
 				self.lineIndex += 1
 				return
+			elif firstWord == '(<perimeterWidth>':
+				self.absolutePerimeterWidth = abs( float( splitLine[ 1 ] ) )
 			self.distanceFeedRate.addLine( line )
 
 	def parseLine( self, line ):
@@ -244,7 +247,7 @@ class MultiplySkein:
 		cornerLowComplex = euclidean.getMinimumFromPoints( locationComplexes )
 		self.extent = cornerHighComplex - cornerLowComplex
 		self.shapeCenter = 0.5 * ( cornerHighComplex + cornerLowComplex )
-		self.separation = self.multiplyPreferences.separationOverExtrusionWidth.value * self.extrusionWidth
+		self.separation = self.multiplyPreferences.separationOverExtrusionWidth.value * self.absolutePerimeterWidth
 		self.extentPlusSeparation = self.extent + complex( self.separation, self.separation )
 		columnsMinusOne = self.numberOfColumns - 1
 		rowsMinusOne = self.numberOfRows - 1
@@ -257,7 +260,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( MultiplyPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

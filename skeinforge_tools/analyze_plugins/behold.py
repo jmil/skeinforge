@@ -105,7 +105,6 @@ from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import polyfile
-import cStringIO
 import math
 import sys
 
@@ -122,7 +121,7 @@ def displayBeholdFileGivenText( gcodeText, beholdPreferences = None ):
 		return ''
 	if beholdPreferences == None:
 		beholdPreferences = BeholdPreferences()
-		preferences.readPreferences( beholdPreferences )
+		preferences.getReadPreferences( beholdPreferences )
 	skein = BeholdSkein()
 	skein.parseGcode( gcodeText, beholdPreferences )
 #	beholdPreferences.displayImmediateUpdateDialog()
@@ -155,6 +154,10 @@ def getBoundedLatitude( latitude ):
 	"Get the bounded latitude.later get rounded"
 	return round( min( 179.9, max( 0.1, latitude ) ), 1 )
 
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( BeholdPreferences() )
+
 def getPolygonComplexFromColoredLines( coloredLines ):
 	"Get a complex polygon from the colored lines."
 	polygonComplex = []
@@ -169,7 +172,7 @@ def getTwoHex( number ):
 def writeOutput( fileName, gcodeText = '' ):
 	"Write a beholded gcode file for a skeinforge gcode file, if 'Activate Behold' is selected."
 	beholdPreferences = BeholdPreferences()
-	preferences.readPreferences( beholdPreferences )
+	preferences.getReadPreferences( beholdPreferences )
 	if beholdPreferences.activateBehold.value:
 		if gcodeText == '':
 			gcodeText = gcodec.getFileText( fileName )
@@ -281,7 +284,7 @@ class BeholdPreferences:
 		self.title = 'Behold Dynamic Preferences'
 		oldArchive = self.archive
 		self.archive = self.updatePreferences
-		preferences.displayDialog( self )
+		preferences.getDisplayedDialogFromConstructor( self )
 		self.archive = oldArchive
 
 	def setUpdateFunction( self, updateFunction ):
@@ -302,8 +305,8 @@ class BeholdPreferences:
 class BeholdSkein:
 	"A class to write a get a scalable vector graphics text for a gcode skein."
 	def __init__( self ):
+		self.absolutePerimeterWidth = 0.6
 		self.coloredThread = []
-		self.extrusionWidth = 0.6
 		self.hasASurroundingLoopBeenReached = False
 		self.isLoop = False
 		self.isPerimeter = False
@@ -419,13 +422,13 @@ class BeholdSkein:
 			self.extruderActive = True
 		elif firstWord == 'M103':
 			self.extruderActive = False
-		elif firstWord == '(<extrusionWidth>':
-			self.extrusionWidth = float( splitLine[ 1 ] )
 		elif firstWord == '(<layer>':
 			self.layerTopZ = float( splitLine[ 1 ] ) + self.thirdLayerThickness
 		elif firstWord == '(<layerThickness>':
 			self.layerThickness = float( splitLine[ 1 ] )
 			self.thirdLayerThickness = 0.33333333333 * self.layerThickness
+		elif firstWord == '(<perimeterWidth>':
+			self.absolutePerimeterWidth = abs( float( splitLine[ 1 ] ) )
 		elif firstWord == '(<surroundingLoop>)':
 			if self.layerTopZ > self.getLayerTop():
 				self.layerTops.append( self.layerTopZ )
@@ -448,7 +451,7 @@ class BeholdSkein:
 		self.firstTopLayer = len( self.layerTops ) - self.beholdPreferences.numberOfFillTopLayers.value
 		self.centerComplex = 0.5 * ( self.cornerHigh.dropAxis( 2 ) + self.cornerLow.dropAxis( 2 ) )
 		self.centerBottom = Vector3( self.centerComplex.real, self.centerComplex.imag, self.cornerLow.z )
-		self.scale = beholdPreferences.pixelsWidthExtrusion.value / self.extrusionWidth
+		self.scale = beholdPreferences.pixelsWidthExtrusion.value / self.absolutePerimeterWidth
 		self.scaleCenterBottom = self.scale * self.centerBottom
 		self.scaleCornerHigh = self.scale * self.cornerHigh.dropAxis( 2 )
 		self.scaleCornerLow = self.scale * self.cornerLow.dropAxis( 2 )
@@ -595,19 +598,10 @@ class SkeinWindow:
 		yScrollbar.config( command = self.canvas.yview )
 		self.canvas[ 'xscrollcommand' ] = xScrollbar.set
 		self.canvas[ 'yscrollcommand' ] = yScrollbar.set
-		self.exitButton = preferences.Tkinter.Button( self.root, text = 'Exit', activebackground = 'black', activeforeground = 'red', command = self.root.quit, fg = 'red' )
+		self.exitButton = preferences.Tkinter.Button( self.root, text = 'Exit', activebackground = 'black', activeforeground = 'red', command = self.destroyAllDialogWindows, fg = 'red' )
 		self.exitButton.grid( row = 99, column = 95, columnspan = 5, sticky = preferences.Tkinter.W )
 		self.showPreferencesButton = preferences.Tkinter.Button( self.root, activebackground = 'black', activeforeground = 'purple', command = self.showPreferences, text = 'Show Preferences' )
 		self.showPreferencesButton.grid( row = 99, column = 0, sticky = preferences.Tkinter.W )
-#		self.menubutton = preferences.Tkinter.Menubutton( self.root, text = 'condiments', relief = preferences.Tkinter.GROOVE )
-#		self.menubutton.grid( row = 99, column = 2, sticky = preferences.Tkinter.W )
-#		self.menubutton.menu = preferences.Tkinter.Menu( self.menubutton, tearoff = 0 )
-#		self.menubutton[ 'menu' ]  =  self.menubutton.menu
-#		self.radioVar = preferences.Tkinter.IntVar()
-#		self.menubutton.menu.add_radiobutton( label="mayo", command = self.clickRadiomayoVar, value = 0, variable = self.radioVar )
-#		self.menubutton.menu.add_radiobutton( label="ketchup", command = self.clickRadioketchVar, value = 1, variable = self.radioVar )
-#		self.radioVar.set( 0 )
-#		self.menubutton.menu.invoke( 0 )
 		self.canvas.bind( '<Button-1>', self.buttonOneClicked )
 		self.canvas.bind( '<ButtonRelease-1>', self.buttonOneReleased )
 		self.canvas.bind( '<Shift-ButtonRelease-1>', self.buttonOneReleasedShift )
@@ -627,26 +621,11 @@ class SkeinWindow:
 			geometryString = self.root.geometry()
 		lastPlusIndex = geometryString.rfind( '+' )
 		windowY = int( geometryString[ lastPlusIndex + 1 : ] )
-		if windowY < 5:
-			geometryString = geometryString[ : lastPlusIndex + 1 ] + '5'
+		if windowY != 0:
+			geometryString = geometryString[ : lastPlusIndex + 1 ] + '0'
 			self.root.geometry( geometryString )
 			self.root.update_idletasks()
 		self.showPreferences()
-		if preferences.globalIsMainLoopRunning:
-			return
-		preferences.globalIsMainLoopRunning = True
-		self.root.mainloop()
-		preferences.globalIsMainLoopRunning = False
-
-	def clickRadiomayoVar( self ):
-		"Print the line that was clicked on by the left button."
-		self.radioVar.set( 0 )
-		print( 'tags' )
-
-	def clickRadioketchVar( self ):
-		"Print the line that was clicked on by the left button."
-		self.radioVar.set( 1 )
-		print( 'tags' )
 
 	def buttonOneClicked( self, event ):
 		"Print the line that was clicked on by the left button."
@@ -684,6 +663,12 @@ class SkeinWindow:
 	def buttonOneReleasedShift( self, event ):
 		"Move the viewpoint if the mouse was released and the shift key was pressed."
 		self.buttonOneReleased( event, True )
+
+	def destroyAllDialogWindows( self ):
+		"Destroy all the dialog windows."
+		if self.showPreferencesButton[ 'state' ] == preferences.Tkinter.DISABLED:
+			self.beholdPreferences.preferencesDialog.root.destroy()
+		self.root.destroy()
 
 	def drawColoredLine( self, arrowType, coloredLine, viewVectors, width ):
 		"Draw colored line."
@@ -870,9 +855,6 @@ class SkeinWindow:
 			self.drawZAxisLine( viewVectors )
 		else:
 			self.drawXYAxisLines( viewVectors )
-#		self.ketchVar.set( 0)
-#		print( self.menuVar.get() )
-#		print( self.optionMenuVar.get() )
 
 
 class ViewVectors:
@@ -892,7 +874,7 @@ def main():
 	if len( sys.argv ) > 1:
 		beholdFile( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( BeholdPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

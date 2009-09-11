@@ -73,7 +73,6 @@ from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import polyfile
-import cStringIO
 import sys
 import threading
 
@@ -88,10 +87,14 @@ def displaySkeinviewFileGivenText( gcodeText, skeinviewPreferences = None ):
 		return ''
 	if skeinviewPreferences == None:
 		skeinviewPreferences = SkeinviewPreferences()
-		preferences.readPreferences( skeinviewPreferences )
+		preferences.getReadPreferences( skeinviewPreferences )
 	skein = SkeinviewSkein()
 	skein.parseGcode( gcodeText, skeinviewPreferences )
 	SkeinWindow( skein.arrowType, skein.scaleSize, skein.skeinPanes, skeinviewPreferences )
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( SkeinviewPreferences() )
 
 def skeinviewFile( fileName = '' ):
 	"Skeinview a gcode file.  If no fileName is specified, skeinview the first gcode file in this folder that is not modified."
@@ -107,7 +110,7 @@ def skeinviewFile( fileName = '' ):
 def writeOutput( fileName, gcodeText = '' ):
 	"Write a skeinviewed gcode file for a skeinforge gcode file, if 'Activate Skeinview' is selected."
 	skeinviewPreferences = SkeinviewPreferences()
-	preferences.readPreferences( skeinviewPreferences )
+	preferences.getReadPreferences( skeinviewPreferences )
 	if skeinviewPreferences.activateSkeinview.value:
 		if gcodeText == '':
 			gcodeText = gcodec.getFileText( fileName )
@@ -167,8 +170,8 @@ class SkeinviewPreferences:
 class SkeinviewSkein:
 	"A class to write a get a scalable vector graphics text for a gcode skein."
 	def __init__( self ):
+		self.absolutePerimeterWidth = 0.6
 		self.extrusionNumber = 0
-		self.extrusionWidth = 0.6
 		self.isThereALayerStartWord = False
 		self.oldZ = - 999999999999.0
 		self.skeinPanes = []
@@ -230,8 +233,8 @@ class SkeinviewSkein:
 			self.extruderActive = True
 		elif firstWord == 'M103':
 			self.extruderActive = False
-		elif firstWord == '(<extrusionWidth>':
-			self.extrusionWidth = float( splitLine[ 1 ] )
+		elif firstWord == '(<perimeterWidth>':
+			self.absolutePerimeterWidth = abs( float( splitLine[ 1 ] ) )
 
 	def parseGcode( self, gcodeText, skeinviewPreferences ):
 		"Parse gcode text and store the vector output."
@@ -246,7 +249,7 @@ class SkeinviewSkein:
 		self.isThereALayerStartWord = gcodec.isThereAFirstWord( '(<layer>', self.lines, 1 )
 		for line in self.lines:
 			self.parseCorner( line )
-		self.scale = skeinviewPreferences.pixelsWidthExtrusion.value / abs( self.extrusionWidth )
+		self.scale = skeinviewPreferences.pixelsWidthExtrusion.value / self.absolutePerimeterWidth
 		self.scaleCornerHigh = self.scale * self.cornerHigh.dropAxis( 2 )
 		self.scaleCornerLow = self.scale * self.cornerLow.dropAxis( 2 )
 		print( "The lower left corner of the skeinview window is at %s, %s" % ( self.cornerLow.x, self.cornerLow.y ) )
@@ -318,15 +321,10 @@ class SkeinWindow:
 		self.indexEntry = preferences.Tkinter.Entry( self.root )
 		self.indexEntry.bind( '<Return>', self.indexEntryReturnPressed )
 		self.indexEntry.grid( row = 99, column = 5, columnspan = 10, sticky = preferences.Tkinter.W )
-		self.exitButton = preferences.Tkinter.Button( self.root, text = 'Exit', activebackground = 'black', activeforeground = 'red', command = self.root.quit, fg = 'red' )
+		self.exitButton = preferences.Tkinter.Button( self.root, text = 'Exit', activebackground = 'black', activeforeground = 'red', command = self.root.destroy, fg = 'red' )
 		self.exitButton.grid( row = 99, column = 95, columnspan = 5, sticky = preferences.Tkinter.W )
 		self.canvas.bind('<Button-1>', self.buttonOneClicked )
 		self.update()
-		if preferences.globalIsMainLoopRunning:
-			return
-		preferences.globalIsMainLoopRunning = True
-		self.root.mainloop()
-		preferences.globalIsMainLoopRunning = False
 
 	def buttonOneClicked( self, event ):
 		x = self.canvas.canvasx( event.x )
@@ -417,7 +415,7 @@ def main():
 	if len( sys.argv ) > 1:
 		skeinviewFile( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( SkeinviewPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

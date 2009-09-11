@@ -8,11 +8,8 @@ from __future__ import absolute_import
 import __init__
 
 from skeinforge_tools.skeinforge_utilities import gcodec
-from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
-from skeinforge_tools import polyfile
-import cStringIO
 import os
 import sys
 import time
@@ -46,46 +43,37 @@ def getChainTextFromProcedures( fileName, procedures, text ):
 
 def getLastModule():
 	"Get the last tool."
-	profileSequence = getProfileSequence()
-	if len( profileSequence ) < 1:
+	craftSequence = getReadCraftSequence()
+	if len( craftSequence ) < 1:
 		return None
-	return getCraftModule( profileSequence[ - 1 ] )
+	return getCraftModule( craftSequence[ - 1 ] )
 
 def getProcedures( procedure, text ):
 	"Get the procedures up to and including the given procedure."
-	profileSequence = getProfileSequence()
+	craftSequence = getReadCraftSequence()
 	sequenceIndexPlusOneFromText = getSequenceIndexPlusOneFromText( text )
 	sequenceIndexFromProcedure = getSequenceIndexFromProcedure( procedure )
-	return profileSequence[ sequenceIndexPlusOneFromText : sequenceIndexFromProcedure + 1 ]
+	return craftSequence[ sequenceIndexPlusOneFromText : sequenceIndexFromProcedure + 1 ]
 
-def getProfileSequence():
+def getReadCraftSequence():
 	"Get profile sequence."
-	profileCraftPreference = 'extrude'
-	sequencesDirectory = preferences.getDirectoryInAboveDirectory( 'craft_sequences' )
-	profileSequenceFileName = os.path.join( sequencesDirectory, profileCraftPreference + '.csv' )
-	profileSequenceText = gcodec.getFileText( profileSequenceFileName )
-	profileSequenceLines = gcodec.getTextLines( profileSequenceText )
-	profileSequence = []
-	for profileSequenceLine in profileSequenceLines[ 1 : ]:
-		if len( profileSequenceLine ) > 0:
-			profileSequence.append( profileSequenceLine )
-	return profileSequence
+	return preferences.getCraftTypePluginModule().getCraftSequence()
 
 def getSequenceIndexPlusOneFromText( fileText ):
 	"Get the profile sequence index of the file plus one.  Return zero if the procedure is not in the file"
-	profileSequence = getProfileSequence()
-	for profileSequenceIndex in xrange( len( profileSequence ) - 1, - 1, - 1 ):
-		procedure = profileSequence[ profileSequenceIndex ]
+	craftSequence = getReadCraftSequence()
+	for craftSequenceIndex in xrange( len( craftSequence ) - 1, - 1, - 1 ):
+		procedure = craftSequence[ craftSequenceIndex ]
 		if gcodec.isProcedureDone( fileText, procedure ):
-			return profileSequenceIndex + 1
+			return craftSequenceIndex + 1
 	return 0
 
 def getSequenceIndexFromProcedure( procedure ):
 	"Get the profile sequence index of the procedure.  Return None if the procedure is not in the sequence"
-	profileSequence = getProfileSequence()
-	if procedure not in profileSequence:
+	craftSequence = getReadCraftSequence()
+	if procedure not in craftSequence:
 		return 0
-	return profileSequence.index( procedure )
+	return craftSequence.index( procedure )
 
 def writeChainText( fileName, messageBegin, messageEnd, procedure ):
 	"Get and write a crafted shape file."

@@ -67,7 +67,6 @@ from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools import polyfile
-import cStringIO
 import sys
 
 
@@ -86,10 +85,14 @@ def getCraftedTextFromText( gcodeText, stretchPreferences = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'stretch' ):
 		return gcodeText
 	if stretchPreferences == None:
-		stretchPreferences = preferences.readPreferences( StretchPreferences() )
+		stretchPreferences = preferences.getReadPreferences( StretchPreferences() )
 	if not stretchPreferences.activateStretch.value:
 		return gcodeText
 	return StretchSkein().getCraftedGcode( gcodeText, stretchPreferences )
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( StretchPreferences() )
 
 def writeOutput( fileName = '' ):
 	"Stretch a gcode linear move file.  Chain stretch the gcode if it is not already stretched.  If no fileName is specified, stretch the first unmodified gcode file in this folder."
@@ -239,12 +242,12 @@ class StretchSkein:
 	def __init__( self ):
 		self.distanceFeedRate = gcodec.DistanceFeedRate()
 		self.extruderActive = False
-		self.extrusionWidth = 0.4
 		self.feedrateMinute = 959.0
 		self.isLoop = False
 		self.lineIndex = 0
 		self.lines = None
 		self.oldLocation = None
+		self.perimeterWidth = 0.4
 
 	def addAlongWayLine( self, alongWay, location ):
 		"Add stretched gcode line, along the way from the location to the old location."
@@ -356,16 +359,16 @@ class StretchSkein:
 			self.distanceFeedRate.parseSplitLine( firstWord, splitLine )
 			if firstWord == '(<decimalPlacesCarried>':
 				self.decimalPlacesCarried = int( splitLine[ 1 ] )
-			elif firstWord == '(<extrusionWidth>':
-				extrusionWidth = float( splitLine[ 1 ] )
-				self.loopMaximumAbsoluteStretch = self.extrusionWidth * self.stretchPreferences.loopStretchOverExtrusionWidth.value
-				self.pathAbsoluteStretch = self.extrusionWidth * self.stretchPreferences.pathStretchOverExtrusionWidth.value
-				self.perimeterMaximumAbsoluteStretch = self.extrusionWidth * self.stretchPreferences.perimeterStretchOverExtrusionWidth.value
-				self.stretchFromDistance = self.stretchPreferences.stretchFromDistanceOverExtrusionWidth.value * extrusionWidth
-				self.threadMaximumAbsoluteStretch = self.pathAbsoluteStretch
 			elif firstWord == '(</extruderInitialization>)':
 				self.distanceFeedRate.addLine( '(<procedureDone> stretch </procedureDone>)' )
 				return
+			elif firstWord == '(<perimeterWidth>':
+				perimeterWidth = float( splitLine[ 1 ] )
+				self.loopMaximumAbsoluteStretch = self.perimeterWidth * self.stretchPreferences.loopStretchOverExtrusionWidth.value
+				self.pathAbsoluteStretch = self.perimeterWidth * self.stretchPreferences.pathStretchOverExtrusionWidth.value
+				self.perimeterMaximumAbsoluteStretch = self.perimeterWidth * self.stretchPreferences.perimeterStretchOverExtrusionWidth.value
+				self.stretchFromDistance = self.stretchPreferences.stretchFromDistanceOverExtrusionWidth.value * perimeterWidth
+				self.threadMaximumAbsoluteStretch = self.pathAbsoluteStretch
 			self.distanceFeedRate.addLine( line )
 
 	def parseStretch( self, line ):
@@ -391,12 +394,12 @@ class StretchSkein:
 		self.distanceFeedRate.addLine( line )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the stretch dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( StretchPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

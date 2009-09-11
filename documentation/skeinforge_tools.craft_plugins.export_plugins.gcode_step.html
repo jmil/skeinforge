@@ -99,6 +99,7 @@ The&nbsp;writeOutput&nbsp;function&nbsp;of&nbsp;this&nbsp;script&nbsp;takes&nbsp
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><dl><dt><a name="-getCharacterIntegerString"><strong>getCharacterIntegerString</strong></a>(character, offset, splitLine, stepLength)</dt><dd><tt>Get&nbsp;a&nbsp;character&nbsp;and&nbsp;integer&nbsp;string.</tt></dd></dl>
+ <dl><dt><a name="-getDisplayedPreferences"><strong>getDisplayedPreferences</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;displayed&nbsp;preferences.</tt></dd></dl>
  <dl><dt><a name="-getFloatFromCharacterSplitLine"><strong>getFloatFromCharacterSplitLine</strong></a>(character, splitLine)</dt><dd><tt>Get&nbsp;the&nbsp;float&nbsp;after&nbsp;the&nbsp;first&nbsp;occurence&nbsp;of&nbsp;the&nbsp;character&nbsp;in&nbsp;the&nbsp;split&nbsp;line.</tt></dd></dl>
  <dl><dt><a name="-getOutput"><strong>getOutput</strong></a>(gcodeText, gcodeStepPreferences<font color="#909090">=None</font>)</dt><dd><tt>Get&nbsp;the&nbsp;exported&nbsp;version&nbsp;of&nbsp;a&nbsp;gcode&nbsp;file.&nbsp;&nbsp;This&nbsp;function,&nbsp;isArchivable&nbsp;and&nbsp;writeOutput&nbsp;are&nbsp;the&nbsp;only&nbsp;necessary&nbsp;functions&nbsp;in&nbsp;a&nbsp;skeinforge&nbsp;export&nbsp;plugin.<br>
 If&nbsp;this&nbsp;plugin&nbsp;writes&nbsp;an&nbsp;output&nbsp;than&nbsp;should&nbsp;not&nbsp;be&nbsp;printed,&nbsp;an&nbsp;empty&nbsp;string&nbsp;should&nbsp;be&nbsp;returned.</tt></dd></dl>
@@ -108,7 +109,7 @@ If&nbsp;this&nbsp;plugin&nbsp;writes&nbsp;an&nbsp;output&nbsp;than&nbsp;should&n
  <dl><dt><a name="-indexOfStartingWithSecond"><strong>indexOfStartingWithSecond</strong></a>(letter, splitLine)</dt><dd><tt>Get&nbsp;index&nbsp;of&nbsp;the&nbsp;first&nbsp;occurence&nbsp;of&nbsp;the&nbsp;given&nbsp;letter&nbsp;in&nbsp;the&nbsp;split&nbsp;line,&nbsp;starting&nbsp;with&nbsp;the&nbsp;second&nbsp;word.&nbsp;&nbsp;Return&nbsp;-&nbsp;1&nbsp;if&nbsp;letter&nbsp;is&nbsp;not&nbsp;found</tt></dd></dl>
  <dl><dt><a name="-isArchivable"><strong>isArchivable</strong></a>()</dt><dd><tt>Return&nbsp;whether&nbsp;or&nbsp;not&nbsp;this&nbsp;plugin&nbsp;is&nbsp;archivable.</tt></dd></dl>
  <dl><dt><a name="-isReplacable"><strong>isReplacable</strong></a>()</dt><dd><tt>Return&nbsp;whether&nbsp;or&nbsp;not&nbsp;the&nbsp;output&nbsp;from&nbsp;this&nbsp;plugin&nbsp;is&nbsp;replacable.&nbsp;&nbsp;This&nbsp;should&nbsp;be&nbsp;true&nbsp;if&nbsp;the&nbsp;output&nbsp;is&nbsp;text&nbsp;and&nbsp;false&nbsp;if&nbsp;it&nbsp;is&nbsp;binary.</tt></dd></dl>
- <dl><dt><a name="-main"><strong>main</strong></a>(hashtable<font color="#909090">=None</font>)</dt><dd><tt>Display&nbsp;the&nbsp;export&nbsp;dialog.</tt></dd></dl>
+ <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>Display&nbsp;the&nbsp;export&nbsp;dialog.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">

@@ -73,10 +73,14 @@ def getCraftedTextFromText( gcodeText, unpausePreferences = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'unpause' ):
 		return gcodeText
 	if unpausePreferences == None:
-		unpausePreferences = preferences.readPreferences( UnpausePreferences() )
+		unpausePreferences = preferences.getReadPreferences( UnpausePreferences() )
 	if not unpausePreferences.activateUnpause.value:
 		return gcodeText
 	return UnpauseSkein().getCraftedGcode( unpausePreferences, gcodeText )
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( UnpausePreferences() )
 
 def getSelectedPlugin( unpausePreferences ):
 	"Get the selected plugin."
@@ -221,12 +225,12 @@ class UnpauseSkein:
 		self.distanceFeedRate.addLine( line )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the unpause dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( UnpausePreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

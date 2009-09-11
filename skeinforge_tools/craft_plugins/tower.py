@@ -65,7 +65,6 @@ from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
-import cStringIO
 import math
 import sys
 
@@ -83,10 +82,14 @@ def getCraftedTextFromText( gcodeText, towerPreferences = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'tower' ):
 		return gcodeText
 	if towerPreferences == None:
-		towerPreferences = preferences.readPreferences( TowerPreferences() )
+		towerPreferences = preferences.getReadPreferences( TowerPreferences() )
 	if not towerPreferences.activateTower.value:
 		return gcodeText
 	return TowerSkein().getCraftedGcode( gcodeText, towerPreferences )
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( TowerPreferences() )
 
 def transferFillLoops( fillLoops, surroundingLoop ):
 	"Transfer fill loops."
@@ -159,7 +162,6 @@ class TowerSkein:
 		self.beforeExtrusionLines = None
 		self.distanceFeedRate = gcodec.DistanceFeedRate()
 		self.extruderActive = False
-		self.extrusionWidth = 0.6
 		self.feedrateMinute = 959.0
 		self.feedrateTable = {}
 		self.halfLayerThickness = 0.4
@@ -175,6 +177,7 @@ class TowerSkein:
 		self.oldOrderedLocation = Vector3()
 		self.oldZ = - 999999999.0
 		self.outsideExtrudedFirst = True
+		self.perimeterWidth = 0.6
 		self.shutdownLineIndex = sys.maxint
 		self.surroundingLoop = None
 		self.thread = None
@@ -201,7 +204,7 @@ class TowerSkein:
 					complexToPoint = firstPoint - oldLocationComplex
 					toPointLength = abs( complexToPoint )
 					if toPointLength > 0.0:
-						truncatedLength = max( 0.5 * toPointLength, toPointLength - self.extrusionWidth )
+						truncatedLength = max( 0.5 * toPointLength, toPointLength - self.perimeterWidth )
 						complexToPointTruncated = complexToPoint * truncatedLength / toPointLength
 						highPoint = oldLocationComplex + complexToPointTruncated
 				self.addGcodeMovementZ( self.travelFeedratePerMinute, highPoint, z )
@@ -230,7 +233,7 @@ class TowerSkein:
 
 	def addIslandLayer( self, threadLayer ):
 		"Add a layer of surrounding islands."
-		surroundingLoops = euclidean.getOrderedSurroundingLoops( self.extrusionWidth, threadLayer.surroundingLoops )
+		surroundingLoops = euclidean.getOrderedSurroundingLoops( self.perimeterWidth, threadLayer.surroundingLoops )
 		for surroundingLoop in surroundingLoops:
 			surroundingLoop.boundingLoop = intercircle.BoundingLoop().getFromLoop( surroundingLoop.boundary )
 		euclidean.transferPathsToSurroundingLoops( threadLayer.paths[ : ], surroundingLoops )
@@ -276,7 +279,7 @@ class TowerSkein:
 
 	def climbTower( self, removedIsland ):
 		"Climb up the island to any islands directly above."
-		outsetDistance = 1.5 * self.extrusionWidth
+		outsetDistance = 1.5 * self.perimeterWidth
 		for step in xrange( self.towerPreferences.maximumTowerHeight.value ):
 			aboveIndex = self.oldLayerIndex + 1
 			if aboveIndex >= len( self.islandLayers ):
@@ -336,7 +339,7 @@ class TowerSkein:
 		coneAngleTangent = math.tan( math.radians( self.towerPreferences.extruderPossibleCollisionConeAngle.value ) )
 		for layerIndex in xrange( bottomLayerIndex, untilLayerIndex ):
 			islands = self.islandLayers[ layerIndex ]
-			outsetDistance = self.extrusionWidth * ( untilLayerIndex - layerIndex ) * coneAngleTangent + 0.5 * self.extrusionWidth
+			outsetDistance = self.perimeterWidth * ( untilLayerIndex - layerIndex ) * coneAngleTangent + 0.5 * self.perimeterWidth
 			for belowIsland in self.islandLayers[ layerIndex ]:
 				outsetIslandLoop = belowIsland.boundingLoop.getOutsetBoundingLoop( outsetDistance )
 				if island.boundingLoop.isOverlappingAnother( outsetIslandLoop ):
@@ -362,12 +365,12 @@ class TowerSkein:
 			if firstWord == '(</extruderInitialization>)':
 				self.distanceFeedRate.addLine( '(<procedureDone> tower </procedureDone>)' )
 				return
-			if firstWord == '(<extrusionWidth>':
-				self.extrusionWidth = float( splitLine[ 1 ] )
 			elif firstWord == '(<layerThickness>':
 				self.halfLayerThickness = 0.5 * float( splitLine[ 1 ] )
 			elif firstWord == '(<outsideExtrudedFirst>':
 				self.outsideExtrudedFirst = bool( splitLine[ 1 ] )
+			elif firstWord == '(<perimeterWidth>':
+				self.perimeterWidth = float( splitLine[ 1 ] )
 			elif firstWord == '(<travelFeedratePerSecond>':
 				self.travelFeedratePerMinute = 60.0 * float( splitLine[ 1 ] )
 			self.distanceFeedRate.addLine( line )
@@ -440,12 +443,12 @@ class TowerSkein:
 				return
 
 
-def main( hashtable = None ):
+def main():
 	"Display the tower dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( TowerPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

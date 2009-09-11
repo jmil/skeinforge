@@ -9,16 +9,13 @@
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="skeinforge_tools.html"><font color="#ffffff">skeinforge_tools</font></a>.profile</strong></big></big> ($Date: 2008/21/04 $)</font></td
 ><td align=right valign=bottom
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/profile.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/profile.py</a></font></td></tr></table>
-    <p><tt>Profile&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;set&nbsp;the&nbsp;profile&nbsp;preference&nbsp;for&nbsp;the&nbsp;skeinforge&nbsp;chain.<br>
+    <p><tt>Profile&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;set&nbsp;the&nbsp;craft&nbsp;types&nbsp;preference&nbsp;for&nbsp;the&nbsp;skeinforge&nbsp;chain.<br>
 &nbsp;<br>
-On&nbsp;the&nbsp;profile&nbsp;dialog,&nbsp;clicking&nbsp;the&nbsp;'Add&nbsp;Profile'&nbsp;button&nbsp;will&nbsp;duplicate&nbsp;the&nbsp;selected&nbsp;profile&nbsp;and&nbsp;give&nbsp;it&nbsp;the&nbsp;name&nbsp;in&nbsp;the&nbsp;input<br>
-field.&nbsp;&nbsp;For&nbsp;example,&nbsp;if&nbsp;extrude_ABS&nbsp;is&nbsp;selected&nbsp;and&nbsp;the&nbsp;name&nbsp;extrude_ABS_black&nbsp;is&nbsp;in&nbsp;the&nbsp;input&nbsp;field,&nbsp;clicking&nbsp;the&nbsp;'Add<br>
-Profile'&nbsp;button&nbsp;will&nbsp;duplicate&nbsp;extrude_ABS&nbsp;and&nbsp;save&nbsp;it&nbsp;as&nbsp;extrude_ABS_black.&nbsp;&nbsp;The&nbsp;'Delete&nbsp;Profile'&nbsp;button&nbsp;deletes&nbsp;the<br>
-selected&nbsp;profile.<br>
+Profile&nbsp;presents&nbsp;the&nbsp;user&nbsp;with&nbsp;a&nbsp;choice&nbsp;of&nbsp;the&nbsp;craft&nbsp;types&nbsp;in&nbsp;the&nbsp;craft_types&nbsp;folder.&nbsp;&nbsp;The&nbsp;chosen&nbsp;craft&nbsp;type&nbsp;is&nbsp;used&nbsp;to<br>
+determine&nbsp;the&nbsp;craft&nbsp;type&nbsp;profile&nbsp;for&nbsp;the&nbsp;skeinforge&nbsp;chain.&nbsp;&nbsp;The&nbsp;default&nbsp;craft&nbsp;type&nbsp;is&nbsp;extrusion.<br>
 &nbsp;<br>
 The&nbsp;preference&nbsp;is&nbsp;the&nbsp;selection.&nbsp;&nbsp;If&nbsp;you&nbsp;hit&nbsp;'Save&nbsp;Preferences'&nbsp;the&nbsp;selection&nbsp;will&nbsp;be&nbsp;saved,&nbsp;if&nbsp;you&nbsp;hit&nbsp;'Cancel'&nbsp;the&nbsp;selection<br>
-will&nbsp;not&nbsp;be&nbsp;saved.&nbsp;&nbsp;However;&nbsp;adding&nbsp;and&nbsp;deleting&nbsp;a&nbsp;profile&nbsp;is&nbsp;a&nbsp;permanent&nbsp;action,&nbsp;for&nbsp;example&nbsp;'Cancel'&nbsp;will&nbsp;not&nbsp;bring&nbsp;back<br>
-any&nbsp;deleted&nbsp;profiles.<br>
+will&nbsp;not&nbsp;be&nbsp;saved.<br>
 &nbsp;<br>
 To&nbsp;change&nbsp;the&nbsp;profile&nbsp;preference,&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;profile&nbsp;folder&nbsp;type:<br>
 &gt;&nbsp;python&nbsp;profile.py<br>
@@ -49,7 +46,8 @@ This&nbsp;brings&nbsp;up&nbsp;the&nbsp;profile&nbsp;preference&nbsp;dialog.</tt>
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-main"><strong>main</strong></a>(hashtable<font color="#909090">=None</font>)</dt><dd><tt>Display&nbsp;the&nbsp;profile&nbsp;dialog.</tt></dd></dl>
+<td width="100%"><dl><dt><a name="-getDisplayedPreferences"><strong>getDisplayedPreferences</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;displayed&nbsp;preferences.</tt></dd></dl>
+ <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>Display&nbsp;the&nbsp;profile&nbsp;dialog.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">

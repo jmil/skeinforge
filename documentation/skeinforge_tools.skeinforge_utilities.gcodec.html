@@ -25,15 +25,6 @@ M100&nbsp;P210<br>
 M103<br>
 M105<br>
 (&lt;extrusionDiameter&gt;&nbsp;P0.7<br>
-(&lt;extrusionWidth&gt;&nbsp;P0.654<br>
-(&lt;layerThickness&gt;&nbsp;P0.654<br>
-G21<br>
-G90<br>
-G28<br>
-(&nbsp;Extruder&nbsp;Movement&nbsp;)<br>
-(&nbsp;Extruder&nbsp;paths&nbsp;for&nbsp;layer&nbsp;0&nbsp;of&nbsp;Screw&nbsp;Holder&nbsp;Bottom&nbsp;)<br>
-(&lt;extrusion&gt;<br>
-G1&nbsp;X2.727&nbsp;Y-2.505&nbsp;Z0.33&nbsp;F600.0<br>
 &nbsp;<br>
 ..<br>
 many&nbsp;lines&nbsp;of&nbsp;text<br>
@@ -129,7 +120,7 @@ word&nbsp;--&nbsp;string&nbsp;with&nbsp;value&nbsp;starting&nbsp;after&nbsp;the&
  <dl><dt><a name="-getDoubleFromCharacterSplitLine"><strong>getDoubleFromCharacterSplitLine</strong></a>(character, splitLine)</dt><dd><tt>Get&nbsp;the&nbsp;double&nbsp;value&nbsp;of&nbsp;the&nbsp;string&nbsp;after&nbsp;the&nbsp;first&nbsp;occurence&nbsp;of&nbsp;the&nbsp;character&nbsp;in&nbsp;the&nbsp;split&nbsp;line.</tt></dd></dl>
  <dl><dt><a name="-getDoubleFromCharacterSplitLineValue"><strong>getDoubleFromCharacterSplitLineValue</strong></a>(character, splitLine, value)</dt><dd><tt>Get&nbsp;the&nbsp;double&nbsp;value&nbsp;of&nbsp;the&nbsp;string&nbsp;after&nbsp;the&nbsp;first&nbsp;occurence&nbsp;of&nbsp;the&nbsp;character&nbsp;in&nbsp;the&nbsp;split&nbsp;line,&nbsp;if&nbsp;it&nbsp;does&nbsp;not&nbsp;exist&nbsp;return&nbsp;the&nbsp;value.</tt></dd></dl>
  <dl><dt><a name="-getFeedrateMinute"><strong>getFeedrateMinute</strong></a>(feedrateMinute, splitLine)</dt><dd><tt>Get&nbsp;the&nbsp;feedrate&nbsp;per&nbsp;minute&nbsp;if&nbsp;the&nbsp;split&nbsp;line&nbsp;has&nbsp;a&nbsp;feedrate.</tt></dd></dl>
- <dl><dt><a name="-getFileText"><strong>getFileText</strong></a>(fileName, readMode<font color="#909090">='r'</font>)</dt><dd><tt>Get&nbsp;the&nbsp;entire&nbsp;text&nbsp;of&nbsp;a&nbsp;file.</tt></dd></dl>
+ <dl><dt><a name="-getFileText"><strong>getFileText</strong></a>(fileName, readMode<font color="#909090">='r'</font>, printWarning<font color="#909090">=True</font>)</dt><dd><tt>Get&nbsp;the&nbsp;entire&nbsp;text&nbsp;of&nbsp;a&nbsp;file.</tt></dd></dl>
  <dl><dt><a name="-getFileTextInFileDirectory"><strong>getFileTextInFileDirectory</strong></a>(fileInDirectory, fileName, readMode<font color="#909090">='r'</font>)</dt><dd><tt>Get&nbsp;the&nbsp;entire&nbsp;text&nbsp;of&nbsp;a&nbsp;file&nbsp;in&nbsp;the&nbsp;directory&nbsp;of&nbsp;the&nbsp;file&nbsp;in&nbsp;directory.</tt></dd></dl>
  <dl><dt><a name="-getFilesWithFileTypeWithoutWords"><strong>getFilesWithFileTypeWithoutWords</strong></a>(fileType, words<font color="#909090">=[]</font>, fileInDirectory<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;files&nbsp;which&nbsp;have&nbsp;a&nbsp;given&nbsp;file&nbsp;type,&nbsp;but&nbsp;with&nbsp;do&nbsp;not&nbsp;contain&nbsp;a&nbsp;word&nbsp;in&nbsp;a&nbsp;list.<br>
 &nbsp;<br>
@@ -143,6 +134,7 @@ fileType&nbsp;--&nbsp;file&nbsp;types&nbsp;required<br>
 words&nbsp;--&nbsp;list&nbsp;of&nbsp;words&nbsp;which&nbsp;the&nbsp;file&nbsp;must&nbsp;not&nbsp;have</tt></dd></dl>
  <dl><dt><a name="-getFirstWord"><strong>getFirstWord</strong></a>(splitLine)</dt><dd><tt>Get&nbsp;the&nbsp;first&nbsp;word&nbsp;of&nbsp;a&nbsp;split&nbsp;line.</tt></dd></dl>
  <dl><dt><a name="-getGcodeFileText"><strong>getGcodeFileText</strong></a>(fileName, gcodeText)</dt><dd><tt>Get&nbsp;the&nbsp;gcode&nbsp;text&nbsp;from&nbsp;a&nbsp;file&nbsp;if&nbsp;it&nbsp;the&nbsp;gcode&nbsp;text&nbsp;is&nbsp;empty&nbsp;and&nbsp;if&nbsp;the&nbsp;file&nbsp;is&nbsp;a&nbsp;gcode&nbsp;file.</tt></dd></dl>
+ <dl><dt><a name="-getHasSuffix"><strong>getHasSuffix</strong></a>(name, suffix)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;word&nbsp;ends&nbsp;with&nbsp;the&nbsp;suffix.</tt></dd></dl>
  <dl><dt><a name="-getLocationFromSplitLine"><strong>getLocationFromSplitLine</strong></a>(oldLocation, splitLine)</dt><dd><tt>Get&nbsp;the&nbsp;location&nbsp;from&nbsp;the&nbsp;split&nbsp;line.</tt></dd></dl>
  <dl><dt><a name="-getModule"><strong>getModule</strong></a>(fileName, folderName, moduleFilename)</dt><dd><tt>Get&nbsp;the&nbsp;module&nbsp;from&nbsp;the&nbsp;fileName&nbsp;and&nbsp;folder&nbsp;name.</tt></dd></dl>
  <dl><dt><a name="-getPluginFilenames"><strong>getPluginFilenames</strong></a>(folderName, moduleFilename)</dt><dd><tt>Get&nbsp;the&nbsp;fileNames&nbsp;of&nbsp;the&nbsp;python&nbsp;plugins&nbsp;in&nbsp;the&nbsp;export_plugins&nbsp;folder.</tt></dd></dl>
@@ -151,6 +143,7 @@ words&nbsp;--&nbsp;list&nbsp;of&nbsp;words&nbsp;which&nbsp;the&nbsp;file&nbsp;mu
  <dl><dt><a name="-getPythonFilenamesExceptInit"><strong>getPythonFilenamesExceptInit</strong></a>(fileInDirectory<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;the&nbsp;python&nbsp;fileNames&nbsp;of&nbsp;the&nbsp;directory&nbsp;which&nbsp;the&nbsp;fileInDirectory&nbsp;is&nbsp;in,&nbsp;except&nbsp;for&nbsp;the&nbsp;__init__.py&nbsp;file.</tt></dd></dl>
  <dl><dt><a name="-getPythonFilenamesExceptInitRecursively"><strong>getPythonFilenamesExceptInitRecursively</strong></a>(directoryName<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;the&nbsp;python&nbsp;fileNames&nbsp;of&nbsp;the&nbsp;directory&nbsp;recursively,&nbsp;except&nbsp;for&nbsp;the&nbsp;__init__.py&nbsp;files.</tt></dd></dl>
  <dl><dt><a name="-getSummarizedFilename"><strong>getSummarizedFilename</strong></a>(fileName)</dt><dd><tt>Get&nbsp;the&nbsp;fileName&nbsp;basename&nbsp;if&nbsp;the&nbsp;file&nbsp;is&nbsp;in&nbsp;the&nbsp;current&nbsp;working&nbsp;directory,&nbsp;otherwise&nbsp;return&nbsp;the&nbsp;original&nbsp;full&nbsp;name.</tt></dd></dl>
+ <dl><dt><a name="-getTextIfEmpty"><strong>getTextIfEmpty</strong></a>(fileName, text)</dt><dd><tt>Get&nbsp;the&nbsp;text&nbsp;from&nbsp;a&nbsp;file&nbsp;if&nbsp;it&nbsp;the&nbsp;text&nbsp;is&nbsp;empty.</tt></dd></dl>
  <dl><dt><a name="-getTextLines"><strong>getTextLines</strong></a>(text)</dt><dd><tt>Get&nbsp;the&nbsp;all&nbsp;the&nbsp;lines&nbsp;of&nbsp;text&nbsp;of&nbsp;a&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-getUnmodifiedGCodeFiles"><strong>getUnmodifiedGCodeFiles</strong></a>(fileInDirectory<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;gcode&nbsp;files&nbsp;which&nbsp;are&nbsp;not&nbsp;modified.</tt></dd></dl>
  <dl><dt><a name="-getVersionFileName"><strong>getVersionFileName</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;file&nbsp;name&nbsp;of&nbsp;the&nbsp;version&nbsp;date.</tt></dd></dl>
@@ -163,6 +156,7 @@ fileType&nbsp;--&nbsp;file&nbsp;type&nbsp;required<br>
 fileName&nbsp;--&nbsp;name&nbsp;of&nbsp;the&nbsp;file<br>
 words&nbsp;--&nbsp;list&nbsp;of&nbsp;words&nbsp;which&nbsp;the&nbsp;fileName&nbsp;must&nbsp;not&nbsp;have</tt></dd></dl>
  <dl><dt><a name="-isProcedureDone"><strong>isProcedureDone</strong></a>(gcodeText, procedure)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;procedure&nbsp;has&nbsp;been&nbsp;done&nbsp;on&nbsp;the&nbsp;gcode&nbsp;text.</tt></dd></dl>
+ <dl><dt><a name="-isProcedureDoneOrFileIsEmpty"><strong>isProcedureDoneOrFileIsEmpty</strong></a>(gcodeText, procedure)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;procedure&nbsp;has&nbsp;been&nbsp;done&nbsp;on&nbsp;the&nbsp;gcode&nbsp;text&nbsp;or&nbsp;the&nbsp;file&nbsp;is&nbsp;empty.</tt></dd></dl>
  <dl><dt><a name="-isThereAFirstWord"><strong>isThereAFirstWord</strong></a>(firstWord, lines, startIndex)</dt><dd><tt>Parse&nbsp;gcode&nbsp;until&nbsp;the&nbsp;first&nbsp;word&nbsp;if&nbsp;there&nbsp;is&nbsp;one.</tt></dd></dl>
  <dl><dt><a name="-replaceWords"><strong>replaceWords</strong></a>(fileNames, original, replacement)</dt><dd><tt>Replace&nbsp;in&nbsp;files&nbsp;the&nbsp;original&nbsp;with&nbsp;the&nbsp;replacement.</tt></dd></dl>
  <dl><dt><a name="-writeFileMessageEnd"><strong>writeFileMessageEnd</strong></a>(end, fileName, fileText, message)</dt><dd><tt>Write&nbsp;to&nbsp;a&nbsp;fileName&nbsp;with&nbsp;a&nbsp;suffix&nbsp;and&nbsp;print&nbsp;a&nbsp;message.</tt></dd></dl>

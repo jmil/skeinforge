@@ -115,7 +115,6 @@ from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools.skeinforge_utilities import preferences
-import cStringIO
 import math
 import sys
 
@@ -134,7 +133,7 @@ def arcPointFile( fileName = '' ):
 			return
 		fileName = unmodified[ 0 ]
 	filletPreferences = FilletPreferences()
-	preferences.readPreferences( filletPreferences )
+	preferences.getReadPreferences( filletPreferences )
 	print( 'File ' + gcodec.getSummarizedFilename( fileName ) + ' is being filleted into arc points.' )
 	gcodeText = gcodec.getFileText( fileName )
 	if gcodeText == '':
@@ -150,7 +149,7 @@ def arcRadiusFile( fileName = '' ):
 			return
 		fileName = unmodified[ 0 ]
 	filletPreferences = FilletPreferences()
-	preferences.readPreferences( filletPreferences )
+	preferences.getReadPreferences( filletPreferences )
 	print( 'File ' + gcodec.getSummarizedFilename( fileName ) + ' is being filleted into arc radiuses.' )
 	gcodeText = gcodec.getFileText( fileName )
 	if gcodeText == '':
@@ -166,7 +165,7 @@ def arcSegmentFile( fileName = '' ):
 			return
 		fileName = unmodified[ 0 ]
 	filletPreferences = FilletPreferences()
-	preferences.readPreferences( filletPreferences )
+	preferences.getReadPreferences( filletPreferences )
 	print( 'File ' + gcodec.getSummarizedFilename( fileName ) + ' is being arc segmented.' )
 	gcodeText = gcodec.getFileText( fileName )
 	if gcodeText == '':
@@ -182,7 +181,7 @@ def bevelFile( fileName = '' ):
 			return
 		fileName = unmodified[ 0 ]
 	filletPreferences = FilletPreferences()
-	preferences.readPreferences( filletPreferences )
+	preferences.getReadPreferences( filletPreferences )
 	print( 'File ' + gcodec.getSummarizedFilename( fileName ) + ' is being beveled.' )
 	gcodeText = gcodec.getFileText( fileName )
 	if gcodeText == '':
@@ -214,7 +213,7 @@ def getCraftedTextFromText( gcodeText, filletPreferences = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'fillet' ):
 		return gcodeText
 	if filletPreferences == None:
-		filletPreferences = preferences.readPreferences( FilletPreferences() )
+		filletPreferences = preferences.getReadPreferences( FilletPreferences() )
 	if not filletPreferences.activateFillet.value:
 		return gcodeText
 	if filletPreferences.arcPoint.value:
@@ -226,6 +225,10 @@ def getCraftedTextFromText( gcodeText, filletPreferences = None ):
 	elif filletPreferences.bevel.value:
 		return getBevelGcode( filletPreferences, gcodeText )
 	return gcodeText
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( FilletPreferences() )
 
 def writeOutput( fileName = '' ):
 	"""Fillet a gcode linear move file.  Chain fill the gcode if it is not already filled.
@@ -326,15 +329,13 @@ class BevelSkein:
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )
 			self.distanceFeedRate.parseSplitLine( firstWord, splitLine )
-			if firstWord == '(<extrusionWidth>':
+			if firstWord == '(</extruderInitialization>)':
+				self.distanceFeedRate.addLine( '(<procedureDone> fillet </procedureDone>)' )
+				return
+			elif firstWord == '(<perimeterWidth>':
 				absoluteExtrusionWidth = abs( float( splitLine[ 1 ] ) )
 				self.reversalSlowdownDistance = absoluteExtrusionWidth * filletPreferences.reversalSlowdownDistanceOverExtrusionWidth.value
 				self.filletRadius = absoluteExtrusionWidth * filletPreferences.filletRadiusOverExtrusionWidth.value
-			elif firstWord == '(<decimalPlacesCarried>':
-				self.decimalPlacesCarried = int( splitLine[ 1 ] )
-			elif firstWord == '(</extruderInitialization>)':
-				self.distanceFeedRate.addLine( '(<procedureDone> fillet </procedureDone>)' )
-				return
 			self.distanceFeedRate.addLine( line )
 
 	def parseLine( self, line ):
@@ -519,7 +520,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( FilletPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

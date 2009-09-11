@@ -2,21 +2,24 @@
 Carve shape is a script to carve a list of slice layers.
 
 Carve carves a list of slices into svg slice layers.  The 'Layer Thickness' is the thickness the extrusion layer at default extruder speed,
-this is the most important carve preference.  The 'Extrusion Width over Thickness' is the ratio of the extrusion width over the layer
-thickness, the default is 1.5.  A ratio of one means the extrusion is a circle, a typical ratio of 1.5 means the extrusion is a wide oval.
-These values should be measured from a test extrusion line.
+this is the most important carve preference.  The 'Perimeter Width over Thickness' is the ratio of the extrusion perimeter width to the
+layer thickness.  The higher the value the more the perimeter will be inset, the default is 1.8.  A ratio of one means the extrusion is a
+circle, a typical ratio of 1.8 means the extrusion is a wide oval.  These values should be measured from a test extrusion line.
 
-Rarely changed preferences are 'Import Coarseness', 'Mesh Type', 'Infill Bridge Width Over Thickness', 'Infill in Direction of Bridges' &
-'Layer Thickness over Precision'.  When a triangle mesh has holes in it, the triangle mesh slicer switches over to a slow algorithm that
-spans gaps in the mesh.  The higher the import coarseness, the wider the gaps in the mesh it will span.  An import coarseness of one
-means it will span gaps the width of the extrusion.  When the Mesh Type preference is Correct Mesh, the mesh will be accurately
-carved, and if a hole is found, carve will switch over to the algorithm that spans gaps.  If the Mesh Type preference is Unproven
-Mesh, carve will use the gap spanning algorithm from the start.  The problem with the gap spanning algothm is that it will span gaps,
-even if there actually is a gap in the model.  Infill bridge width over thickness ratio is the ratio of the extrusion width over the layer
-thickness on a bridge layer.  If the infill in direction of bridges preference is chosen, the infill will be in the direction of bridges across
-gaps, so that the fill will be able to span a bridge easier.  The 'Layer Thickness over Precision' is the ratio of the layer thickness over
-the smallest change in value.  The higher the layer thickness over precision, the more significant figures the output numbers will have,
-the default is ten.
+Rarely changed preferences are 'Import Coarseness', 'Mesh Type', 'Infill in Direction of Bridges' & 'Layer Thickness over Precision'.
+When a triangle mesh has holes in it, the triangle mesh slicer switches over to a slow algorithm that spans gaps in the mesh.  The
+higher the import coarseness, the wider the gaps in the mesh it will span.  An import coarseness of one means it will span gaps the
+of the perimeter width.  When the Mesh Type preference is Correct Mesh, the mesh will be accurately carved, and if a hole is found,
+carve will switch over to the algorithm that spans gaps.  If the Mesh Type preference is Unproven Mesh, carve will use the gap
+spanning algorithm from the start.  The problem with the gap spanning algothm is that it will span gaps, even if there is not actually a
+gap in the model.  If the infill in direction of bridges preference is chosen, the infill will be in the direction of bridges across gaps, so
+that the fill will be able to span a bridge easier.
+
+The 'Layer Thickness over Precision' is the ratio of the layer thickness over the smallest change in value.  The higher the layer
+thickness over precision, the more significant figures the output numbers will have, the default is ten.
+
+The output will go from the "Layers From" index to the "Layers To" index.  The default for the "Layers From" index is zero and the
+default for the "Layers To" is a really big number.  To get a single layer, set the "Layers From" to zero and the "Layers To" to one.
 
 To run carve, in a shell type:
 > python carve.py
@@ -47,16 +50,6 @@ It took 3 seconds to carve the file.
 File Screw Holder Bottom.gcode is being carved.
 The carved file is saved as Screw Holder Bottom_carve.svg
 It took 3 seconds to carve the file.
-
-
->>> carve.getGcode("
-54 162 108 Number of Vertices,Number of Edges,Number of Faces
--5.800000000000001 5.341893939393939 4.017841892579603 Vertex Coordinates XYZ
-5.800000000000001 5.341893939393939 4.017841892579603
-..
-many lines of GNU Triangulated Surface vertices, edges and faces
-..
-")
 
 """
 
@@ -115,10 +108,14 @@ def getCraftedTextFromFileName( fileName, carvePreferences = None ):
 		return ''
 	if carvePreferences == None:
 		carvePreferences = CarvePreferences()
-		preferences.readPreferences( carvePreferences )
+		preferences.getReadPreferences( carvePreferences )
 	skein = CarveSkein()
 	skein.parseCarving( carvePreferences, carving, fileName )
 	return skein.output.getvalue()
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( CarvePreferences() )
 
 def getParameterFromJavascript( lines, parameterName, parameterValue ):
 	"Get a paramater from lines of javascript."
@@ -189,8 +186,6 @@ class CarvePreferences:
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
-		self.extrusionWidthOverThickness = preferences.FloatPreference().getFromValue( 'Extrusion Width over Thickness (ratio):', 1.5 )
-		self.archive.append( self.extrusionWidthOverThickness )
 		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getTranslatorFileTypeTuples(), 'Open File to be Carved', '' )
 		self.archive.append( self.fileNameInput )
 		self.importCoarseness = preferences.FloatPreference().getFromValue( 'Import Coarseness (ratio):', 1.0 )
@@ -204,8 +199,6 @@ class CarvePreferences:
 		self.archive.append( self.unprovenMesh )
 		self.infillBridgeThicknessOverLayerThickness = preferences.FloatPreference().getFromValue( 'Infill Bridge Thickness over Layer Thickness (ratio):', 1.0 )
 		self.archive.append( self.infillBridgeThicknessOverLayerThickness )
-		self.infillBridgeWidthOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Infill Bridge Width over Extrusion Width (ratio):', 1.0 )
-		self.archive.append( self.infillBridgeWidthOverExtrusionWidth )
 		self.infillDirectionBridge = preferences.BooleanPreference().getFromValue( 'Infill in Direction of Bridges', True )
 		self.archive.append( self.infillDirectionBridge )
 		self.layerThickness = preferences.FloatPreference().getFromValue( 'Layer Thickness (mm):', 0.4 )
@@ -216,6 +209,8 @@ class CarvePreferences:
 		self.archive.append( self.layersFrom )
 		self.layersTo = preferences.IntPreference().getFromValue( 'Layers To (index):', 999999999 )
 		self.archive.append( self.layersTo )
+		self.perimeterWidthOverThickness = preferences.FloatPreference().getFromValue( 'Perimeter Width over Thickness (ratio):', 1.8 )
+		self.archive.append( self.perimeterWidthOverThickness )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Carve'
 		self.saveTitle = 'Save Preferences'
@@ -242,8 +237,7 @@ class CarveSkein:
 		self.addLines( self.svgTemplateLines[ : endOfSVGHeaderIndex ] )
 		self.addLine( '\tdecimalPlacesCarried = ' + str( self.decimalPlacesCarried ) ) # Set decimal places carried.
 		self.addLine( '\tlayerThickness = ' + self.getRounded( self.layerThickness ) ) # Set layer thickness.
-		self.addLine( '\textrusionWidth = ' + self.getRounded( self.extrusionWidth ) ) # Set extrusion width.
-		self.addLine( '\tinfillBridgeWidthOverExtrusionWidth = ' + euclidean.getRoundedToThreePlaces( self.carvePreferences.infillBridgeWidthOverExtrusionWidth.value ) )
+		self.addLine( '\tperimeterWidth = ' + self.getRounded( self.perimeterWidth ) ) # Set perimeter width.
 		self.addLine( '\tprocedureDone = "carve"' ) # The skein has been carved.
 		self.addLine( '\textrusionStart = 1' ) # Initialization is finished, extrusion is starting.
 		beginningOfPathSectionIndex = self.svgTemplateLines.index( '<!--Beginning of path section-->' )
@@ -374,7 +368,7 @@ class CarveSkein:
 		if carvePreferences.infillDirectionBridge.value:
 			carving.setCarveBridgeLayerThickness( self.bridgeLayerThickness )
 		carving.setCarveLayerThickness( self.layerThickness )
-		importRadius = 0.5 * carvePreferences.importCoarseness.value * abs( self.extrusionWidth )
+		importRadius = 0.5 * carvePreferences.importCoarseness.value * abs( self.perimeterWidth )
 		carving.setCarveImportRadius( max( importRadius, 0.01 * self.layerThickness ) )
 		carving.setCarveIsCorrectMesh( carvePreferences.correctMesh.value )
 		rotatedBoundaryLayers = carving.getCarveRotatedBoundaryLayers()
@@ -394,16 +388,15 @@ class CarveSkein:
 
 	def setExtrusionDiameterWidth( self, carvePreferences ):
 		"Set the extrusion diameter & width and the bridge thickness & width."
-		self.extrusionWidth = carvePreferences.extrusionWidthOverThickness.value * self.layerThickness
 		self.bridgeLayerThickness = self.layerThickness * carvePreferences.infillBridgeThicknessOverLayerThickness.value
-
+		self.perimeterWidth = carvePreferences.perimeterWidthOverThickness.value * self.layerThickness
 
 def main():
 	"Display the carve dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( CarvePreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

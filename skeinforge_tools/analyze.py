@@ -16,7 +16,6 @@ import __init__
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import polyfile
-import cStringIO
 import os
 import sys
 
@@ -29,6 +28,10 @@ __license__ = "GPL 3.0"
 def getAnalyzePluginFilenames():
 	"Get analyze plugin fileNames."
 	return gcodec.getPluginFilenames( 'analyze_plugins', __file__ )
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( AnalyzePreferences() )
 
 def writeOutput( fileName = '', gcodeText = '' ):
 	"Analyze a gcode file.  If no fileName is specified, comment the first gcode file in this folder that is not modified."
@@ -61,7 +64,7 @@ class AnalyzePreferences:
 		self.archive.append( self.fileNameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Analyze'
-		self.saveTitle = None
+		self.saveTitle = 'Save Preferences'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.analyze.html' )
 
 	def execute( self ):
@@ -71,12 +74,12 @@ class AnalyzePreferences:
 			writeOutput( fileName )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the analyze dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( AnalyzePreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

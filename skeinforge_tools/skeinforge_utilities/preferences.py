@@ -23,7 +23,6 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/23/04 $"
 __license__ = "GPL 3.0"
 
-globalIsMainLoopRunning = False
 globalSpreadsheetSeparator = '\t'
 
 def deleteDirectory( directory, subfolderName ):
@@ -31,18 +30,6 @@ def deleteDirectory( directory, subfolderName ):
 	subDirectory = os.path.join( directory, subfolderName )
 	if os.path.isdir( subDirectory ):
 		shutil.rmtree( subDirectory )
-
-def displayDialog( displayPreferences ):
-	"Display the preferences dialog."
-	readPreferences( displayPreferences )
-	root = Tkinter.Tk()
-	preferencesDialog = PreferencesDialog( displayPreferences, root )
-	global globalIsMainLoopRunning
-	if globalIsMainLoopRunning:
-		return
-	globalIsMainLoopRunning = True
-	root.mainloop()
-	globalIsMainLoopRunning = False
 
 def getArchiveText( archivablePreferences ):
 	"Get the text representation of the archive."
@@ -53,10 +40,46 @@ def getArchiveText( archivablePreferences ):
 		preference.writeToArchiveWriter( archiveWriter )
 	return archiveWriter.getvalue()
 
+def getCraftTypeName( subName = '' ):
+	"Get the craft type from the profile."
+	profilePreferences = getReadProfilePreferences()
+	craftTypeName = getSelectedPluginName( profilePreferences.craftRadios )
+	if subName == '':
+		return craftTypeName
+	return os.path.join( craftTypeName, subName )
+
+def getCraftTypePluginModule( craftTypeName = '' ):
+	"Get the craft type plugin module."
+	if craftTypeName == '':
+		craftTypeName = getCraftTypeName()
+	return gcodec.getModule( craftTypeName, 'craft_types', os.path.dirname( __file__ ) )
+
+def getCraftTypeProfilesDirectoryPath( subfolder = '' ):
+	"Get the craft type profiles directory path, which is the preferences directory joined with profiles, joined in turn with the craft type."
+	craftTypeName = getCraftTypeName( subfolder )
+	craftTypeProfileDirectory = getProfilesDirectoryPath( craftTypeName )
+	return craftTypeProfileDirectory
+
 def getDirectoryInAboveDirectory( directory ):
 	"Get the directory in the above directory."
 	aboveDirectory = os.path.dirname( os.path.dirname( os.path.abspath( __file__ ) ) )
 	return os.path.join( aboveDirectory, directory )
+
+def getDisplayedDialogFromConstructor( displayPreferences ):
+	"Display the preferences dialog."
+	getReadPreferences( displayPreferences )
+	return PreferencesDialog( displayPreferences, Tkinter.Tk() )
+
+def getDisplayToolButtons( folderName, importantFilenames, moduleFilename, toolFileNames, visibleFilenames ):
+	"Get the display tool buttons."
+	displayToolButtons = []
+	for toolFileName in toolFileNames:
+		visible = 0
+		if toolFileName in visibleFilenames:
+			visible = 1
+		displayToolButton = DisplayToolButton().getFromFolderName( folderName, toolFileName in importantFilenames, moduleFilename, toolFileName, visible )
+		displayToolButtons.append( displayToolButton )
+	return displayToolButtons
 
 def getFileInGivenDirectory( directory, fileName ):
 	"Get the file from the fileName or the lowercase fileName in the given directory."
@@ -107,15 +130,15 @@ def getFolders( directory ):
 def getLowerNameSetHelpTitleWindowPosition( displayPreferences, fileNameHelp ):
 	"Set the help & preferences file path, the title and the window position archiver."
 	lastDotIndex = fileNameHelp.rfind( '.' )
-	lowerName = fileNameHelp[ : lastDotIndex ]
-	lastTruncatedDotIndex = lowerName.rfind( '.' )
-	lowerName = lowerName[ lastTruncatedDotIndex + 1 : ]
-	displayPreferences.title = lowerName.replace( '_', ' ' ).capitalize() + ' Preferences'
+	displayPreferences.lowerName = fileNameHelp[ : lastDotIndex ]
+	lastTruncatedDotIndex = displayPreferences.lowerName.rfind( '.' )
+	displayPreferences.lowerName = displayPreferences.lowerName[ lastTruncatedDotIndex + 1 : ]
+	displayPreferences.title = displayPreferences.lowerName.replace( '_', ' ' ).capitalize() + ' Preferences'
 	windowPositionName = 'windowPosition' + displayPreferences.title
 	displayPreferences.windowPositionPreferences = WindowPosition().getFromValue( windowPositionName, '0+0' )
 	displayPreferences.archive.append( displayPreferences.windowPositionPreferences )
 	displayPreferences.fileNameHelp = fileNameHelp
-	return lowerName + '.csv'
+	return displayPreferences.lowerName + '.csv'
 
 def getPreferencesDirectoryPath( subfolder = '' ):
 	"Get the preferences directory path, which is the home directory joined with .skeinforge."
@@ -124,12 +147,6 @@ def getPreferencesDirectoryPath( subfolder = '' ):
 		return preferencesDirectory
 	return os.path.join( preferencesDirectory, subfolder )
 
-def getPreferencesFilePath( fileName ):
-	"Get the preferences file path, which is the home directory joined with .skeinforge and fileName."
-	directoryName = getProfilesDirectoryPath( getSelectedProfile() )
-	makeDirectory( directoryName )
-	return os.path.join( directoryName, fileName )
-
 def getProfilesDirectoryPath( subfolder = '' ):
 	"Get the profiles directory path, which is the preferences directory joined with profiles."
 	profilesDirectory = getPreferencesDirectoryPath( 'profiles' )
@@ -137,11 +154,50 @@ def getProfilesDirectoryPath( subfolder = '' ):
 		return profilesDirectory
 	return os.path.join( profilesDirectory, subfolder )
 
-def getSelectedProfile():
-	"Get the selected profile."
+def getProfilesDirectoryInAboveDirectory( subName = '' ):
+	"Get the profiles directory path in the above directory."
+	aboveProfilesDirectory = getDirectoryInAboveDirectory( 'profiles' )
+	if subName == '':
+		return aboveProfilesDirectory
+	return os.path.join( aboveProfilesDirectory, subName )
+
+def getReadPreferences( archivablePreferences ):
+	"Read and return preferences from a file."
+	text = gcodec.getFileText( getProfilesDirectoryPath( archivablePreferences.baseName ), 'r', False )
+	if text == '':
+		print( 'The default %s will be written in the .skeinforge folder in the home directory.' % archivablePreferences.title.lower() )
+		text = gcodec.getFileText( getProfilesDirectoryInAboveDirectory( archivablePreferences.baseName ), 'r', False )
+		if text != '':
+			readPreferencesFromText( archivablePreferences, text )
+		writePreferences( archivablePreferences )
+		return archivablePreferences
+	readPreferencesFromText( archivablePreferences, text )
+	return archivablePreferences
+
+def getReadProfilePreferences():
+	"Get the read profile preferences."
 	profilePreferences = ProfilePreferences()
-	readPreferences( profilePreferences )
-	return profilePreferences.profileListbox.value
+	return getReadPreferences( profilePreferences )
+
+def getSelectedPluginModule( folderName, moduleFilename, plugins ):
+	"Get the selected plugin module."
+	for plugin in plugins:
+		if plugin.value:
+			return gcodec.getModule( plugin.name, folderName, moduleFilename )
+	return None
+
+def getSelectedPluginName( plugins ):
+	"Get the selected plugin name."
+	for plugin in plugins:
+		if plugin.value:
+			return plugin.name
+	return ''
+
+def getSelectedCraftTypeProfile( craftTypeName = '' ):
+	"Get the selected profile.getPreferencesConstructor"
+	craftTypePreferences = getCraftTypePluginModule( craftTypeName ).getPreferencesConstructor()
+	getReadPreferences( craftTypePreferences )
+	return craftTypePreferences.profileListbox.value
 
 def getSubfolderWithBasename( basename, directory ):
 	"Get the subfolder in the directory with the basename."
@@ -154,15 +210,6 @@ def getSubfolderWithBasename( basename, directory ):
 				return joinedFileName
 	return None
 
-def getDisplayToolButtons( folderName, importantFilenames, moduleFilename, toolFileNames, visibleFilenames ):
-	"Get the display tool buttons."
-	displayToolButtons = []
-	for toolFileName in toolFileNames:
-		displayToolButton = DisplayToolButton().getFromFolderName( folderName, moduleFilename, toolFileName )
-		displayToolButton.setImportantVisible( toolFileName in importantFilenames, toolFileName in visibleFilenames )
-		displayToolButtons.append( displayToolButton )
-	return displayToolButtons
-
 def makeDirectory( directory ):
 	"Make a directory if it does not already exist."
 	if os.path.isdir( directory ):
@@ -174,7 +221,7 @@ def makeDirectory( directory ):
 
 def openWebPage( webPagePath ):
 	"Open a web page in a browser."
-	webPagePath = os.path.normpath( webPagePath )
+	webPagePath = '"' + os.path.normpath( webPagePath ) + '"' # " to get around space in url bug
 	try:
 		os.startfile( webPagePath )#this is available on some python environments, but not all
 		return
@@ -187,25 +234,8 @@ def openWebPage( webPagePath ):
 		return
 	os.system( webbrowser.get().name + ' ' + webPagePath )#used this instead of webbrowser.open() to workaround webbrowser open() bug
 
-def readPreferences( archivablePreferences ):
-	"Set an archive to the preferences read from a file."
-	text = gcodec.getFileText( archivablePreferences.fileNamePreferences )
-	if text == '':
-		baseFileNamePreferences = os.path.basename( archivablePreferences.fileNamePreferences )
-		print( 'The default preferences for %s will be written in the .skeinforge folder in the home directory.' % baseFileNamePreferences )
-		aboveSelectedProfileDirectory = getDirectoryInAboveDirectory( 'profiles' )
-		if archivablePreferences.title[ : len( 'Profile' ) ].lower() != 'profile':
-			aboveSelectedProfileDirectory = os.path.join( aboveSelectedProfileDirectory, getSelectedProfile() )
-		text = gcodec.getFileText( os.path.join( aboveSelectedProfileDirectory, baseFileNamePreferences ) )
-		if text != '':
-			readPreferencesFromText( archivablePreferences, text )
-		writePreferences( archivablePreferences )
-		return
-	readPreferencesFromText( archivablePreferences, text )
-	return archivablePreferences
-
 def readPreferencesFromText( archivablePreferences, text ):
-	"Set an archive to the preferences read from a text."
+	"Read preferences from a text."
 	lines = gcodec.getTextLines( text )
 	preferenceTable = {}
 	for preference in archivablePreferences.archive:
@@ -223,23 +253,54 @@ def setArchiveToLine( lineIndex, lines, preferenceTable ):
 	if filePreferenceName in preferenceTable:
 		preferenceTable[ filePreferenceName ].setValueToSplitLine( lineIndex, lines, splitLine )
 
+def setCraftProfileArchive( defaultProfile, displayPreferences, fileNameHelp ):
+	"Set the craft profile archive."
+	displayPreferences.archive = []
+	displayPreferences.baseName = getLowerNameSetHelpTitleWindowPosition( displayPreferences, fileNameHelp )
+	displayPreferences.profileList = ProfileList().getFromName( displayPreferences.lowerName, 'Profile List:' )
+	displayPreferences.archive.append( displayPreferences.profileList )
+	displayPreferences.profileListbox = ListboxPreference().getFromListPreference( displayPreferences.profileList, 'Profile Selection:', defaultProfile )
+	displayPreferences.archive.append( displayPreferences.profileListbox )
+	displayPreferences.addListboxSelection = AddProfile().getFromListboxPreference( displayPreferences.profileListbox )
+	displayPreferences.archive.append( displayPreferences.addListboxSelection )
+	displayPreferences.deleteListboxSelection = DeleteProfile().getFromListboxPreference( displayPreferences.profileListbox )
+	displayPreferences.archive.append( displayPreferences.deleteListboxSelection )
+	#Create the archive, title of the dialog & preferences fileName.
+	displayPreferences.executeTitle = None
+	displayPreferences.saveTitle = 'Save Preferences'
+	directoryName = getProfilesDirectoryPath()
+	makeDirectory( directoryName )
+	displayPreferences.windowPositionPreferences.value = '0+400'
+
 def setHelpPreferencesFileNameTitleWindowPosition( displayPreferences, fileNameHelp ):
 	"Set the help & preferences file path, the title and the window position archiver."
-	displayPreferences.fileNamePreferences = getPreferencesFilePath( getLowerNameSetHelpTitleWindowPosition( displayPreferences, fileNameHelp ) )
+	baseName = getLowerNameSetHelpTitleWindowPosition( displayPreferences, fileNameHelp )
+	craftTypeName = getCraftTypeName()
+	selectedCraftTypeProfileBaseName  = os.path.join( getSelectedCraftTypeProfile( craftTypeName ), baseName )
+	displayPreferences.baseName = os.path.join( craftTypeName, selectedCraftTypeProfileBaseName )
+	dotsMinusOne = fileNameHelp.count( '.' ) - 1
+	x = 0
+	xAddition = 400
+	for step in xrange( dotsMinusOne ):
+		x += xAddition
+		xAddition /= 2
+	displayPreferences.windowPositionPreferences.value = '%s+0' % x
 
 def writePreferences( archivablePreferences ):
 	"Write the preferences to a file."
-	gcodec.writeFileText( archivablePreferences.fileNamePreferences, getArchiveText( archivablePreferences ) )
+	profilesDirectoryPath = getProfilesDirectoryPath( archivablePreferences.baseName )
+	makeDirectory( os.path.dirname( profilesDirectoryPath ) )
+	gcodec.writeFileText( profilesDirectoryPath, getArchiveText( archivablePreferences ) )
 
 
 class AddListboxSelection:
 	"A class to add the selection of a listbox preference."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.entry = Tkinter.Entry( preferencesDialog.master )
+		self.entry = Tkinter.Entry( preferencesDialog.root )
 		self.entry.bind( '<Return>', self.addSelectionWithEvent )
 		self.entry.grid( row = preferencesDialog.row, column = 1, columnspan = 2, sticky = Tkinter.W )
-		self.addButton = Tkinter.Button( preferencesDialog.master, text = 'Add Listbox Selection', command = self.addSelection )
+		self.addButton = Tkinter.Button( preferencesDialog.root, text = 'Add Listbox Selection', command = self.addSelection )
 		self.addButton.grid( row = preferencesDialog.row, column = 0 )
 		preferencesDialog.row += 1
 
@@ -283,10 +344,10 @@ class AddProfile:
 	"A class to add a profile."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.entry = Tkinter.Entry( preferencesDialog.master )
+		self.entry = Tkinter.Entry( preferencesDialog.root )
 		self.entry.bind( '<Return>', self.addSelectionWithEvent )
 		self.entry.grid( row = preferencesDialog.row, column = 1, columnspan = 2, sticky = Tkinter.W )
-		self.addButton = Tkinter.Button( preferencesDialog.master, text = 'Add Profile', command = self.addSelection )
+		self.addButton = Tkinter.Button( preferencesDialog.root, text = 'Add Profile', command = self.addSelection )
 		self.addButton.grid( row = preferencesDialog.row, column = 0 )
 		preferencesDialog.row += 1
 
@@ -301,7 +362,8 @@ class AddProfile:
 			print( 'There is already a profile by the name of %s, so no profile will be added.' % entryText )
 			return
 		self.entry.delete( 0, Tkinter.END )
-		destinationDirectory = getProfilesDirectoryPath( entryText )
+		craftTypeProfileDirectory = getProfilesDirectoryPath( self.listboxPreference.listPreference.craftTypeName )
+		destinationDirectory = os.path.join( craftTypeProfileDirectory, entryText )
 		shutil.copytree( self.listboxPreference.getSelectedFolder(), destinationDirectory )
 		self.listboxPreference.listPreference.setValueToFolders()
 		self.listboxPreference.value = entryText
@@ -338,10 +400,10 @@ class StringPreference:
 
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.entry = Tkinter.Entry( preferencesDialog.master )
+		self.entry = Tkinter.Entry( preferencesDialog.root )
 		self.setStateToValue()
 		self.entry.grid( row = preferencesDialog.row, column = 2, columnspan = 2, sticky = Tkinter.W )
-		self.label = Tkinter.Label( preferencesDialog.master, text = self.name )
+		self.label = Tkinter.Label( preferencesDialog.root, text = self.name )
 		self.label.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky = Tkinter.W )
 		preferencesDialog.row += 1
 
@@ -389,7 +451,7 @@ class BooleanPreference( StringPreference ):
 	"A class to display, read & write a boolean."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.checkbutton = Tkinter.Checkbutton( preferencesDialog.master, command = self.toggleCheckbox, text = self.name )
+		self.checkbutton = Tkinter.Checkbutton( preferencesDialog.root, command = self.toggleCheckbox, text = self.name )
 #toggleCheckbox is being used instead of a Tkinter IntVar because there is a weird bug where it doesn't work properly if this preference is not on the first window.
 		self.checkbutton.grid( row = preferencesDialog.row, columnspan = 4, sticky = Tkinter.W )
 		self.setStateToValue()
@@ -425,7 +487,7 @@ class DeleteListboxSelection( AddListboxSelection ):
 	"A class to delete the selection of a listbox preference."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.deleteButton = Tkinter.Button( preferencesDialog.master, text = "Delete Listbox Selection", command = self.deleteSelection )
+		self.deleteButton = Tkinter.Button( preferencesDialog.root, text = "Delete Listbox Selection", command = self.deleteSelection )
 		self.deleteButton.grid( row = preferencesDialog.row, column = 0 )
 		preferencesDialog.row += 1
 
@@ -445,7 +507,7 @@ class DeleteProfile( AddProfile ):
 	"A class to delete the selection of a listbox profile."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.deleteButton = Tkinter.Button( preferencesDialog.master, text = "Delete Profile", command = self.deleteSelection )
+		self.deleteButton = Tkinter.Button( preferencesDialog.root, text = "Delete Profile", command = self.deleteSelection )
 		self.deleteButton.grid( row = preferencesDialog.row, column = 0 )
 		preferencesDialog.row += 1
 
@@ -462,11 +524,11 @@ class DeleteProfile( AddProfile ):
 		else:
 			print( 'No profile is selected, so no profile will be deleted.' )
 			return
-		deleteDirectory( getProfilesDirectoryPath(), self.listboxPreference.value )
-		deleteDirectory( getDirectoryInAboveDirectory( 'profiles' ), self.listboxPreference.value )
+		deleteDirectory( getProfilesDirectoryPath( self.listboxPreference.listPreference.craftTypeName ), self.listboxPreference.value )
+		deleteDirectory( getProfilesDirectoryInAboveDirectory( self.listboxPreference.listPreference.craftTypeName ), self.listboxPreference.value )
 		self.listboxPreference.listPreference.setValueToFolders()
 		if len( self.listboxPreference.listPreference.value ) < 1:
-			defaultPreferencesDirectory = getProfilesDirectoryPath( self.listboxPreference.defaultValue )
+			defaultPreferencesDirectory = getProfilesDirectoryPath( os.path.join( self.listboxPreference.listPreference.craftTypeName, self.listboxPreference.defaultValue ) )
 			makeDirectory( defaultPreferencesDirectory )
 			self.listboxPreference.listPreference.setValueToFolders()
 		lastSelectionIndex = min( lastSelectionIndex, len( self.listboxPreference.listPreference.value ) - 1 )
@@ -474,22 +536,39 @@ class DeleteProfile( AddProfile ):
 		self.listboxPreference.listbox.delete( 0, Tkinter.END )
 		self.listboxPreference.setListboxItems()
 
+
 class DisplayToolButtonBesidePrevious:
 	"A class to display the tool preferences dialog beside the previous preference dialog element."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.displayButton = Tkinter.Button( preferencesDialog.master, text = self.getCapitalizedName(), command = self.displayTool )
+		self.createDisplayButton( preferencesDialog )
 		self.displayButton.grid( row = preferencesDialog.row - 1, column = 2, columnspan = 2 )
 
 	def addToPreferenceTable( self, preferenceTable ):
-		"Do nothing because the add listbox selection is not archivable."
-		pass
+		"Add this to the preference table."
+		preferenceTable[ self.name + 'Button' ] = self
+
+	def close( self ):
+		"The close listener has been executed."
+		self.value -= 1
+
+	def createDisplayButton( self, preferencesDialog ):
+		"Create the display button."
+		self.displayButton = Tkinter.Button( preferencesDialog.root, text = self.getCapitalizedName(), command = self.displayTool )
+		preferencesDialog.openDialogListeners.append( self )
+
+	def openDialog( self ):
+		"Create the display button."
+		if self.value > 0:
+			self.value = 0
+			self.displayTool()
 
 	def displayTool( self ):
 		"Display the tool preferences dialog."
+		self.value += 1
 		pluginModule = gcodec.getModule( self.name, self.folderName, self.moduleFilename )
 		if pluginModule != None:
-			pluginModule.main()
+			pluginModule.getDisplayedPreferences().closeListeners.append( self )
 
 	def getCapitalizedName( self ):
 		"Get the capitalized name."
@@ -500,36 +579,43 @@ class DisplayToolButtonBesidePrevious:
 			capitalizedStrings.append( word.capitalize() )
 		return ' '.join( capitalizedStrings )
 
-	def getFromFolderName( self, folderName, moduleFilename, name ):
+	def getFromFolderName( self, folderName, important, moduleFilename, name, value ):
 		"Initialize."
 		self.folderName = folderName
+		self.important = important
 		self.moduleFilename = moduleFilename
 		self.name = name
+		self.value = value
 		return self
 
 	def getLowerName( self ):
 		"Get the lower case name."
 		return self.name.lower()
 
-	def setImportantVisible( self, important, visible ):
-		"Set important and visible."
-		self.important = important
-		self.visible = visible
-
 	def setToDisplay( self ):
-		"Do nothing because the display tool button is not archivable."
+		"Do nothing because the button does not have a state."
 		pass
+
+	def setValueToSplitLine( self, lineIndex, lines, splitLine ):
+		"Set the value to the second word of a split line."
+		self.setValueToString( splitLine[ 1 ] )
+
+	def setValueToString( self, valueString ):
+		"Set the string to the value string."
+		self.value = int( valueString )
 
 	def writeToArchiveWriter( self, archiveWriter ):
-		"Do nothing because the display tool button is not archivable."
-		pass
+		"Write tab separated name and value to the archive writer."
+		limitedValue = max( self.value, 0 )
+		limitedValue = min( self.value, 1 )
+		archiveWriter.write( '%s%s%s\n' % ( self.name + 'Button', globalSpreadsheetSeparator, limitedValue ) )
 
 
 class DisplayToolButton( DisplayToolButtonBesidePrevious ):
 	"A class to display the tool preferences dialog, in a two column wide table."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.displayButton = Tkinter.Button( preferencesDialog.master, activebackground = 'black', activeforeground = 'violet', command = self.displayTool, text = self.getCapitalizedName() )
+		self.createDisplayButton( preferencesDialog )
 		try:
 			weightString = 'normal'
 			if self.important:
@@ -620,10 +706,10 @@ class FloatPreference( StringPreference ):
 	"A class to display, read & write a float."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.entry = Tkinter.Entry( preferencesDialog.master )
+		self.entry = Tkinter.Entry( preferencesDialog.root )
 		self.entry.insert( 0, str( self.value ) )
 		self.entry.grid( row = preferencesDialog.row, column = 3, sticky = Tkinter.W )
-		self.label = Tkinter.Label( preferencesDialog.master, text = self.name )
+		self.label = Tkinter.Label( preferencesDialog.root, text = self.name )
 		self.label.grid( row = preferencesDialog.row, column = 0, columnspan = 3, sticky = Tkinter.W )
 		preferencesDialog.row += 1
 
@@ -656,7 +742,7 @@ class LabelDisplay:
 	"A class to add a label."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.label = Tkinter.Label( preferencesDialog.master, text = self.name )
+		self.label = Tkinter.Label( preferencesDialog.root, text = self.name )
 		self.label.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky = Tkinter.W )
 		preferencesDialog.row += 1
 
@@ -713,8 +799,8 @@ class ListboxPreference( StringPreference ):
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
 #http://www.pythonware.com/library/tkinter/introduction/x5453-patterns.htm
-		self.master = preferencesDialog.master
-		frame = Tkinter.Frame( preferencesDialog.master )
+		self.root = preferencesDialog.root
+		frame = Tkinter.Frame( preferencesDialog.root )
 		scrollbar = Tkinter.Scrollbar( frame, orient = Tkinter.VERTICAL )
 		self.listbox = Tkinter.Listbox( frame, selectmode = Tkinter.SINGLE, yscrollcommand = scrollbar.set )
 		self.listbox.bind( '<ButtonRelease-1>', self.buttonReleaseOne )
@@ -738,10 +824,10 @@ class ListboxPreference( StringPreference ):
 
 	def getSelectedFolder( self ):
 		"Get the selected folder."
-		preferenceProfileSubfolder = getSubfolderWithBasename( self.value, getProfilesDirectoryPath() )
+		preferenceProfileSubfolder = getSubfolderWithBasename( self.value, getProfilesDirectoryPath( self.listPreference.craftTypeName ) )
 		if preferenceProfileSubfolder != None:
 			return preferenceProfileSubfolder
-		toolProfileSubfolder = getSubfolderWithBasename( self.value, getDirectoryInAboveDirectory( 'profiles' ) )
+		toolProfileSubfolder = getSubfolderWithBasename( self.value, getProfilesDirectoryInAboveDirectory( self.listPreference.craftTypeName ) )
 		return toolProfileSubfolder
 
 	def setListboxItems( self ):
@@ -776,7 +862,7 @@ class MenuButtonDisplay:
 	"A class to add a menu button."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.menuButton = Tkinter.Menubutton( preferencesDialog.master, borderwidth = 5, text = self.name, relief = Tkinter.RIDGE )
+		self.menuButton = Tkinter.Menubutton( preferencesDialog.root, borderwidth = 5, text = self.name, relief = Tkinter.RIDGE )
 		self.menuButton.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky = Tkinter.W )
 		self.menuButton.menu = Tkinter.Menu( self.menuButton, tearoff = 0 )
 		self.menuButton[ 'menu' ]  =  self.menuButton.menu
@@ -859,8 +945,9 @@ class ProfileList:
 		"Do nothing because the profile list is not archivable."
 		pass
 
-	def getFromName( self, name ):
+	def getFromName( self, craftTypeName, name ):
 		"Initialize."
+		self.craftTypeName = craftTypeName
 		self.name = name
 		self.setValueToFolders()
 		return self
@@ -875,8 +962,8 @@ class ProfileList:
 
 	def setValueToFolders( self ):
 		"Set the value to the folders in the profiles directories."
-		folders = getFolders( getProfilesDirectoryPath() )
-		defaultFolders = getFolders( getDirectoryInAboveDirectory( 'profiles' ) )
+		folders = getFolders( getProfilesDirectoryPath( self.craftTypeName ) )
+		defaultFolders = getFolders( getProfilesDirectoryInAboveDirectory( self.craftTypeName ) )
 		for defaultFolder in defaultFolders:
 			if defaultFolder not in folders:
 				folders.append( defaultFolder )
@@ -892,7 +979,7 @@ class Radio( BooleanPreference ):
 	"A class to display, read & write a boolean with associated radio button."
 	def addToDialog( self, preferencesDialog ):
 		"Add this to the dialog."
-		self.radiobutton = Tkinter.Radiobutton( preferencesDialog.master, command = self.clickRadio, text = self.name, value = preferencesDialog.row, variable = self.getIntVar() )
+		self.radiobutton = Tkinter.Radiobutton( preferencesDialog.root, command = self.clickRadio, text = self.name, value = preferencesDialog.row, variable = self.getIntVar() )
 		self.radiobutton.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky = Tkinter.W )
 		self.setDisplayState( preferencesDialog.row )
 		preferencesDialog.row += 1
@@ -934,7 +1021,7 @@ class RadioCapitalized( Radio ):
 		for word in words:
 			capitalizedStrings.append( word.capitalize() )
 		capitalizedName = ' '.join( capitalizedStrings )
-		self.radiobutton = Tkinter.Radiobutton( preferencesDialog.master, command = self.clickRadio, text = capitalizedName, value = preferencesDialog.row, variable = self.getIntVar() )
+		self.radiobutton = Tkinter.Radiobutton( preferencesDialog.root, command = self.clickRadio, text = capitalizedName, value = preferencesDialog.row, variable = self.getIntVar() )
 		self.radiobutton.grid( row = preferencesDialog.row, column = 0, columnspan = 2, sticky = Tkinter.W )
 		self.setDisplayState( preferencesDialog.row )
 		preferencesDialog.row += 1
@@ -947,16 +1034,16 @@ class RadioCapitalized( Radio ):
 class WindowPosition( StringPreference ):
 	"A class to display, read & write a window position."
 	def addToDialog( self, preferencesDialog ):
-		"Set the master to later get the geometry."
-		self.master = preferencesDialog.master
+		"Set the root to later get the geometry."
+		self.root = preferencesDialog.root
 		self.windowPositionName = 'windowPosition' + preferencesDialog.displayPreferences.title
-		self.setToDisplay()
+#		self.setToDisplay()
 
 	def setToDisplay( self ):
 		"Set the string to the window position."
 		if self.name != self.windowPositionName:
 			return
-		geometryString = self.master.geometry()
+		geometryString = self.root.geometry()
 		if geometryString == '1x1+0+0':
 			return
 		firstPlusIndexPlusOne = geometryString.find( '+' ) + 1
@@ -964,32 +1051,39 @@ class WindowPosition( StringPreference ):
 
 	def setWindowPosition( self ):
 		"Set the window position."
-		movedGeometryString = '%sx%s+%s' % ( self.master.winfo_reqwidth(), self.master.winfo_reqheight(), self.value )
-		self.master.geometry( movedGeometryString )
+		movedGeometryString = '%sx%s+%s' % ( self.root.winfo_reqwidth(), self.root.winfo_reqheight(), self.value )
+		self.root.geometry( movedGeometryString )
 
 
 class PreferencesDialog:
-	def __init__( self, displayPreferences, master ):
+	def __init__( self, displayPreferences, root ):
 		"Add display preferences to the dialog."
+		self.closeListeners = []
 		self.displayPreferences = displayPreferences
 		self.displayToolButtonStart = True
 		self.executables = []
-		self.master = master
+		self.root = root
+		self.openDialogListeners = []
 		self.row = 0
-		master.title( displayPreferences.title )
-		frame = Tkinter.Frame( master )
+		displayPreferences.preferencesDialog = self
+		root.title( displayPreferences.title )
+		frame = Tkinter.Frame( root )
 		if len( displayPreferences.archive ) > 25:
-			self.addButtons( displayPreferences, master )
+			self.addButtons( displayPreferences, root )
 		for preference in displayPreferences.archive:
 			preference.addToDialog( self )
 		if self.row < 20:
-			Tkinter.Label( master ).grid( row = self.row )
+			Tkinter.Label( root ).grid( row = self.row )
 			self.row += 1
-		self.addButtons( displayPreferences, master )
+		self.addButtons( displayPreferences, root )
+		root.withdraw()
+		root.update_idletasks()
 		self.setWindowPositionDeiconify()
-		self.master.update_idletasks()
+		root.deiconify()
+		for openDialogListener in self.openDialogListeners:
+			openDialogListener.openDialog()
 
-	def addButtons( self, displayPreferences, master ):
+	def addButtons( self, displayPreferences, root ):
 		"Add buttons to the dialog."
 		columnIndex = 0
 		cancelColor = 'red'
@@ -997,19 +1091,25 @@ class PreferencesDialog:
 		if displayPreferences.saveTitle != None:
 			cancelTitle = 'Cancel'
 		if displayPreferences.executeTitle != None:
-			executeButton = Tkinter.Button( master, activebackground = 'black', activeforeground = 'blue', text = displayPreferences.executeTitle, command = self.execute )
+			executeButton = Tkinter.Button( root, activebackground = 'black', activeforeground = 'blue', text = displayPreferences.executeTitle, command = self.execute )
 			executeButton.grid( row = self.row, column = columnIndex )
 			columnIndex += 1
-		helpButton = Tkinter.Button( master, activebackground = 'black', activeforeground = 'white', text = "       ?       ", command = self.openHelpPage )
+		helpButton = Tkinter.Button( root, activebackground = 'black', activeforeground = 'white', text = "       ?       ", command = self.openHelpPage )
 		helpButton.grid( row = self.row, column = columnIndex )
 		columnIndex += 1
-		cancelButton = Tkinter.Button( master, activebackground = 'black', activeforeground = cancelColor, command = master.destroy, fg = cancelColor, text = cancelTitle )
+		cancelButton = Tkinter.Button( root, activebackground = 'black', activeforeground = cancelColor, command = self.close, fg = cancelColor, text = cancelTitle )
 		cancelButton.grid( row = self.row, column = columnIndex )
 		columnIndex += 1
 		if displayPreferences.saveTitle != None:
-			saveButton = Tkinter.Button( master, activebackground = 'black', activeforeground = 'darkgreen', command = self.savePreferencesDestroy, fg = 'darkgreen', text = displayPreferences.saveTitle )
+			saveButton = Tkinter.Button( root, activebackground = 'black', activeforeground = 'darkgreen', command = self.savePreferencesDestroy, fg = 'darkgreen', text = displayPreferences.saveTitle )
 			saveButton.grid( row = self.row, column = columnIndex )
 		self.row += 1
+
+	def close( self ):
+		"The dialog was closed."
+		for closeListener in self.closeListeners:
+			closeListener.close()
+		self.root.destroy()
 
 	def execute( self ):
 		"The execute button was clicked."
@@ -1017,7 +1117,7 @@ class PreferencesDialog:
 			executable.execute()
 		self.savePreferences()
 		self.displayPreferences.execute()
-		self.master.destroy()
+		self.close()
 
 	def openHelpPage( self ):
 		"Open the browser to the help page."
@@ -1037,7 +1137,7 @@ class PreferencesDialog:
 	def savePreferencesDestroy( self ):
 		"Set the preferences to the dialog, write them, then destroy the window."
 		self.savePreferences()
-		self.master.destroy()
+		self.close()
 
 	def setWindowPositionDeiconify( self ):
 		"Set the window position if that preference exists."
@@ -1045,10 +1145,7 @@ class PreferencesDialog:
 		for preference in self.displayPreferences.archive:
 			if isinstance( preference, WindowPosition ):
 				if preference.name == windowPositionName:
-					self.master.withdraw()
-					self.master.update_idletasks()
 					preference.setWindowPosition()
-					self.master.deiconify()
 					return
 
 
@@ -1057,15 +1154,25 @@ class ProfilePreferences:
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
-		self.profileList = ProfileList().getFromName( 'Profile List:' )
-		self.profileListbox = ListboxPreference().getFromListPreference( self.profileList, 'Profile Selection:', 'extrude_ABS' )
-		self.addListboxSelection = AddProfile().getFromListboxPreference( self.profileListbox )
-		self.deleteListboxSelection = DeleteProfile().getFromListboxPreference( self.profileListbox )
+		fileDirectoryPath = os.path.dirname( __file__ )
+		self.archive = []
+		self.craftTypeLabel = LabelDisplay().getFromName( 'Craft Types: ' )
+		self.archive.append( self.craftTypeLabel )
+		craftTypeFilenames = gcodec.getPluginFilenames( 'craft_types', fileDirectoryPath )
+		craftTypeRadio = []
+		self.craftRadios = []
+		for craftTypeFilename in craftTypeFilenames:
+			craftRadio = RadioCapitalized().getFromRadio( craftTypeFilename, craftTypeRadio, craftTypeFilename == 'extrusion' )
+			self.craftRadios.append( craftRadio )
+		self.craftRadios.sort( key = RadioCapitalized.getLowerName )
+		for craftRadio in self.craftRadios:
+			self.archive.append( craftRadio )
+			displayToolButtonBesidePrevious = DisplayToolButtonBesidePrevious().getFromFolderName( 'craft_types', False, fileDirectoryPath, craftRadio.name, 1 * ( craftRadio.name == 'extrusion' ) )
+			self.archive.append( displayToolButtonBesidePrevious )
 		#Create the archive, title of the dialog & preferences fileName.
-		self.archive = [ self.profileList, self.profileListbox, self.addListboxSelection, self.deleteListboxSelection ]
 		self.executeTitle = None
 		self.saveTitle = 'Save Preferences'
 		directoryName = getProfilesDirectoryPath()
 		makeDirectory( directoryName )
-		self.fileNamePreferences = os.path.join( directoryName, getLowerNameSetHelpTitleWindowPosition( self, 'skeinforge_tools.profile.html' ) )
+		self.baseName = getLowerNameSetHelpTitleWindowPosition( self, 'skeinforge_tools.profile.html' )
 		self.windowPositionPreferences.value = '0+200'

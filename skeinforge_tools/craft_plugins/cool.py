@@ -80,7 +80,6 @@ from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import polyfile
-import cStringIO
 import math
 import os
 import sys
@@ -100,10 +99,14 @@ def getCraftedTextFromText( gcodeText, coolPreferences = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'cool' ):
 		return gcodeText
 	if coolPreferences == None:
-		coolPreferences = preferences.readPreferences( CoolPreferences() )
+		coolPreferences = preferences.getReadPreferences( CoolPreferences() )
 	if not coolPreferences.activateCool.value:
 		return gcodeText
 	return CoolSkein().getCraftedGcode( gcodeText, coolPreferences )
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( CoolPreferences() )
 
 def writeOutput( fileName = '' ):
 	"Cool a gcode linear move file.  Chain cool the gcode if it is not already cooled. If no fileName is specified, cool the first unmodified gcode file in this folder."
@@ -159,7 +162,7 @@ class CoolSkein:
 		"Add the minimum radius cool orbits."
 		if len( self.boundaryLayer.loops ) < 1:
 			return
-		perimeterOutset = - 0.4 * self.extrusionPerimeterWidth
+		perimeterOutset = - 0.4 * self.perimeterWidth
 		outsetBoundaryLoops = intercircle.getInsetLoopsFromLoops( perimeterOutset, self.boundaryLayer.loops )
 		if len( outsetBoundaryLoops ) < 1:
 			outsetBoundaryLoops = self.boundaryLayer.loops
@@ -172,7 +175,7 @@ class CoolSkein:
 			largestLoop = euclidean.getSquareLoop( minimumCorner, maximumCorner )
 		pointComplex = euclidean.getXYComplexFromVector3( self.oldLocation )
 		if pointComplex != None:
-			largestLoop = euclidean.getLoopStartingNearest( self.extrusionPerimeterWidth, pointComplex, largestLoop )
+			largestLoop = euclidean.getLoopStartingNearest( self.perimeterWidth, pointComplex, largestLoop )
 		intercircle.addOrbits( largestLoop, self, remainingOrbitTime, self.highestZ )
 
 	def addGcodeFromFeedrateMovementZ( self, feedrateMinute, point, z ):
@@ -214,8 +217,8 @@ class CoolSkein:
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )
 			self.distanceFeedRate.parseSplitLine( firstWord, splitLine )
-			if firstWord == '(<extrusionPerimeterWidth>':
-				self.extrusionPerimeterWidth = float( splitLine[ 1 ] )
+			if firstWord == '(<perimeterWidth>':
+				self.perimeterWidth = float( splitLine[ 1 ] )
 				if self.coolPreferences.turnFanOnAtBeginning.value:
 					self.distanceFeedRate.addLine( 'M106' )
 			elif firstWord == '(</extruderInitialization>)':
@@ -253,12 +256,12 @@ class CoolSkein:
 		self.distanceFeedRate.addLine( line )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the cool dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( CoolPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

@@ -57,6 +57,10 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( StatisticPreferences() )
+
 def getStatisticGcode( gcodeText ):
 	"Get statistics for a gcode text."
 	skein = StatisticSkein()
@@ -72,13 +76,13 @@ def statisticFile( fileName = '' ):
 			return
 		fileName = unmodified[ 0 ]
 	statisticPreferences = StatisticPreferences()
-	preferences.readPreferences( statisticPreferences )
+	preferences.getReadPreferences( statisticPreferences )
 	writeStatisticFileGivenText( fileName, gcodec.getFileText( fileName ), statisticPreferences )
 
 def writeOutput( fileName, gcodeText = '' ):
 	"Write statistics for a skeinforge gcode file, if 'Write Statistics File for Skeinforge Chain' is selected."
 	statisticPreferences = StatisticPreferences()
-	preferences.readPreferences( statisticPreferences )
+	preferences.getReadPreferences( statisticPreferences )
 	if gcodeText == '':
 		gcodeText = gcodec.getFileText( fileName )
 	if statisticPreferences.activateStatistic.value:
@@ -205,6 +209,7 @@ class StatisticSkein:
 
 	def parseGcode( self, gcodeText ):
 		"Parse gcode text and store the statistics."
+		self.absolutePerimeterWidth = 0.4
 		self.characters = 0
 		self.cornerHigh = Vector3( - 999999999.0, - 999999999.0, - 999999999.0 )
 		self.cornerLow = Vector3( 999999999.0, 999999999.0, 999999999.0 )
@@ -212,7 +217,6 @@ class StatisticSkein:
 		self.extruderSpeed = 0.0
 		self.extruderToggled = 0
 		self.extrusionDiameter = None
-		self.extrusionWidth = 0.4
 		self.feedrateMinute = 600.0
 		self.layerThickness = 0.4
 		self.numberOfLines = 0
@@ -226,8 +230,8 @@ class StatisticSkein:
 		averageFeedrate = self.totalDistanceTraveled / self.totalBuildTime
 		self.characters += self.numberOfLines
 		kilobytes = round( self.characters / 1024.0 )
-		halfExtrusionWidth = 0.5 * self.extrusionWidth
-		halfExtrusionCorner = Vector3( halfExtrusionWidth, halfExtrusionWidth, halfExtrusionWidth )
+		halfPerimeterWidth = 0.5 * self.absolutePerimeterWidth
+		halfExtrusionCorner = Vector3( halfPerimeterWidth, halfPerimeterWidth, halfPerimeterWidth )
 		self.cornerHigh += halfExtrusionCorner
 		self.cornerLow -= halfExtrusionCorner
 		extent = self.cornerHigh - self.cornerLow
@@ -235,7 +239,7 @@ class StatisticSkein:
 		roundedLow = euclidean.getRoundedPoint( self.cornerLow )
 		roundedExtent = euclidean.getRoundedPoint( extent )
 		axisString =  " axis, the extrusion starts at "
-		volumeExtruded = 0.0009 * self.extrusionWidth * self.layerThickness * self.totalDistanceExtruded # the 9 comes from a typical fill density of 0.9
+		volumeExtruded = 0.0009 * self.absolutePerimeterWidth * self.layerThickness * self.totalDistanceExtruded # the 9 is from a fill density of 0.9, maybe use combination of extrusion and perimeter width
 		self.addLine( "On the X" + axisString + str( int ( roundedLow.x ) ) + " mm and ends at " + str( int ( roundedHigh.x ) ) + " mm, for a width of " + str( int ( extent.x ) ) + " mm" )
 		self.addLine( "On the Y" + axisString + str( int ( roundedLow.y ) ) + " mm and ends at " + str( int ( roundedHigh.y ) ) + " mm, for a depth of " + str( int ( extent.y ) ) + " mm" )
 		self.addLine( "On the Z" + axisString + str( int ( roundedLow.z ) ) + " mm and ends at " + str( int ( roundedHigh.z ) ) + " mm, for a height of " + str( int ( extent.z ) ) + " mm" )
@@ -245,7 +249,7 @@ class StatisticSkein:
 		self.addLine( "The extruder was toggled " + str( self.extruderToggled ) + " times." )
 		if self.extrusionDiameter != None:
 			self.addLine( "The extrusion diameter is "  + str( self.extrusionDiameter ) + " mm." )
-		self.addLine( "The extrusion width is "  + str( self.extrusionWidth ) + " mm." )
+		self.addLine( "The perimeter width is "  + str( self.absolutePerimeterWidth ) + " mm." )
 		self.addLine( "The following procedures have been performed on the skein:" )
 		for procedure in self.procedures:
 			self.addLine( procedure )
@@ -282,10 +286,10 @@ class StatisticSkein:
 			self.extruderSpeed = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
 		elif firstWord == '(<extrusionDiameter>':
 			self.extrusionDiameter = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
-		elif firstWord == '(<extrusionWidth>':
-			self.extrusionWidth = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
 		elif firstWord == '(<layerThickness>':
 			self.layerThickness = gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] )
+		elif firstWord == '(<perimeterWidth>':
+			self.absolutePerimeterWidth = abs( gcodec.getDoubleAfterFirstLetter( splitLine[ 1 ] ) )
 		elif firstWord == '(<procedureDone>':
 			self.procedures.append( splitLine[ 1 ] )
 		elif firstWord == '(<version>':
@@ -297,7 +301,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( StatisticPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

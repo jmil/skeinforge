@@ -48,6 +48,10 @@ def getCharacterIntegerString( character, offset, splitLine, stepLength ):
 	integerValue = int( round( float( floatValue / stepLength ) ) )
 	return character + str( integerValue )
 
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( GcodeStepPreferences() )
+
 def getFloatFromCharacterSplitLine( character, splitLine ):
 	"Get the float after the first occurence of the character in the split line."
 	lineFromCharacter = getStringFromCharacterSplitLine( character, splitLine )
@@ -62,7 +66,7 @@ def getOutput( gcodeText, gcodeStepPreferences = None ):
 		return ''
 	if gcodeStepPreferences == None:
 		gcodeStepPreferences = GcodeStepPreferences()
-		preferences.readPreferences( gcodeStepPreferences )
+		preferences.getReadPreferences( gcodeStepPreferences )
 	skein = GcodeStepSkein()
 	skein.parseGcode( gcodeStepPreferences, gcodeText )
 	return skein.output.getvalue()
@@ -135,7 +139,7 @@ class GcodeStepPreferences:
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Convert to Gcode Step'
 		self.saveTitle = 'Save Preferences'
-		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.export_plugins.gcode_step.html' )
+		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.export_plugins.gcode_step.html' )
 
 	def execute( self ):
 		"Convert to gcode step button has been clicked."
@@ -209,12 +213,12 @@ class GcodeStepSkein:
 		self.oldZString = zString
 
 
-def main( hashtable = None ):
+def main():
 	"Display the export dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( GcodeStepPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

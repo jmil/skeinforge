@@ -67,6 +67,10 @@ def getCommentGcode( gcodeText ):
 	skein.parseGcode( gcodeText )
 	return skein.output.getvalue()
 
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( CommentPreferences() )
+
 def writeCommentFileGivenText( fileName, gcodeText ):
 	"Write a commented gcode file for a gcode file."
 	gcodec.writeFileMessageEnd( '_comment.gcode', fileName, getCommentGcode( gcodeText ), 'The commented file is saved as ' )
@@ -74,7 +78,7 @@ def writeCommentFileGivenText( fileName, gcodeText ):
 def writeOutput( fileName, gcodeText = '' ):
 	"Write a commented gcode file for a skeinforge gcode file, if 'Write Commented File for Skeinforge Chain' is selected."
 	commentPreferences = CommentPreferences()
-	preferences.readPreferences( commentPreferences )
+	preferences.getReadPreferences( commentPreferences )
 	if gcodeText == '':
 		gcodeText = gcodec.getFileText( fileName )
 	if commentPreferences.activateComment.value:
@@ -178,7 +182,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( CommentPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

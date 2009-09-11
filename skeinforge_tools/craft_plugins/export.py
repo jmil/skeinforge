@@ -96,10 +96,14 @@ def getCraftedTextFromText( gcodeText, exportPreferences = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'export' ):
 		return gcodeText
 	if exportPreferences == None:
-		exportPreferences = preferences.readPreferences( ExportPreferences() )
+		exportPreferences = preferences.getReadPreferences( ExportPreferences() )
 	if not exportPreferences.activateExport.value:
 		return gcodeText
 	return ExportSkein().getCraftedGcode( exportPreferences, gcodeText )
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( ExportPreferences() )
 
 def getReplaced( exportText ):
 	"Get text with words replaced according to replace.csv file."
@@ -115,13 +119,6 @@ def getReplaced( exportText ):
 			exportText = exportText.replace( splitLine[ 0 ], splitLine[ 1 ] )
 	return exportText
 
-def getSelectedPlugin( exportPreferences ):
-	"Get the selected plugin module."
-	for plugin in exportPreferences.exportPlugins:
-		if plugin.value:
-			return gcodec.getModule( plugin.name, 'export_plugins', __file__ )
-	return None
-
 def writeOutput( fileName = '' ):
 	"""Export a gcode linear move file.  Chain export the gcode if it is not already exported.
 	If no fileName is specified, export the first unmodified gcode file in this folder."""
@@ -131,7 +128,7 @@ def writeOutput( fileName = '' ):
 	if fileName == '':
 		return
 	exportPreferences = ExportPreferences()
-	preferences.readPreferences( exportPreferences )
+	preferences.getReadPreferences( exportPreferences )
 	startTime = time.time()
 	print( 'File ' + gcodec.getSummarizedFilename( fileName ) + ' is being chain exported.' )
 	suffixFilename = fileName[ : fileName.rfind( '.' ) ] + '_export.' + exportPreferences.fileExtension.value
@@ -143,7 +140,7 @@ def writeOutput( fileName = '' ):
 	analyze.writeOutput( suffixFilename, gcodeText )
 	exportChainGcode = getCraftedTextFromText( gcodeText, exportPreferences )
 	replacableExportChainGcode = None
-	selectedPluginModule = getSelectedPlugin( exportPreferences )
+	selectedPluginModule = preferences.getSelectedPluginModule( 'export_plugins', __file__, exportPreferences.exportPlugins )
 	if selectedPluginModule == None:
 		replacableExportChainGcode = exportChainGcode
 	else:
@@ -194,7 +191,7 @@ class ExportPreferences:
 				pluginModule = gcodec.getModule( exportOperation.name, 'export_plugins', __file__ )
 				if pluginModule != None:
 					if pluginModule.isArchivable():
-						displayToolButtonBesidePrevious = preferences.DisplayToolButtonBesidePrevious().getFromFolderName( 'export_plugins', __file__, exportOperation.name )
+						displayToolButtonBesidePrevious = preferences.DisplayToolButtonBesidePrevious().getFromFolderName( 'export_plugins', False, __file__, exportOperation.name, 0 )
 						self.exportOperationsButtons.append( displayToolButtonBesidePrevious )
 		self.archive += self.exportOperationsButtons
 		self.fileExtension = preferences.StringPreference().getFromValue( 'File Extension:', 'gcode' )
@@ -270,12 +267,12 @@ class ExportSkein:
 		self.addLine( line )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the export dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( ExportPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

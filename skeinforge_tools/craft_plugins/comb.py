@@ -59,7 +59,6 @@ from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import polyfile
-import cStringIO
 import math
 import sys
 
@@ -68,7 +67,7 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
-#patched over falling tower comb bug if location.z < self.getBetweens()[ 0 ][ 0 ].z + 0.5 * self.extrusionWidth, but a real solution would be nice
+#patched over falling tower comb bug if location.z < self.getBetweens()[ 0 ][ 0 ].z + 0.5 * self.perimeterWidth, but a real solution would be nice
 #addLoopsBeforeLeavingPerimeter or something before crossing bug, seen on layer 8 of Screw holder
 def getCraftedText( fileName, text, combPreferences = None ):
 	"Comb a gcode linear move text."
@@ -79,10 +78,14 @@ def getCraftedTextFromText( gcodeText, combPreferences = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'comb' ):
 		return gcodeText
 	if combPreferences == None:
-		combPreferences = preferences.readPreferences( CombPreferences() )
+		combPreferences = preferences.getReadPreferences( CombPreferences() )
 	if not combPreferences.activateComb.value:
 		return gcodeText
 	return CombSkein().getCraftedGcode( combPreferences, gcodeText )
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( CombPreferences() )
 
 def isLoopNumberEqual( betweenX, betweenXIndex, loopNumber ):
 	"Determine if the loop number is equal."
@@ -186,7 +189,7 @@ class CombSkein:
 		locationComplex = location.dropAxis( 2 )
 		closestInset = None
 		closestDistanceIndex = euclidean.DistanceIndex( 999999999999999999.0, - 1 )
-		loop = euclidean.getAwayPoints( loop, self.extrusionWidth )
+		loop = euclidean.getAwayPoints( loop, self.perimeterWidth )
 		circleNodes = intercircle.getCircleNodesFromLoop( loop, self.fillInset )
 		centers = []
 		centers = intercircle.getCentersFromCircleNodes( circleNodes )
@@ -200,12 +203,12 @@ class CombSkein:
 						closestDistanceIndex = distanceIndex
 		if closestInset == None:
 			return
-		extrusionHalfWidth = 0.5 * self.extrusionWidth
-		closestInset = euclidean.getLoopStartingNearest( extrusionHalfWidth, locationComplex, closestInset )
+		perimeterHalfWidth = 0.5 * self.perimeterWidth
+		closestInset = euclidean.getLoopStartingNearest( perimeterHalfWidth, locationComplex, closestInset )
 		if euclidean.getPolygonLength( closestInset ) < 0.2 * self.arrivalInsetFollowDistance:
 			return
 		closestInset.append( closestInset[ 0 ] )
-		closestInset = euclidean.getSimplifiedPath( closestInset, self.extrusionWidth )
+		closestInset = euclidean.getSimplifiedPath( closestInset, self.perimeterWidth )
 		closestInset.reverse()
 		pathBeforeArrival = euclidean.getClippedAtEndLoopPath( self.arrivalInsetFollowDistance, closestInset )
 		pointBeforeArrival = pathBeforeArrival[ - 1 ]
@@ -256,8 +259,8 @@ class CombSkein:
 		loop = self.loopPath.path[ : - 1 ]
 		jitterDistance = self.layerJitter + self.arrivalInsetFollowDistance
 		if self.beforeLoopLocation != None:
-			extrusionHalfWidth = 0.5 * self.extrusionWidth
-			loop = euclidean.getLoopStartingNearest( extrusionHalfWidth, self.beforeLoopLocation, loop )
+			perimeterHalfWidth = 0.5 * self.perimeterWidth
+			loop = euclidean.getLoopStartingNearest( perimeterHalfWidth, self.beforeLoopLocation, loop )
 		if jitterDistance != 0.0:
 			loop = self.getJitteredLoop( jitterDistance, loop )
 			loop = euclidean.getAwayPoints( loop, 0.2 * self.fillInset )
@@ -510,15 +513,15 @@ class CombSkein:
 			if firstWord == '(</extruderInitialization>)':
 				self.distanceFeedRate.addLine( '(<procedureDone> comb </procedureDone>)' )
 				return
-			elif firstWord == '(<extrusionWidth>':
-				self.extrusionWidth = float( splitLine[ 1 ] )
-				self.arrivalInsetFollowDistance = combPreferences.arrivalInsetFollowDistanceOverExtrusionWidth.value * self.extrusionWidth
-				self.jitter = combPreferences.jitterOverExtrusionWidth.value * self.extrusionWidth
-				self.minimumPerimeterDepartureDistance = combPreferences.minimumPerimeterDepartureDistanceOverExtrusionWidth.value * self.extrusionWidth
-			elif firstWord == '(<operatingFeedratePerSecond>':
-				self.operatingFeedratePerMinute = 60.0 * float( splitLine[ 1 ] )
 			elif firstWord == '(<fillInset>':
 				self.fillInset = float( splitLine[ 1 ] )
+			elif firstWord == '(<operatingFeedratePerSecond>':
+				self.operatingFeedratePerMinute = 60.0 * float( splitLine[ 1 ] )
+			elif firstWord == '(<perimeterWidth>':
+				self.perimeterWidth = float( splitLine[ 1 ] )
+				self.arrivalInsetFollowDistance = combPreferences.arrivalInsetFollowDistanceOverExtrusionWidth.value * self.perimeterWidth
+				self.jitter = combPreferences.jitterOverExtrusionWidth.value * self.perimeterWidth
+				self.minimumPerimeterDepartureDistance = combPreferences.minimumPerimeterDepartureDistanceOverExtrusionWidth.value * self.perimeterWidth
 			elif firstWord == '(<travelFeedratePerSecond>':
 				self.travelFeedratePerMinute = 60.0 * float( splitLine[ 1 ] )
 			self.distanceFeedRate.addLine( line )
@@ -547,12 +550,12 @@ class CombSkein:
 			self.isPerimeter = True
 
 
-def main( hashtable = None ):
+def main():
 	"Display the comb dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( CombPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

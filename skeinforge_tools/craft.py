@@ -14,12 +14,9 @@ from __future__ import absolute_import
 import __init__
 
 from skeinforge_tools.skeinforge_utilities import consecution
-from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import polyfile
-import cStringIO
-import os
 import sys
 
 
@@ -30,7 +27,13 @@ __license__ = "GPL 3.0"
 
 def getCraftPluginFilenames():
 	"Get craft plugin fileNames."
-	return gcodec.getPluginFilenames( 'craft_plugins', __file__ )
+	craftSequence = consecution.getReadCraftSequence()
+	craftSequence.sort()
+	return craftSequence
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( CraftPreferences() )
 
 def writeOutput( fileName = '' ):
 	"Craft a gcode file.  If no fileName is specified, comment the first gcode file in this folder that is not modified."
@@ -53,9 +56,8 @@ class CraftPreferences:
 		self.archive.append( self.fileNameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Craft'
-		self.saveTitle = None
+		self.saveTitle = 'Save Preferences'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft.html' )
-		self.windowPositionPreferences.value = '400+0'
 
 	def execute( self ):
 		"Craft button has been clicked."
@@ -64,12 +66,12 @@ class CraftPreferences:
 			writeOutput( fileName )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the craft dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( CraftPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

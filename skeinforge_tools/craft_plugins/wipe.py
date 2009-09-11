@@ -80,10 +80,14 @@ def getCraftedTextFromText( gcodeText, wipePreferences = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'wipe' ):
 		return gcodeText
 	if wipePreferences == None:
-		wipePreferences = preferences.readPreferences( WipePreferences() )
+		wipePreferences = preferences.getReadPreferences( WipePreferences() )
 	if not wipePreferences.activateWipe.value:
 		return gcodeText
 	return WipeSkein().getCraftedGcode( gcodeText, wipePreferences )
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( WipePreferences() )
 
 def writeOutput( fileName = '' ):
 	"Wipe a gcode linear move file.  Chain wipe the gcode if it is not already wiped. If no fileName is specified, wipe the first unmodified gcode file in this folder."
@@ -151,9 +155,9 @@ class WipeSkein:
 	def addHop( self, begin, end ):
 		"Add hop to highest point."
 		beginEndDistance = begin.distance( end )
-		if beginEndDistance < 3.0 * self.extrusionWidth:
+		if beginEndDistance < 3.0 * self.absolutePerimeterWidth:
 			return
-		alongWay = self.extrusionWidth / beginEndDistance
+		alongWay = self.absolutePerimeterWidth / beginEndDistance
 		closeToOldLocation = euclidean.getIntermediateLocation( alongWay, begin, end )
 		closeToOldLocation.z = self.highestZ
 		self.distanceFeedRate.addLine( self.getLinearMoveWithFeedrate( self.travelFeedratePerMinute, closeToOldLocation ) )
@@ -206,8 +210,8 @@ class WipeSkein:
 			if firstWord == '(</extruderInitialization>)':
 				self.distanceFeedRate.addLine( '(<procedureDone> wipe </procedureDone>)' )
 				return
-			elif firstWord == '(<extrusionWidth>':
-				self.extrusionWidth = float( splitLine[ 1 ] )
+			elif firstWord == '(<perimeterWidth>':
+				self.absolutePerimeterWidth = abs( float( splitLine[ 1 ] ) )
 			elif firstWord == '(<travelFeedratePerSecond>':
 				self.travelFeedratePerMinute = 60.0 * float( splitLine[ 1 ] )
 			self.distanceFeedRate.addLine( line )
@@ -232,12 +236,12 @@ class WipeSkein:
 		self.distanceFeedRate.addLine( line )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the wipe dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( WipePreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

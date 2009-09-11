@@ -4,7 +4,11 @@ Home is a script to home the nozzle.
 The default 'Activate Home' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions
 will not be called.
 
-At the beginning of a each layer, home will add the commands of a gcode script called homing.text, if it exists.
+At the beginning of a each layer, home will add the commands of a gcode script with the name of the "Name of Homing File"
+setting, if one exists.  The default name is homing.text.  Home does not care if the text file names are capitalized, but some file
+systems do not handle file name cases properly, so to be on the safe side you should give them lower case names.  Home
+looks for those files in the alterations folder in the .skeinforge folder in the home directory. If it doesn't find the file it then looks
+in the alterations folder in the skeinforge_tools folder.  If it doesn't find anything there it looks in the craft_plugins folder.
 
 To run home, in a shell which home is in type:
 > python home.py
@@ -53,7 +57,6 @@ from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
-import cStringIO
 import math
 import os
 import sys
@@ -73,10 +76,14 @@ def getCraftedTextFromText( gcodeText, homePreferences = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'home' ):
 		return gcodeText
 	if homePreferences == None:
-		homePreferences = preferences.readPreferences( HomePreferences() )
+		homePreferences = preferences.getReadPreferences( HomePreferences() )
 	if not homePreferences.activateHome.value:
 		return gcodeText
 	return HomeSkein().getCraftedGcode( gcodeText, homePreferences )
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( HomePreferences() )
 
 def writeOutput( fileName = '' ):
 	"Home a gcode linear move file.  Chain home the gcode if it is not already homed. If no fileName is specified, home the first unmodified gcode file in this folder."
@@ -126,7 +133,7 @@ class HomeSkein:
 	def addFloat( self, begin, end ):
 		"Add dive to the original height."
 		beginEndDistance = begin.distance( end )
-		alongWay = self.extrusionWidth / beginEndDistance
+		alongWay = self.absolutePerimeterWidth / beginEndDistance
 		closeToEnd = euclidean.getIntermediateLocation( alongWay, end, begin )
 		closeToEnd.z = self.highestZ
 		self.distanceFeedRate.addLine( self.distanceFeedRate.getLinearGcodeMovementWithFeedrate( self.travelFeedratePerMinute, closeToEnd.dropAxis( 2 ), closeToEnd.z ) )
@@ -176,8 +183,8 @@ class HomeSkein:
 			if firstWord == '(</extruderInitialization>)':
 				self.distanceFeedRate.addLine( '(<procedureDone> home </procedureDone>)' )
 				return
-			elif firstWord == '(<extrusionWidth>':
-				self.extrusionWidth = float( splitLine[ 1 ] )
+			elif firstWord == '(<perimeterWidth>':
+				self.absolutePerimeterWidth = abs( float( splitLine[ 1 ] ) )
 			elif firstWord == '(<travelFeedratePerSecond>':
 				self.travelFeedratePerMinute = 60.0 * float( splitLine[ 1 ] )
 			self.distanceFeedRate.addLine( line )
@@ -201,12 +208,12 @@ class HomeSkein:
 		self.distanceFeedRate.addLine( line )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the home dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( HomePreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

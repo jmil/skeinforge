@@ -75,7 +75,6 @@ from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities import interpret
-import cStringIO
 import math
 import sys
 
@@ -94,10 +93,14 @@ def getCraftedTextFromText( gcodeText, oozebanePreferences = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'oozebane' ):
 		return gcodeText
 	if oozebanePreferences == None:
-		oozebanePreferences = preferences.readPreferences( OozebanePreferences() )
+		oozebanePreferences = preferences.getReadPreferences( OozebanePreferences() )
 	if not oozebanePreferences.activateOozebane.value:
 		return gcodeText
 	return OozebaneSkein().getCraftedGcode( gcodeText, oozebanePreferences )
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( OozebanePreferences() )
 
 def writeOutput( fileName = '' ):
 	"Oozebane a gcode linear move file.  Chain oozebane the gcode if it is not already oozebaned. If no fileName is specified, oozebane the first unmodified gcode file in this folder."
@@ -445,11 +448,11 @@ class OozebaneSkein:
 			if firstWord == '(</extruderInitialization>)':
 				self.distanceFeedRate.addLine( '(<procedureDone> oozebane </procedureDone>)' )
 				return
-			elif firstWord == '(<extrusionWidth>':
-				self.extrusionWidth = float( splitLine[ 1 ] )
-				self.setExtrusionWidth( oozebanePreferences )
 			elif firstWord == '(<operatingFeedratePerSecond>':
 				self.operatingFeedrateMinute = 60.0 * float( splitLine[ 1 ] )
+			elif firstWord == '(<perimeterWidth>':
+				self.perimeterWidth = float( splitLine[ 1 ] )
+				self.setExtrusionWidth( oozebanePreferences )
 			self.distanceFeedRate.addLine( line )
 
 	def parseLine( self, line ):
@@ -542,7 +545,7 @@ class OozebaneSkein:
 
 	def setExtrusionWidth( self, oozebanePreferences ):
 		"Set the extrusion width."
-		self.closeSquared = 0.01 * self.extrusionWidth * self.extrusionWidth
+		self.closeSquared = 0.01 * self.perimeterWidth * self.perimeterWidth
 		self.earlyStartupMaximumDistance = oozebanePreferences.earlyStartupMaximumDistance.value
 		self.earlyStartupDistanceConstant = oozebanePreferences.earlyStartupDistanceConstant.value
 		self.minimumDistanceForEarlyStartup = oozebanePreferences.minimumDistanceForEarlyStartup.value
@@ -579,12 +582,12 @@ class OozebaneSkein:
 			self.earlyShutdownDistances.append( downWay * self.earlyShutdownDistance )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the oozebane dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( OozebanePreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

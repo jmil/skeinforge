@@ -55,7 +55,6 @@ from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools import polyfile
-import cStringIO
 import math
 import sys
 
@@ -74,10 +73,14 @@ def getCraftedTextFromText( gcodeText, clipPreferences = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'clip' ):
 		return gcodeText
 	if clipPreferences == None:
-		clipPreferences = preferences.readPreferences( ClipPreferences() )
+		clipPreferences = preferences.getReadPreferences( ClipPreferences() )
 	if not clipPreferences.activateClip.value:
 		return gcodeText
 	return ClipSkein().getCraftedGcode( clipPreferences, gcodeText )
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( ClipPreferences() )
 
 def writeOutput( fileName = '' ):
 	"Clip a gcode linear move file.  Chain clip the gcode if it is not already clipped.  If no fileName is specified, clip the first unmodified gcode file in this folder."
@@ -139,7 +142,7 @@ class ClipSkein:
 		"Add a clipped and jittered loop path."
 		if self.clipLength > 0.0:
 			self.loopPath.path = euclidean.getClippedLoopPath( self.clipLength, self.loopPath.path )
-			self.loopPath.path = euclidean.getSimplifiedPath( self.loopPath.path, self.extrusionWidth )
+			self.loopPath.path = euclidean.getSimplifiedPath( self.loopPath.path, self.perimeterWidth )
 		self.addGcodeFromThreadZ( self.loopPath.path, self.loopPath.z )
 		self.loopPath = None
 
@@ -184,12 +187,12 @@ class ClipSkein:
 			splitLine = line.split()
 			firstWord = gcodec.getFirstWord( splitLine )
 			self.distanceFeedRate.parseSplitLine( firstWord, splitLine )
-			if firstWord == '(<extrusionWidth>':
-				self.extrusionWidth = float( splitLine[ 1 ] )
-				self.clipLength = clipPreferences.clipOverExtrusionWidth.value * self.extrusionWidth
-			elif firstWord == '(</extruderInitialization>)':
+			if firstWord == '(</extruderInitialization>)':
 				self.distanceFeedRate.addLine( '(<procedureDone> clip </procedureDone>)' )
 				return
+			elif firstWord == '(<perimeterWidth>':
+				self.perimeterWidth = float( splitLine[ 1 ] )
+				self.clipLength = clipPreferences.clipOverExtrusionWidth.value * self.perimeterWidth
 			elif firstWord == '(<travelFeedratePerSecond>':
 				self.travelFeedratePerMinute = 60.0 * float( splitLine[ 1 ] )
 			self.distanceFeedRate.addLine( line )
@@ -212,12 +215,12 @@ class ClipSkein:
 			self.distanceFeedRate.addLine( line )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the clip dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( ClipPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

@@ -39,6 +39,12 @@ Another way to make gcode for a model is to use the Java RepRap host program, de
 http://dev.www.reprap.org/bin/view/Main/DriverSoftware#Creating_GCode_files_from_STL_fi
 
 
+Contribute
+
+You can contribute by helping develop the manual at:
+http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge
+
+
 Getting Started
 
 For skeinforge to run, install python 2.x on your machine, which is available from:
@@ -101,8 +107,8 @@ the skeinforge.py directory, then type:
 
 Then move all the generated html files to the documentation folder.
 
-There is a list of tutorials at:
-http://dev.www.reprap.org/bin/view/Main/SkeinforgeTutorials
+There is a manual at:
+http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge
 
 
 Fabrication
@@ -132,6 +138,12 @@ http://reprap.svn.sourceforge.net/viewvc/reprap/trunk/users/metalab/processing/G
 
 The Metalab group has descriptions of skeinforge in action and their adventures are described at:
 http://reprap.soup.io/
+
+There is a board about printing issues at:
+http://www.bitsfrombytes.com/fora/user/index.php?board=5.0
+
+You can buy fabricators at:
+http://www.bitsfrombytes.com/
 
 
 File Formats
@@ -199,7 +211,9 @@ or you can email me at:
 perez_enrique@yahoo.com
 
 When asking for help please include your object and your zipped skeinforge preferences.  The skeinforge preferences are in
-the .skeinforge folder in your home directory.
+the .skeinforge folder in your home directory.  If you include your object and zipped preferences, I will give your bug a high
+priority, if you do not I will give it a low priority since without the object and zipped preferences I often can not reproduce the
+bug.
 
 If the dialog window is too big for the screen, on most Linux window managers you can move a window by holding down the
 Alt key and then drag the window with the left mouse button to get to the off screen widgets.
@@ -297,7 +311,7 @@ class SkeinforgePreferences:
 		self.archive.append( self.fileNameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Skeinforge'
-		self.saveTitle = None
+		self.saveTitle = 'Save Preferences'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge.html' )
 
 	def execute( self ):
@@ -311,7 +325,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( SkeinforgePreferences() )
+		preferences.getDisplayedDialogFromConstructor( SkeinforgePreferences() ).root.mainloop()
 
 if __name__ == "__main__":
 	main()

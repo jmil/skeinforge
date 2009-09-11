@@ -50,7 +50,6 @@ from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities import interpret
-import cStringIO
 import math
 import sys
 
@@ -69,10 +68,14 @@ def getCraftedTextFromText( gcodeText, hopPreferences = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'hop' ):
 		return gcodeText
 	if hopPreferences == None:
-		hopPreferences = preferences.readPreferences( HopPreferences() )
+		hopPreferences = preferences.getReadPreferences( HopPreferences() )
 	if not hopPreferences.activateHop.value:
 		return gcodeText
 	return HopSkein().getCraftedGcode( gcodeText, hopPreferences )
+
+def getDisplayedPreferences():
+	"Get the displayed preferences."
+	return preferences.getDisplayedDialogFromConstructor( HopPreferences() )
 
 def writeOutput( fileName = '' ):
 	"Hop a gcode linear move file.  Chain hop the gcode if it is not already hopped. If no fileName is specified, hop the first unmodified gcode file in this folder."
@@ -219,12 +222,12 @@ class HopSkein:
 		self.distanceFeedRate.addLine( line )
 
 
-def main( hashtable = None ):
+def main():
 	"Display the hop dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.displayDialog( HopPreferences() )
+		getDisplayedPreferences().root.mainloop()
 
 if __name__ == "__main__":
 	main()

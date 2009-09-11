@@ -840,7 +840,7 @@ class SphereObjectInfo( CubeObjectInfo ):
 
 globalCarvableClassObjectInfoTable = getCarvableClassObjectInfoTable()
 
-def main( hashtable = None ):
+def main():
 	"Display the inset dialog."
 	if len( sys.argv ) > 1:
 		getCarving( ' '.join( sys.argv[ 1 : ] ) )

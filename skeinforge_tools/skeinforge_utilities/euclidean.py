@@ -403,6 +403,8 @@ def getIntermediateLocation( alongWay, begin, end ):
 
 def getLargestLoop( loops ):
 	"Get largest loop from loops."
+	if len( loops ) == 1:
+		return loops[ 0 ]
 	largestArea = - 999999999.0
 	largestLoop = None
 	for loop in loops:
@@ -511,7 +513,7 @@ def getNumberOfIntersectionsToLeft( loopComplex, pointComplex ):
 				numberOfIntersectionsToLeft += 1
 	return numberOfIntersectionsToLeft
 
-def getOrderedSurroundingLoops( extrusionWidth, surroundingLoops ):
+def getOrderedSurroundingLoops( perimeterWidth, surroundingLoops ):
 	"Get ordered surrounding loops from surrounding loops."
 	insides = []
 	orderedSurroundingLoops = []
@@ -527,7 +529,7 @@ def getOrderedSurroundingLoops( extrusionWidth, surroundingLoops ):
 		else:
 			orderedSurroundingLoops.append( surroundingLoop )
 	for outside in orderedSurroundingLoops:
-		outside.getFromInsideSurroundings( extrusionWidth, insides )
+		outside.getFromInsideSurroundings( insides, perimeterWidth )
 	return orderedSurroundingLoops
 
 def getPathLength( path ):
@@ -1175,12 +1177,12 @@ class SurroundingLoop:
 			fillLoops += getFillOfSurroundings( surroundingLoop.innerSurroundings )
 		return fillLoops
 
-	def getFromInsideSurroundings( self, extrusionWidth, inputSurroundingInsides ):
+	def getFromInsideSurroundings( self, inputSurroundingInsides, perimeterWidth ):
 		"Initialize from inside surrounding loops."
-		self.extrusionHalfWidth = 0.5 * extrusionWidth
-		self.extrusionWidth = extrusionWidth
+		self.extrusionHalfWidth = 0.5 * perimeterWidth
+		self.perimeterWidth = perimeterWidth
 		transferredSurroundings = getTransferredSurroundingLoops( inputSurroundingInsides, self.boundary )
-		self.innerSurroundings = getOrderedSurroundingLoops( extrusionWidth, transferredSurroundings )
+		self.innerSurroundings = getOrderedSurroundingLoops( perimeterWidth, transferredSurroundings )
 		return self
 
 	def getLoopsToBeFilled( self ):
