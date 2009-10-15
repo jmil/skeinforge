@@ -75,15 +75,21 @@ def getSequenceIndexFromProcedure( procedure ):
 		return 0
 	return craftSequence.index( procedure )
 
-def writeChainText( fileName, messageBegin, messageEnd, procedure ):
+def writeChainTextWithNounMessage( fileName, procedure ):
 	"Get and write a crafted shape file."
-	print( 'File ' + gcodec.getSummarizedFilename( fileName ) + messageBegin )
+	print( '' )
+	print( 'The %s tool is parsing the file:' % procedure )
+	print( os.path.basename( fileName ) )
+	print( '' )
 	startTime = time.time()
 	suffixFilename = fileName[ : fileName.rfind( '.' ) ] + '_' + procedure + '.gcode'
 	craftText = getChainText( fileName, procedure )
 	if craftText == '':
 		return
 	gcodec.writeFileText( suffixFilename, craftText )
-	print( messageEnd + suffixFilename )
+	print( '' )
+	print( 'The %s tool has created the file:' % procedure )
+	print( suffixFilename )
+	print( '' )
 	print( 'It took ' + str( int( round( time.time() - startTime ) ) ) + ' seconds to craft the file.' )
 	analyze.writeOutput( suffixFilename, craftText )

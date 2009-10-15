@@ -9,19 +9,20 @@ layer thickness, the default is 1.0.  The 'Minimum Hop Angle (degrees)' is the m
 will be raised.  An angle of ninety means that the extruder will go straight up as soon as it is not extruding and a low angle
 means the extruder path will gradually rise to the hop height, the default is 20 degrees.
 
-To run hop, in a shell which hop is in type:
-> python hop.py
-
-The following examples hop the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the
-folder which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and hop.py.  The hop function will hop if the 'Activate Hop'
-checkbox is on.  The functions writeOutput and getChainGcode check to see if the text has been hopped, if not they
-call the getChainGcode in stretch.py to stretch the text; once they have the stretched text, then they hop.
+The following examples hop the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
+and hop.py.
 
 
 > python hop.py
-This brings up the dialog, after clicking 'Hop', the following is printed:
-File Screw Holder Bottom.stl is being chain hopped.
-The hopped file is saved as Screw Holder Bottom_hop.gcode
+This brings up the hop dialog.
+
+
+> python hop.py Screw Holder Bottom.stl
+The hop tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The hop tool has created the file:
+.. Screw Holder Bottom_hop.gcode
 
 
 > python
@@ -34,9 +35,11 @@ This brings up the hop dialog.
 
 
 >>> hop.writeOutput()
+The hop tool is parsing the file:
 Screw Holder Bottom.stl
-File Screw Holder Bottom.stl is being chain hopped.
-The hopped file is saved as Screw Holder Bottom_hop.gcode
+..
+The hop tool has created the file:
+.. Screw Holder Bottom_hop.gcode
 
 """
 
@@ -73,16 +76,15 @@ def getCraftedTextFromText( gcodeText, hopPreferences = None ):
 		return gcodeText
 	return HopSkein().getCraftedGcode( gcodeText, hopPreferences )
 
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( HopPreferences() )
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return HopPreferences()
 
 def writeOutput( fileName = '' ):
 	"Hop a gcode linear move file.  Chain hop the gcode if it is not already hopped. If no fileName is specified, hop the first unmodified gcode file in this folder."
 	fileName = interpret.getFirstTranslatorFileNameUnmodified( fileName )
-	if fileName == '':
-		return
-	consecution.writeChainText( fileName, ' is being chain hopped.', 'The hopped file is saved as ', 'hop' )
+	if fileName != '':
+		consecution.writeChainTextWithNounMessage( fileName, 'hop' )
 
 
 class HopPreferences:
@@ -101,7 +103,7 @@ class HopPreferences:
 		self.archive.append( self.minimumHopAngle )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Hop'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.hop.html' )
 
 	def execute( self ):
@@ -116,7 +118,7 @@ class HopSkein:
 	def __init__( self ):
 		self.distanceFeedRate = gcodec.DistanceFeedRate()
 		self.extruderActive = False
-		self.feedrateString = ''
+		self.feedRateString = ''
 		self.hopHeight = 0.4
 		self.hopDistance = self.hopHeight
 		self.justDeactivated = False
@@ -139,7 +141,7 @@ class HopSkein:
 		splitLine = line.split( ' ' )
 		indexOfF = gcodec.indexOfStartingWithSecond( "F", splitLine )
 		if indexOfF > 0:
-			self.feedrateString = splitLine[ indexOfF ]
+			self.feedRateString = splitLine[ indexOfF ]
 		if self.extruderActive:
 			return line
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
@@ -169,8 +171,8 @@ class HopSkein:
 	def getMovementLineWithHop( self, location, z ):
 		"Get linear movement line for a location."
 		movementLine = self.distanceFeedRate.getLinearGcodeMovement( location, z + self.hopHeight )
-		if self.feedrateString != '':
-			movementLine += ' ' + self.feedrateString
+		if self.feedRateString != '':
+			movementLine += ' ' + self.feedRateString
 		return movementLine
 
 	def isNextTravel( self ):
@@ -227,7 +229,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

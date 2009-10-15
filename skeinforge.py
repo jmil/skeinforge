@@ -13,6 +13,8 @@ gcode.  If you want to use all the tools, call export and it will call in turn a
 The skeinforge module provides a single place to call up all the preference dialogs.  When the 'Skeinforge' button is clicked,
 skeinforge calls export, since that is the end of the chain.
 
+The plugin buttons which are commonly used are bolded and the ones which are rarely used have normal font weight.
+
 To run skeinforge, type in a shell in the same folder as skeinforge:
 > python skeinforge.py
 
@@ -60,9 +62,15 @@ If you want python and Tkinter together on all platforms and don't mind filling 
 from Active State at:
 http://www.activestate.com/Products/activepython/feature_list.mhtml
 
-Skeinforge imports Stereolithography (.stl) files or GNU Triangulated Surface (.gts) files.  The import plugin for STL files is
-experimental and if it doesn't work, an indirect way to import an STL file is by turning it into a GTS file is by using the Export GNU
-Triangulated Surface script at:
+The computation intensive python modules will use psyco if it is available and run about twice as fast.  Psyco is described at:
+http://psyco.sourceforge.net/index.html
+
+The psyco download page is:
+http://psyco.sourceforge.net/download.html
+
+Skeinforge imports Stereolithography (.stl) files or GNU Triangulated Surface (.gts) files.  If importing an STL file directly doesn't
+work, an indirect way to import an STL file is by turning it into a GTS file is by using the Export GNU Triangulated Surface script
+at:
 http://members.axion.net/~enrique/Export%20GNU%20Triangulated%20Surface.bsh
 
 The Export GNU Triangulated Surface script is also in the Art of Illusion folder, which is in the same folder as skeinforge.py.  To
@@ -79,23 +87,6 @@ Or you can turn files into gcode by adding the file name, for example:
 > python skeinforge.py Screw Holder Bottom.stl
 
 
-
-End of the Beginning
-
-When carve is generating the code, if there is a file start.txt, it will add that to the very beginning of the gcode.  After it has
-added some initialization code and just before it adds the extrusion gcode, it will add the file endofthebeginning.txt if it exists.
-At the very end, it will add the file end.txt if it exists.  Carve does not care if the text file names are capitalized, but some file
-systems do not handle file name cases properly, so to be on the safe side you should give them lower case names.  It will
-first look for the file in the same directory as carve, if it does not find it it will look in ~/.skeinforge/gcode_scripts.
-
-The computation intensive python modules will use psyco if it is available and run about twice as fast.  Psyco is described at:
-http://psyco.sourceforge.net/index.html
-
-The psyco download page is:
-http://psyco.sourceforge.net/download.html
-
-
-
 Documentation
 
 The documentation is in the documentation folder, in the doc strings for each module and it can be called from the '?'
@@ -109,6 +100,10 @@ Then move all the generated html files to the documentation folder.
 
 There is a manual at:
 http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge
+
+A list of other tutorials is at:
+http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge#Tutorials
+
 
 
 Fabrication
@@ -144,6 +139,7 @@ http://www.bitsfrombytes.com/fora/user/index.php?board=5.0
 
 You can buy fabricators at:
 http://www.bitsfrombytes.com/
+
 
 
 File Formats
@@ -287,9 +283,13 @@ __date__ = "$Date: 2008/21/11 $"
 __license__ = "GPL 3.0"
 
 
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return SkeinforgePreferences()
+
 def getSkeinforgeToolFilenames():
 	"Get skeinforge plugin fileNames."
-	return gcodec.getPluginFilenames( 'skeinforge_tools', __file__ )
+	return gcodec.getPluginFilenamesFromDirectoryPath( gcodec.getAbsoluteFolderPath( __file__, 'skeinforge_tools' ) )
 
 def writeOutput( fileName = '' ):
 	"Craft a gcode file."
@@ -302,16 +302,19 @@ class SkeinforgePreferences:
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
+		versionText = gcodec.getFileText( gcodec.getVersionFileName() )
+		self.createdOnLabel = preferences.LabelDisplay().getFromName( 'Created On: ' + versionText )
+		self.archive.append( self.createdOnLabel )
 		self.skeinforgeLabel = preferences.LabelDisplay().getFromName( 'Open Preferences: ' )
 		self.archive.append( self.skeinforgeLabel )
 		importantFilenames = [ 'craft', 'profile' ]
 		visibleFilenames = [ 'profile' ]
-		self.archive += preferences.getDisplayToolButtons( 'skeinforge_tools', importantFilenames, __file__, getSkeinforgeToolFilenames(), visibleFilenames )
+		self.archive += preferences.getDisplayToolButtons( gcodec.getAbsoluteFolderPath( __file__, 'skeinforge_tools' ), importantFilenames, getSkeinforgeToolFilenames(), visibleFilenames )
 		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Skeinforged', '' )
 		self.archive.append( self.fileNameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Skeinforge'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge.html' )
 
 	def execute( self ):
@@ -325,7 +328,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.getDisplayedDialogFromConstructor( SkeinforgePreferences() ).root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

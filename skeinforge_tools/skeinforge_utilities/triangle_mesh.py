@@ -105,7 +105,7 @@ def addWithLeastLength( loops, point, shortestAdditionalLength ):
 		if isInlineAfter or isInlineBefore:
 			shortestLoop.insert( shortestPointIndex, point )
 
-def compareArea( loopArea, otherLoopArea ):
+def compareAreaDescending( loopArea, otherLoopArea ):
 	"Get comparison in order to sort loop areas in descending order of area."
 	if loopArea.area < otherLoopArea.area:
 		return 1
@@ -133,16 +133,16 @@ def getBridgeDirection( belowLoops, layerLoops, layerThickness ):
 			outset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, overhangInset )
 			if intercircle.isLargeSameDirection( outset, center, muchGreaterThanOverhang ):
 				belowOutsetLoops.append( outset )
-	bridgeDirection = complex()
+	bridgeRotation = complex()
 	for loop in layerLoops:
 		for pointIndex in xrange( len( loop ) ):
 			previousIndex = ( pointIndex + len( loop ) - 1 ) % len( loop )
-			bridgeDirection += getOverhangDirection( belowOutsetLoops, loop[ previousIndex ], loop[ pointIndex ] )
-	if abs( bridgeDirection ) < 0.75 * layerThickness:
+			bridgeRotation += getOverhangDirection( belowOutsetLoops, loop[ previousIndex ], loop[ pointIndex ] )
+	if abs( bridgeRotation ) < 0.75 * layerThickness:
 		return None
 	else:
-		bridgeDirection /= abs( bridgeDirection )
-		return cmath.sqrt( bridgeDirection )
+		bridgeRotation /= abs( bridgeRotation )
+		return cmath.sqrt( bridgeRotation )
 
 def getBridgeLoops( layerThickness, loop ):
 	"Get the inset bridge loops from the loop."
@@ -212,7 +212,7 @@ def getInclusiveLoops( allPoints, corners, importRadius, isInteriorWanted ):
 		addLoopToPointTable( loop, pointTable )
 	if not isInteriorWanted:
 		return getLoopsWithCorners( corners, importRadius, loops, pointTable )
-	clockwiseLoops = getLoopsInDescendingOrderOfArea( intercircle.getLoopsFromLoopsDirection( False, centers ) )
+	clockwiseLoops = getLoopsInOrderOfArea( compareAreaDescending, intercircle.getLoopsFromLoopsDirection( False, centers ) )
 	clockwiseLoops.reverse()
 	for clockwiseLoop in clockwiseLoops:
 		if len( clockwiseLoop ) > 2 and euclidean.getMaximumSpan( clockwiseLoop ) > 2.5 * importRadius:
@@ -270,13 +270,13 @@ def getLoopsFromUnprovenMesh( edges, faces, importRadius, vertices, z ):
 	pointTable = {}
 	return getInclusiveLoops( allPoints, corners, importRadius, True )
 
-def getLoopsInDescendingOrderOfArea( loops ):
-	"Get the lowest zone index."
+def getLoopsInOrderOfArea( compareAreaFunction, loops ):
+	"Get the loops in the order of area according to the compare function."
 	loopAreas = []
 	for loop in loops:
 		loopArea = LoopArea( loop )
 		loopAreas.append( loopArea )
-	loopAreas.sort( compareArea )
+	loopAreas.sort( compareAreaFunction )
 	loopsInDescendingOrderOfArea = []
 	for loopArea in loopAreas:
 		loopsInDescendingOrderOfArea.append( loopArea.loop )
@@ -608,7 +608,7 @@ class TriangleMesh:
 		simplifiedLoops = []
 		for originalLoop in originalLoops:
 			simplifiedLoops.append( euclidean.getSimplifiedLoop( originalLoop, self.importRadius ) )
-		loops = getLoopsInDescendingOrderOfArea( simplifiedLoops )
+		loops = getLoopsInOrderOfArea( compareAreaDescending, simplifiedLoops )
 		for loopIndex in xrange( len( loops ) ):
 			loop = loops[ loopIndex ]
 			leftPoint = euclidean.getLeftPoint( loop )

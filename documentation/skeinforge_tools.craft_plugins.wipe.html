@@ -25,25 +25,20 @@ The&nbsp;"Wipe&nbsp;Period&nbsp;(layers)"&nbsp;preference&nbsp;is&nbsp;the&nbsp;
 afterwards&nbsp;it&nbsp;will&nbsp;wipe&nbsp;every&nbsp;"Wipe&nbsp;Period"&nbsp;layers.&nbsp;&nbsp;With&nbsp;the&nbsp;default&nbsp;of&nbsp;three,&nbsp;wipe&nbsp;will&nbsp;wipe&nbsp;just&nbsp;before&nbsp;the&nbsp;zeroth&nbsp;layer,&nbsp;the<br>
 third&nbsp;layer,&nbsp;sixth&nbsp;layer&nbsp;and&nbsp;so&nbsp;on.<br>
 &nbsp;<br>
-To&nbsp;run&nbsp;wipe,&nbsp;in&nbsp;a&nbsp;shell&nbsp;which&nbsp;wipe&nbsp;is&nbsp;in&nbsp;type:<br>
-&gt;&nbsp;python&nbsp;wipe.py<br>
-&nbsp;<br>
-The&nbsp;following&nbsp;examples&nbsp;wipes&nbsp;the&nbsp;files&nbsp;Screw&nbsp;Holder&nbsp;Bottom.gcode&nbsp;&amp;&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a<br>
-terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains&nbsp;Screw&nbsp;Holder&nbsp;Bottom.gcode,&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;and&nbsp;wipe.py.&nbsp;&nbsp;The&nbsp;wipe&nbsp;function<br>
-will&nbsp;wipe&nbsp;if&nbsp;the&nbsp;'Activate&nbsp;Wipe'&nbsp;checkbox&nbsp;is&nbsp;on.&nbsp;&nbsp;The&nbsp;functions&nbsp;writeOutput&nbsp;and&nbsp;getChainGcode&nbsp;check&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text<br>
-has&nbsp;been&nbsp;wiped,&nbsp;if&nbsp;not&nbsp;they&nbsp;call&nbsp;the&nbsp;getChainGcode&nbsp;in&nbsp;hop.py&nbsp;to&nbsp;hop&nbsp;the&nbsp;text;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;hopped&nbsp;text,&nbsp;then&nbsp;they<br>
-wipe.<br>
+The&nbsp;following&nbsp;examples&nbsp;wipe&nbsp;the&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+and&nbsp;wipe.py.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python&nbsp;wipe.py<br>
-This&nbsp;brings&nbsp;up&nbsp;the&nbsp;dialog,&nbsp;after&nbsp;clicking&nbsp;'Wipe',&nbsp;the&nbsp;following&nbsp;is&nbsp;printed:<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;wiped.<br>
-The&nbsp;wiped&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_wipe.gcode<br>
+This&nbsp;brings&nbsp;up&nbsp;the&nbsp;wipe&nbsp;dialog.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python&nbsp;wipe.py&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;wiped.<br>
-The&nbsp;wiped&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_wipe.gcode<br>
+The&nbsp;wipe&nbsp;tool&nbsp;is&nbsp;parsing&nbsp;the&nbsp;file:<br>
+Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+..<br>
+The&nbsp;wipe&nbsp;tool&nbsp;has&nbsp;created&nbsp;the&nbsp;file:<br>
+..&nbsp;Screw&nbsp;Holder&nbsp;Bottom_wipe.gcode<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python<br>
@@ -56,8 +51,11 @@ This&nbsp;brings&nbsp;up&nbsp;the&nbsp;wipe&nbsp;dialog.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&gt;&gt;&nbsp;wipe.<a href="#-writeOutput">writeOutput</a>()<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;wiped.<br>
-The&nbsp;wiped&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_wipe.gcode</tt></p>
+The&nbsp;wipe&nbsp;tool&nbsp;is&nbsp;parsing&nbsp;the&nbsp;file:<br>
+Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+..<br>
+The&nbsp;wipe&nbsp;tool&nbsp;has&nbsp;created&nbsp;the&nbsp;file:<br>
+..&nbsp;Screw&nbsp;Holder&nbsp;Bottom_wipe.gcode</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -117,7 +115,7 @@ The&nbsp;wiped&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;
 
 <dl><dt><a name="WipeSkein-getCraftedGcode"><strong>getCraftedGcode</strong></a>(self, gcodeText, wipePreferences)</dt><dd><tt>Parse&nbsp;gcode&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;wipe&nbsp;gcode.</tt></dd></dl>
 
-<dl><dt><a name="WipeSkein-getLinearMoveWithFeedrate"><strong>getLinearMoveWithFeedrate</strong></a>(self, feedrate, location)</dt><dd><tt>Get&nbsp;a&nbsp;linear&nbsp;move&nbsp;line&nbsp;with&nbsp;the&nbsp;feedrate.</tt></dd></dl>
+<dl><dt><a name="WipeSkein-getLinearMoveWithFeedRate"><strong>getLinearMoveWithFeedRate</strong></a>(self, feedRate, location)</dt><dd><tt>Get&nbsp;a&nbsp;linear&nbsp;move&nbsp;line&nbsp;with&nbsp;the&nbsp;feedRate.</tt></dd></dl>
 
 <dl><dt><a name="WipeSkein-parseInitialization"><strong>parseInitialization</strong></a>(self, wipePreferences)</dt><dd><tt>Parse&nbsp;gcode&nbsp;initialization&nbsp;and&nbsp;store&nbsp;the&nbsp;parameters.</tt></dd></dl>
 
@@ -132,9 +130,9 @@ The&nbsp;wiped&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><dl><dt><a name="-getCraftedText"><strong>getCraftedText</strong></a>(fileName, text, wipePreferences<font color="#909090">=None</font>)</dt><dd><tt>Wipe&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-getCraftedTextFromText"><strong>getCraftedTextFromText</strong></a>(gcodeText, wipePreferences<font color="#909090">=None</font>)</dt><dd><tt>Wipe&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
- <dl><dt><a name="-getDisplayedPreferences"><strong>getDisplayedPreferences</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;displayed&nbsp;preferences.</tt></dd></dl>
+ <dl><dt><a name="-getPreferencesConstructor"><strong>getPreferencesConstructor</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;preferences&nbsp;constructor.</tt></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>Display&nbsp;the&nbsp;wipe&nbsp;dialog.</tt></dd></dl>
- <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName<font color="#909090">=''</font>)</dt><dd><tt>Wipe&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;Chain&nbsp;wipe&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;wiped.&nbsp;If&nbsp;no&nbsp;fileName&nbsp;is&nbsp;specified,&nbsp;wipe&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
+ <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName<font color="#909090">=''</font>)</dt><dd><tt>Wipe&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">

@@ -2,8 +2,7 @@
 Multiply is a script to multiply the shape into an array of copies arranged in a table.
 
 The default 'Activate Multiply' checkbox is on.  When it is on, the functions described below will work, when it is off, the
-functions will not be called.  The multiply script sets the feedrate, and flowrate.  To run multiply, in a shell type:
-> python multiply.py
+functions will not be called.
 
 The center of the shape will be moved to the "Center X" and "Center Y" coordinates.
 
@@ -14,21 +13,23 @@ Besides using the multiply tool, another way of printing many copies of the mode
 however many times you want, with the appropriate offsets.  Then you can either use the Join Objects script in the scripts
 submenu to create a combined shape or you can export the whole scene as an xml file, which skeinforge can then slice.
 
-The following examples multiply the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a
-terminal in the folder which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and multiply.py.  The multiply
-function will multiply if "Activate Multiply" is true, which can be set in the dialog or by changing the preferences file
-'multiply.csv' with a text editor or a spreadsheet program set to separate tabs.  The functions writeOutput and
-getMultiplyChainGcode check to see if the text has been multiplied, if not they call getChainGcode in fill.py to get filled
-gcode; once they have the filled text, then they multiply.
+The following examples multiply the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
+and multiply.py.
 
 
 > python multiply.py
-This brings up the dialog, after clicking 'Multiply', the following is printed:
-File Screw Holder Bottom.stl is being chain multiplied.
-The multiplied file is saved as Screw Holder Bottom_multiply.gcode
+This brings up the multiply dialog.
 
 
->python
+> python multiply.py Screw Holder Bottom.stl
+The multiply tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The multiply tool has created the file:
+.. Screw Holder Bottom_multiply.gcode
+
+
+> python
 Python 2.5.1 (r251:54863, Sep 22 2007, 01:43:31)
 [GCC 4.2.1 (SUSE Linux)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
@@ -38,10 +39,11 @@ This brings up the multiply dialog.
 
 
 >>> multiply.writeOutput()
+The multiply tool is parsing the file:
 Screw Holder Bottom.stl
-File Screw Holder Bottom.stl is being chain multiplied.
-The multiplied file is saved as Screw Holder Bottom_multiply.gcode
-
+..
+The multiply tool has created the file:
+.. Screw Holder Bottom_multiply.gcode
 
 """
 
@@ -81,17 +83,15 @@ def getCraftedTextFromText( gcodeText, multiplyPreferences = None ):
 		return gcodeText
 	return MultiplySkein().getCraftedGcode( gcodeText, multiplyPreferences )
 
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( MultiplyPreferences() )
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return MultiplyPreferences()
 
 def writeOutput( fileName = '' ):
-	"""Multiply a gcode linear move file.  Chain multiply the gcode if it is not already multiplied.
-	If no fileName is specified, multiply the first unmodified gcode file in this folder."""
+	"Multiply a gcode linear move file."
 	fileName = interpret.getFirstTranslatorFileNameUnmodified( fileName )
-	if fileName == '':
-		return
-	consecution.writeChainText( fileName, ' is being chain multiplied.', 'The multiplied file is saved as ', 'multiply' )
+	if fileName != '':
+		consecution.writeChainTextWithNounMessage( fileName, 'multiply' )
 
 
 class MultiplyPreferences:
@@ -102,9 +102,9 @@ class MultiplyPreferences:
 		self.archive = []
 		self.activateMultiply = preferences.BooleanPreference().getFromValue( 'Activate Multiply:', False )
 		self.archive.append( self.activateMultiply )
-		self.centerX = preferences.FloatPreference().getFromValue( 'Center X (millimeters):', 0.0 )
+		self.centerX = preferences.FloatPreference().getFromValue( 'Center X (mm):', 0.0 )
 		self.archive.append( self.centerX )
-		self.centerY = preferences.FloatPreference().getFromValue( 'Center Y (millimeters):', 0.0 )
+		self.centerY = preferences.FloatPreference().getFromValue( 'Center Y (mm):', 0.0 )
 		self.archive.append( self.centerY )
 		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Multiplied', '' )
 		self.archive.append( self.fileNameInput )
@@ -116,7 +116,7 @@ class MultiplyPreferences:
 		self.archive.append( self.separationOverExtrusionWidth )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Multiply'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.multiply.html' )
 
 	def execute( self ):
@@ -260,7 +260,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

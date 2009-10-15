@@ -1,9 +1,10 @@
 #! /usr/bin/env python
 """
-Fill is a script to fill the inset outlines of a gcode file.
+Fill is a script to fill the perimeters of a gcode file.
 
-Allan Ecker aka The Masked Retriever's has written the following quicktip for fill.
-"Skeinforge Quicktip: Fill" at: http://blog.thingiverse.com/2009/07/21/mysteries-of-skeinforge-fill/
+Allan Ecker aka The Masked Retriever's has written the quicktip for fill which follows below.
+"Skeinforge Quicktip: Fill" at:
+http://blog.thingiverse.com/2009/07/21/mysteries-of-skeinforge-fill/
 
 The diaphragm is a solid group of layers, at regular intervals.  It can be used with a sparse infill to give the object watertight, horizontal
 compartments and/or a higher shear strength.  The "Diaphragm Period" is the number of layers between diaphrams.  The "Diaphragm
@@ -53,31 +54,52 @@ zero, the entire object will be composed of a sparse infill, and water could flo
 through the surface and with a value of three, the object could be watertight.  The higher the solid surface thickness, the stronger and
 heavier the object will be.  The default is three.
 
-The following examples fill the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which
-contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and fill.py.
+The 'Thread Sequence Choice' is the sequence in which the threads will be extruded.  There are three kinds of thread, the perimeter
+threads on the outside of the object, the loop threads aka inner shell threads, and the interior infill threads.  This gives the following six
+sequence combinations:
+'Infill > Loops > Perimeter'
+'Infill > Perimeter > Loops'
+'Loops > Infill > Perimeter'
+'Loops > Perimeter > Infill'
+'Perimeter > Infill > Loops'
+'Perimeter > Loops > Infill'
+
+The default choice is 'Perimeter > Loops > Infill', which the default stretch parameters are based on.  If you change from the default
+sequence choice preference of perimeter, then loops, then infill, the optimal stretch thread parameters would also be different.  In general,
+if the infill is extruded first, the infill would have to be stretched more so that even after the filament shrinkage, it would still be long enough
+to connect to the loop or perimeter.
+
+The following examples fill the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
+and fill.py.
 
 
 > python fill.py
-This brings up the dialog, after clicking 'Fill', the following is printed:
-File Screw Holder Bottom.stl is being chain filled.
-The filled file is saved as Screw Holder Bottom_fill.gcode
+This brings up the fill dialog.
 
 
->python
+> python fill.py Screw Holder Bottom.stl
+The fill tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The fill tool has created the file:
+.. Screw Holder Bottom_fill.gcode
+
+
+> python
 Python 2.5.1 (r251:54863, Sep 22 2007, 01:43:31)
 [GCC 4.2.1 (SUSE Linux)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
 >>> import fill
 >>> fill.main()
-File Screw Holder Bottom.stl is being filled.
-The filled file is saved as Screw Holder Bottom_fill.gcode
-It took 3 seconds to fill the file.
+This brings up the fill dialog.
 
 
 >>> fill.writeOutput()
-File Screw Holder Bottom.stl is being filled.
-The filled file is saved as Screw Holder Bottom_fill.gcode
-It took 3 seconds to fill the file.
+The fill tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The fill tool has created the file:
+.. Screw Holder Bottom_fill.gcode
 
 """
 
@@ -106,61 +128,52 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-#cutting, chop, outset, later split speed into speed and orbital, add raise and whittle
-#change call documentation
-#add documentation about bold in skeinforge, craft and analyze
-#
-#
-#
-#version in skeinforge window
-#fix window geometry height in behold
-#select list when profile window is brought forward
-#look into self.root.destroy() and withdraw in close
-#dot on skeinview line
-#fix multiply tower bug
-#find files in alterations etc.. by lower case
-#export constant/variable
-#bed, chamber temperature m110
-#stretch different inner / outer
-#optional comb loops
-#make buttons on top of behold and skeinview
-#replace feedrate instead of sometimes using getLinearFeedrate, set addedLocation after arc move
-#fillet radius zero bug
-#cooling temperature lowering on small areas
-#
-#mill
-#
-#remove some of the warnings when there is no preference
-#order of loops, infill setting
-#add hook start in oozebane
-#make fill optional by changing <bridgeLayer>
-#make skeinview and behold more robust readers
+
+# replace getModule(, replace FolderName with directoryPath
+# display coordinates in skeinview
+# export png canvas.postscript % convert your_file_name.ps your_file_name.png
+# add file to Screw Holder Bottom.stl documentation
+#add Minimum Perimeter documentation in comb
+#compartmentalize addOrbit, maybe already done
 #prune carve
-#after behold join modify models
-#fan off
-#boundaries, center radius z bottom top, circular or rectangular
-#update windowPosition in behold dynamic preferences when closing
+#mill
+#fix multiply tower bug
+#fillet radius zero bug
+# raft margin & raft margin extra over length
+#set addedLocation in distanceFeedRate after arc move
+#cooling temperature lowering on small areas
+#fan off at each layer
 #carve aoi xml testing
 #check xml gcode
 #cross hatch support polishing???
 #straighten out the use of layer thickness
-#fix behold exit when not opening a file
-#add Ddistance option in preface
-#make stl instead of essentially gts the default format
 #
-#gang or concatenate or join, maybe from behold?
+#lathe_winding and/or just winding
+# synonym for rotation or turning, loop angle
 #check exterior paths which should be combed when changing layers, sometimes in tower
+#comb path cut
+#
+#drilling
+#implement acceleration & collinear removal in viewers
+#comb run jump
+#check clip and add spiral
+# rulers on skeinview
+#
 #pick and place
-#hole sequence, probably made obsolete by CSGEvaluator
-#laminate tool head
+#add Ddistance option in preface
+#add hook start in oozebane
+#after behold join modify models, gang or concatenate or join
+#make preference backups
 #preferences in gcode or saved versions
+#
+#laminate tool head
+#boundaries, center radius z bottom top, circular or rectangular, polygon
 #maybe add layer updates in behold, skeinview and maybe others
 #email marius about bridge extrusion width http://reprap.org/bin/view/Main/ExtruderImprovementsAndAlternatives
-#maybe get a volume estimate in statistic from extrusionDiameter instead of width and thickness
 #xml & svg more forgiving, svg make defaults for layerThickness, maxZ, minZ, add layer z to svg_template, make the slider on the template track even when mouse is outside
-#compartmentalize addOrbit, maybe already done
-#distance option???
-#rulers, zoom & select field on skeinview
+#
+#single or double layer option?
+#handle equation
 #simulate
 #short continue in oozebane
 #document gear script
@@ -168,21 +181,37 @@ __license__ = "GPL 3.0"
 #transform
 #searchable help
 #stack
-#infill first option
 #extrude loops I guess make circles? and/or run along sparse infill
 #custom inclined plane, inclined plane from model, screw, fillet travel as well maybe
 #maybe much afterwards make congajure multistep view
 #maybe bridge supports although staggered spans are probably better
 #maybe update carve to add perimeter path intersection information to the large loop also
 #maybe stripe although mosaic alone can handle it
-#stretch fiber around shape
+#stretch fiber around shape, maybe modify winding for asymmetric shapes
 #multiple heads around edge
 #maybe add full underscored date name for version
+#maybe make buttons on top of behold and skeinview
 #maybe add rarely used tool option
 #angle shape for overhang extrusions
-#free fabricator
+#maybe m111? countdown
+#maybe option of using G0 when extruder is off
+#maybe variable flowrate for base: http://dev.forums.reprap.org/read.php?12,27293,27293#msg-27293
+#make stl instead of essentially gts the default format
+#maybe split preface into preface and extrusion distance
+#def getGNUTranslatorGcodeFileTypeTuples() to include .bfb means making different extensions for unfold and rapman, lower priority since now rapman can handle gcodes
+#common tool
+#first time tool tip
+#individual tool tip to place in text
+# maybe try to simplify raft layer start
+# maybe make temp directory
 
+#Manual
+#10,990
+#devocracy?
+#make one piece electromagnet spool
+#stepper rotor with ceramic disk magnet in middle, electromagnet with long thin spool line?
 #stepper motor
+#make plastic coated thread in vat with pulley
 #tensile stuart platform
 #kayak
 #gear vacuum pump
@@ -195,15 +224,14 @@ __license__ = "GPL 3.0"
 #condo with reflected gardens in between buildings
 #medical equipment
 #cell counter, etc..
-#stepper rotor with ceramic disk magnet in middle, electromagnet with long thin spool line?
 #pipe clamp lathe
-#version info for module should be in the window header  http://dev.forums.reprap.org/read.php?12,20013,26921,page=6#msg-26921
-#make one piece electromagnet spool
-#later maybe rename some extrusionHalfWidths to perimeterHalfWidths
-#maybe m111? countdown
-#maybe option of using G0 when extruder is off
-#iconify the first window when it is closed if another window exists
-#maybe variable flowrate for base: http://dev.forums.reprap.org/read.php?12,27293,27293#msg-27293
+# square tube driller & cutter
+
+# archihedron
+# look from top of intersection circle plane to look for next, add a node; tree out until all are stepped on then connect, when more than three intersections are close
+# when loading a file, we should have a preview of the part and orientation in space
+# second (and most important in my opinion) would be the ability to rotate the part on X/Y/Z axis to chose it's orientation
+# third, a routine to detect the largest face and orient the part accordingly. Mat http://reprap.kumy.net/
 
 def addAroundGridPoint( arounds, gridPoint, gridPointInsetX, gridPointInsetY, gridPoints, gridSearchRadius, isBothOrNone, isDoubleJunction, isJunctionWide, paths, pixelTable, width ):
 	"Add the path around the grid point."
@@ -259,10 +287,13 @@ def addAroundGridPoint( arounds, gridPoint, gridPointInsetX, gridPointInsetY, gr
 	yCloseToCenterPaths.sort( comparePointIndexDescending )
 	insertGridPointPairs( gridPoint, gridPointInsetX, gridPoints, yCloseToCenterPaths[ 0 ], yCloseToCenterPaths[ 1 ], isBothOrNone, isJunctionWide, paths, pixelTable, width )
 
-def addPath( extrusionWidth, fill, path, rotationPlaneAngle ):
+def addPath( extrusionWidth, infillPaths, path, rotationPlaneAngle ):
 	"Add simplified path to fill."
-	planeRotated = euclidean.getPointsRoundZAxis( rotationPlaneAngle, euclidean.getSimplifiedPath( path, extrusionWidth ) )
-	fill.append( planeRotated )
+	simplifiedPath = euclidean.getSimplifiedPath( path, extrusionWidth )
+	if len( simplifiedPath ) < 2:
+		return
+	planeRotated = euclidean.getPointsRoundZAxis( rotationPlaneAngle, simplifiedPath )
+	infillPaths.append( planeRotated )
 
 def addPointOnPath( path, pixelTable, point, pointIndex, width ):
 	"Add a point to a path and the pixel table."
@@ -392,11 +423,13 @@ def getCraftedText( fileName, text = '', fillPreferences = None ):
 	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), fillPreferences )
 
 def getCraftedTextFromText( gcodeText, fillPreferences = None ):
-	"Fill the inset text."
+	"Fill the inset text.self."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'fill' ):
 		return gcodeText
 	if fillPreferences == None:
 		fillPreferences = preferences.getReadPreferences( FillPreferences() )
+	if not fillPreferences.activateFill.value:
+		return gcodeText
 	return FillSkein().getCraftedGcode( fillPreferences, gcodeText )
 
 def getClosestOppositeIntersectionPaths( yIntersectionPaths ):
@@ -410,10 +443,6 @@ def getClosestOppositeIntersectionPaths( yIntersectionPaths ):
 			yCloseToCenterPaths.append( yIntersectionPath )
 			return yCloseToCenterPaths
 	return yCloseToCenterPaths
-
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( FillPreferences() )
 
 def getExtraFillLoops( insideLoops, outsideLoop, radius ):
 	"Get extra loops between inside and outside loops."
@@ -482,6 +511,10 @@ def getPlusMinusSign( number ):
 	if number >= 0.0:
 		return 1.0
 	return - 1.0
+
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return FillPreferences()
 
 def getSurroundingXIntersections( doubleSolidSurfaceThickness, surroundingCarves, y ):
 	"Get x intersections from surrounding layers."
@@ -791,11 +824,10 @@ def setIsOutside( yCloseToCenterPath, yIntersectionPaths ):
 	yCloseToCenterPath.isOutside = True
 
 def writeOutput( fileName = '' ):
-	"Fill the carves of a gcode file.  Chain carve the file if it is a GNU TriangulatedSurface file.  If no fileName is specified, fill the first unmodified gcode file in this folder."
+	"Fill an inset gcode file."
 	fileName = interpret.getFirstTranslatorFileNameUnmodified( fileName )
-	if fileName == '':
-		return
-	consecution.writeChainText( fileName, ' is being chain filled.', 'The filled file is saved as ', 'fill' )
+	if fileName != '':
+		consecution.writeChainTextWithNounMessage( fileName, 'fill' )
 
 
 class FillPreferences:
@@ -804,6 +836,8 @@ class FillPreferences:
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
+		self.activateFill = preferences.BooleanPreference().getFromValue( 'Activate Fill:', True )
+		self.archive.append( self.activateFill )
 		self.diaphragmPeriod = preferences.IntPreference().getFromValue( 'Diaphragm Period (layers):', 999999 )
 		self.archive.append( self.diaphragmPeriod )
 		self.diaphragmThickness = preferences.IntPreference().getFromValue( 'Diaphragm Thickness (layers):', 0 )
@@ -843,13 +877,25 @@ class FillPreferences:
 		self.archive.append( self.infillPatternLine )
 		self.interiorInfillDensityOverExteriorDensity = preferences.FloatPreference().getFromValue( 'Interior Infill Density over Exterior Density (ratio):', 0.9 )
 		self.archive.append( self.interiorInfillDensityOverExteriorDensity )
-		self.outsideExtrudedFirst = preferences.BooleanPreference().getFromValue( 'Outside Extruded First', True )
-		self.archive.append( self.outsideExtrudedFirst )
 		self.solidSurfaceThickness = preferences.IntPreference().getFromValue( 'Solid Surface Thickness (layers):', 3 )
 		self.archive.append( self.solidSurfaceThickness )
+		self.threadSequenceChoice = preferences.MenuButtonDisplay().getFromName( 'Thread Sequence Choice:' )
+		self.archive.append( self.threadSequenceChoice )
+		self.threadSequenceInfillLoops = preferences.MenuRadio().getFromMenuButtonDisplay( self.threadSequenceChoice, 'Infill > Loops > Perimeter', False )
+		self.archive.append( self.threadSequenceInfillLoops )
+		self.threadSequenceInfillPerimeter = preferences.MenuRadio().getFromMenuButtonDisplay( self.threadSequenceChoice, 'Infill > Perimeter > Loops', False )
+		self.archive.append( self.threadSequenceInfillPerimeter )
+		self.threadSequenceLoopsInfill = preferences.MenuRadio().getFromMenuButtonDisplay( self.threadSequenceChoice, 'Loops > Infill > Perimeter', False )
+		self.archive.append( self.threadSequenceLoopsInfill )
+		self.threadSequenceLoopsPerimeter = preferences.MenuRadio().getFromMenuButtonDisplay( self.threadSequenceChoice, 'Loops > Perimeter > Infill', False )
+		self.archive.append( self.threadSequenceLoopsPerimeter )
+		self.threadSequencePerimeterInfill = preferences.MenuRadio().getFromMenuButtonDisplay( self.threadSequenceChoice, 'Perimeter > Infill > Loops', False )
+		self.archive.append( self.threadSequencePerimeterInfill )
+		self.threadSequencePerimeterLoops = preferences.MenuRadio().getFromMenuButtonDisplay( self.threadSequenceChoice, 'Perimeter > Loops > Infill', True )
+		self.archive.append( self.threadSequencePerimeterLoops )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Fill'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.fill.html' )
 
 	def execute( self ):
@@ -879,28 +925,28 @@ class FillSkein:
 
 	def addFill( self, layerIndex ):
 		"Add fill to the carve layer."
-#		print( layerIndex )
 		alreadyFilledArounds = []
 		arounds = []
+		halfWidth = 0.5 * self.perimeterWidth
 		layerExtrusionWidth = self.extrusionWidth
 		layerFillInset = self.fillInset
 		rotatedLayer = self.rotatedLayers[ layerIndex ]
 		self.distanceFeedRate.addLine( '(<layer> %s )' % rotatedLayer.z ) # Indicate that a new layer is starting.
+#		print( 'layer index: %s  z: %s' % ( layerIndex, rotatedLayer.z ) )
 		if rotatedLayer.rotation != None:
+			halfWidth *= self.infillBridgeWidthOverExtrusionWidth
 			layerExtrusionWidth = self.extrusionWidth * self.infillBridgeWidthOverExtrusionWidth
 			layerFillInset = self.fillInset * self.infillBridgeWidthOverExtrusionWidth
-			self.distanceFeedRate.addLine( '(<bridgeLayer>)' ) # Indicate that this is a bridge layer.
+			self.distanceFeedRate.addLine( '(<bridgeRotation> %s )' % rotatedLayer.rotation ) # Indicate that this is a bridge layer.
 		gridPointInsetX = 0.5 * layerFillInset
 		doubleExtrusionWidth = 2.0 * layerExtrusionWidth
-		muchGreaterThanLayerFillInset = 2.5 * layerFillInset
 		endpoints = []
-		fill = []
-		aroundInset = 0.4 * layerFillInset
+		infillPaths = []
+		aroundInset = 0.4 * layerExtrusionWidth
 		aroundWidth = 0.3 * aroundInset
 		layerInfillSolidity = self.infillSolidity
 		self.isDoubleJunction = True
 		self.isJunctionWide = True
-		slightlyGreaterThanFill = 1.01 * layerFillInset
 		layerRotationAroundZAngle = self.getLayerRoundZ( layerIndex )
 		if self.fillPreferences.infillPatternGridHexagonal.value:
 			if abs( euclidean.getDotProduct( layerRotationAroundZAngle, euclidean.getPolar( self.infillBeginRotation, 1.0 ) ) ) < math.sqrt( 0.5 ):
@@ -911,9 +957,6 @@ class FillSkein:
 		reverseZRotationAngle = complex( layerRotationAroundZAngle.real, - layerRotationAroundZAngle.imag )
 		rotatedExtruderLoops = []
 		stretch = 0.5 * layerExtrusionWidth
-		loops = []
-		for surroundingLoop in rotatedLayer.surroundingLoops:
-			loops.append( surroundingLoop.boundary )
 		surroundingCarves = []
 		layerRemainder = layerIndex % int( round( self.fillPreferences.diaphragmPeriod.value ) )
 		if layerRemainder >= int( round( self.fillPreferences.diaphragmThickness.value ) ):
@@ -934,10 +977,14 @@ class FillSkein:
 		for extraShellIndex in xrange( extraShells ):
 			radius = layerExtrusionWidth
 			if extraShellIndex == 0:
-				radius = 0.5  * ( layerExtrusionWidth + self.perimeterWidth )
+				radius += halfWidth
 			createFillForSurroundings( radius, surroundingLoops )
 		fillLoops = euclidean.getFillOfSurroundings( surroundingLoops )
 		aroundPixelTable = {}
+		if extraShells == 0:
+			layerFillInset += halfWidth
+		slightlyGreaterThanFill = 1.01 * layerFillInset
+		muchGreaterThanLayerFillInset = 2.5 * layerFillInset
 		for loop in fillLoops:
 			alreadyFilledLoop = []
 			alreadyFilledArounds.append( alreadyFilledLoop )
@@ -984,7 +1031,7 @@ class FillSkein:
 		if len( endpoints ) < 1:
 			self.addThreadsBridgeLayer( rotatedLayer, surroundingLoops )
 			return
-		paths = euclidean.getPathsFromEndpoints( endpoints, layerFillInset, aroundPixelTable, aroundWidth )
+		paths = euclidean.getPathsFromEndpoints( endpoints, layerExtrusionWidth, aroundPixelTable, aroundWidth )
 		if self.isGridToBeExtruded():
 			self.addGrid( alreadyFilledArounds, arounds, fillLoops, gridPointInsetX, layerIndex, paths, aroundPixelTable, aroundWidth, reverseZRotationAngle, rotatedExtruderLoops, surroundingCarves )
 		oldRemovedEndpointLength = len( removedEndpoints ) + 1
@@ -992,8 +1039,8 @@ class FillSkein:
 			oldRemovedEndpointLength = len( removedEndpoints )
 			removeEndpoints( aroundPixelTable, layerExtrusionWidth, paths, removedEndpoints, aroundWidth )
 		for path in paths:
-			addPath( layerFillInset, fill, path, layerRotationAroundZAngle )
-		euclidean.transferPathsToSurroundingLoops( fill, surroundingLoops )
+			addPath( layerExtrusionWidth, infillPaths, path, layerRotationAroundZAngle )
+		euclidean.transferPathsToSurroundingLoops( infillPaths, surroundingLoops )
 		self.addThreadsBridgeLayer( rotatedLayer, surroundingLoops )
 
 	def addGcodeFromThreadZ( self, thread, z ):
@@ -1063,7 +1110,7 @@ class FillSkein:
 		"Add the threads, add the bridge end & the layer end tag."
 		euclidean.addToThreadsRemoveFromSurroundings( self.oldOrderedLocation, surroundingLoops, self )
 		if rotatedLayer.rotation != None:
-			self.distanceFeedRate.addLine( '(</bridgeLayer>)' ) # Indicate that this is a bridge layer.
+			self.distanceFeedRate.addLine( '(</bridgeRotation>)' ) # Indicate that this is a bridge layer.
 		self.distanceFeedRate.addLine( '(</layer>)' )
 
 	def addToThread( self, location ):
@@ -1087,6 +1134,19 @@ class FillSkein:
 		"Parse gcode text and store the bevel gcode."
 		self.fillPreferences = fillPreferences
 		self.lines = gcodec.getTextLines( gcodeText )
+		self.threadSequence = None
+		if fillPreferences.threadSequenceInfillLoops.value:
+			self.threadSequence = [ 'infill', 'loops', 'perimeter' ]
+		if fillPreferences.threadSequenceInfillPerimeter.value:
+			self.threadSequence = [ 'infill', 'perimeter', 'loops' ]
+		if fillPreferences.threadSequenceLoopsInfill.value:
+			self.threadSequence = [ 'loops', 'infill', 'perimeter' ]
+		if fillPreferences.threadSequenceLoopsPerimeter.value:
+			self.threadSequence = [ 'loops', 'perimeter', 'infill' ]
+		if fillPreferences.threadSequencePerimeterInfill.value:
+			self.threadSequence = [ 'perimeter', 'infill', 'loops' ]
+		if fillPreferences.threadSequencePerimeterLoops.value:
+			self.threadSequence = [ 'perimeter', 'loops', 'infill' ]
 		self.parseInitialization()
 		self.infillSolidity = fillPreferences.infillSolidity.value
 		if self.isGridToBeExtruded():
@@ -1218,16 +1278,18 @@ class FillSkein:
 			self.distanceFeedRate.parseSplitLine( firstWord, splitLine )
 			if firstWord == '(<perimeterWidth>':
 				self.perimeterWidth = float( splitLine[ 1 ] )
+				threadSequenceString = ' '.join( self.threadSequence )
+				self.distanceFeedRate.addTagBracketedLine( 'threadSequenceString', threadSequenceString )
+			elif firstWord == '(<extrusion>)':
+				self.distanceFeedRate.addLine( line )
+				return
 			elif firstWord == '(<extrusionWidth>':
 				self.extrusionWidth = float( splitLine[ 1 ] )
 				self.interiorExtrusionWidth = self.extrusionWidth
 				if self.fillPreferences.interiorInfillDensityOverExteriorDensity.value > 0:
 					self.interiorExtrusionWidth /= self.fillPreferences.interiorInfillDensityOverExteriorDensity.value
-				self.distanceFeedRate.addLine( '(<outsideExtrudedFirst> %s </outsideExtrudedFirst>)' % self.fillPreferences.outsideExtrudedFirst.value )
 			elif firstWord == '(</extruderInitialization>)':
 				self.distanceFeedRate.addLine( '(<procedureDone> fill </procedureDone>)' )
-				self.distanceFeedRate.addLine( line )
-				return
 			elif firstWord == '(<fillInset>':
 				self.fillInset = float( splitLine[ 1 ] )
 			elif firstWord == '(<infillBridgeWidthOverExtrusionWidth>':
@@ -1252,7 +1314,7 @@ class FillSkein:
 		elif firstWord == '(<boundaryPoint>':
 			location = gcodec.getLocationFromSplitLine( None, splitLine )
 			self.surroundingLoop.addToBoundary( location )
-		elif firstWord == '(<bridgeDirection>':
+		elif firstWord == '(<bridgeRotation>':
 			secondWordWithoutBrackets = splitLine[ 1 ].replace( '(', '' ).replace( ')', '' )
 			self.rotatedLayer.rotation = complex( secondWordWithoutBrackets )
 		elif firstWord == '(</extrusion>)':
@@ -1264,7 +1326,7 @@ class FillSkein:
 		elif firstWord == '(<perimeter>)':
 			self.isPerimeter = True
 		elif firstWord == '(<surroundingLoop>)':
-			self.surroundingLoop = euclidean.SurroundingLoop( self.fillPreferences.outsideExtrudedFirst.value )
+			self.surroundingLoop = euclidean.SurroundingLoop( self.threadSequence )
 			self.rotatedLayer.surroundingLoops.append( self.surroundingLoop )
 		elif firstWord == '(</surroundingLoop>)':
 			self.surroundingLoop = None
@@ -1321,7 +1383,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

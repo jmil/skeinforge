@@ -8,9 +8,9 @@ The important value for the oozebane preferences is "Early Shutdown Distance" wh
 that the extruder will be turned off, the default is 1.2.  A higher distance means the extruder will turn off sooner and the end of the
 line will be thinner.
 
-When oozebane turns the extruder off, it slows the feedrate down in steps so in theory the thread will remain at roughly the same
+When oozebane turns the extruder off, it slows the feedRate down in steps so in theory the thread will remain at roughly the same
 thickness until the end.  The "Turn Off Steps" preference is the number of steps, the more steps the smaller the size of the step that
-the feedrate will be decreased and the larger the size of the resulting gcode file, the default is three.
+the feedRate will be decreased and the larger the size of the resulting gcode file, the default is three.
 
 Oozebane also turns the extruder on just before the start of a thread.  The "Early Startup Maximum Distance" preference is the
 maximum distance before the thread starts that the extruder will be turned off, the default is 1.2.  The longer the extruder has been
@@ -26,28 +26,23 @@ The "Minimum Distance for Early Startup" is the minimum distance that the extrud
 early start up feature to activate.  The "Minimum Distance for Early Shutdown" is the minimum distance that the extruder has to be
 off after the thread end for the early shutdown feature to activate.
 
-After oozebane turns the extruder on, it slows the feedrate down where the thread starts.  Then it speeds it up in steps so in theory
+After oozebane turns the extruder on, it slows the feedRate down where the thread starts.  Then it speeds it up in steps so in theory
 the thread will remain at roughly the same thickness from the beginning.
 
-To run oozebane, in a shell which oozebane is in type:
-> python oozebane.py
-
-The following examples oozebane the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the
-folder which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and oozebane.py.  The oozebane function will oozebane if the
-'Activate Oozebane' checkbox is on.  The functions writeOutput and getChainGcode check to see if the text has been
-oozebaned, if not they call the getChainGcode in wipe.py to nozzle wipe the text; once they have the nozzle
-wiped text, then they oozebane.
+The following examples oozebane the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
+and oozebane.py.
 
 
 > python oozebane.py
-This brings up the dialog, after clicking 'Oozebane', the following is printed:
-File Screw Holder Bottom.stl is being chain oozebaned.
-The oozebaned file is saved as Screw Holder Bottom_oozebane.gcode
+This brings up the oozebane dialog.
 
 
 > python oozebane.py Screw Holder Bottom.stl
-File Screw Holder Bottom.stl is being chain oozebaned.
-The oozebaned file is saved as Screw Holder Bottom_oozebane.gcode
+The oozebane tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The oozebane tool has created the file:
+.. Screw Holder Bottom_oozebane.gcode
 
 
 > python
@@ -60,8 +55,11 @@ This brings up the oozebane dialog.
 
 
 >>> oozebane.writeOutput()
-File Screw Holder Bottom.stl is being chain oozebaned.
-The oozebaned file is saved as Screw Holder Bottom_oozebane.gcode
+The oozebane tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The oozebane tool has created the file:
+.. Screw Holder Bottom_oozebane.gcode
 
 """
 
@@ -98,16 +96,15 @@ def getCraftedTextFromText( gcodeText, oozebanePreferences = None ):
 		return gcodeText
 	return OozebaneSkein().getCraftedGcode( gcodeText, oozebanePreferences )
 
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( OozebanePreferences() )
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return OozebanePreferences()
 
 def writeOutput( fileName = '' ):
-	"Oozebane a gcode linear move file.  Chain oozebane the gcode if it is not already oozebaned. If no fileName is specified, oozebane the first unmodified gcode file in this folder."
+	"Oozebane a gcode linear move file."
 	fileName = interpret.getFirstTranslatorFileNameUnmodified( fileName )
-	if fileName == '':
-		return
-	consecution.writeChainText( fileName, ' is being chain oozebaned.', 'The oozebaned file is saved as ', 'oozebane' )
+	if fileName != '':
+		consecution.writeChainTextWithNounMessage( fileName, 'oozebane' )
 
 
 class OozebanePreferences:
@@ -138,7 +135,7 @@ class OozebanePreferences:
 		self.archive.append( self.slowdownStartupSteps )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Oozebane'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.oozebane.html' )
 
 	def execute( self ):
@@ -155,7 +152,7 @@ class OozebaneSkein:
 		self.distanceFromThreadEndToThreadBeginning = None
 		self.earlyStartupDistance = None
 		self.extruderInactiveLongEnough = True
-		self.feedrateMinute = 961.0
+		self.feedRateMinute = 961.0
 		self.isExtruderActive = False
 		self.isFirstExtrusion = True
 		self.isShutdownEarly = False
@@ -163,7 +160,7 @@ class OozebaneSkein:
 		self.lineIndex = 0
 		self.lines = None
 		self.oldLocation = None
-		self.operatingFeedrateMinute = 959.0
+		self.operatingFeedRateMinute = 959.0
 		self.shutdownStepIndex = 999999999
 		self.startupStepIndex = 999999999
 
@@ -176,9 +173,9 @@ class OozebaneSkein:
 		distanceBack = distanceAfterThreadBeginning - self.afterStartupDistances[ self.startupStepIndex ]
 		if segmentLength > 0.0:
 			locationBack = location + segment * distanceBack / segmentLength
-			feedrate = self.operatingFeedrateMinute * self.afterStartupFlowRates[ self.startupStepIndex ]
+			feedRate = self.operatingFeedRateMinute * self.afterStartupFlowRates[ self.startupStepIndex ]
 			if not self.isCloseToEither( locationBack, location, self.oldLocation ):
-				self.distanceFeedRate.addLine( self.getLinearMoveWithFeedrate( feedrate, locationBack ) )
+				self.distanceFeedRate.addLine( self.getLinearMoveWithFeedRate( feedRate, locationBack ) )
 		self.startupStepIndex += 1
 
 	def addLineSetShutdowns( self, line ):
@@ -186,8 +183,8 @@ class OozebaneSkein:
 		self.distanceFeedRate.addLine( line )
 		self.isShutdownEarly = True
 
-	def getActiveFeedrateRatio( self ):
-		"Get the feedrate of the first active move over the operating feedrate."
+	def getActiveFeedRateRatio( self ):
+		"Get the feedRate of the first active move over the operating feedRate."
 		isSearchExtruderActive = self.isExtruderActive
 		for afterIndex in xrange( self.lineIndex, len( self.lines ) ):
 			line = self.lines[ afterIndex ]
@@ -195,10 +192,10 @@ class OozebaneSkein:
 			firstWord = gcodec.getFirstWord( splitLine )
 			if firstWord == 'G1':
 				if isSearchExtruderActive:
-					return gcodec.getFeedrateMinute( self.feedrateMinute, splitLine ) / self.operatingFeedrateMinute
+					return gcodec.getFeedRateMinute( self.feedRateMinute, splitLine ) / self.operatingFeedRateMinute
 			elif firstWord == 'M101':
 				isSearchExtruderActive = True
-		print( 'active feedrate ratio was not found in oozebane.' )
+		print( 'active feedRate ratio was not found in oozebane.' )
 		return 1.0
 
 	def getAddAfterStartupLines( self, line ):
@@ -208,9 +205,9 @@ class OozebaneSkein:
 			self.addAfterStartupLine( splitLine )
 		if self.startupStepIndex >= len( self.afterStartupDistances ):
 			self.startupStepIndex = len( self.afterStartupDistances ) + 999999999999
-			return self.getLinearMoveWithFeedrateSplitLine( self.operatingFeedrateMinute, splitLine )
-		feedrate = self.operatingFeedrateMinute * self.getStartupFlowRateMultiplier( self.getDistanceAfterThreadBeginning() / self.afterStartupDistance, len( self.afterStartupDistances ) )
-		return self.getLinearMoveWithFeedrateSplitLine( feedrate, splitLine )
+			return self.getLinearMoveWithFeedRateSplitLine( self.operatingFeedRateMinute, splitLine )
+		feedRate = self.operatingFeedRateMinute * self.getStartupFlowRateMultiplier( self.getDistanceAfterThreadBeginning() / self.afterStartupDistance, len( self.afterStartupDistances ) )
+		return self.getLinearMoveWithFeedRateSplitLine( feedRate, splitLine )
 
 	def getAddBeforeStartupLines( self, line ):
 		"Get and / or add before the startup lines."
@@ -231,11 +228,11 @@ class OozebaneSkein:
 			self.isStartupEarly = False
 			return line
 		locationBack = location + segment * distanceBack / segmentLength
-		self.distanceFeedRate.addLine( self.getLinearMoveWithFeedrate( self.operatingFeedrateMinute, locationBack ) )
+		self.distanceFeedRate.addLine( self.getLinearMoveWithFeedRate( self.operatingFeedRateMinute, locationBack ) )
 		self.distanceFeedRate.addLine( 'M101' )
 		if self.isCloseToEither( locationBack, location, self.oldLocation ):
 			return ''
-		return self.getLinearMoveWithFeedrate( self.operatingFeedrateMinute, location )
+		return self.getLinearMoveWithFeedRate( self.operatingFeedRateMinute, location )
 
 	def getAddShutSlowDownLine( self, line ):
 		"Add the shutdown and slowdown lines."
@@ -249,7 +246,7 @@ class OozebaneSkein:
 			distanceThreadEnd = self.getDistanceToExtruderOffCommand( self.earlyShutdownDistances[ 0 ] )
 			if distanceThreadEnd != None:
 				shutdownFlowRateMultiplier = self.getShutdownFlowRateMultiplier( 1.0 - distanceThreadEnd / self.earlyShutdownDistance, len( self.earlyShutdownDistances ) )
-				line = self.getLinearMoveWithFeedrate( self.feedrateMinute * shutdownFlowRateMultiplier, location )
+				line = self.getLinearMoveWithFeedRate( self.feedRateMinute * shutdownFlowRateMultiplier, location )
 			self.distanceFeedRate.addLine( line )
 			return False
 		segment = self.oldLocation - location
@@ -260,16 +257,16 @@ class OozebaneSkein:
 			locationBack = location + segment * distanceBack / segmentLength
 		if self.shutdownStepIndex == 0:
 			if not self.isCloseToEither( locationBack, location, self.oldLocation ):
-				line = self.getLinearMoveWithFeedrate( self.feedrateMinute, locationBack )
+				line = self.getLinearMoveWithFeedRate( self.feedRateMinute, locationBack )
 			self.distanceFeedRate.addLine( line )
 			self.addLineSetShutdowns( 'M103' )
 			return True
 		if self.isClose( locationBack, self.oldLocation ):
 			return True
-		feedrate = self.feedrateMinute * self.earlyShutdownFlowRates[ self.shutdownStepIndex ]
-		line = self.getLinearMoveWithFeedrate( feedrate, locationBack )
+		feedRate = self.feedRateMinute * self.earlyShutdownFlowRates[ self.shutdownStepIndex ]
+		line = self.getLinearMoveWithFeedRate( feedRate, locationBack )
 		if self.isClose( locationBack, location ):
-			line = self.getLinearMoveWithFeedrate( feedrate, location )
+			line = self.getLinearMoveWithFeedRate( feedRate, location )
 		self.distanceFeedRate.addLine( line )
 		return True
 
@@ -385,19 +382,19 @@ class OozebaneSkein:
 			return None
 		return self.getDistanceToExtruderOffCommand( self.earlyShutdownDistances[ self.shutdownStepIndex ] )
 
-	def getLinearMoveWithFeedrate( self, feedrate, location ):
-		"Get a linear move line with the feedrate."
-		return self.distanceFeedRate.getLinearGcodeMovementWithFeedrate( feedrate, location.dropAxis( 2 ), location.z )
+	def getLinearMoveWithFeedRate( self, feedRate, location ):
+		"Get a linear move line with the feedRate."
+		return self.distanceFeedRate.getLinearGcodeMovementWithFeedRate( feedRate, location.dropAxis( 2 ), location.z )
 
-	def getLinearMoveWithFeedrateSplitLine( self, feedrate, splitLine ):
-		"Get a linear move line with the feedrate and split line."
+	def getLinearMoveWithFeedRateSplitLine( self, feedRate, splitLine ):
+		"Get a linear move line with the feedRate and split line."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-		return self.getLinearMoveWithFeedrate( feedrate, location )
+		return self.getLinearMoveWithFeedRate( feedRate, location )
 
 	def getOozebaneLine( self, line ):
 		"Get oozebaned gcode line."
 		splitLine = line.split()
-		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
+		self.feedRateMinute = gcodec.getFeedRateMinute( self.feedRateMinute, splitLine )
 		if self.oldLocation == None:
 			return line
 		if self.startupStepIndex < len( self.afterStartupDistances ):
@@ -407,7 +404,7 @@ class OozebaneSkein:
 		if self.shutdownStepIndex < len( self.earlyShutdownDistances ):
 			return self.getAddShutSlowDownLines( line )
 		if self.isStartupEarly:
-			return self.getLinearMoveWithFeedrateSplitLine( self.operatingFeedrateMinute, splitLine )
+			return self.getLinearMoveWithFeedRateSplitLine( self.operatingFeedRateMinute, splitLine )
 		return line
 
 	def getShutdownFlowRateMultiplier( self, along, numberOfDistances ):
@@ -448,8 +445,8 @@ class OozebaneSkein:
 			if firstWord == '(</extruderInitialization>)':
 				self.distanceFeedRate.addLine( '(<procedureDone> oozebane </procedureDone>)' )
 				return
-			elif firstWord == '(<operatingFeedratePerSecond>':
-				self.operatingFeedrateMinute = 60.0 * float( splitLine[ 1 ] )
+			elif firstWord == '(<operatingFeedRatePerSecond>':
+				self.operatingFeedRateMinute = 60.0 * float( splitLine[ 1 ] )
 			elif firstWord == '(<perimeterWidth>':
 				self.perimeterWidth = float( splitLine[ 1 ] )
 				self.setExtrusionWidth( oozebanePreferences )
@@ -498,7 +495,7 @@ class OozebaneSkein:
 		"Set the after startup flow rates."
 		afterStartupRatio = min( 1.0, afterStartupRatio )
 		afterStartupRatio = max( 0.0, afterStartupRatio )
-		self.afterStartupDistance = afterStartupRatio * self.getActiveFeedrateRatio() * self.oozebanePreferences.afterStartupDistance.value
+		self.afterStartupDistance = afterStartupRatio * self.getActiveFeedRateRatio() * self.oozebanePreferences.afterStartupDistance.value
 		self.afterStartupDistances = []
 		self.afterStartupFlowRate = 1.0
 		self.afterStartupFlowRates = []
@@ -540,7 +537,7 @@ class OozebaneSkein:
 				if self.isFirstExtrusion:
 					earlyStartupOperatingDistance = self.oozebanePreferences.firstEarlyStartupDistance.value
 					self.isFirstExtrusion = False
-				self.earlyStartupDistance = earlyStartupOperatingDistance * self.getActiveFeedrateRatio()
+				self.earlyStartupDistance = earlyStartupOperatingDistance * self.getActiveFeedRateRatio()
 				return
 
 	def setExtrusionWidth( self, oozebanePreferences ):
@@ -568,7 +565,7 @@ class OozebaneSkein:
 		"Set the extrusion width."
 		earlyShutdownRatio = min( 1.0, earlyShutdownRatio )
 		earlyShutdownRatio = max( 0.0, earlyShutdownRatio )
-		self.earlyShutdownDistance = earlyShutdownRatio * self.getActiveFeedrateRatio() * self.oozebanePreferences.earlyShutdownDistance.value
+		self.earlyShutdownDistance = earlyShutdownRatio * self.getActiveFeedRateRatio() * self.oozebanePreferences.earlyShutdownDistance.value
 		self.earlyShutdownDistances = []
 		self.earlyShutdownFlowRates = []
 		earlyShutdownSteps = int( math.floor( earlyShutdownRatio * float( self.oozebanePreferences.slowdownStartupSteps.value ) ) )
@@ -587,7 +584,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

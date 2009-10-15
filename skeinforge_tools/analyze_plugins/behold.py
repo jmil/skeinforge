@@ -115,18 +115,6 @@ __license__ = "GPL 3.0"
 
 
 #bring up the preferences window, maybe make dragging more intuitive
-def displayBeholdFileGivenText( gcodeText, beholdPreferences = None ):
-	"Display a beholded gcode file for a gcode file."
-	if gcodeText == '':
-		return ''
-	if beholdPreferences == None:
-		beholdPreferences = BeholdPreferences()
-		preferences.getReadPreferences( beholdPreferences )
-	skein = BeholdSkein()
-	skein.parseGcode( gcodeText, beholdPreferences )
-#	beholdPreferences.displayImmediateUpdateDialog()
-	skeinWindow = SkeinWindow( beholdPreferences, skein.screenSize, skein.skeinPanes )
-
 def beholdFile( fileName = '' ):
 	"Behold a gcode file.  If no fileName is specified, behold the first gcode file in this folder that is not modified."
 	if fileName == '':
@@ -150,13 +138,24 @@ def compareLayerSequence( first, second ):
 		return - 1
 	return 0
 
+def displayBeholdFileGivenText( gcodeText, beholdPreferences = None ):
+	"Display a beholded gcode file for a gcode file."
+	if gcodeText == '':
+		return ''
+	if beholdPreferences == None:
+		beholdPreferences = BeholdPreferences()
+		preferences.getReadPreferences( beholdPreferences )
+	displayBeholdFileGivenTextPreferences( gcodeText, beholdPreferences )
+
+def displayBeholdFileGivenTextPreferences( gcodeText, beholdPreferences ):
+	"Display the gcode text in a behold viewer."
+	skein = BeholdSkein()
+	skein.parseGcode( gcodeText, beholdPreferences )
+	skeinWindow = SkeinWindow( beholdPreferences, skein )
+
 def getBoundedLatitude( latitude ):
 	"Get the bounded latitude.later get rounded"
 	return round( min( 179.9, max( 0.1, latitude ) ), 1 )
-
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( BeholdPreferences() )
 
 def getPolygonComplexFromColoredLines( coloredLines ):
 	"Get a complex polygon from the colored lines."
@@ -164,6 +163,10 @@ def getPolygonComplexFromColoredLines( coloredLines ):
 	for coloredLine in coloredLines:
 		polygonComplex.append( coloredLine.begin.dropAxis( 2 ) )
 	return polygonComplex
+
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return BeholdPreferences()
 
 def getTwoHex( number ):
 	"Get the first two hexadecimal digits."
@@ -174,8 +177,7 @@ def writeOutput( fileName, gcodeText = '' ):
 	beholdPreferences = BeholdPreferences()
 	preferences.getReadPreferences( beholdPreferences )
 	if beholdPreferences.activateBehold.value:
-		if gcodeText == '':
-			gcodeText = gcodec.getFileText( fileName )
+		gcodeText = gcodec.getTextIfEmpty( fileName, gcodeText )
 		displayBeholdFileGivenText( gcodeText, beholdPreferences )
 
 
@@ -185,107 +187,105 @@ class BeholdPreferences:
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
+		self.phoenixPreferenceTable = {}
 		self.updatePreferences = []
 		self.activateBehold = preferences.BooleanPreference().getFromValue( 'Activate Behold', True )
 		self.archive.append( self.activateBehold )
 		self.bandHeight = preferences.IntPreference().getFromValue( 'Band Height (layers):', 5 )
-		self.archive.append( self.bandHeight )
+		self.addToArchivePhoenixUpdate( self.bandHeight )
 		self.bottomBandBrightness = preferences.FloatPreference().getFromValue( 'Bottom Band Brightness (ratio):', 0.7 )
-		self.archive.append( self.bottomBandBrightness )
+		self.addToArchivePhoenixUpdate( self.bottomBandBrightness )
 		self.bottomLayerBrightness = preferences.FloatPreference().getFromValue( 'Bottom Layer Brightness (ratio):', 1.0 )
-		self.archive.append( self.bottomLayerBrightness )
+		self.addToArchivePhoenixUpdate( self.bottomLayerBrightness )
 		self.brightBandStart = preferences.MenuButtonDisplay().getFromName( 'Bright Band Start: ' )
-		self.archive.append( self.brightBandStart )
+		self.addToArchiveUpdate( self.brightBandStart )
 		self.fromTheBottom = preferences.MenuRadio().getFromMenuButtonDisplay( self.brightBandStart, 'From the Bottom', False )
-		self.archive.append( self.fromTheBottom )
+		self.addToArchivePhoenixUpdate( self.fromTheBottom )
 		self.fromTheTop = preferences.MenuRadio().getFromMenuButtonDisplay( self.brightBandStart, 'From the Top', True )
-		self.archive.append( self.fromTheTop )
+		self.addToArchivePhoenixUpdate( self.fromTheTop )
+		self.displayLineTextWhenMouseMoves = preferences.BooleanPreference().getFromValue( 'Display Line Text when Mouse Moves', False )
+		self.addToArchivePhoenixUpdate( self.displayLineTextWhenMouseMoves )
 		self.drawArrows = preferences.BooleanPreference().getFromValue( 'Draw Arrows', False )
-		self.archive.append( self.drawArrows )
-		self.updatePreferences.append( self.drawArrows )
+		self.addToArchiveUpdate( self.drawArrows )
 		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Behold', '' )
 		self.archive.append( self.fileNameInput )
 		self.goAroundExtruderOffTravel = preferences.BooleanPreference().getFromValue( 'Go Around Extruder Off Travel', False )
-		self.archive.append( self.goAroundExtruderOffTravel )
+		self.addToArchivePhoenixUpdate( self.goAroundExtruderOffTravel )
 		self.layersFrom = preferences.IntPreference().getFromValue( 'Layers From (index):', 0 )
-		self.archive.append( self.layersFrom )
-		self.updatePreferences.append( self.layersFrom )
+		self.addToArchiveUpdate( self.layersFrom )
 		self.layersTo = preferences.IntPreference().getFromValue( 'Layers To (index):', 999999999 )
-		self.archive.append( self.layersTo )
-		self.updatePreferences.append( self.layersTo )
+		self.addToArchiveUpdate( self.layersTo )
 		self.numberOfFillBottomLayers = preferences.IntPreference().getFromValue( 'Number of Fill Bottom Layers (integer):', 1 )
-		self.archive.append( self.numberOfFillBottomLayers )
+		self.addToArchivePhoenixUpdate( self.numberOfFillBottomLayers )
 		self.numberOfFillTopLayers = preferences.IntPreference().getFromValue( 'Number of Fill Top Layers (integer):', 1 )
-		self.archive.append( self.numberOfFillTopLayers )
-		self.pixelsWidthExtrusion = preferences.FloatPreference().getFromValue( 'Pixels over Extrusion Width (ratio):', 10.0 )
-		self.archive.append( self.pixelsWidthExtrusion )
+		self.addToArchivePhoenixUpdate( self.numberOfFillTopLayers )
+		self.pixelsPerMillimeter = preferences.FloatPreference().getFromValue( 'Pixels per Millimeter (ratio):', 10.0 )
+		self.addToArchivePhoenixUpdate( self.pixelsPerMillimeter )
 		self.screenHorizontalInset = preferences.IntPreference().getFromValue( 'Screen Horizontal Inset (pixels):', 100 )
-		self.archive.append( self.screenHorizontalInset )
-		self.screenVerticalInset = preferences.IntPreference().getFromValue( 'Screen Vertical Inset (pixels):', 50 )
-		self.archive.append( self.screenVerticalInset )
+		self.addToArchivePhoenixUpdate( self.screenHorizontalInset )
+		self.screenVerticalInset = preferences.IntPreference().getFromValue( 'Screen Vertical Inset (pixels):', 150 )
+		self.addToArchivePhoenixUpdate( self.screenVerticalInset )
 		self.viewpointLatitude = preferences.FloatPreference().getFromValue( 'Viewpoint Latitude (degrees):', 15.0 )
-		self.archive.append( self.viewpointLatitude )
-		self.updatePreferences.append( self.viewpointLatitude )
+		self.addToArchiveUpdate( self.viewpointLatitude )
 		self.viewpointLongitude = preferences.FloatPreference().getFromValue( 'Viewpoint Longitude (degrees):', 210.0 )
-		self.archive.append( self.viewpointLongitude )
-		self.updatePreferences.append( self.viewpointLongitude )
+		self.addToArchiveUpdate( self.viewpointLongitude )
 		self.widthOfExtrusionThread = preferences.IntPreference().getFromValue( 'Width of Extrusion Thread (pixels):', 1 )
-		self.archive.append( self.widthOfExtrusionThread )
-		self.updatePreferences.append( self.widthOfExtrusionThread )
+		self.addToArchiveUpdate( self.widthOfExtrusionThread )
 		self.widthOfFillBottomThread = preferences.IntPreference().getFromValue( 'Width of Fill Bottom Thread (pixels):', 3 )
-		self.archive.append( self.widthOfFillBottomThread )
-		self.updatePreferences.append( self.widthOfFillBottomThread )
+		self.addToArchiveUpdate( self.widthOfFillBottomThread )
 		self.widthOfFillTopThread = preferences.IntPreference().getFromValue( 'Width of Fill Top Thread (pixels):', 3 )
-		self.archive.append( self.widthOfFillTopThread )
-		self.updatePreferences.append( self.widthOfFillTopThread )
+		self.addToArchiveUpdate( self.widthOfFillTopThread )
 		self.widthOfLoopThread = preferences.IntPreference().getFromValue( 'Width of Loop Thread (pixels):', 3 )
-		self.archive.append( self.widthOfLoopThread )
-		self.updatePreferences.append( self.widthOfLoopThread )
+		self.addToArchiveUpdate( self.widthOfLoopThread )
 		self.widthOfPerimeterInsideThread = preferences.IntPreference().getFromValue( 'Width of Perimeter Inside Thread (pixels):', 4 )
-		self.archive.append( self.widthOfPerimeterInsideThread )
-		self.updatePreferences.append( self.widthOfPerimeterInsideThread )
+		self.addToArchiveUpdate( self.widthOfPerimeterInsideThread )
 		self.widthOfPerimeterOutsideThread = preferences.IntPreference().getFromValue( 'Width of Perimeter Outside Thread (pixels):', 4 )
-		self.archive.append( self.widthOfPerimeterOutsideThread )
-		self.updatePreferences.append( self.widthOfPerimeterOutsideThread )
+		self.addToArchiveUpdate( self.widthOfPerimeterOutsideThread )
 		self.raftThreadWidth = preferences.IntPreference().getFromValue( 'Width of Raft Thread (pixels):', 1 )
-		self.archive.append( self.raftThreadWidth )
-		self.updatePreferences.append( self.raftThreadWidth )
+		self.addToArchiveUpdate( self.raftThreadWidth )
 		self.travelThreadWidth = preferences.IntPreference().getFromValue( 'Width of Travel Thread (pixels):', 0 )
-		self.archive.append( self.travelThreadWidth )
-		self.updatePreferences.append( self.travelThreadWidth )
+		self.addToArchiveUpdate( self.travelThreadWidth )
 		self.widthOfXAxis = preferences.IntPreference().getFromValue( 'Width of X Axis (pixels):', 5 )
-		self.archive.append( self.widthOfXAxis )
-		self.updatePreferences.append( self.widthOfXAxis )
+		self.addToArchiveUpdate( self.widthOfXAxis )
 		self.widthOfYAxis = preferences.IntPreference().getFromValue( 'Width of Y Axis (pixels):', 5 )
-		self.archive.append( self.widthOfYAxis )
-		self.updatePreferences.append( self.widthOfYAxis )
+		self.addToArchiveUpdate( self.widthOfYAxis )
 		self.widthOfZAxis = preferences.IntPreference().getFromValue( 'Width of Z Axis (pixels):', 5 )
-		self.archive.append( self.widthOfZAxis )
-		self.updatePreferences.append( self.widthOfZAxis )
+		self.addToArchiveUpdate( self.widthOfZAxis )
 		self.windowPositionBeholdDynamicPreferences = preferences.WindowPosition().getFromValue( 'windowPositionBehold Dynamic Preferences', '0+0' )
-		self.archive.append( self.windowPositionBeholdDynamicPreferences )
-		self.updatePreferences.append( self.windowPositionBeholdDynamicPreferences )
+		self.addToArchiveUpdate( self.windowPositionBeholdDynamicPreferences )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Behold'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.analyze_plugins.behold.html' )
+		self.windowPositionPreferences.windowPositionName = None
 		self.updateFunction = None
+
+	def addToArchiveUpdate( self, archivablePreference ):
+		"Add preference to the archive and the update preferences."
+		self.archive.append( archivablePreference )
+		self.updatePreferences.append( archivablePreference )
+
+	def addToArchivePhoenixUpdate( self, archivablePreference ):
+		"Add preference to the archive, the phoenix preferences, and the update preferences."
+		self.addToArchiveUpdate( archivablePreference )
+		self.phoenixPreferenceTable[ archivablePreference ] = None
+
+	def displayImmediateUpdateDialog( self ):
+		"Display the immediate update dialog."
+		self.executeTitle = None
+		self.saveCloseTitle = None
+		self.title = 'Behold Dynamic Preferences'
+		oldArchive = self.archive
+		self.archive = self.updatePreferences
+		self.lowerName = 'behold dynamic'
+		preferences.getDisplayedDialogFromConstructor( self )
+		self.archive = oldArchive
 
 	def execute( self ):
 		"Write button has been clicked."
 		fileNames = polyfile.getFileOrGcodeDirectory( self.fileNameInput.value, self.fileNameInput.wasCancelled )
 		for fileName in fileNames:
 			beholdFile( fileName )
-
-	def displayImmediateUpdateDialog( self ):
-		"Display the immediate update dialog."
-		self.executeTitle = None
-		self.saveTitle = None
-		self.title = 'Behold Dynamic Preferences'
-		oldArchive = self.archive
-		self.archive = self.updatePreferences
-		preferences.getDisplayedDialogFromConstructor( self )
-		self.archive = oldArchive
 
 	def setUpdateFunction( self, updateFunction ):
 		"Set the update function of the update preferences."
@@ -305,17 +305,17 @@ class BeholdPreferences:
 class BeholdSkein:
 	"A class to write a get a scalable vector graphics text for a gcode skein."
 	def __init__( self ):
-		self.absolutePerimeterWidth = 0.6
 		self.coloredThread = []
 		self.hasASurroundingLoopBeenReached = False
 		self.isLoop = False
 		self.isPerimeter = False
 		self.isThereALayerStartWord = False
 		self.layerTops = []
-		self.layerThickness = 0.4
 		self.oldLayerZoneIndex = 0
 		self.oldZ = - 999999999999.0
+		self.skeinPane = None
 		self.skeinPanes = []
+		self.thirdLayerThickness = 0.133333
 
 	def addToPath( self, line, location ):
 		'Add a point to travel and maybe extrusion.'
@@ -323,7 +323,7 @@ class BeholdSkein:
 			return
 		begin = self.scale * self.oldLocation - self.scaleCenterBottom
 		end = self.scale * location - self.scaleCenterBottom
-		tagString = 'The line clicked is: %s %s' % ( self.lineIndex, line )
+		tagString = '%s %s' % ( self.lineIndex, line )
 		coloredLine = ColoredLine( begin, '', end, tagString )
 		coloredLine.z = location.z
 		self.coloredThread.append( coloredLine )
@@ -376,6 +376,8 @@ class BeholdSkein:
 
 	def linearMove( self, line, splitLine ):
 		"Get statistics for a linear move."
+		if self.skeinPane == None:
+			return
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		self.addToPath( line, location )
 		self.oldLocation = location
@@ -425,10 +427,7 @@ class BeholdSkein:
 		elif firstWord == '(<layer>':
 			self.layerTopZ = float( splitLine[ 1 ] ) + self.thirdLayerThickness
 		elif firstWord == '(<layerThickness>':
-			self.layerThickness = float( splitLine[ 1 ] )
-			self.thirdLayerThickness = 0.33333333333 * self.layerThickness
-		elif firstWord == '(<perimeterWidth>':
-			self.absolutePerimeterWidth = abs( float( splitLine[ 1 ] ) )
+			self.thirdLayerThickness = 0.33333333333 * float( splitLine[ 1 ] )
 		elif firstWord == '(<surroundingLoop>)':
 			if self.layerTopZ > self.getLayerTop():
 				self.layerTops.append( self.layerTopZ )
@@ -436,6 +435,7 @@ class BeholdSkein:
 	def parseGcode( self, gcodeText, beholdPreferences ):
 		"Parse gcode text and store the vector output."
 		self.beholdPreferences = beholdPreferences
+		self.gcodeText = gcodeText
 		self.initializeActiveLocation()
 		self.cornerHigh = Vector3( - 999999999.0, - 999999999.0, - 999999999.0 )
 		self.cornerLow = Vector3( 999999999.0, 999999999.0, 999999999.0 )
@@ -451,7 +451,7 @@ class BeholdSkein:
 		self.firstTopLayer = len( self.layerTops ) - self.beholdPreferences.numberOfFillTopLayers.value
 		self.centerComplex = 0.5 * ( self.cornerHigh.dropAxis( 2 ) + self.cornerLow.dropAxis( 2 ) )
 		self.centerBottom = Vector3( self.centerComplex.real, self.centerComplex.imag, self.cornerLow.z )
-		self.scale = beholdPreferences.pixelsWidthExtrusion.value / self.absolutePerimeterWidth
+		self.scale = beholdPreferences.pixelsPerMillimeter.value
 		self.scaleCenterBottom = self.scale * self.centerBottom
 		self.scaleCornerHigh = self.scale * self.cornerHigh.dropAxis( 2 )
 		self.scaleCornerLow = self.scale * self.cornerLow.dropAxis( 2 )
@@ -573,24 +573,33 @@ class SkeinPane:
 
 
 class SkeinWindow:
-	def __init__( self, beholdPreferences, size, skeinPanes ):
+	def __init__( self, beholdPreferences, skein ):
 		"Initialize the skein window."
+		title = 'Behold Viewer'
 		self.arrowshape = ( 24, 30, 9 )
 		self.beholdPreferences = beholdPreferences
 		self.buttonOnePressedCoordinate = None
-		self.center = 0.5 * size
+		self.screenSize = skein.screenSize
+		self.center = 0.5 * self.screenSize
 		self.index = 0
 		self.motionStippleName = 'gray75'
+		self.movementTextID = None
+		self.oldPixelsPerMillimeter = beholdPreferences.pixelsPerMillimeter.value
 		self.root = preferences.Tkinter.Tk()
-		self.root.title( "Behold Viewer" )
-		self.size = size
-		self.skeinPanes = skeinPanes
+		self.root.title( title )
+		self.skein = skein
+		self.skeinPanes = skein.skeinPanes
+		for phoenixPreferenceTableKey in beholdPreferences.phoenixPreferenceTable.keys():
+			beholdPreferences.phoenixPreferenceTable[ phoenixPreferenceTableKey ] = phoenixPreferenceTableKey.value
+		fileHelpMenuBar = preferences.FileHelpMenuBar( self.root )
+		fileHelpMenuBar.helpMenu.add_command( label = 'Behold', command = preferences.HelpPage().getOpenFromDocumentationSubName( 'skeinforge_tools.analyze_plugins.behold.html' ) )
+		fileHelpMenuBar.completeMenu( self.destroyAllDialogWindows, beholdPreferences.lowerName )
 		frame = preferences.Tkinter.Frame( self.root )
 		xScrollbar = preferences.Tkinter.Scrollbar( self.root, orient = preferences.Tkinter.HORIZONTAL )
 		yScrollbar = preferences.Tkinter.Scrollbar( self.root )
-		self.canvasHeight = min( int( size.imag ), self.root.winfo_screenheight() - beholdPreferences.screenHorizontalInset.value )
-		self.canvasWidth = min( int( size.real ), self.root.winfo_screenwidth() - beholdPreferences.screenVerticalInset.value )
-		self.canvas = preferences.Tkinter.Canvas( self.root, width = self.canvasWidth, height = self.canvasHeight, scrollregion = ( 0, 0, int( size.real ), int( size.imag ) ) )
+		self.canvasHeight = min( int( self.screenSize.imag ), self.root.winfo_screenheight() - beholdPreferences.screenVerticalInset.value )
+		self.canvasWidth = min( int( self.screenSize.real ), self.root.winfo_screenwidth() - beholdPreferences.screenHorizontalInset.value )
+		self.canvas = preferences.Tkinter.Canvas( self.root, width = self.canvasWidth, height = self.canvasHeight, scrollregion = ( 0, 0, int( self.screenSize.real ), int( self.screenSize.imag ) ) )
 		self.canvas.grid( row = 0, rowspan = 98, column = 0, columnspan = 99, sticky = preferences.Tkinter.W )
 		xScrollbar.grid( row = 98, column = 0, columnspan = 99, sticky = preferences.Tkinter.E + preferences.Tkinter.W )
 		xScrollbar.config( command = self.canvas.xview )
@@ -600,6 +609,7 @@ class SkeinWindow:
 		self.canvas[ 'yscrollcommand' ] = yScrollbar.set
 		self.exitButton = preferences.Tkinter.Button( self.root, text = 'Exit', activebackground = 'black', activeforeground = 'red', command = self.destroyAllDialogWindows, fg = 'red' )
 		self.exitButton.grid( row = 99, column = 95, columnspan = 5, sticky = preferences.Tkinter.W )
+		preferences.CloseListener( title.lower(), self ).listenToWidget( self.exitButton )
 		self.showPreferencesButton = preferences.Tkinter.Button( self.root, activebackground = 'black', activeforeground = 'purple', command = self.showPreferences, text = 'Show Preferences' )
 		self.showPreferencesButton.grid( row = 99, column = 0, sticky = preferences.Tkinter.W )
 		self.canvas.bind( '<Button-1>', self.buttonOneClicked )
@@ -612,8 +622,8 @@ class SkeinWindow:
 		self.xAxisLine = ColoredLine( Vector3(), 'darkorange', Vector3( halfCenter ), 'X Axis' )
 		self.yAxisLine = ColoredLine( Vector3(), 'gold', Vector3( 0.0, halfCenter ), 'Y Axis' )
 		self.zAxisLine = ColoredLine( Vector3(), 'skyblue', Vector3( 0.0, 0.0, halfCenter ), 'Z Axis' )
-		self.canvas.xview( preferences.Tkinter.MOVETO, 0.5 * ( 1.0 - float( self.canvasWidth ) / float( size.real ) ) )
-		self.canvas.yview( preferences.Tkinter.MOVETO, 0.5 * ( 1.0 - float( self.canvasHeight ) / float( size.imag ) ) )
+		self.canvas.xview( preferences.Tkinter.MOVETO, 0.5 * ( 1.0 - float( self.canvasWidth ) / float( self.screenSize.real ) ) )
+		self.canvas.yview( preferences.Tkinter.MOVETO, 0.5 * ( 1.0 - float( self.canvasHeight ) / float( self.screenSize.imag ) ) )
 		self.update()
 		geometryString = self.root.geometry()
 		if geometryString == '1x1+0+0':
@@ -628,17 +638,12 @@ class SkeinWindow:
 		self.showPreferences()
 
 	def buttonOneClicked( self, event ):
-		"Print the line that was clicked on by the left button."
+		"Print the line clicked."
 		x = self.canvas.canvasx( event.x )
 		y = self.canvas.canvasy( event.y )
 		self.buttonOnePressedCoordinate = complex( x, y )
 		self.canvas.delete( 'motion' )
-		tags = self.canvas.itemcget( self.canvas.find_closest( x, y ), 'tags' )
-		currentEnd = ' current'
-		if tags.find( currentEnd ) != - 1:
-			tags = tags[ : - len( currentEnd ) ]
-		if len( tags ) > 0:
-			print( tags )
+		print( 'The line clicked is: ' + self.getTagsGivenXY( x, y ) )
 
 	def buttonOneReleased( self, event, shift = False ):
 		"Move the viewpoint if the mouse was released."
@@ -669,6 +674,11 @@ class SkeinWindow:
 		if self.showPreferencesButton[ 'state' ] == preferences.Tkinter.DISABLED:
 			self.beholdPreferences.preferencesDialog.root.destroy()
 		self.root.destroy()
+
+	def destroyMovementText( self ):
+		'Destroy the movement text.'
+		self.canvas.delete( self.movementTextID )
+		self.movementTextID = None
 
 	def drawColoredLine( self, arrowType, coloredLine, viewVectors, width ):
 		"Draw colored line."
@@ -747,6 +757,16 @@ class SkeinWindow:
 		"Get the point in screen perspective."
 		return complex( pointComplex.real, - pointComplex.imag ) + self.center
 
+	def getTagsGivenXY( self, x, y ):
+		"Get the tag for the x and y."
+		if self.movementTextID != None:
+			self.destroyMovementText()
+		tags = self.canvas.itemcget( self.canvas.find_closest( x, y ), 'tags' )
+		currentEnd = ' current'
+		if tags.find( currentEnd ) != - 1:
+			return tags[ : - len( currentEnd ) ]
+		return tags
+
 	def getViewComplex( self, point, viewVectors ):
 		"Get the point in view perspective."
 		screenComplexX = point.dot( viewVectors.viewXVector3 )
@@ -757,10 +777,18 @@ class SkeinWindow:
 		"Null the button one pressed coordinate because the mouse has left the canvas."
 		self.buttonOnePressedCoordinate = None
 		self.canvas.delete( 'motion' )
+		self.destroyMovementText()
 
 	def motion( self, event, shift = False ):
 		"Move the viewpoint if the mouse was moved."
 		if self.buttonOnePressedCoordinate == None:
+			if not self.beholdPreferences.displayLineTextWhenMouseMoves.value:
+				return
+			x = self.canvas.canvasx( event.x )
+			y = self.canvas.canvasy( event.y )
+			tags = self.getTagsGivenXY( x, y )
+			if tags != '':
+				self.movementTextID = self.canvas.create_text ( x, y, anchor = preferences.Tkinter.SW, text = 'The line is: ' + tags )
 			return
 		x = self.canvas.canvasx( event.x )
 		y = self.canvas.canvasy( event.y )
@@ -817,8 +845,11 @@ class SkeinWindow:
 		self.motion( event, True )
 
 	def preferencesDestroyed( self, event ):
-		"Disable the show preferences button because the dynamic preferences were destroyed."
-		self.showPreferencesButton.config( state = preferences.Tkinter.NORMAL )
+		"Enable the show preferences button because the dynamic preferences were destroyed."
+		try:
+			self.showPreferencesButton.config( state = preferences.Tkinter.NORMAL )
+		except:
+			pass
 
 	def printHexadecimalColorName( self, name ):
 		"Print the color name in hexadecimal."
@@ -836,6 +867,11 @@ class SkeinWindow:
 		"Update the screen."
 		if len( self.skeinPanes ) < 1:
 			return
+		for phoenixPreferenceTableKey in self.beholdPreferences.phoenixPreferenceTable.keys():
+			if self.beholdPreferences.phoenixPreferenceTable[ phoenixPreferenceTableKey ] != phoenixPreferenceTableKey.value:
+				self.destroyAllDialogWindows()
+				displayBeholdFileGivenTextPreferences( self.skein.gcodeText, self.beholdPreferences )
+				return
 		self.arrowType = None
 		if self.beholdPreferences.drawArrows.value:
 			self.arrowType = 'last'
@@ -874,7 +910,7 @@ def main():
 	if len( sys.argv ) > 1:
 		beholdFile( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

@@ -24,25 +24,25 @@ will&nbsp;start&nbsp;all&nbsp;over&nbsp;the&nbsp;place&nbsp;and&nbsp;a&nbsp;low&
 Perimeter&nbsp;Departure&nbsp;Distance&nbsp;over&nbsp;Extrusion&nbsp;Width'&nbsp;is&nbsp;the&nbsp;ratio&nbsp;of&nbsp;the&nbsp;minimum&nbsp;distance&nbsp;that&nbsp;the&nbsp;extruder&nbsp;will&nbsp;travel&nbsp;and&nbsp;loop<br>
 before&nbsp;leaving&nbsp;an&nbsp;outer&nbsp;perimeter.&nbsp;&nbsp;A&nbsp;high&nbsp;value&nbsp;means&nbsp;the&nbsp;extruder&nbsp;will&nbsp;loop&nbsp;many&nbsp;times&nbsp;before&nbsp;leaving,&nbsp;so&nbsp;that&nbsp;the&nbsp;ooze&nbsp;will<br>
 finish&nbsp;within&nbsp;the&nbsp;perimeter,&nbsp;a&nbsp;low&nbsp;value&nbsp;means&nbsp;the&nbsp;extruder&nbsp;will&nbsp;not&nbsp;loop&nbsp;and&nbsp;a&nbsp;stringer&nbsp;might&nbsp;be&nbsp;created&nbsp;from&nbsp;the&nbsp;outer<br>
-perimeter.&nbsp;&nbsp;To&nbsp;run&nbsp;comb,&nbsp;in&nbsp;a&nbsp;shell&nbsp;type:<br>
-&gt;&nbsp;python&nbsp;comb.py<br>
+perimeter.<br>
 &nbsp;<br>
-The&nbsp;following&nbsp;examples&nbsp;comb&nbsp;the&nbsp;files&nbsp;Screw&nbsp;Holder&nbsp;Bottom.gcode&nbsp;&amp;&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder<br>
-which&nbsp;contains&nbsp;Screw&nbsp;Holder&nbsp;Bottom.gcode,&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;and&nbsp;comb.py.&nbsp;&nbsp;The&nbsp;comb&nbsp;function&nbsp;will&nbsp;comb&nbsp;if&nbsp;'Activate&nbsp;Comb'&nbsp;is&nbsp;true,&nbsp;which<br>
-can&nbsp;be&nbsp;set&nbsp;in&nbsp;the&nbsp;dialog&nbsp;or&nbsp;by&nbsp;changing&nbsp;the&nbsp;preferences&nbsp;file&nbsp;'comb.csv'&nbsp;in&nbsp;the&nbsp;'.skeinforge'&nbsp;folder&nbsp;in&nbsp;your&nbsp;home&nbsp;directory&nbsp;with&nbsp;a&nbsp;text<br>
-editor&nbsp;or&nbsp;a&nbsp;spreadsheet&nbsp;program&nbsp;set&nbsp;to&nbsp;separate&nbsp;tabs.&nbsp;&nbsp;The&nbsp;functions&nbsp;writeOutput&nbsp;and&nbsp;getChainGcode&nbsp;check&nbsp;to&nbsp;see&nbsp;if&nbsp;the<br>
-text&nbsp;has&nbsp;been&nbsp;combed,&nbsp;if&nbsp;not&nbsp;they&nbsp;call&nbsp;getChainGcode&nbsp;in&nbsp;tower.py&nbsp;to&nbsp;tower&nbsp;the&nbsp;text;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;towered&nbsp;text,&nbsp;then<br>
-they&nbsp;comb.&nbsp;&nbsp;Pictures&nbsp;of&nbsp;combing&nbsp;in&nbsp;action&nbsp;are&nbsp;available&nbsp;from&nbsp;the&nbsp;Metalab&nbsp;blog&nbsp;at:<br>
-<a href="http://reprap.soup.io/?search=combing">http://reprap.soup.io/?search=combing</a><br>
+The&nbsp;following&nbsp;examples&nbsp;comb&nbsp;the&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+and&nbsp;comb.py.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python&nbsp;comb.py<br>
-This&nbsp;brings&nbsp;up&nbsp;the&nbsp;dialog,&nbsp;after&nbsp;clicking&nbsp;'Comb',&nbsp;the&nbsp;following&nbsp;is&nbsp;printed:<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;combed.<br>
-The&nbsp;combed&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_comb.gcode<br>
+This&nbsp;brings&nbsp;up&nbsp;the&nbsp;comb&nbsp;dialog.<br>
 &nbsp;<br>
 &nbsp;<br>
-&gt;python<br>
+&gt;&nbsp;python&nbsp;comb.py&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+The&nbsp;comb&nbsp;tool&nbsp;is&nbsp;parsing&nbsp;the&nbsp;file:<br>
+Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+..<br>
+The&nbsp;comb&nbsp;tool&nbsp;has&nbsp;created&nbsp;the&nbsp;file:<br>
+..&nbsp;Screw&nbsp;Holder&nbsp;Bottom_comb.gcode<br>
+&nbsp;<br>
+&nbsp;<br>
+&gt;&nbsp;python<br>
 Python&nbsp;2.5.1&nbsp;(r251:54863,&nbsp;Sep&nbsp;22&nbsp;2007,&nbsp;01:43:31)<br>
 [GCC&nbsp;4.2.1&nbsp;(SUSE&nbsp;Linux)]&nbsp;on&nbsp;linux2<br>
 Type&nbsp;"help",&nbsp;"copyright",&nbsp;"credits"&nbsp;or&nbsp;"license"&nbsp;for&nbsp;more&nbsp;information.<br>
@@ -52,9 +52,11 @@ This&nbsp;brings&nbsp;up&nbsp;the&nbsp;comb&nbsp;dialog.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&gt;&gt;&nbsp;comb.<a href="#-writeOutput">writeOutput</a>()<br>
+The&nbsp;comb&nbsp;tool&nbsp;is&nbsp;parsing&nbsp;the&nbsp;file:<br>
 Screw&nbsp;Holder&nbsp;Bottom.stl<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;combed.<br>
-The&nbsp;combed&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_comb.gcode</tt></p>
+..<br>
+The&nbsp;comb&nbsp;tool&nbsp;has&nbsp;created&nbsp;the&nbsp;file:<br>
+..&nbsp;Screw&nbsp;Holder&nbsp;Bottom_comb.gcode</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -111,9 +113,9 @@ The&nbsp;combed&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp
 
 <dl><dt><a name="CombSkein-addGcodeFromThreadZ"><strong>addGcodeFromThreadZ</strong></a>(self, thread, z)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;thread&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="CombSkein-addGcodeMovementZ"><strong>addGcodeMovementZ</strong></a>(self, feedrateMinute, point, z)</dt><dd><tt>Add&nbsp;a&nbsp;movement&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
+<dl><dt><a name="CombSkein-addGcodeMovementZ"><strong>addGcodeMovementZ</strong></a>(self, feedRateMinute, point, z)</dt><dd><tt>Add&nbsp;a&nbsp;movement&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
-<dl><dt><a name="CombSkein-addGcodePathZ"><strong>addGcodePathZ</strong></a>(self, feedrateMinute, path, z)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;path,&nbsp;without&nbsp;modifying&nbsp;the&nbsp;extruder,&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
+<dl><dt><a name="CombSkein-addGcodePathZ"><strong>addGcodePathZ</strong></a>(self, feedRateMinute, path, z)</dt><dd><tt>Add&nbsp;a&nbsp;gcode&nbsp;path,&nbsp;without&nbsp;modifying&nbsp;the&nbsp;extruder,&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
 <dl><dt><a name="CombSkein-addIfTravel"><strong>addIfTravel</strong></a>(self, splitLine)</dt><dd><tt>Add&nbsp;travel&nbsp;move&nbsp;around&nbsp;loops&nbsp;if&nbsp;the&nbsp;extruder&nbsp;is&nbsp;off.</tt></dd></dl>
 
@@ -162,10 +164,10 @@ The&nbsp;combed&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><dl><dt><a name="-getCraftedText"><strong>getCraftedText</strong></a>(fileName, text, combPreferences<font color="#909090">=None</font>)</dt><dd><tt>Comb&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-getCraftedTextFromText"><strong>getCraftedTextFromText</strong></a>(gcodeText, combPreferences<font color="#909090">=None</font>)</dt><dd><tt>Comb&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
- <dl><dt><a name="-getDisplayedPreferences"><strong>getDisplayedPreferences</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;displayed&nbsp;preferences.</tt></dd></dl>
+ <dl><dt><a name="-getPreferencesConstructor"><strong>getPreferencesConstructor</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;preferences&nbsp;constructor.</tt></dd></dl>
  <dl><dt><a name="-isLoopNumberEqual"><strong>isLoopNumberEqual</strong></a>(betweenX, betweenXIndex, loopNumber)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;loop&nbsp;number&nbsp;is&nbsp;equal.</tt></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>Display&nbsp;the&nbsp;comb&nbsp;dialog.</tt></dd></dl>
- <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName<font color="#909090">=''</font>)</dt><dd><tt>Comb&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;Chain&nbsp;comb&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;combed.&nbsp;&nbsp;If&nbsp;no&nbsp;fileName&nbsp;is&nbsp;specified,&nbsp;comb&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
+ <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName<font color="#909090">=''</font>)</dt><dd><tt>Comb&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">

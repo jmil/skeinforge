@@ -52,11 +52,15 @@ def findWords( fileNames, search ):
 				if whereInTextFromEnd != whereInText:
 					print( whereInTextFromEnd )
 
-def getDoubleAfterFirstLetter( word ):
-	"""Get the double value of the word after the first letter.
+def getAbsoluteFolderPath( filePath, folderName = '' ):
+	"Get the double value of the word after the first letter."
+	absoluteFolderPath = os.path.dirname( os.path.abspath( filePath ) )
+	if folderName == '':
+		return absoluteFolderPath
+	return os.path.join( absoluteFolderPath, folderName )
 
-	Keyword arguments:
-	word -- string with value starting after the first letter"""
+def getDoubleAfterFirstLetter( word ):
+	"Get the double value of the word after the first letter."
 	return float( word[ 1 : ] )
 
 def getDoubleForLetter( letter, splitLine ):
@@ -81,19 +85,15 @@ def getDoubleFromCharacterSplitLineValue( character, splitLine, value ):
 		return value
 	return splitLineFloat
 
-def getFeedrateMinute( feedrateMinute, splitLine ):
-	"Get the feedrate per minute if the split line has a feedrate."
+def getFeedRateMinute( feedRateMinute, splitLine ):
+	"Get the feed rate per minute if the split line has a feed rate."
 	indexOfF = indexOfStartingWithSecond( "F", splitLine )
 	if indexOfF > 0:
 		return getDoubleAfterFirstLetter( splitLine[ indexOfF ] )
-	return feedrateMinute
+	return feedRateMinute
 
 def getFilesWithFileTypesWithoutWords( fileTypes, words = [], fileInDirectory = '' ):
-	"""Get files which have a given file type, but with do not contain a word in a list.
-
-	Keyword arguments:
-	fileType -- file types required
-	words -- list of words which the file must not have"""
+	"Get files which have a given file type, but with do not contain a word in a list."
 	filesWithFileTypes = []
 	for fileType in fileTypes:
 		filesWithFileTypes += getFilesWithFileTypeWithoutWords( fileType, words, fileInDirectory )
@@ -101,11 +101,7 @@ def getFilesWithFileTypesWithoutWords( fileTypes, words = [], fileInDirectory = 
 	return filesWithFileTypes
 
 def getFilesWithFileTypeWithoutWords( fileType, words = [], fileInDirectory = '' ):
-	"""Get files which have a given file type, but with do not contain a word in a list.
-
-	Keyword arguments:
-	fileType -- file type required
-	words -- list of words which the file must not have"""
+	"Get files which have a given file type, but with do not contain a word in a list."
 	filesWithFileType = []
 	directoryName = os.getcwd()
 	if fileInDirectory != '':
@@ -182,13 +178,19 @@ def getLocationFromSplitLine( oldLocation, splitLine ):
 
 def getModule( fileName, folderName, moduleFilename ):
 	"Get the module from the fileName and folder name."
+	absoluteDirectory = os.path.dirname( os.path.abspath( moduleFilename ) )
+	if folderName != '':
+		absoluteDirectory = os.path.join( absoluteDirectory, folderName )
+	return getModuleWithPath( fileName, absoluteDirectory )
+
+def getModuleWithPath( fileName, folderPath ):
+	"Get the module from the fileName and folder name."
 	if fileName == '':
 		print( 'The file name in getModule in gcodec was empty.' )
 		return None
-	absoluteDirectory = os.path.join( os.path.dirname( os.path.abspath( moduleFilename ) ), folderName )
 	originalSystemPath = sys.path[ : ]
 	try:
-		sys.path.insert( 0, absoluteDirectory )
+		sys.path.insert( 0, folderPath )
 		folderPluginsModule = __import__( fileName )
 		sys.path = originalSystemPath
 		return folderPluginsModule
@@ -199,17 +201,16 @@ def getModule( fileName, folderName, moduleFilename ):
 		print( 'That error means; could not import a module with the fileName ' + fileName )
 		print( 'folder name ' + folderName )
 		print( 'and module fileName ' + moduleFilename )
-		print( 'giving an absolute directory name of ' + absoluteDirectory )
+		print( 'giving an absolute directory name of ' + folderPath )
 		print( '' )
 		print( 'The plugin could not be imported.  So to run ' + fileName + ' directly and at least get a more informative error message,' )
 		print( 'in a shell in the ' + folderName + ' folder type ' )
 		print( '> python ' + fileName + '.py' )
 	return None
 
-def getPluginFilenames( folderName, moduleFilename ):
-	"Get the fileNames of the python plugins in the export_plugins folder."
-	pluginsFolderName = os.path.join( os.path.dirname( os.path.abspath( moduleFilename ) ), folderName )
-	fileInDirectory = os.path.join( pluginsFolderName, '__init__.py' )
+def getPluginFilenamesFromDirectoryPath( directoryPath ):
+	"Get the file names of the python plugins in the directory path."
+	fileInDirectory = os.path.join( directoryPath, '__init__.py' )
 	fullPluginFilenames = getPythonFilenamesExceptInit( fileInDirectory )
 	pluginFilenames = []
 	for fullPluginFilename in fullPluginFilenames:
@@ -379,6 +380,7 @@ def writeFileText( fileName, fileText, writeMode = 'w+' ):
 class DistanceFeedRate:
 	"A class to limit the z feed rate and round values."
 	def __init__( self ):
+		self.absoluteDistanceMode = True
 		self.decimalPlacesCarried = 3
 		self.extrusionDistanceFormat = ''
 		self.maximumZFeedRatePerSecond = None
@@ -395,7 +397,7 @@ class DistanceFeedRate:
 		else:
 			print( "zero length vertex positions array which was skipped over, this should never happen" )
 		if len( thread ) < 2:
-			print( "thread of only one point in gcodec, this should never happen" )
+			print( "thread of only one point in addGcodeFromFeedRateThreadZ in gcodec, this should never happen" )
 			print( thread )
 			return
 		self.addLine( "M101" ) # Turn extruder on.
@@ -410,7 +412,7 @@ class DistanceFeedRate:
 		else:
 			print( "zero length vertex positions array which was skipped over, this should never happen" )
 		if len( thread ) < 2:
-			print( "thread of only one point in gcodec, this should never happen" )
+			print( "thread of only one point in addGcodeFromThreadZ in gcodec, this should never happen" )
 			print( thread )
 			return
 		self.addLine( "M101" ) # Turn extruder on.
@@ -424,7 +426,7 @@ class DistanceFeedRate:
 
 	def addGcodeMovementZWithFeedRate( self, feedRateMinute, point, z ):
 		"Add a movement to the output."
-		self.addLine( self.getLinearGcodeMovementWithFeedrate( feedRateMinute, point, z ) )
+		self.addLine( self.getLinearGcodeMovementWithFeedRate( feedRateMinute, point, z ) )
 
 	def addLine( self, line ):
 		"Add a line of text and a newline to the output."
@@ -432,12 +434,20 @@ class DistanceFeedRate:
 			return
 		splitLine = line.split()
 		firstWord = getFirstWord( splitLine )
+		if firstWord == 'G90':
+			self.absoluteDistanceMode = True
+		elif firstWord == 'G91':
+			self.absoluteDistanceMode = False
+			return
 		if firstWord == '(<extrusionDistanceRatio>':
 			self.extrusionDistanceRatio = float( splitLine[ 1 ] )
 		elif firstWord == 'G1':
-			feedRateMinute = getFeedrateMinute( None, splitLine )
-			location = getLocationFromSplitLine( self.oldAddedLocation, splitLine )
-			line = self.getLinearGcodeMovementWithZLimitedFeedRate( feedRateMinute, location )
+			feedRateMinute = getFeedRateMinute( None, splitLine )
+			if self.absoluteDistanceMode:
+				location = getLocationFromSplitLine( self.oldAddedLocation, splitLine )
+			else:
+				location = self.oldAddedLocation + getLocationFromSplitLine( None, splitLine )
+			line = self.getLineWithZLimitedFeedRate( feedRateMinute, line, splitLine, location )
 			self.oldAddedLocation = location
 		elif firstWord == 'G92':
 			self.oldAddedLocation = getLocationFromSplitLine( self.oldAddedLocation, splitLine )
@@ -452,6 +462,11 @@ class DistanceFeedRate:
 		"Add lines of text to the output."
 		for line in lines:
 			self.addLine( line )
+
+	def addLinesSetAbsoluteDistanceMode( self, lines ):
+		"Add lines of text to the output."
+		self.addLines( lines )
+		self.absoluteDistanceMode = True
 
 	def addPerimeterBlock( self, loop, z ):
 		"Add the perimeter gcode block for the loop."
@@ -473,7 +488,7 @@ class DistanceFeedRate:
 		distance = abs( arcDistanceZ )
 		if distance <= 0.0:
 			return ''
-		feedRateMinute = self.getZLimitedFeedrate( deltaZ, distance, feedRateMinute )
+		feedRateMinute = self.getZLimitedFeedRate( deltaZ, distance, feedRateMinute )
 		return self.getExtrusionDistanceString( distance ) + ' F' + self.getRounded( feedRateMinute )
 
 	def getBoundaryLine( self, location ):
@@ -502,7 +517,7 @@ class DistanceFeedRate:
 		"Get a linear gcode movement."
 		return "G1 X%s Y%s Z%s" % ( self.getRounded( point.real ), self.getRounded( point.imag ), self.getRounded( z ) )
 
-	def getLinearGcodeMovementWithFeedrate( self, feedRateMinute, point, z ):
+	def getLinearGcodeMovementWithFeedRate( self, feedRateMinute, point, z ):
 		"Get a z limited gcode movement."
 		addedLocation = Vector3( point.real, point.imag, z )
 		if addedLocation == self.oldAddedLocation:
@@ -526,14 +541,69 @@ class DistanceFeedRate:
 			return linearGcodeMovement
 		if self.oldAddedLocation != None:
 			deltaZ = abs( location.z - self.oldAddedLocation.z )
-			feedRateMinute = self.getZLimitedFeedrate( deltaZ, distance, feedRateMinute )
+			feedRateMinute = self.getZLimitedFeedRate( deltaZ, distance, feedRateMinute )
 		return linearGcodeMovement + ' F' + self.getRounded( feedRateMinute )
+
+	def getLineWithX( self, line, splitLine, x ):
+		"Get the line with an x."
+		roundedXString = 'X' + self.getRounded( x )
+		indexOfX = indexOfStartingWithSecond( 'X', splitLine )
+		if indexOfX == - 1:
+			return line + ' ' + roundedXString
+		word = splitLine[ indexOfX ]
+		return line.replace( word, roundedXString )
+
+	def getLineWithY( self, line, splitLine, y ):
+		"Get the line with a y."
+		roundedYString = 'Y' + self.getRounded( y )
+		indexOfY = indexOfStartingWithSecond( 'Y', splitLine )
+		if indexOfY == - 1:
+			return line + ' ' + roundedYString
+		word = splitLine[ indexOfY ]
+		return line.replace( word, roundedYString )
+
+	def getLineWithZ( self, line, splitLine, z ):
+		"Get the line with a z."
+		roundedZString = 'Z' + self.getRounded( z )
+		indexOfZ = indexOfStartingWithSecond( 'Z', splitLine )
+		if indexOfZ == - 1:
+			return line + ' ' + roundedZString
+		word = splitLine[ indexOfZ ]
+		return line.replace( word, roundedZString )
+
+	def getLineWithZLimitedFeedRate( self, feedRateMinute, line, splitLine, location ):
+		"Get a replaced limited gcode movement line."
+		if location == self.oldAddedLocation:
+			return ''
+		distance = 0.0
+		extrusionDistanceString = ''
+		if self.oldAddedLocation != None:
+			distance = abs( location - self.oldAddedLocation )
+			extrusionDistanceString = self.getExtrusionDistanceString( distance )
+		indexOfE = indexOfStartingWithSecond( 'E', splitLine )
+		if indexOfE == - 1:
+			line += extrusionDistanceString
+		else:
+			word = ' ' + splitLine[ indexOfE ]
+			line = line.replace( word, extrusionDistanceString )
+#		linearGcodeMovement = self.getLinearGcodeMovement( location.dropAxis( 2 ), location.z ) + extrusionDistanceString
+		if feedRateMinute == None:
+			return line
+		if self.oldAddedLocation != None:
+			deltaZ = abs( location.z - self.oldAddedLocation.z )
+			feedRateMinute = self.getZLimitedFeedRate( deltaZ, distance, feedRateMinute )
+		feedRateString = 'F' + self.getRounded( feedRateMinute )
+		indexOfF = indexOfStartingWithSecond( 'F', splitLine )
+		if indexOfF == - 1:
+			return line + ' ' + feedRateString
+		word = splitLine[ indexOfF ]
+		return line.replace( word, feedRateString )
 
 	def getRounded( self, number ):
 		"Get number rounded to the number of carried decimal places as a string."
 		return euclidean.getRoundedToDecimalPlacesString( self.decimalPlacesCarried, number )
 
-	def getZLimitedFeedrate( self, deltaZ, distance, feedRateMinute ):
+	def getZLimitedFeedRate( self, deltaZ, distance, feedRateMinute ):
 		"Get the z limited feed rate."
 		if self.maximumZFeedRatePerSecond == None:
 			return feedRateMinute
@@ -549,7 +619,7 @@ class DistanceFeedRate:
 			self.decimalPlacesCarried = int( splitLine[ 1 ] )
 		elif firstWord == 'extrusionDistanceFormat':
 			self.extrusionDistanceFormat = splitLine[ 1 ]
-		elif firstWord == 'maximumZFeedratePerSecond':
+		elif firstWord == 'maximumZFeedRatePerSecond':
 			self.maximumZFeedRatePerSecond = float( splitLine[ 1 ] )
 
 	def resetLocationOutput( self ):

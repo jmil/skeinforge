@@ -6,26 +6,22 @@ will not be called.
 
 Clip clips the ends of loops to prevent bumps from forming.  The "Clip Over Extrusion Width (ratio)" is the ratio of the amount
 each end of the loop is clipped over the extrusion width.  The total gap will therefore be twice the clip.  If the ratio is too high
-loops will have a gap, if the ratio is too low there will be a bulge at the loop ends.  To run clip, in a shell type:
-> python clip.py
+loops will have a gap, if the ratio is too low there will be a bulge at the loop ends.
 
-The following examples clip the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the
-folder which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and clip.py.  The clip function will clip if 'Activate Clip' is true,
-which can be set in the dialog or by changing the preferences file 'clip.csv' in the '.skeinforge' folder in your home directory
-with a text editor or a spreadsheet program set to separate tabs.  The functions writeOutput and getChainGcode check
-to see if the text has been clipped, if not they call getChainGcode in comb.py to comb the text; once they have the
-combed text, then they clip.
+The following examples clip the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
+and clip.py.
 
 
 > python clip.py
-This brings up the dialog, after clicking 'Clip', the following is printed:
-File Screw Holder Bottom.stl is being chain clipped.
-The clipped file is saved as Screw Holder Bottom_clip.gcode
+This brings up the clip dialog.
 
 
 > python clip.py Screw Holder Bottom.stl
-File Screw Holder Bottom.stl is being chain clipped.
-The clipped file is saved as Screw Holder Bottom_clip.gcode
+The clip tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The clip tool has created the file:
+.. Screw Holder Bottom_clip.gcode
 
 
 > python
@@ -38,9 +34,11 @@ This brings up the clip dialog.
 
 
 >>> clip.writeOutput()
+The clip tool is parsing the file:
 Screw Holder Bottom.stl
-File Screw Holder Bottom.stl is being chain clipped.
-The clipped file is saved as Screw Holder Bottom_clip.gcode
+..
+The clip tool has created the file:
+.. Screw Holder Bottom_clip.gcode
 
 """
 
@@ -78,16 +76,15 @@ def getCraftedTextFromText( gcodeText, clipPreferences = None ):
 		return gcodeText
 	return ClipSkein().getCraftedGcode( clipPreferences, gcodeText )
 
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( ClipPreferences() )
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return ClipPreferences()
 
 def writeOutput( fileName = '' ):
 	"Clip a gcode linear move file.  Chain clip the gcode if it is not already clipped.  If no fileName is specified, clip the first unmodified gcode file in this folder."
 	fileName = interpret.getFirstTranslatorFileNameUnmodified( fileName )
-	if fileName == '':
-		return
-	consecution.writeChainText( fileName, ' is being chain clipped.', 'The clipped file is saved as ', 'clip' )
+	if fileName != '':
+		consecution.writeChainTextWithNounMessage( fileName, 'clip' )
 
 
 class ClipPreferences:
@@ -104,7 +101,7 @@ class ClipPreferences:
 		self.archive.append( self.fileNameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Clip'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.clip.html' )
 
 	def execute( self ):
@@ -118,7 +115,7 @@ class ClipSkein:
 	"A class to clip a skein of extrusions."
 	def __init__( self ):
 		self.distanceFeedRate = gcodec.DistanceFeedRate()
-		self.feedrateMinute = None
+		self.feedRateMinute = None
 		self.isLoopPerimeter = False
 		self.loopPath = None
 		self.lineIndex = 0
@@ -127,7 +124,7 @@ class ClipSkein:
 	def addGcodeFromThreadZ( self, thread, z ):
 		"Add a gcode thread to the output."
 		if len( thread ) > 0:
-			self.distanceFeedRate.addGcodeMovementZWithFeedRate( self.travelFeedratePerMinute, thread[ 0 ], z )
+			self.distanceFeedRate.addGcodeMovementZWithFeedRate( self.travelFeedRatePerMinute, thread[ 0 ], z )
 		else:
 			print( "zero length vertex positions array which was skipped over, this should never happen" )
 		if len( thread ) < 2:
@@ -136,7 +133,7 @@ class ClipSkein:
 			return
 		self.distanceFeedRate.addLine( 'M101' )
 		for point in thread[ 1 : ]:
-			self.distanceFeedRate.addGcodeMovementZWithFeedRate( self.feedrateMinute, point, z )
+			self.distanceFeedRate.addGcodeMovementZWithFeedRate( self.feedRateMinute, point, z )
 
 	def addTailoredLoopPath( self ):
 		"Add a clipped and jittered loop path."
@@ -172,7 +169,7 @@ class ClipSkein:
 	def linearMove( self, splitLine ):
 		"Add to loop path if this is a loop or path."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
+		self.feedRateMinute = gcodec.getFeedRateMinute( self.feedRateMinute, splitLine )
 		if self.isLoopPerimeter:
 			if self.isNextExtruderOn():
 				self.loopPath = euclidean.PathZ( location.z )
@@ -193,8 +190,8 @@ class ClipSkein:
 			elif firstWord == '(<perimeterWidth>':
 				self.perimeterWidth = float( splitLine[ 1 ] )
 				self.clipLength = clipPreferences.clipOverExtrusionWidth.value * self.perimeterWidth
-			elif firstWord == '(<travelFeedratePerSecond>':
-				self.travelFeedratePerMinute = 60.0 * float( splitLine[ 1 ] )
+			elif firstWord == '(<travelFeedRatePerSecond>':
+				self.travelFeedRatePerMinute = 60.0 * float( splitLine[ 1 ] )
 			self.distanceFeedRate.addLine( line )
 
 	def parseLine( self, line ):
@@ -220,7 +217,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

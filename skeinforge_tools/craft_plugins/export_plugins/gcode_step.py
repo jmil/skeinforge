@@ -1,16 +1,16 @@
 """
 Gcode step is an export plugin to convert gcode from float position to number of steps.
 
-An export plugin is a script in the export_plugins folder which has the functions getOuput, isArchivable and writeOutput.  It is
-meant to be run from the export tool.  To ensure that the plugin works on platforms which do not handle file capitalization
-properly, give the plugin a lower case name.
+An export plugin is a script in the export_plugins folder which has the functions getOuput, and writeOutput.  It is meant to be
+run from the export tool.  To ensure that the plugin works on platforms which do not handle file capitalization properly, give the
+plugin a lower case name.
 
-If the "Add Feedrate Even When Unchanging" checkbox is true, the feedrate will be added even when it did not change
+If the "Add FeedRate Even When Unchanging" checkbox is true, the feedRate will be added even when it did not change
 from the previous line.  If the "Add Space Between Words" checkbox is true, a space will be added between each gcode
 word.  If the "Add Z Even When Unchanging" checkbox is true, the z word will be added even when it did not change.  The
 defaults for these checkboxes are all true. 
 
-The "Feedrate Step Length" is the length of one feedrate increment.  The "Radius Step Length" is the length of one radius
+The "FeedRate Step Length" is the length of one feedRate increment.  The "Radius Step Length" is the length of one radius
 increment.  The "X Step Length" is the length of one x step.  The "Y Step Length" is the length of one y step.  The "Z Step
 Length" is the length of one z step.
 
@@ -48,10 +48,6 @@ def getCharacterIntegerString( character, offset, splitLine, stepLength ):
 	integerValue = int( round( float( floatValue / stepLength ) ) )
 	return character + str( integerValue )
 
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( GcodeStepPreferences() )
-
 def getFloatFromCharacterSplitLine( character, splitLine ):
 	"Get the float after the first occurence of the character in the split line."
 	lineFromCharacter = getStringFromCharacterSplitLine( character, splitLine )
@@ -60,16 +56,18 @@ def getFloatFromCharacterSplitLine( character, splitLine ):
 	return float( lineFromCharacter )
 
 def getOutput( gcodeText, gcodeStepPreferences = None ):
-	"""Get the exported version of a gcode file.  This function, isArchivable and writeOutput are the only necessary functions in a skeinforge export plugin.
+	"""Get the exported version of a gcode file.  This function, and writeOutput are the only necessary functions in a skeinforge export plugin.
 	If this plugin writes an output than should not be printed, an empty string should be returned."""
 	if gcodeText == '':
 		return ''
 	if gcodeStepPreferences == None:
 		gcodeStepPreferences = GcodeStepPreferences()
 		preferences.getReadPreferences( gcodeStepPreferences )
-	skein = GcodeStepSkein()
-	skein.parseGcode( gcodeStepPreferences, gcodeText )
-	return skein.output.getvalue()
+	return GcodeStepSkein().getCraftedGcode( gcodeStepPreferences, gcodeText )
+
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return GcodeStepPreferences()
 
 def getStringFromCharacterSplitLine( character, splitLine ):
 	"Get the string after the first occurence of the character in the split line."
@@ -97,10 +95,6 @@ def indexOfStartingWithSecond( letter, splitLine ):
 			return wordIndex
 	return - 1
 
-def isArchivable():
-	"Return whether or not this plugin is archivable."
-	return True
-
 def isReplacable():
 	"Return whether or not the output from this plugin is replacable.  This should be true if the output is text and false if it is binary."
 	return True
@@ -112,16 +106,16 @@ class GcodeStepPreferences:
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
-		self.addFeedrateEvenWhenUnchanging = preferences.BooleanPreference().getFromValue( 'Add Feedrate Even When Unchanging', True )
-		self.archive.append( self.addFeedrateEvenWhenUnchanging )
+		self.addFeedRateEvenWhenUnchanging = preferences.BooleanPreference().getFromValue( 'Add FeedRate Even When Unchanging', True )
+		self.archive.append( self.addFeedRateEvenWhenUnchanging )
 		self.addSpaceBetweenWords = preferences.BooleanPreference().getFromValue( 'Add Space Between Words', True )
 		self.archive.append( self.addSpaceBetweenWords )
 		self.addZEvenWhenUnchanging = preferences.BooleanPreference().getFromValue( 'Add Z Even When Unchanging', True )
 		self.archive.append( self.addZEvenWhenUnchanging )
 		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Converted to Gcode Step', '' )
 		self.archive.append( self.fileNameInput )
-		self.feedrateStepLength = preferences.FloatPreference().getFromValue( 'Feedrate Step Length (millimeters/second)', 0.1 )
-		self.archive.append( self.feedrateStepLength )
+		self.feedRateStepLength = preferences.FloatPreference().getFromValue( 'FeedRate Step Length (millimeters/second)', 0.1 )
+		self.archive.append( self.feedRateStepLength )
 		self.radiusStepLength = preferences.FloatPreference().getFromValue( 'Radius Step Length (millimeters)', 0.1 )
 		self.archive.append( self.radiusStepLength )
 		self.xStepLength = preferences.FloatPreference().getFromValue( 'X Step Length (millimeters)', 0.1 )
@@ -138,7 +132,7 @@ class GcodeStepPreferences:
 		self.archive.append( self.zOffset )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Convert to Gcode Step'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.export_plugins.gcode_step.html' )
 
 	def execute( self ):
@@ -151,7 +145,7 @@ class GcodeStepPreferences:
 class GcodeStepSkein:
 	"A class to convert gcode into 16 byte binary segments."
 	def __init__( self ):
-		self.oldFeedrateString = None
+		self.oldFeedRateString = None
 		self.oldZString = None
 		self.output = cStringIO.StringIO()
 
@@ -172,12 +166,13 @@ class GcodeStepSkein:
 			lineStringIO.write( ' ' )
 		lineStringIO.write( wordString )
 
-	def parseGcode( self, gcodeStepPreferences, gcodeText ):
+	def getCraftedGcode( self, gcodeStepPreferences, gcodeText ):
 		"Parse gcode text and store the gcode."
 		self.gcodeStepPreferences = gcodeStepPreferences
 		lines = getTextLines( gcodeText )
 		for line in lines:
 			self.parseLine( line )
+		return self.output.getvalue()
 
 	def parseLine( self, line ):
 		"Parse a gcode line."
@@ -201,15 +196,15 @@ class GcodeStepSkein:
 		self.addCharacterInteger( 'X', lineStringIO, self.gcodeStepPreferences.xOffset.value, splitLine, self.gcodeStepPreferences.xStepLength.value )
 		self.addCharacterInteger( 'Y', lineStringIO, self.gcodeStepPreferences.yOffset.value, splitLine, self.gcodeStepPreferences.yStepLength.value )
 		zString = getCharacterIntegerString( 'Z', self.gcodeStepPreferences.zOffset.value, splitLine, self.gcodeStepPreferences.zStepLength.value )
-		feedrateString = getCharacterIntegerString( 'F', 0.0, splitLine, self.gcodeStepPreferences.feedrateStepLength.value )
+		feedRateString = getCharacterIntegerString( 'F', 0.0, splitLine, self.gcodeStepPreferences.feedRateStepLength.value )
 		if zString != None:
 			if zString != self.oldZString or self.gcodeStepPreferences.addZEvenWhenUnchanging.value:
 				self.addStringToLine( lineStringIO, zString )
-		if feedrateString != None:
-			if feedrateString != self.oldFeedrateString or self.gcodeStepPreferences.addFeedrateEvenWhenUnchanging.value:
-				self.addStringToLine( lineStringIO, feedrateString )
+		if feedRateString != None:
+			if feedRateString != self.oldFeedRateString or self.gcodeStepPreferences.addFeedRateEvenWhenUnchanging.value:
+				self.addStringToLine( lineStringIO, feedRateString )
 		self.addLine( lineStringIO.getvalue() )
-		self.oldFeedrateString = feedrateString
+		self.oldFeedRateString = feedRateString
 		self.oldZString = zString
 
 
@@ -218,7 +213,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

@@ -120,7 +120,16 @@ def addSegmentToPixelTable( beginComplex, endComplex, pixelTable, shortenDistanc
 		beginComplex = newBeginComplex
 	deltaX = endComplex.real - beginComplex.real
 	deltaY = endComplex.imag - beginComplex.imag
-	gradient = deltaY / deltaX
+	if deltaX > 0.0:
+		gradient = deltaY / deltaX
+	else:
+		gradient = 0.0
+		print( 'This should never happen, deltaX in addSegmentToPixelTable in euclidean is 0.' )
+		print( beginComplex )
+		print( endComplex )
+		print( shortenDistanceBegin )
+		print( shortenDistanceEnd )
+		print( width )
 	xEnd = int( round( beginComplex.real ) )
 	yEnd = beginComplex.imag + gradient * ( xEnd - beginComplex.real )
 	xGap = getReverseFloatPart( beginComplex.real + 0.5 )
@@ -342,6 +351,15 @@ def getFillOfSurroundings( surroundingLoops ):
 def getFloatPart( number ):
 	"Get the float part of the number."
 	return number - math.floor( number )
+
+def getFourSignificantFigures( number ):
+	"Get number rounded to four significant figures as a string."
+	absoluteNumber = abs( number )
+	if absoluteNumber >= 100.0:
+		return getRoundedToDecimalPlacesString( 2, number )
+	if absoluteNumber < 0.000000001:
+		return getRoundedToDecimalPlacesString( 13, number )
+	return getRoundedToDecimalPlacesString( 3 - math.floor( math.log10( absoluteNumber ) ), number )
 
 def getFrontOfLoops( loops ):
 	"Get the front of the loops."
@@ -572,6 +590,9 @@ def getPathsFromEndpoints( endpoints, fillInset, pixelTable, width ):
 		otherEndpoint = nextEndpoint.otherEndpoint
 		hop = nextEndpoint.getHop( fillInset, path )
 		if hop != None:
+			if len( path ) < 2:
+				print( 'path of length one in getPathsFromEndpoints in euclidean, this should never happen')
+				print( path )
 			path = [ hop ]
 			paths.append( path )
 		addPointToPath( path, pixelTable, otherEndpoint.point, width )
@@ -647,14 +668,10 @@ def getRoundedToDecimalPlacesString( decimalPlaces, number ):
 
 def getRoundedToThreePlaces( number ):
 	"Get number rounded to three places as a string."
-	return str( 0.001 * round( number * 1000.0 ) )
+	return str( round( number, 3 ) )
 
 def getRoundZAxisByPlaneAngle( planeAngle, vector3 ):
-	"""Get Vector3 rotated by a plane angle.
-
-	Keyword arguments:
-	planeAngle - plane angle of the rotation
-	vector3 - Vector3 whose rotation will be returned"""
+	"Get Vector3 rotated by a plane angle."
 	return Vector3( vector3.x * planeAngle.real - vector3.y * planeAngle.imag, vector3.x * planeAngle.imag + vector3.y * planeAngle.real, vector3.z )
 
 def getSegmentFromPoints( begin, end ):
@@ -732,6 +749,15 @@ def getSquareValues( pixelTable, x, y ):
 def getStepKey( x, y ):
 	"Get step key for x and y."
 	return ( x, y )
+
+def getThreeSignificantFigures( number ):
+	"Get number rounded to three significant figures as a string."
+	absoluteNumber = abs( number )
+	if absoluteNumber >= 10.0:
+		return getRoundedToDecimalPlacesString( 1, number )
+	if absoluteNumber < 0.000000001:
+		return getRoundedToDecimalPlacesString( 12, number )
+	return getRoundedToDecimalPlacesString( 2 - math.floor( math.log10( absoluteNumber ) ), number )
 
 def getTransferClosestSurroundingLoop( oldOrderedLocation, remainingSurroundingLoops, skein ):
 	"Get and transfer the closest remaining surrounding loop."
@@ -1125,23 +1151,46 @@ class RotatedLoopLayer:
 		"Get the string representation of this rotated loop layer."
 		return '%s, %s, %s' % ( self.z, self.rotation, self.loops )
 
+	def getCopyAtZ( self, z ):
+		"Get a raised copy."
+		raisedRotatedLoopLayer = RotatedLoopLayer( z )
+		for loop in self.loops:
+			raisedRotatedLoopLayer.loops.append( loop[ : ] )
+		raisedRotatedLoopLayer.rotation = self.rotation
+		return raisedRotatedLoopLayer
+
 
 class SurroundingLoop:
 	"A loop that surrounds paths."
-	def __init__( self, isOutsideExtrudedFirst = True ):
+	def __init__( self, threadSequence ):
+		self.addToThreadsFunctions = []
 		self.boundary = []
 		self.extraLoops = []
+		self.infillPaths = []
 		self.innerSurroundings = None
-		self.isOutsideExtrudedFirst = isOutsideExtrudedFirst
 		self.lastFillLoops = None
 		self.loop = None
-		self.paths = []
 		self.perimeterPaths = []
 		self.z = None
+		threadFunctionTable = { 'infill' : self.transferInfillPaths, 'loops' : self.transferClosestFillLoops, 'perimeter' : self.addPerimeterInner }
+#		threadSequence = [ 'loops', 'perimeter', 'infill' ]
+#		if isOutsideExtrudedFirst:
+#			threadSequence = [ 'perimeter', 'loops', 'infill' ]
+		for threadType in threadSequence:
+			self.addToThreadsFunctions.append( threadFunctionTable[ threadType ] )
 
 	def __repr__( self ):
 		"Get the string representation of this surrounding loop."
-		return '%s, %s, %s, %s' % ( self.boundary, self.innerSurroundings, self.paths, self.perimeterPaths )
+		stringRepresentation = 'boundary\n%s\n' % self.boundary
+		stringRepresentation = 'loop\n%s\n' % self.loop
+		stringRepresentation += 'inner surroundings\n%s\n' % self.innerSurroundings
+		stringRepresentation += 'infillPaths\n'
+		for infillPath in self.infillPaths:
+			stringRepresentation += 'infillPath\n%s\n' % infillPath
+		stringRepresentation += 'perimeterPaths\n'
+		for perimeterPath in self.perimeterPaths:
+			stringRepresentation += 'perimeterPath\n%s\n' % perimeterPath
+		return stringRepresentation + '\n'
 
 	def addToBoundary( self, vector3 ):
 		"Add vector3 to boundary."
@@ -1155,20 +1204,20 @@ class SurroundingLoop:
 		self.loop.append( vector3.dropAxis( 2 ) )
 		self.z = vector3.z
 
-	def addToThreads( self, oldOrderedLocation, skein ):
-		"Add to paths from the last location."
+	def addPerimeterInner( self, oldOrderedLocation, skein ):
+		"Add to the perimeter and the inner island."
 		addSurroundingLoopBeginning( self.boundary, skein, self.z )
-		if not self.isOutsideExtrudedFirst:
-			self.transferClosestFillLoops( oldOrderedLocation, skein )
 		if self.loop == None:
 			transferClosestPaths( oldOrderedLocation, self.perimeterPaths[ : ], skein )
 		else:
-			addToThreadsFromLoop( self.extrusionHalfWidth, '(<perimeter>)', self.loop[ : ], oldOrderedLocation, skein )#later when comb is updated replace perimeter with loop
+			addToThreadsFromLoop( self.extrusionHalfWidth, '(<perimeter>)', self.loop[ : ], oldOrderedLocation, skein )
 		skein.distanceFeedRate.addLine( '(</surroundingLoop>)' )
 		addToThreadsRemoveFromSurroundings( oldOrderedLocation, self.innerSurroundings[ : ], skein )
-		if self.isOutsideExtrudedFirst:
-			self.transferClosestFillLoops( oldOrderedLocation, skein )
-		transferClosestPaths( oldOrderedLocation, self.paths[ : ], skein )
+
+	def addToThreads( self, oldOrderedLocation, skein ):
+		"Add to paths from the last location. perimeter>inner >fill>paths or fill> perimeter>inner >paths"
+		for addToThreadsFunction in self.addToThreadsFunctions:
+			addToThreadsFunction( oldOrderedLocation, skein )
 
 	def getFillLoops( self ):
 		"Get last fill loops from the outside loop and the loops inside the inside loops."
@@ -1202,11 +1251,15 @@ class SurroundingLoop:
 		while len( remainingFillLoops ) > 0:
 			transferClosestFillLoop( self.extrusionHalfWidth, oldOrderedLocation, remainingFillLoops, skein )
 
+	def transferInfillPaths( self, oldOrderedLocation, skein ):
+		"Transfer the infill paths."
+		transferClosestPaths( oldOrderedLocation, self.infillPaths[ : ], skein )
+
 	def transferPaths( self, paths ):
 		"Transfer paths."
 		for surroundingLoop in self.innerSurroundings:
 			transferPathsToSurroundingLoops( paths, surroundingLoop.innerSurroundings )
-		self.paths = getTransferredPaths( paths, self.boundary )
+		self.infillPaths = getTransferredPaths( paths, self.boundary )
 
 
 class XIntersectionIndex:

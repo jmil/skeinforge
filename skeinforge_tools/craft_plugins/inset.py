@@ -15,21 +15,27 @@ width over thickness ratio is the ratio of the extrusion width over the layer th
 
 The 'Infill Perimeter Overlap' ratio is the amount the infill overlaps the perimeter over the extrusion width.  The higher the value the
 more the infill will overlap the perimeter, and the thicker join between the infill and the perimeter.  If the value is too high, the join will
-be so thick that the nozzle will run plow through the join below making a mess, the default is 0.05.  There are two choices for the
+be so thick that the nozzle will run plow through the join below making a mess, the default is 0.15.  There are two choices for the
 infill perimeter overlap method of calculation.  If the 'Calculate Overlap from Perimeter and Infill' option is chosen, the overlap will be
 calculated from the average of the perimeter width and the infill width, this is the default choice.  If the 'Calculate Overlap from
 Perimeter Only' option is chosen, the overlap will be calculated from the perimeter width only.
 
 If "Remove Extrusion Overlap" is selected, any extrusion that intersects itself will be removed, the default is on.
 
-The following examples inset the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in
-the folder which contains Screw Holder Bottom.stl and inset.py.
+The following examples inset the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
+and inset.py.
 
 
 > python inset.py
-This brings up the dialog, after clicking 'Inset', the following is printed:
-File Screw Holder Bottom.stl is being chain insetted.
-The insetted file is saved as Screw Holder Bottom_inset.gcode
+This brings up the inset dialog.
+
+
+> python inset.py Screw Holder Bottom.stl
+The inset tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The inset tool has created the file:
+.. Screw Holder Bottom_inset.gcode
 
 
 > python
@@ -38,15 +44,15 @@ Python 2.5.1 (r251:54863, Sep 22 2007, 01:43:31)
 Type "help", "copyright", "credits" or "license" for more information.
 >>> import inset
 >>> inset.main()
-File Screw Holder Bottom.stl is being insetted.
-The insetted file is saved as Screw Holder Bottom_inset.gcode
-It took 3 seconds to inset the file.
+This brings up the inset dialog.
 
 
 >>> inset.writeOutput()
-File Screw Holder Bottom.stl is being insetted.
-The insetted file is saved as Screw Holder Bottom_inset.gcode
-It took 3 seconds to inset the file.
+The inset tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The inset tool has created the file:
+.. Screw Holder Bottom_inset.gcode
 
 """
 
@@ -156,14 +162,9 @@ def getCraftedTextFromText( gcodeText, insetPreferences = None ):
 		insetPreferences = preferences.getReadPreferences( InsetPreferences() )
 	return InsetSkein().getCraftedGcode( insetPreferences, gcodeText )
 
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( InsetPreferences() )
-
-def getLargestInsetLoopFromLoop( loop, radius ):
-	"Get the largest inset loop from the loop."
-	loops = intercircle.getInsetLoopsFromLoop( radius, loop )
-	return euclidean.getLargestLoop( loops )
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return InsetPreferences()
 
 def getSegmentsFromPoints( aroundLists, loopLists, pointBegin, pointEnd ):
 	"Get endpoint segments from the beginning and end of a line segment."
@@ -242,9 +243,8 @@ def isSegmentInsideAround( aroundLists, segment ):
 def writeOutput( fileName = '' ):
 	"Inset the carving of a gcode file.  If no fileName is specified, inset the first unmodified gcode file in this folder."
 	fileName = interpret.getFirstTranslatorFileNameUnmodified( fileName )
-	if fileName == '':
-		return
-	consecution.writeChainText( fileName, ' is being chain insetted.', 'The insetted file is saved as ', 'inset' )
+	if fileName != '':
+		consecution.writeChainTextWithNounMessage( fileName, 'inset' )
 
 
 class InsetPreferences:
@@ -262,7 +262,7 @@ class InsetPreferences:
 		self.archive.append( self.fileNameInput )
 		self.infillBridgeWidthOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Infill Bridge Width over Extrusion Width (ratio):', 1.0 )
 		self.archive.append( self.infillBridgeWidthOverExtrusionWidth )
-		self.infillPerimeterOverlap = preferences.FloatPreference().getFromValue( 'Infill Perimeter Overlap (ratio):', 0.05 )
+		self.infillPerimeterOverlap = preferences.FloatPreference().getFromValue( 'Infill Perimeter Overlap (ratio):', 0.15 )
 		self.archive.append( self.infillPerimeterOverlap )
 		self.infillPerimeterOverlapMethodOfCalculationLabel = preferences.LabelDisplay().getFromName( 'Infill Perimeter Overlap Method of Calculation: ' )
 		self.archive.append( self.infillPerimeterOverlapMethodOfCalculationLabel )
@@ -277,7 +277,7 @@ class InsetPreferences:
 		self.archive.append( self.turnExtruderHeaterOffAtShutDown )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Inset'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.inset.html' )
 
 	def execute( self ):
@@ -339,15 +339,7 @@ class InsetSkein:
 
 	def addGcodeFromRemainingLoop( self, loop, loopLists, radius, z ):
 		"Add the remainder of the loop which does not overlap the alreadyFilledArounds loops."
-		boundary = getLargestInsetLoopFromLoop( loop, - radius )
-		if boundary == None:
-			boundary = getLargestInsetLoopFromLoop( loop, - 0.55 * radius )
-		if boundary == None:
-			boundary = getLargestInsetLoopFromLoop( loop, - 0.35 * radius )
-		if boundary == None:
-			print( 'This should never happen, there should always be a boundary in addGcodeFromRemainingLoop in inset.' )
-			print( loop )
-			boundary = loop
+		boundary = intercircle.getLargestInsetLoopFromLoopNoMatterWhat( loop, - radius )
 		euclidean.addSurroundingLoopBeginning( boundary, self, z )
 		self.addGcodePerimeterBlockFromRemainingLoop( loop, loopLists, radius, z )
 		self.distanceFeedRate.addLine( '(</surroundingLoop>)' )
@@ -355,13 +347,13 @@ class InsetSkein:
 	def addGcodePerimeterBlockFromRemainingLoop( self, loop, loopLists, radius, z ):
 		"Add the perimter block remainder of the loop which does not overlap the alreadyFilledArounds loops."
 		if not self.insetPreferences.removeExtrusionOverlap.value:
-			self.addPerimeterBlock( loop, z )
+			self.distanceFeedRate.addPerimeterBlock( loop, z )
 			return
 		isIntersectingSelf = isIntersectingItself( loop, self.extrusionWidth )
 		if isIntersectingWithinLists( loop, loopLists ) or isIntersectingSelf:
 			self.addGcodeFromPerimeterPaths( isIntersectingSelf, loop, loopLists, radius, z )
 		else:
-			self.addPerimeterBlock( loop, z )
+			self.distanceFeedRate.addPerimeterBlock( loop, z )
 
 	def addInitializationToOutput( self ):
 		"Add initialization gcode to the output."
@@ -375,18 +367,12 @@ class InsetSkein:
 		self.distanceFeedRate.addLine( '(<layer> %s )' % rotatedBoundaryLayer.z ) # Indicate that a new layer is starting.
 		if rotatedBoundaryLayer.rotation != None:
 			halfWidth *= self.insetPreferences.infillBridgeWidthOverExtrusionWidth.value
-			self.distanceFeedRate.addTagBracketedLine( 'bridgeDirection', rotatedBoundaryLayer.rotation ) # Indicate the bridge direction.
+			self.distanceFeedRate.addTagBracketedLine( 'bridgeRotation', rotatedBoundaryLayer.rotation ) # Indicate the bridge rotation.
 		extrudateLoops = intercircle.getInsetLoopsFromLoops( halfWidth, rotatedBoundaryLayer.loops )
 		for extrudateLoop in extrudateLoops:
 			self.addGcodeFromRemainingLoop( extrudateLoop, alreadyFilledArounds, halfWidth, rotatedBoundaryLayer.z )
-			addAlreadyFilledArounds( alreadyFilledArounds, extrudateLoop, self.fillInset )
+			addAlreadyFilledArounds( alreadyFilledArounds, extrudateLoop, self.fromExtrusionFillInset )
 		self.distanceFeedRate.addLine( '(</layer>)' )
-
-	def addPerimeterBlock( self, loop, z ):
-		"Add the perimeter gcode block for the loop."
-		self.distanceFeedRate.addLine( '(<perimeter>)' ) # Indicate that a perimeter is beginning.
-		self.distanceFeedRate.addGcodeFromThreadZ( loop + [ loop[ 0 ] ], z )
-		self.distanceFeedRate.addLine( '(</perimeter>)' ) # Indicate that a perimeter is beginning.
 
 	def addRotatedLoopLayer( self, z ):
 		"Add rotated loop layer."
@@ -427,10 +413,10 @@ class InsetSkein:
 			elif firstWord == '(<perimeterWidth>':
 				self.perimeterWidth = float( splitLine[ 1 ] )
 				self.halfPerimeterWidth = 0.5 * self.perimeterWidth
-				self.fillInset = self.perimeterWidth - self.perimeterWidth * self.insetPreferences.infillPerimeterOverlap.value
+				self.fromExtrusionFillInset = self.perimeterWidth - self.perimeterWidth * self.insetPreferences.infillPerimeterOverlap.value
 				if self.insetPreferences.perimeterInfillPreference.value:
-					self.fillInset = self.halfPerimeterWidth + 0.5 * self.extrusionWidth - self.extrusionWidth * self.insetPreferences.infillPerimeterOverlap.value
-				self.distanceFeedRate.addTagBracketedLine( 'fillInset', self.fillInset )
+					self.fromExtrusionFillInset = self.halfPerimeterWidth + 0.5 * self.extrusionWidth - self.extrusionWidth * self.insetPreferences.infillPerimeterOverlap.value
+				self.distanceFeedRate.addTagBracketedLine( 'fillInset', self.fromExtrusionFillInset )
 		# Set bridge extrusion width
 			elif firstWord == '(<layer>':
 				self.lineIndex -= 1
@@ -452,7 +438,7 @@ class InsetSkein:
 		if firstWord == '(<boundaryPoint>':
 			location = gcodec.getLocationFromSplitLine( None, splitLine )
 			self.boundary.append( location.dropAxis( 2 ) )
-		elif ( firstWord == '(<bridgeDirection>' or firstWord == '<!--bridgeDirection-->' ):
+		elif ( firstWord == '(<bridgeRotation>' or firstWord == '<!--bridgeRotation-->' ):
 			secondWordWithoutBrackets = splitLine[ 1 ].replace( '(', '' ).replace( ')', '' )
 			self.rotatedBoundaryLayer.rotation = complex( secondWordWithoutBrackets )
 		elif firstWord == '(<layer>':
@@ -471,7 +457,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

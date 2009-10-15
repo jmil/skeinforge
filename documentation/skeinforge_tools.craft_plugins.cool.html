@@ -11,54 +11,42 @@
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/craft_plugins/cool.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/craft_plugins/cool.py</a></font></td></tr></table>
     <p><tt>Cool&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;cool&nbsp;the&nbsp;shape.<br>
 &nbsp;<br>
-Allan&nbsp;Ecker&nbsp;aka&nbsp;The&nbsp;Masked&nbsp;Retriever's&nbsp;has&nbsp;written&nbsp;the&nbsp;following&nbsp;quicktip&nbsp;for&nbsp;cool.<br>
-"Skeinforge&nbsp;Quicktip:&nbsp;Cool"&nbsp;at:&nbsp;<a href="http://blog.thingiverse.com/2009/07/28/skeinforge-quicktip-cool/">http://blog.thingiverse.com/2009/07/28/skeinforge-quicktip-cool/</a><br>
+Allan&nbsp;Ecker&nbsp;aka&nbsp;The&nbsp;Masked&nbsp;Retriever's&nbsp;has&nbsp;written&nbsp;the&nbsp;quicktip&nbsp;for&nbsp;cool&nbsp;which&nbsp;follows&nbsp;below.<br>
+"Skeinforge&nbsp;Quicktip:&nbsp;Cool"&nbsp;at:<br>
+<a href="http://blog.thingiverse.com/2009/07/28/skeinforge-quicktip-cool/">http://blog.thingiverse.com/2009/07/28/skeinforge-quicktip-cool/</a><br>
 &nbsp;<br>
-The&nbsp;default&nbsp;'Activate&nbsp;Cool'&nbsp;checkbox&nbsp;is&nbsp;on.&nbsp;&nbsp;When&nbsp;it&nbsp;is&nbsp;on,&nbsp;the&nbsp;functions&nbsp;described&nbsp;below&nbsp;will&nbsp;work,&nbsp;when&nbsp;it&nbsp;is&nbsp;off,&nbsp;the&nbsp;functions<br>
-will&nbsp;not&nbsp;be&nbsp;called.<br>
+The&nbsp;default&nbsp;'Activate&nbsp;Cool'&nbsp;checkbox&nbsp;is&nbsp;on.&nbsp;&nbsp;When&nbsp;it&nbsp;is&nbsp;on,&nbsp;the&nbsp;functions&nbsp;described&nbsp;below&nbsp;will&nbsp;work,&nbsp;when&nbsp;it&nbsp;is&nbsp;off,&nbsp;the&nbsp;functions&nbsp;will&nbsp;not&nbsp;be&nbsp;called.<br>
 &nbsp;<br>
-The&nbsp;important&nbsp;value&nbsp;for&nbsp;the&nbsp;cool&nbsp;preferences&nbsp;is&nbsp;"Minimum&nbsp;Layer&nbsp;Time&nbsp;(seconds)"&nbsp;which&nbsp;is&nbsp;the&nbsp;minimum&nbsp;amount&nbsp;of&nbsp;time&nbsp;the<br>
-extruder&nbsp;will&nbsp;spend&nbsp;on&nbsp;a&nbsp;layer.&nbsp;&nbsp;If&nbsp;it&nbsp;takes&nbsp;less&nbsp;time&nbsp;to&nbsp;extrude&nbsp;the&nbsp;layer&nbsp;than&nbsp;the&nbsp;minimum&nbsp;layer&nbsp;time,&nbsp;cool&nbsp;adds&nbsp;orbits&nbsp;with&nbsp;the<br>
-extruder&nbsp;off&nbsp;to&nbsp;give&nbsp;the&nbsp;layer&nbsp;time&nbsp;to&nbsp;cool,&nbsp;so&nbsp;that&nbsp;the&nbsp;next&nbsp;layer&nbsp;is&nbsp;not&nbsp;extruded&nbsp;on&nbsp;a&nbsp;molten&nbsp;base.&nbsp;&nbsp;The&nbsp;orbits&nbsp;will&nbsp;be&nbsp;around&nbsp;the<br>
-largest&nbsp;island&nbsp;on&nbsp;that&nbsp;layer.&nbsp;&nbsp;If&nbsp;the&nbsp;area&nbsp;of&nbsp;the&nbsp;largest&nbsp;island&nbsp;is&nbsp;as&nbsp;large&nbsp;as&nbsp;the&nbsp;square&nbsp;of&nbsp;the&nbsp;"Minimum&nbsp;Orbital&nbsp;Radius"&nbsp;then&nbsp;the<br>
-orbits&nbsp;will&nbsp;be&nbsp;just&nbsp;within&nbsp;the&nbsp;island.&nbsp;&nbsp;If&nbsp;the&nbsp;island&nbsp;is&nbsp;smaller,&nbsp;then&nbsp;the&nbsp;orbits&nbsp;will&nbsp;be&nbsp;in&nbsp;a&nbsp;square&nbsp;of&nbsp;the&nbsp;"Minimum&nbsp;Orbital&nbsp;Radius"<br>
-around&nbsp;the&nbsp;center&nbsp;of&nbsp;the&nbsp;island.<br>
+The&nbsp;important&nbsp;value&nbsp;for&nbsp;the&nbsp;cool&nbsp;preferences&nbsp;is&nbsp;"Minimum&nbsp;Layer&nbsp;Time&nbsp;(seconds)"&nbsp;which&nbsp;is&nbsp;the&nbsp;minimum&nbsp;amount&nbsp;of&nbsp;time&nbsp;the&nbsp;extruder&nbsp;will&nbsp;spend&nbsp;on&nbsp;a<br>
+layer.&nbsp;&nbsp;If&nbsp;it&nbsp;takes&nbsp;less&nbsp;time&nbsp;to&nbsp;extrude&nbsp;the&nbsp;layer&nbsp;than&nbsp;the&nbsp;minimum&nbsp;layer&nbsp;time,&nbsp;cool&nbsp;adds&nbsp;orbits&nbsp;with&nbsp;the&nbsp;extruder&nbsp;off&nbsp;to&nbsp;give&nbsp;the&nbsp;layer&nbsp;time&nbsp;to&nbsp;cool,&nbsp;so<br>
+that&nbsp;the&nbsp;next&nbsp;layer&nbsp;is&nbsp;not&nbsp;extruded&nbsp;on&nbsp;a&nbsp;molten&nbsp;base.&nbsp;&nbsp;The&nbsp;orbits&nbsp;will&nbsp;be&nbsp;around&nbsp;the&nbsp;largest&nbsp;island&nbsp;on&nbsp;that&nbsp;layer.&nbsp;&nbsp;If&nbsp;the&nbsp;area&nbsp;of&nbsp;the&nbsp;largest&nbsp;island&nbsp;is&nbsp;as<br>
+large&nbsp;as&nbsp;the&nbsp;square&nbsp;of&nbsp;the&nbsp;"Minimum&nbsp;Orbital&nbsp;Radius"&nbsp;then&nbsp;the&nbsp;orbits&nbsp;will&nbsp;be&nbsp;just&nbsp;within&nbsp;the&nbsp;island.&nbsp;&nbsp;If&nbsp;the&nbsp;island&nbsp;is&nbsp;smaller,&nbsp;then&nbsp;the&nbsp;orbits&nbsp;will&nbsp;be&nbsp;in&nbsp;a<br>
+square&nbsp;of&nbsp;the&nbsp;"Minimum&nbsp;Orbital&nbsp;Radius"&nbsp;around&nbsp;the&nbsp;center&nbsp;of&nbsp;the&nbsp;island.<br>
 &nbsp;<br>
-Before&nbsp;the&nbsp;orbits,&nbsp;if&nbsp;there&nbsp;is&nbsp;a&nbsp;file&nbsp;cool_start.txt,&nbsp;cool&nbsp;will&nbsp;add&nbsp;that&nbsp;to&nbsp;the&nbsp;start&nbsp;of&nbsp;the&nbsp;orbits.&nbsp;After&nbsp;it&nbsp;has&nbsp;added&nbsp;the&nbsp;orbits,&nbsp;it&nbsp;will<br>
-add&nbsp;the&nbsp;file&nbsp;cool_end.txt&nbsp;if&nbsp;it&nbsp;exists.&nbsp;&nbsp;Cool&nbsp;does&nbsp;not&nbsp;care&nbsp;if&nbsp;the&nbsp;text&nbsp;file&nbsp;names&nbsp;are&nbsp;capitalized,&nbsp;but&nbsp;some&nbsp;file&nbsp;systems&nbsp;do&nbsp;not<br>
-handle&nbsp;file&nbsp;name&nbsp;cases&nbsp;properly,&nbsp;so&nbsp;to&nbsp;be&nbsp;on&nbsp;the&nbsp;safe&nbsp;side&nbsp;you&nbsp;should&nbsp;give&nbsp;them&nbsp;lower&nbsp;case&nbsp;names.&nbsp;&nbsp;Cool&nbsp;looks&nbsp;for&nbsp;those&nbsp;files<br>
-in&nbsp;the&nbsp;alterations&nbsp;folder&nbsp;in&nbsp;the&nbsp;.skeinforge&nbsp;folder&nbsp;in&nbsp;the&nbsp;home&nbsp;directory.&nbsp;If&nbsp;it&nbsp;doesn't&nbsp;find&nbsp;the&nbsp;file&nbsp;it&nbsp;then&nbsp;looks&nbsp;in&nbsp;the&nbsp;alterations<br>
-folder&nbsp;in&nbsp;the&nbsp;skeinforge_tools&nbsp;folder.&nbsp;If&nbsp;it&nbsp;doesn't&nbsp;find&nbsp;anything&nbsp;there&nbsp;it&nbsp;looks&nbsp;in&nbsp;the&nbsp;skeinforge_tools&nbsp;folder.&nbsp;&nbsp;The&nbsp;cool&nbsp;start&nbsp;and<br>
-end&nbsp;text&nbsp;idea&nbsp;is&nbsp;from:<br>
+Before&nbsp;the&nbsp;orbits,&nbsp;if&nbsp;there&nbsp;is&nbsp;a&nbsp;file&nbsp;cool_start.gcode,&nbsp;cool&nbsp;will&nbsp;add&nbsp;that&nbsp;to&nbsp;the&nbsp;start&nbsp;of&nbsp;the&nbsp;orbits.&nbsp;After&nbsp;it&nbsp;has&nbsp;added&nbsp;the&nbsp;orbits,&nbsp;it&nbsp;will&nbsp;add&nbsp;the&nbsp;file<br>
+cool_end.gcode&nbsp;if&nbsp;it&nbsp;exists.&nbsp;&nbsp;Cool&nbsp;does&nbsp;not&nbsp;care&nbsp;if&nbsp;the&nbsp;text&nbsp;file&nbsp;names&nbsp;are&nbsp;capitalized,&nbsp;but&nbsp;some&nbsp;file&nbsp;systems&nbsp;do&nbsp;not&nbsp;handle&nbsp;file&nbsp;name&nbsp;cases&nbsp;properly,&nbsp;so<br>
+to&nbsp;be&nbsp;on&nbsp;the&nbsp;safe&nbsp;side&nbsp;you&nbsp;should&nbsp;give&nbsp;them&nbsp;lower&nbsp;case&nbsp;names.&nbsp;&nbsp;Cool&nbsp;looks&nbsp;for&nbsp;those&nbsp;files&nbsp;in&nbsp;the&nbsp;alterations&nbsp;folder&nbsp;in&nbsp;the&nbsp;.skeinforge&nbsp;folder&nbsp;in&nbsp;the&nbsp;home<br>
+directory.&nbsp;If&nbsp;it&nbsp;doesn't&nbsp;find&nbsp;the&nbsp;file&nbsp;it&nbsp;then&nbsp;looks&nbsp;in&nbsp;the&nbsp;alterations&nbsp;folder&nbsp;in&nbsp;the&nbsp;skeinforge_tools&nbsp;folder.&nbsp;If&nbsp;it&nbsp;doesn't&nbsp;find&nbsp;anything&nbsp;there&nbsp;it&nbsp;looks&nbsp;in&nbsp;the<br>
+skeinforge_tools&nbsp;folder.&nbsp;&nbsp;The&nbsp;cool&nbsp;start&nbsp;and&nbsp;end&nbsp;text&nbsp;idea&nbsp;is&nbsp;from:<br>
 <a href="http://makerhahn.blogspot.com/2008/10/yay-minimug.html">http://makerhahn.blogspot.com/2008/10/yay-minimug.html</a><br>
 &nbsp;<br>
-If&nbsp;the&nbsp;'Turn&nbsp;Fan&nbsp;On&nbsp;at&nbsp;Beginning'&nbsp;preference&nbsp;is&nbsp;true,&nbsp;cool&nbsp;will&nbsp;turn&nbsp;the&nbsp;fan&nbsp;on&nbsp;at&nbsp;the&nbsp;beginning&nbsp;of&nbsp;the&nbsp;fabrication.&nbsp;&nbsp;If&nbsp;the<br>
-'Turn&nbsp;Fan&nbsp;Off&nbsp;at&nbsp;Ending'&nbsp;preference&nbsp;is&nbsp;true,&nbsp;cool&nbsp;will&nbsp;turn&nbsp;the&nbsp;fan&nbsp;off&nbsp;at&nbsp;the&nbsp;ending&nbsp;of&nbsp;the&nbsp;fabrication.<br>
+If&nbsp;the&nbsp;'Turn&nbsp;Fan&nbsp;On&nbsp;at&nbsp;Beginning'&nbsp;preference&nbsp;is&nbsp;true,&nbsp;cool&nbsp;will&nbsp;turn&nbsp;the&nbsp;fan&nbsp;on&nbsp;at&nbsp;the&nbsp;beginning&nbsp;of&nbsp;the&nbsp;fabrication.&nbsp;&nbsp;If&nbsp;the&nbsp;'Turn&nbsp;Fan&nbsp;Off&nbsp;at&nbsp;Ending'&nbsp;preference<br>
+is&nbsp;true,&nbsp;cool&nbsp;will&nbsp;turn&nbsp;the&nbsp;fan&nbsp;off&nbsp;at&nbsp;the&nbsp;ending&nbsp;of&nbsp;the&nbsp;fabrication.<br>
 &nbsp;<br>
-To&nbsp;run&nbsp;cool,&nbsp;in&nbsp;a&nbsp;shell&nbsp;which&nbsp;cool&nbsp;is&nbsp;in&nbsp;type:<br>
-&gt;&nbsp;python&nbsp;cool.py<br>
-&nbsp;<br>
-The&nbsp;following&nbsp;examples&nbsp;cool&nbsp;the&nbsp;files&nbsp;Screw&nbsp;Holder&nbsp;Bottom.gcode&nbsp;&amp;&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the<br>
-folder&nbsp;which&nbsp;contains&nbsp;Screw&nbsp;Holder&nbsp;Bottom.gcode,&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;and&nbsp;cool.py.&nbsp;&nbsp;The&nbsp;cool&nbsp;function&nbsp;will&nbsp;cool&nbsp;if&nbsp;the&nbsp;'Activate&nbsp;Cool'<br>
-checkbox&nbsp;is&nbsp;on.&nbsp;&nbsp;The&nbsp;functions&nbsp;writeOutput&nbsp;and&nbsp;getChainGcode&nbsp;check&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text&nbsp;has&nbsp;been&nbsp;cooled,&nbsp;if&nbsp;not&nbsp;they<br>
-call&nbsp;the&nbsp;getChainGcode&nbsp;in&nbsp;clip.py&nbsp;to&nbsp;clip&nbsp;the&nbsp;text;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;clipped&nbsp;text,&nbsp;then&nbsp;they&nbsp;cool.<br>
+The&nbsp;following&nbsp;examples&nbsp;cool&nbsp;the&nbsp;file&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+and&nbsp;cool.py.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python&nbsp;cool.py<br>
-This&nbsp;brings&nbsp;up&nbsp;the&nbsp;dialog,&nbsp;after&nbsp;clicking&nbsp;'Cool',&nbsp;the&nbsp;following&nbsp;is&nbsp;printed:<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;cooled.<br>
-The&nbsp;extrusion&nbsp;fill&nbsp;density&nbsp;ratio&nbsp;is&nbsp;0.853<br>
-The&nbsp;cooled&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom.gcode<br>
-The&nbsp;scalable&nbsp;vector&nbsp;graphics&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow_Square_cool.svg<br>
-It&nbsp;took&nbsp;34&nbsp;seconds&nbsp;to&nbsp;cool&nbsp;the&nbsp;file.<br>
+This&nbsp;brings&nbsp;up&nbsp;the&nbsp;cool&nbsp;dialog.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python&nbsp;cool.py&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;cooled.<br>
-The&nbsp;extrusion&nbsp;fill&nbsp;density&nbsp;ratio&nbsp;is&nbsp;0.853<br>
-The&nbsp;cooled&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom.gcode<br>
-The&nbsp;scalable&nbsp;vector&nbsp;graphics&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow_Square_cool.svg<br>
-It&nbsp;took&nbsp;34&nbsp;seconds&nbsp;to&nbsp;cool&nbsp;the&nbsp;file.<br>
+The&nbsp;cool&nbsp;tool&nbsp;is&nbsp;parsing&nbsp;the&nbsp;file:<br>
+Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+..<br>
+The&nbsp;cool&nbsp;tool&nbsp;has&nbsp;created&nbsp;the&nbsp;file:<br>
+..&nbsp;Screw&nbsp;Holder&nbsp;Bottom_cool.gcode<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python<br>
@@ -71,11 +59,11 @@ This&nbsp;brings&nbsp;up&nbsp;the&nbsp;cool&nbsp;dialog.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&gt;&gt;&nbsp;cool.<a href="#-writeOutput">writeOutput</a>()<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;cooled.<br>
-The&nbsp;extrusion&nbsp;fill&nbsp;density&nbsp;ratio&nbsp;is&nbsp;0.853<br>
-The&nbsp;cooled&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom.gcode<br>
-The&nbsp;scalable&nbsp;vector&nbsp;graphics&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Hollow_Square_cool.svg<br>
-It&nbsp;took&nbsp;34&nbsp;seconds&nbsp;to&nbsp;cool&nbsp;the&nbsp;file.</tt></p>
+The&nbsp;cool&nbsp;tool&nbsp;is&nbsp;parsing&nbsp;the&nbsp;file:<br>
+Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+..<br>
+The&nbsp;cool&nbsp;tool&nbsp;has&nbsp;created&nbsp;the&nbsp;file:<br>
+..&nbsp;Screw&nbsp;Holder&nbsp;Bottom_cool.gcode</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -133,7 +121,7 @@ It&nbsp;took&nbsp;34&nbsp;seconds&nbsp;to&nbsp;cool&nbsp;the&nbsp;file.</tt></p>
 
 <dl><dt><a name="CoolSkein-addCoolOrbits"><strong>addCoolOrbits</strong></a>(self, remainingOrbitTime)</dt><dd><tt>Add&nbsp;the&nbsp;minimum&nbsp;radius&nbsp;cool&nbsp;orbits.</tt></dd></dl>
 
-<dl><dt><a name="CoolSkein-addGcodeFromFeedrateMovementZ"><strong>addGcodeFromFeedrateMovementZ</strong></a>(self, feedrateMinute, point, z)</dt><dd><tt>Add&nbsp;a&nbsp;movement&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
+<dl><dt><a name="CoolSkein-addGcodeFromFeedRateMovementZ"><strong>addGcodeFromFeedRateMovementZ</strong></a>(self, feedRateMinute, point, z)</dt><dd><tt>Add&nbsp;a&nbsp;movement&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
 <dl><dt><a name="CoolSkein-getCraftedGcode"><strong>getCraftedGcode</strong></a>(self, gcodeText, coolPreferences)</dt><dd><tt>Parse&nbsp;gcode&nbsp;text&nbsp;and&nbsp;store&nbsp;the&nbsp;cool&nbsp;gcode.</tt></dd></dl>
 
@@ -152,7 +140,7 @@ It&nbsp;took&nbsp;34&nbsp;seconds&nbsp;to&nbsp;cool&nbsp;the&nbsp;file.</tt></p>
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><dl><dt><a name="-getCraftedText"><strong>getCraftedText</strong></a>(fileName, text, coolPreferences<font color="#909090">=None</font>)</dt><dd><tt>Cool&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-getCraftedTextFromText"><strong>getCraftedTextFromText</strong></a>(gcodeText, coolPreferences<font color="#909090">=None</font>)</dt><dd><tt>Cool&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
- <dl><dt><a name="-getDisplayedPreferences"><strong>getDisplayedPreferences</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;displayed&nbsp;preferences.</tt></dd></dl>
+ <dl><dt><a name="-getPreferencesConstructor"><strong>getPreferencesConstructor</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;preferences&nbsp;constructor.</tt></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>Display&nbsp;the&nbsp;cool&nbsp;dialog.</tt></dd></dl>
  <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName<font color="#909090">=''</font>)</dt><dd><tt>Cool&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;Chain&nbsp;cool&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;cooled.&nbsp;If&nbsp;no&nbsp;fileName&nbsp;is&nbsp;specified,&nbsp;cool&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
 </td></tr></table><p>

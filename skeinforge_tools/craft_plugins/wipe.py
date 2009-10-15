@@ -15,25 +15,20 @@ The "Wipe Period (layers)" preference is the number of layers between wipes.  Wi
 afterwards it will wipe every "Wipe Period" layers.  With the default of three, wipe will wipe just before the zeroth layer, the
 third layer, sixth layer and so on.
 
-To run wipe, in a shell which wipe is in type:
-> python wipe.py
-
-The following examples wipes the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a
-terminal in the folder which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and wipe.py.  The wipe function
-will wipe if the 'Activate Wipe' checkbox is on.  The functions writeOutput and getChainGcode check to see if the text
-has been wiped, if not they call the getChainGcode in hop.py to hop the text; once they have the hopped text, then they
-wipe.
+The following examples wipe the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
+and wipe.py.
 
 
 > python wipe.py
-This brings up the dialog, after clicking 'Wipe', the following is printed:
-File Screw Holder Bottom.stl is being chain wiped.
-The wiped file is saved as Screw Holder Bottom_wipe.gcode
+This brings up the wipe dialog.
 
 
 > python wipe.py Screw Holder Bottom.stl
-File Screw Holder Bottom.stl is being chain wiped.
-The wiped file is saved as Screw Holder Bottom_wipe.gcode
+The wipe tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The wipe tool has created the file:
+.. Screw Holder Bottom_wipe.gcode
 
 
 > python
@@ -46,8 +41,11 @@ This brings up the wipe dialog.
 
 
 >>> wipe.writeOutput()
-File Screw Holder Bottom.stl is being chain wiped.
-The wiped file is saved as Screw Holder Bottom_wipe.gcode
+The wipe tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The wipe tool has created the file:
+.. Screw Holder Bottom_wipe.gcode
 
 """
 
@@ -85,16 +83,15 @@ def getCraftedTextFromText( gcodeText, wipePreferences = None ):
 		return gcodeText
 	return WipeSkein().getCraftedGcode( gcodeText, wipePreferences )
 
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( WipePreferences() )
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return WipePreferences()
 
 def writeOutput( fileName = '' ):
-	"Wipe a gcode linear move file.  Chain wipe the gcode if it is not already wiped. If no fileName is specified, wipe the first unmodified gcode file in this folder."
+	"Wipe a gcode linear move file."
 	fileName = interpret.getFirstTranslatorFileNameUnmodified( fileName )
-	if fileName == '':
-		return
-	consecution.writeChainText( fileName, ' is being chain wiped.', 'The wiped file is saved as ', 'wipe' )
+	if fileName != '':
+		consecution.writeChainTextWithNounMessage( fileName, 'wipe' )
 
 
 class WipePreferences:
@@ -129,7 +126,7 @@ class WipePreferences:
 		self.archive.append( self.wipePeriod )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Wipe'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.wipe.html' )
 
 	def execute( self ):
@@ -150,7 +147,7 @@ class WipeSkein:
 		self.lines = None
 		self.oldLocation = None
 		self.shouldWipe = False
-		self.travelFeedratePerMinute = 957.0
+		self.travelFeedRatePerMinute = 957.0
 
 	def addHop( self, begin, end ):
 		"Add hop to highest point."
@@ -160,10 +157,10 @@ class WipeSkein:
 		alongWay = self.absolutePerimeterWidth / beginEndDistance
 		closeToOldLocation = euclidean.getIntermediateLocation( alongWay, begin, end )
 		closeToOldLocation.z = self.highestZ
-		self.distanceFeedRate.addLine( self.getLinearMoveWithFeedrate( self.travelFeedratePerMinute, closeToOldLocation ) )
+		self.distanceFeedRate.addLine( self.getLinearMoveWithFeedRate( self.travelFeedRatePerMinute, closeToOldLocation ) )
 		closeToOldArrival = euclidean.getIntermediateLocation( alongWay, end, begin )
 		closeToOldArrival.z = self.highestZ
-		self.distanceFeedRate.addLine( self.getLinearMoveWithFeedrate( self.travelFeedratePerMinute, closeToOldArrival ) )
+		self.distanceFeedRate.addLine( self.getLinearMoveWithFeedRate( self.travelFeedRatePerMinute, closeToOldArrival ) )
 
 	def addWipeTravel( self, splitLine ):
 		"Add the wipe travel gcode."
@@ -176,9 +173,9 @@ class WipeSkein:
 			self.distanceFeedRate.addLine( 'M103' )
 		if self.oldLocation != None:
 			self.addHop( self.oldLocation, self.locationArrival )
-		self.distanceFeedRate.addLine( self.getLinearMoveWithFeedrate( self.travelFeedratePerMinute, self.locationArrival ) )
-		self.distanceFeedRate.addLine( self.getLinearMoveWithFeedrate( self.travelFeedratePerMinute, self.locationWipe ) )
-		self.distanceFeedRate.addLine( self.getLinearMoveWithFeedrate( self.travelFeedratePerMinute, self.locationDeparture ) )
+		self.distanceFeedRate.addLine( self.getLinearMoveWithFeedRate( self.travelFeedRatePerMinute, self.locationArrival ) )
+		self.distanceFeedRate.addLine( self.getLinearMoveWithFeedRate( self.travelFeedRatePerMinute, self.locationWipe ) )
+		self.distanceFeedRate.addLine( self.getLinearMoveWithFeedRate( self.travelFeedRatePerMinute, self.locationDeparture ) )
 		self.addHop( self.locationDeparture, location )
 		if self.extruderActive:
 			self.distanceFeedRate.addLine( 'M101' )
@@ -196,9 +193,9 @@ class WipeSkein:
 			self.parseLine( line )
 		return self.distanceFeedRate.output.getvalue()
 
-	def getLinearMoveWithFeedrate( self, feedrate, location ):
-		"Get a linear move line with the feedrate."
-		return self.distanceFeedRate.getLinearGcodeMovementWithFeedrate( feedrate, location.dropAxis( 2 ), location.z )
+	def getLinearMoveWithFeedRate( self, feedRate, location ):
+		"Get a linear move line with the feedRate."
+		return self.distanceFeedRate.getLinearGcodeMovementWithFeedRate( feedRate, location.dropAxis( 2 ), location.z )
 
 	def parseInitialization( self, wipePreferences ):
 		"Parse gcode initialization and store the parameters."
@@ -212,8 +209,8 @@ class WipeSkein:
 				return
 			elif firstWord == '(<perimeterWidth>':
 				self.absolutePerimeterWidth = abs( float( splitLine[ 1 ] ) )
-			elif firstWord == '(<travelFeedratePerSecond>':
-				self.travelFeedratePerMinute = 60.0 * float( splitLine[ 1 ] )
+			elif firstWord == '(<travelFeedRatePerSecond>':
+				self.travelFeedRatePerMinute = 60.0 * float( splitLine[ 1 ] )
 			self.distanceFeedRate.addLine( line )
 
 	def parseLine( self, line ):
@@ -241,7 +238,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

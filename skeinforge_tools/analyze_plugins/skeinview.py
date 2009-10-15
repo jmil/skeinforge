@@ -24,10 +24,8 @@ layer index by one.  When the index displayed in the index field is changed then
 be set to the index field, to a mimimum of zero and to a maximum of the highest index layer.  The Soar button increases the
 layer index at the "Slide Show Rate", and the Dive button decreases the layer index at the slide show rate.  The soaring and
 diving stop when return is hit in the index field, or when the up or down button is hit, or when the top or bottom layer is
-reached.
-
-To run skeinview, in a shell in the folder which skeinview is in type:
-> python skeinview.py
+reached.  When the mouse is clicked, the line closest to the mouse pointer will be printed in the console.  If 'Display Line Text
+when Mouse Moves' is selected, then the line closest to the mouse pointer will be displayed above the mouse pointer.
 
 An explanation of the gcodes is at:
 http://reprap.org/bin/view/Main/Arduino_GCode_Interpreter
@@ -59,7 +57,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 This brings up the skeinview dialog.
 
 
->>> skeinview.skeinviewFile()
+>>> skeinview.displayFile()
 This brings up a skein window to view each layer of a gcode file.
 
 """
@@ -81,40 +79,37 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def displaySkeinviewFileGivenText( gcodeText, skeinviewPreferences = None ):
-	"Display a skeinviewed gcode file for a gcode file."
+def displayFile( fileName ):
+	"Display a gcode file in a skeinview window."
+	gcodeText = gcodec.getFileText( fileName )
+	displayFileGivenText( gcodeText )
+
+def displayFileGivenText( gcodeText, skeinviewPreferences = None ):
+	"Display a gcode file in a skeinview window given the text."
 	if gcodeText == '':
-		return ''
+		return
 	if skeinviewPreferences == None:
 		skeinviewPreferences = SkeinviewPreferences()
 		preferences.getReadPreferences( skeinviewPreferences )
+	displayFileGivenTextPreferences( gcodeText, skeinviewPreferences )
+
+def displayFileGivenTextPreferences( gcodeText, skeinviewPreferences ):
+	"Display a gcode file in a skeinview window given the text and preferences."
 	skein = SkeinviewSkein()
 	skein.parseGcode( gcodeText, skeinviewPreferences )
-	SkeinWindow( skein.arrowType, skein.scaleSize, skein.skeinPanes, skeinviewPreferences )
+	SkeinWindow( skein, skeinviewPreferences )
 
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( SkeinviewPreferences() )
-
-def skeinviewFile( fileName = '' ):
-	"Skeinview a gcode file.  If no fileName is specified, skeinview the first gcode file in this folder that is not modified."
-	if fileName == '':
-		unmodified = gcodec.getUnmodifiedGCodeFiles()
-		if len( unmodified ) == 0:
-			print( "There are no unmodified gcode files in this folder." )
-			return
-		fileName = unmodified[ 0 ]
-	gcodeText = gcodec.getFileText( fileName )
-	displaySkeinviewFileGivenText( gcodeText )
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return SkeinviewPreferences()
 
 def writeOutput( fileName, gcodeText = '' ):
-	"Write a skeinviewed gcode file for a skeinforge gcode file, if 'Activate Skeinview' is selected."
+	"Display a skeinviewed gcode file for a skeinforge gcode file, if 'Activate Skeinview' is selected."
 	skeinviewPreferences = SkeinviewPreferences()
 	preferences.getReadPreferences( skeinviewPreferences )
 	if skeinviewPreferences.activateSkeinview.value:
-		if gcodeText == '':
-			gcodeText = gcodec.getFileText( fileName )
-		displaySkeinviewFileGivenText( gcodeText, skeinviewPreferences )
+		gcodeText = gcodec.getTextIfEmpty( fileName, gcodeText )
+		displayFileGivenText( gcodeText, skeinviewPreferences )
 
 
 class ColoredLine:
@@ -139,41 +134,84 @@ class SkeinviewPreferences:
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
+		self.phoenixPreferenceTable = {}
+		self.updatePreferences = []
 		self.activateSkeinview = preferences.BooleanPreference().getFromValue( 'Activate Skeinview', True )
 		self.archive.append( self.activateSkeinview )
+		self.displayLineTextWhenMouseMoves = preferences.BooleanPreference().getFromValue( 'Display Line Text when Mouse Moves', False )
+		self.addToArchivePhoenixUpdate( self.displayLineTextWhenMouseMoves )
 		self.drawArrows = preferences.BooleanPreference().getFromValue( 'Draw Arrows', True )
-		self.archive.append( self.drawArrows )
+		self.addToArchiveUpdate( self.drawArrows )
 		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Skeinview', '' )
 		self.archive.append( self.fileNameInput )
 		self.goAroundExtruderOffTravel = preferences.BooleanPreference().getFromValue( 'Go Around Extruder Off Travel', False )
-		self.archive.append( self.goAroundExtruderOffTravel )
-		self.pixelsWidthExtrusion = preferences.FloatPreference().getFromValue( 'Pixels over Extrusion Width (ratio):', 10.0 )
-		self.archive.append( self.pixelsWidthExtrusion )
+		self.addToArchivePhoenixUpdate( self.goAroundExtruderOffTravel )
+		self.pixelsPerMillimeter = preferences.FloatPreference().getFromValue( 'Pixels per Millimeter (ratio):', 15.0 )
+		self.addToArchivePhoenixUpdate( self.pixelsPerMillimeter )
 		self.screenHorizontalInset = preferences.IntPreference().getFromValue( 'Screen Horizontal Inset (pixels):', 100 )
-		self.archive.append( self.screenHorizontalInset )
+		self.addToArchivePhoenixUpdate( self.screenHorizontalInset )
 		self.screenVerticalInset = preferences.IntPreference().getFromValue( 'Screen Vertical Inset (pixels):', 50 )
-		self.archive.append( self.screenVerticalInset )
+		self.addToArchivePhoenixUpdate( self.screenVerticalInset )
 		self.slideShowRate = preferences.FloatPreference().getFromValue( 'Slide Show Rate (layers/second):', 1.0 )
-		self.archive.append( self.slideShowRate )
+		self.addToArchiveUpdate( self.slideShowRate )
+		self.windowPositionSkeinviewDynamicPreferences = preferences.WindowPosition().getFromValue( 'windowPositionSkeinview Dynamic Preferences', '0+0' )
+		self.addToArchiveUpdate( self.windowPositionSkeinviewDynamicPreferences )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Skeinview'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.analyze_plugins.skeinview.html' )
+		self.windowPositionPreferences.windowPositionName = None
+		self.updateFunction = None
+
+	def addToArchiveUpdate( self, archivablePreference ):
+		"Add preference to the archive and the update preferences."
+		self.archive.append( archivablePreference )
+		self.updatePreferences.append( archivablePreference )
+
+	def addToArchivePhoenixUpdate( self, archivablePreference ):
+		"Add preference to the archive, the phoenix preferences, and the update preferences."
+		self.addToArchiveUpdate( archivablePreference )
+		self.phoenixPreferenceTable[ archivablePreference ] = None
+
+	def displayImmediateUpdateDialog( self ):
+		"Display the immediate update dialog."
+		self.executeTitle = None
+		self.saveCloseTitle = None
+		self.title = 'Skeinview Dynamic Preferences'
+		oldArchive = self.archive
+		self.archive = self.updatePreferences
+		self.lowerName = 'skeinview dynamic'
+		preferences.getDisplayedDialogFromConstructor( self )
+		self.archive = oldArchive
 
 	def execute( self ):
 		"Write button has been clicked."
 		fileNames = polyfile.getFileOrGcodeDirectory( self.fileNameInput.value, self.fileNameInput.wasCancelled )
 		for fileName in fileNames:
-			skeinviewFile( fileName )
+			displayFile( fileName )
+
+	def setUpdateFunction( self, updateFunction ):
+		"Set the update function of the update preferences."
+		self.updateFunction = updateFunction
+		for updatePreference in self.updatePreferences:
+			updatePreference.setUpdateFunction( self.setToDisplaySaveUpdate )
+
+	def setToDisplaySaveUpdate( self, event = None ):
+		"Set the preference values to the display, save the new values, then call the update function."
+		for updatePreference in self.updatePreferences:
+			updatePreference.setToDisplay()
+		preferences.writePreferences( self )
+		if self.updateFunction != None:
+			self.updateFunction()
 
 
 class SkeinviewSkein:
 	"A class to write a get a scalable vector graphics text for a gcode skein."
 	def __init__( self ):
-		self.absolutePerimeterWidth = 0.6
 		self.extrusionNumber = 0
 		self.isThereALayerStartWord = False
 		self.oldZ = - 999999999999.0
+		self.skeinPane = None
 		self.skeinPanes = []
 
 	def addToPath( self, line, location ):
@@ -217,6 +255,8 @@ class SkeinviewSkein:
 
 	def linearMove( self, line, splitLine ):
 		"Get statistics for a linear move."
+		if self.skeinPane == None:
+			return
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		self.addToPath( line, location )
 		self.oldLocation = location
@@ -233,14 +273,10 @@ class SkeinviewSkein:
 			self.extruderActive = True
 		elif firstWord == 'M103':
 			self.extruderActive = False
-		elif firstWord == '(<perimeterWidth>':
-			self.absolutePerimeterWidth = abs( float( splitLine[ 1 ] ) )
 
 	def parseGcode( self, gcodeText, skeinviewPreferences ):
 		"Parse gcode text and store the vector output."
-		self.arrowType = None
-		if skeinviewPreferences.drawArrows.value:
-			self.arrowType = 'last'
+		self.gcodeText = gcodeText
 		self.initializeActiveLocation()
 		self.cornerHigh = Vector3( - 999999999.0, - 999999999.0, - 999999999.0 )
 		self.cornerLow = Vector3( 999999999.0, 999999999.0, 999999999.0 )
@@ -249,7 +285,7 @@ class SkeinviewSkein:
 		self.isThereALayerStartWord = gcodec.isThereAFirstWord( '(<layer>', self.lines, 1 )
 		for line in self.lines:
 			self.parseCorner( line )
-		self.scale = skeinviewPreferences.pixelsWidthExtrusion.value / self.absolutePerimeterWidth
+		self.scale = skeinviewPreferences.pixelsPerMillimeter.value
 		self.scaleCornerHigh = self.scale * self.cornerHigh.dropAxis( 2 )
 		self.scaleCornerLow = self.scale * self.cornerLow.dropAxis( 2 )
 		print( "The lower left corner of the skeinview window is at %s, %s" % ( self.cornerLow.x, self.cornerLow.y ) )
@@ -284,25 +320,31 @@ class SkeinviewSkein:
 
 
 class SkeinWindow:
-	def __init__( self, arrowType, size, skeinPanes, skeinviewPreferences ):
+	def __init__( self, skein, skeinviewPreferences ):
 		screenHorizontalInset = skeinviewPreferences.screenHorizontalInset.value
 		screenVerticalInset = skeinviewPreferences.screenVerticalInset.value
-		self.arrowType = arrowType
+		title = 'Skeinview Viewer from Hydraraptor'
 		self.index = 0
-		self.skeinPanes = skeinPanes
+		self.movementTextID = None
+		self.skein = skein
+		self.skeinPanes = skein.skeinPanes
 		self.root = preferences.Tkinter.Tk()
-		self.root.title( "Skeinview from HydraRaptor" )
+		self.root.title( title )
+		self.skeinviewPreferences = skeinviewPreferences
+		for phoenixPreferenceTableKey in skeinviewPreferences.phoenixPreferenceTable.keys():
+			skeinviewPreferences.phoenixPreferenceTable[ phoenixPreferenceTableKey ] = phoenixPreferenceTableKey.value
 		skeinviewPreferences.slideShowRate.value = max( skeinviewPreferences.slideShowRate.value, 0.01 )
 		skeinviewPreferences.slideShowRate.value = min( skeinviewPreferences.slideShowRate.value, 85.0 )
-		self.slideShowDelay = int( round( 1000.0 / skeinviewPreferences.slideShowRate.value ) )
-		self.slideShowDelay = max( self.slideShowDelay, 1 )
 		self.timerID = None
+		fileHelpMenuBar = preferences.FileHelpMenuBar( self.root )
+		fileHelpMenuBar.helpMenu.add_command( label = 'Skeinview', command = preferences.HelpPage().getOpenFromDocumentationSubName( 'skeinforge_tools.analyze_plugins.skeinview.html' ) )
+		fileHelpMenuBar.completeMenu( self.root.destroy, skeinviewPreferences.lowerName )
 		frame = preferences.Tkinter.Frame( self.root )
 		xScrollbar = preferences.Tkinter.Scrollbar( self.root, orient = preferences.Tkinter.HORIZONTAL )
 		yScrollbar = preferences.Tkinter.Scrollbar( self.root )
-		canvasHeight = min( int( size.imag ), self.root.winfo_screenheight() - screenHorizontalInset )
-		canvasWidth = min( int( size.real ), self.root.winfo_screenwidth() - screenVerticalInset )
-		self.canvas = preferences.Tkinter.Canvas( self.root, width = canvasWidth, height = canvasHeight, scrollregion = ( 0, 0, int( size.real ), int( size.imag ) ) )
+		canvasHeight = min( int( skein.scaleSize.imag ), self.root.winfo_screenheight() - screenHorizontalInset )
+		canvasWidth = min( int( skein.scaleSize.real ), self.root.winfo_screenwidth() - screenVerticalInset )
+		self.canvas = preferences.Tkinter.Canvas( self.root, width = canvasWidth, height = canvasHeight, scrollregion = ( 0, 0, int( skein.scaleSize.real ), int( skein.scaleSize.imag ) ) )
 		self.canvas.grid( row = 0, rowspan = 98, column = 0, columnspan = 99, sticky = preferences.Tkinter.W )
 		xScrollbar.grid( row = 98, column = 0, columnspan = 99, sticky = preferences.Tkinter.E + preferences.Tkinter.W )
 		xScrollbar.config( command = self.canvas.xview )
@@ -311,36 +353,50 @@ class SkeinWindow:
 		self.canvas[ 'xscrollcommand' ] = xScrollbar.set
 		self.canvas[ 'yscrollcommand' ] = yScrollbar.set
 		self.diveButton = preferences.Tkinter.Button( self.root, activebackground = 'black', activeforeground = 'purple', command = self.dive, text = 'Dive \\/\\/' )
-		self.diveButton.grid( row = 99, column = 0, sticky = preferences.Tkinter.W )
+		self.diveButton.grid( row = 99, column = 1, sticky = preferences.Tkinter.W )
 		self.downButton = preferences.Tkinter.Button( self.root, activebackground = 'black', activeforeground = 'purple', command = self.down, text = 'Down \\/' )
-		self.downButton.grid( row = 99, column = 1, sticky = preferences.Tkinter.W )
+		self.downButton.grid( row = 99, column = 2, sticky = preferences.Tkinter.W )
+		preferences.CloseListener( title.lower(), self ).listenToWidget( self.downButton )
 		self.upButton = preferences.Tkinter.Button( self.root, activebackground = 'black', activeforeground = 'purple', command = self.up, text = 'Up /\\' )
-		self.upButton.grid( row = 99, column = 3, sticky = preferences.Tkinter.W )
+		self.upButton.grid( row = 99, column = 4, sticky = preferences.Tkinter.W )
 		self.soarButton = preferences.Tkinter.Button( self.root, activebackground = 'black', activeforeground = 'purple', command = self.soar, text = 'Soar /\\/\\' )
-		self.soarButton.grid( row = 99, column = 4, sticky = preferences.Tkinter.W )
+		self.soarButton.grid( row = 99, column = 5, sticky = preferences.Tkinter.W )
 		self.indexEntry = preferences.Tkinter.Entry( self.root )
 		self.indexEntry.bind( '<Return>', self.indexEntryReturnPressed )
-		self.indexEntry.grid( row = 99, column = 5, columnspan = 10, sticky = preferences.Tkinter.W )
-		self.exitButton = preferences.Tkinter.Button( self.root, text = 'Exit', activebackground = 'black', activeforeground = 'red', command = self.root.destroy, fg = 'red' )
+		self.indexEntry.grid( row = 99, column = 6, columnspan = 10, sticky = preferences.Tkinter.W )
+		self.exitButton = preferences.Tkinter.Button( self.root, text = 'Exit', activebackground = 'black', activeforeground = 'red', command = self.destroyAllDialogWindows, fg = 'red' )
 		self.exitButton.grid( row = 99, column = 95, columnspan = 5, sticky = preferences.Tkinter.W )
-		self.canvas.bind('<Button-1>', self.buttonOneClicked )
+		self.showPreferencesButton = preferences.Tkinter.Button( self.root, activebackground = 'black', activeforeground = 'purple', command = self.showPreferences, text = 'Show Preferences' )
+		self.showPreferencesButton.grid( row = 99, column = 0, sticky = preferences.Tkinter.W )
+		self.canvas.bind( '<Button-1>', self.buttonOneClicked )
+		if skeinviewPreferences.displayLineTextWhenMouseMoves.value:
+			self.canvas.bind( '<Leave>', self.leave )
+			self.canvas.bind( '<Motion>', self.motion )
 		self.update()
+		self.showPreferences()
 
 	def buttonOneClicked( self, event ):
+		"Print the line clicked."
 		x = self.canvas.canvasx( event.x )
-		y = self.canvas.canvasx( event.y )
-		tags = self.canvas.itemcget( self.canvas.find_closest( x, y ), 'tags' )
-		currentEnd = ' current'
-		if tags.find( currentEnd ) != - 1:
-			tags = tags[ : - len( currentEnd ) ]
-		if len( tags ) > 0:
-			print( tags )
+		y = self.canvas.canvasy( event.y )
+		print( 'The line clicked is: ' + self.getTagsGivenXY( x, y ) )
 
 	def cancelTimer( self ):
 		"Cancel the timer and set it to none."
 		if self.timerID != None:
 			self.canvas.after_cancel ( self.timerID )
 			self.timerID = None
+
+	def destroyAllDialogWindows( self ):
+		"Destroy all the dialog windows."
+		if self.showPreferencesButton[ 'state' ] == preferences.Tkinter.DISABLED:
+			self.skeinviewPreferences.preferencesDialog.root.destroy()
+		self.root.destroy()
+
+	def destroyMovementText( self ):
+		'Destroy the movement text.'
+		self.canvas.delete( self.movementTextID )
+		self.movementTextID = None
 
 	def dive( self ):
 		"Dive, go down periodically."
@@ -349,12 +405,27 @@ class SkeinWindow:
 		self.update()
 		if self.index < 1:
 			return
-		self.timerID = self.canvas.after( self.slideShowDelay, self.dive )
+		self.timerID = self.canvas.after( self.getSlideShowDelay(), self.dive )
 
 	def down( self ):
 		self.cancelTimer()
 		self.index -= 1
 		self.update()
+
+	def getSlideShowDelay( self ):
+		"Get the slide show delay in milliseconds."
+		slideShowDelay = int( round( 1000.0 / self.skeinviewPreferences.slideShowRate.value ) )
+		return max( slideShowDelay, 1 )
+
+	def getTagsGivenXY( self, x, y ):
+		"Get the tag for the x and y."
+		if self.movementTextID != None:
+			self.destroyMovementText()
+		tags = self.canvas.itemcget( self.canvas.find_closest( x, y ), 'tags' )
+		currentEnd = ' current'
+		if tags.find( currentEnd ) != - 1:
+			return tags[ : - len( currentEnd ) ]
+		return tags
 
 	def indexEntryReturnPressed( self, event ):
 		self.cancelTimer()
@@ -363,10 +434,31 @@ class SkeinWindow:
 		self.index = min( len( self.skeinPanes ) - 1, self.index )
 		self.update()
 
-	def up( self ):
-		self.cancelTimer()
-		self.index += 1
-		self.update()
+	def leave( self, event ):
+		"The mouse left the canvas."
+		self.destroyMovementText()
+
+	def motion( self, event ):
+		"The mouse moved."
+		x = self.canvas.canvasx( event.x )
+		y = self.canvas.canvasy( event.y )
+		tags = self.getTagsGivenXY( x, y )
+		if tags != '':
+			self.movementTextID = self.canvas.create_text ( x, y, anchor = preferences.Tkinter.SW, text = 'The line is: ' + tags )
+
+	def preferencesDestroyed( self, event ):
+		"Enable the show preferences button because the dynamic preferences were destroyed."
+		try:
+			self.showPreferencesButton.config( state = preferences.Tkinter.NORMAL )
+		except:
+			pass
+
+	def showPreferences( self ):
+		"Show the dynamic preferences."
+		self.skeinviewPreferences.displayImmediateUpdateDialog()
+		self.skeinviewPreferences.setUpdateFunction( self.update  )
+		self.skeinviewPreferences.drawArrows.checkbutton.bind( '<Destroy>', self.preferencesDestroyed )
+		self.showPreferencesButton.config( state = preferences.Tkinter.DISABLED )
 
 	def soar( self ):
 		"Soar, go up periodically."
@@ -375,11 +467,25 @@ class SkeinWindow:
 		self.update()
 		if self.index > len( self.skeinPanes ) - 2:
 			return
-		self.timerID = self.canvas.after( self.slideShowDelay, self.soar )
+		self.timerID = self.canvas.after( self.getSlideShowDelay(), self.soar )
+
+	def up( self ):
+		"Go up a layer."
+		self.cancelTimer()
+		self.index += 1
+		self.update()
 
 	def update( self ):
 		if len( self.skeinPanes ) < 1:
 			return
+		for phoenixPreferenceTableKey in self.skeinviewPreferences.phoenixPreferenceTable.keys():
+			if self.skeinviewPreferences.phoenixPreferenceTable[ phoenixPreferenceTableKey ] != phoenixPreferenceTableKey.value:
+				self.destroyAllDialogWindows()
+				displayFileGivenTextPreferences( self.skein.gcodeText, self.skeinviewPreferences )
+				return
+		self.arrowType = None
+		if self.skeinviewPreferences.drawArrows.value:
+			self.arrowType = 'last'
 		skeinPane = self.skeinPanes[ self.index ]
 		self.canvas.delete( preferences.Tkinter.ALL )
 		for coloredLine in skeinPane:
@@ -392,7 +498,7 @@ class SkeinWindow:
 				complexEnd.imag,
 				fill = coloredLine.colorName,
 				arrow = self.arrowType,
-				tags = 'The line clicked is: %s %s' % ( coloredLine.lineIndex, coloredLine.line ),
+				tags = '%s %s' % ( coloredLine.lineIndex, coloredLine.line ),
 				width = coloredLine.width )
 		if self.index < len( self.skeinPanes ) - 1:
 			self.soarButton.config( state = preferences.Tkinter.NORMAL )
@@ -413,9 +519,9 @@ class SkeinWindow:
 def main():
 	"Display the skeinview dialog."
 	if len( sys.argv ) > 1:
-		skeinviewFile( ' '.join( sys.argv[ 1 : ] ) )
+		displayFile( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

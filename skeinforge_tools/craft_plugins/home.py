@@ -1,34 +1,28 @@
 """
 Home is a script to home the nozzle.
 
-The default 'Activate Home' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions
-will not be called.
+The default 'Activate Home' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions will not be called.
 
-At the beginning of a each layer, home will add the commands of a gcode script with the name of the "Name of Homing File"
-setting, if one exists.  The default name is homing.text.  Home does not care if the text file names are capitalized, but some file
-systems do not handle file name cases properly, so to be on the safe side you should give them lower case names.  Home
-looks for those files in the alterations folder in the .skeinforge folder in the home directory. If it doesn't find the file it then looks
-in the alterations folder in the skeinforge_tools folder.  If it doesn't find anything there it looks in the craft_plugins folder.
+At the beginning of a each layer, home will add the commands of a gcode script with the name of the "Name of Homing File" setting, if one exists.  The
+default name is homing.gcode.  Home does not care if the text file names are capitalized, but some file systems do not handle file name cases
+properly, so to be on the safe side you should give them lower case names.  Home looks for those files in the alterations folder in the .skeinforge folder
+in the home directory. If it doesn't find the file it then looks in the alterations folder in the skeinforge_tools folder.  If it doesn't find anything there it looks
+in the craft_plugins folder.
 
-To run home, in a shell which home is in type:
-> python home.py
-
-The following examples homes the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a
-terminal in the folder which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and home.py.  The home function
-will home if the 'Activate Home' checkbox is on.  The functions writeOutput and getChainGcode check to see if the text
-has been homed, if not they call the getChainGcode in fillet.py to fillet the text; once they have the
-filleted text, then they home.
+The following examples home the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
+and home.py.
 
 
 > python home.py
-This brings up the dialog, after clicking 'Home', the following is printed:
-File Screw Holder Bottom.stl is being chain homed.
-The homed file is saved as Screw Holder Bottom_home.gcode
+This brings up the home dialog.
 
 
 > python home.py Screw Holder Bottom.stl
-File Screw Holder Bottom.stl is being chain homed.
-The homed file is saved as Screw Holder Bottom_home.gcode
+The home tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The home tool has created the file:
+.. Screw Holder Bottom_home.gcode
 
 
 > python
@@ -41,8 +35,11 @@ This brings up the home dialog.
 
 
 >>> home.writeOutput()
-File Screw Holder Bottom.stl is being chain homed.
-The homed file is saved as Screw Holder Bottom_home.gcode
+The home tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The home tool has created the file:
+.. Screw Holder Bottom_home.gcode
 
 """
 
@@ -81,16 +78,15 @@ def getCraftedTextFromText( gcodeText, homePreferences = None ):
 		return gcodeText
 	return HomeSkein().getCraftedGcode( gcodeText, homePreferences )
 
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( HomePreferences() )
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return HomePreferences()
 
 def writeOutput( fileName = '' ):
 	"Home a gcode linear move file.  Chain home the gcode if it is not already homed. If no fileName is specified, home the first unmodified gcode file in this folder."
 	fileName = interpret.getFirstTranslatorFileNameUnmodified( fileName )
-	if fileName == '':
-		return
-	consecution.writeChainText( fileName, ' is being chain homed.', 'The homed file is saved as ', 'home' )
+	if fileName != '':
+		consecution.writeChainTextWithNounMessage( fileName, 'home' )
 
 
 class HomePreferences:
@@ -103,11 +99,11 @@ class HomePreferences:
 		self.archive.append( self.activateHome )
 		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Homed', '' )
 		self.archive.append( self.fileNameInput )
-		self.nameOfHomingFile = preferences.StringPreference().getFromValue( 'Name of Homing File:', 'homing.txt' )
+		self.nameOfHomingFile = preferences.StringPreference().getFromValue( 'Name of Homing File:', 'homing.gcode' )
 		self.archive.append( self.nameOfHomingFile )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Home'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.home.html' )
 
 	def execute( self ):
@@ -128,7 +124,7 @@ class HomeSkein:
 		self.lines = None
 		self.oldLocation = None
 		self.shouldHome = False
-		self.travelFeedratePerMinute = 957.0
+		self.travelFeedRatePerMinute = 957.0
 
 	def addFloat( self, begin, end ):
 		"Add dive to the original height."
@@ -136,12 +132,12 @@ class HomeSkein:
 		alongWay = self.absolutePerimeterWidth / beginEndDistance
 		closeToEnd = euclidean.getIntermediateLocation( alongWay, end, begin )
 		closeToEnd.z = self.highestZ
-		self.distanceFeedRate.addLine( self.distanceFeedRate.getLinearGcodeMovementWithFeedrate( self.travelFeedratePerMinute, closeToEnd.dropAxis( 2 ), closeToEnd.z ) )
+		self.distanceFeedRate.addLine( self.distanceFeedRate.getLinearGcodeMovementWithFeedRate( self.travelFeedRatePerMinute, closeToEnd.dropAxis( 2 ), closeToEnd.z ) )
 
 	def addHopUp( self, location ):
 		"Add hop to highest point."
 		locationUp = Vector3( location.x, location.y, self.highestZ )
-		self.distanceFeedRate.addLine( self.distanceFeedRate.getLinearGcodeMovementWithFeedrate( self.travelFeedratePerMinute, locationUp.dropAxis( 2 ), locationUp.z ) )
+		self.distanceFeedRate.addLine( self.distanceFeedRate.getLinearGcodeMovementWithFeedRate( self.travelFeedRatePerMinute, locationUp.dropAxis( 2 ), locationUp.z ) )
 
 	def addHomeTravel( self, splitLine ):
 		"Add the home travel gcode."
@@ -155,7 +151,7 @@ class HomeSkein:
 		if self.extruderActive:
 			self.distanceFeedRate.addLine( 'M103' )
 		self.addHopUp( self.oldLocation )
-		self.distanceFeedRate.addLines( self.homingLines )
+		self.distanceFeedRate.addLinesSetAbsoluteDistanceMode( self.homingLines )
 		self.addHopUp( self.oldLocation )
 		self.addFloat( self.oldLocation, location )
 		if self.extruderActive:
@@ -166,7 +162,7 @@ class HomeSkein:
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.homePreferences = homePreferences
 		self.parseInitialization( homePreferences )
-		self.homingText = preferences.getFileInGivenPreferencesDirectory( os.path.dirname( __file__ ), homePreferences.nameOfHomingFile.value )
+		self.homingText = preferences.getFileInAlterationsOrGivenDirectory( os.path.dirname( __file__ ), homePreferences.nameOfHomingFile.value )
 		self.homingLines = gcodec.getTextLines( self.homingText )
 		for self.lineIndex in xrange( self.lineIndex, len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
@@ -185,8 +181,8 @@ class HomeSkein:
 				return
 			elif firstWord == '(<perimeterWidth>':
 				self.absolutePerimeterWidth = abs( float( splitLine[ 1 ] ) )
-			elif firstWord == '(<travelFeedratePerSecond>':
-				self.travelFeedratePerMinute = 60.0 * float( splitLine[ 1 ] )
+			elif firstWord == '(<travelFeedRatePerSecond>':
+				self.travelFeedRatePerMinute = 60.0 * float( splitLine[ 1 ] )
 			self.distanceFeedRate.addLine( line )
 
 	def parseLine( self, line ):
@@ -213,7 +209,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

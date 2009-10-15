@@ -59,19 +59,20 @@ def addOperatingOrbits( boundaryLoops, pointComplex, skein, temperatureChangeTim
 	largestLoop = euclidean.getLargestLoop( outsetBoundaryLoops )
 	if pointComplex != None:
 		largestLoop = euclidean.getLoopStartingNearest( skein.perimeterWidth, pointComplex, largestLoop )
-	addOrbits( largestLoop, skein, temperatureChangeTime, z )
+	addOrbitsIfLarge( largestLoop, skein, temperatureChangeTime, z )
 
 def addOrbits( loop, skein, temperatureChangeTime, z ):
 	"Add orbits with the extruder off."
-	if len( loop ) < 1:
-		print( 'Zero length loop which was skipped over, this should never happen.' )
-	if temperatureChangeTime < 1.5:
-		return
 	timeInOrbit = 0.0
 	while timeInOrbit < temperatureChangeTime:
 		for point in loop:
-			skein.distanceFeedRate.addGcodeMovementZWithFeedRate( 60.0 * skein.orbitalFeedratePerSecond, point, z )
-		timeInOrbit += euclidean.getPolygonLength( loop ) / skein.orbitalFeedratePerSecond
+			skein.distanceFeedRate.addGcodeMovementZWithFeedRate( 60.0 * skein.orbitalFeedRatePerSecond, point, z )
+		timeInOrbit += euclidean.getPolygonLength( loop ) / skein.orbitalFeedRatePerSecond
+
+def addOrbitsIfLarge( loop, skein, temperatureChangeTime, z ):
+	"Add orbits with the extruder off if the orbits are large enough."
+	if orbitsAreLarge( loop, temperatureChangeTime ):
+		addOrbits( loop, skein, temperatureChangeTime, z )
 
 def addPointsFromSegment( pointComplexes, radius, pointBeginComplex, pointEndComplex, thresholdRatio = 0.9 ):
 	"Add point complexes between the endpoints of a segment."
@@ -246,12 +247,15 @@ def getInsetLoopsFromLoop( inset, loop ):
 	"Get the inset loops, which might overlap."
 	isInset = inset > 0
 	insetLoops = []
+	isLoopWiddershins = euclidean.isWiddershins( loop )
 	arounds = getAroundsFromLoop( loop, inset )
 	for around in arounds:
 		leftPoint = euclidean.getLeftPoint( around )
-		shouldBeWithin = ( isInset == euclidean.isWiddershins( loop ) )
+		shouldBeWithin = ( isInset == isLoopWiddershins )
 		if euclidean.isPointInsideLoop( loop, leftPoint ) == shouldBeWithin:
-			around.reverse()
+			if isLoopWiddershins != euclidean.isWiddershins( around ):
+				around.reverse()
+#			around.reverse()
 			insetLoops.append( around )
 	return insetLoops
 
@@ -281,6 +285,24 @@ def getIntersectionAtInset( aheadComplex, behindComplex, inset ):
 	rotatedClockwiseQuarter = complex( aheadComplexMinusBehindComplex.imag, - aheadComplexMinusBehindComplex.real )
 	rotatedClockwiseQuarter *= inset / abs( rotatedClockwiseQuarter )
 	return aheadComplexMinusBehindComplex + behindComplex + rotatedClockwiseQuarter
+
+def getLargestInsetLoopFromLoop( loop, radius ):
+	"Get the largest inset loop from the loop."
+	loops = getInsetLoopsFromLoop( radius, loop )
+	return euclidean.getLargestLoop( loops )
+
+def getLargestInsetLoopFromLoopNoMatterWhat( loop, radius ):
+	"Get the largest inset loop from the loop, even if the radius has to be shrunk and even if there is still no inset loop."
+	largestInsetLoop = getLargestInsetLoopFromLoop( loop, radius )
+	if largestInsetLoop == None:
+		largestInsetLoop = getLargestInsetLoopFromLoop( loop, 0.55 * radius )
+	if largestInsetLoop == None:
+		largestInsetLoop = getLargestInsetLoopFromLoop( loop, 0.35 * radius )
+	if largestInsetLoop == None:
+		print( 'This should never happen, there should always be a largestInsetLoop in getLargestInsetLoopFromLoopNoMatterWhat in intercircle.' )
+		print( loop )
+		return loop
+	return largestInsetLoop
 
 def getLoopsFromLoopsDirection( isWiddershins, loops ):
 	"Get the loops going round in a given direction."
@@ -338,6 +360,13 @@ def isLoopIntersectingLoop( anotherLoop, loop ):
 		if euclidean.isLoopIntersectingInsideXSegment( anotherLoop, segmentFirstPoint.real, segmentSecondPoint.real, segmentYMirror, segmentFirstPoint.imag ):
 			return True
 	return False
+
+def orbitsAreLarge( loop, temperatureChangeTime ):
+	"Determine if the orbits are large enough."
+	if len( loop ) < 1:
+		print( 'Zero length loop which was skipped over, this should never happen.' )
+		return False
+	return temperatureChangeTime > 1.5
 
 def removeIntersection( loop ):
 	"Get loop without the first intersection."

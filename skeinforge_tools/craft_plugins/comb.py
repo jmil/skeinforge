@@ -14,25 +14,25 @@ will start all over the place and a low value means loops will start at roughly 
 Perimeter Departure Distance over Extrusion Width' is the ratio of the minimum distance that the extruder will travel and loop
 before leaving an outer perimeter.  A high value means the extruder will loop many times before leaving, so that the ooze will
 finish within the perimeter, a low value means the extruder will not loop and a stringer might be created from the outer
-perimeter.  To run comb, in a shell type:
-> python comb.py
+perimeter.
 
-The following examples comb the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the folder
-which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and comb.py.  The comb function will comb if 'Activate Comb' is true, which
-can be set in the dialog or by changing the preferences file 'comb.csv' in the '.skeinforge' folder in your home directory with a text
-editor or a spreadsheet program set to separate tabs.  The functions writeOutput and getChainGcode check to see if the
-text has been combed, if not they call getChainGcode in tower.py to tower the text; once they have the towered text, then
-they comb.  Pictures of combing in action are available from the Metalab blog at:
-http://reprap.soup.io/?search=combing
+The following examples comb the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
+and comb.py.
 
 
 > python comb.py
-This brings up the dialog, after clicking 'Comb', the following is printed:
-File Screw Holder Bottom.stl is being chain combed.
-The combed file is saved as Screw Holder Bottom_comb.gcode
+This brings up the comb dialog.
 
 
->python
+> python comb.py Screw Holder Bottom.stl
+The comb tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The comb tool has created the file:
+.. Screw Holder Bottom_comb.gcode
+
+
+> python
 Python 2.5.1 (r251:54863, Sep 22 2007, 01:43:31)
 [GCC 4.2.1 (SUSE Linux)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
@@ -42,9 +42,11 @@ This brings up the comb dialog.
 
 
 >>> comb.writeOutput()
+The comb tool is parsing the file:
 Screw Holder Bottom.stl
-File Screw Holder Bottom.stl is being chain combed.
-The combed file is saved as Screw Holder Bottom_comb.gcode
+..
+The comb tool has created the file:
+.. Screw Holder Bottom_comb.gcode
 
 """
 
@@ -83,9 +85,9 @@ def getCraftedTextFromText( gcodeText, combPreferences = None ):
 		return gcodeText
 	return CombSkein().getCraftedGcode( combPreferences, gcodeText )
 
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( CombPreferences() )
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return CombPreferences()
 
 def isLoopNumberEqual( betweenX, betweenXIndex, loopNumber ):
 	"Determine if the loop number is equal."
@@ -94,11 +96,10 @@ def isLoopNumberEqual( betweenX, betweenXIndex, loopNumber ):
 	return betweenX[ betweenXIndex ].index == loopNumber
 
 def writeOutput( fileName = '' ):
-	"Comb a gcode linear move file.  Chain comb the gcode if it is not already combed.  If no fileName is specified, comb the first unmodified gcode file in this folder."
+	"Comb a gcode linear move file."
 	fileName = interpret.getFirstTranslatorFileNameUnmodified( fileName )
-	if fileName == '':
-		return
-	consecution.writeChainText( fileName, ' is being chain combed.', 'The combed file is saved as ', 'comb' )
+	if fileName != '':
+		consecution.writeChainTextWithNounMessage( fileName, 'comb' )
 
 
 class CombPreferences:
@@ -119,7 +120,7 @@ class CombPreferences:
 		self.archive.append( self.fileNameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Comb'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.comb.html' )
 
 	def execute( self ):
@@ -136,7 +137,6 @@ class CombSkein:
 		self.betweenTable = {}
 		self.boundaryLoop = None
 		self.distanceFeedRate = gcodec.DistanceFeedRate()
-		self.fillInset = 0.18
 		self.isPerimeter = False
 		self.layer = None
 		self.layers = []
@@ -153,24 +153,24 @@ class CombSkein:
 	def addGcodeFromThreadZ( self, thread, z ):
 		"Add a gcode thread to the output."
 		if len( thread ) > 0:
-			self.addGcodeMovementZ( self.travelFeedratePerMinute, thread[ 0 ], z )
+			self.addGcodeMovementZ( self.travelFeedRatePerMinute, thread[ 0 ], z )
 		else:
 			print( "zero length vertex positions array which was skipped over, this should never happen" )
 		if len( thread ) < 2:
 			return
 		self.distanceFeedRate.addLine( 'M101' )
-		self.addGcodePathZ( self.feedrateMinute, thread[ 1 : ], z )
+		self.addGcodePathZ( self.feedRateMinute, thread[ 1 : ], z )
 
-	def addGcodeMovementZ( self, feedrateMinute, point, z ):
+	def addGcodeMovementZ( self, feedRateMinute, point, z ):
 		"Add a movement to the output."
-		if feedrateMinute == None:
-			feedrateMinute = self.operatingFeedratePerMinute
-		self.distanceFeedRate.addGcodeMovementZWithFeedRate( feedrateMinute, point, z )
+		if feedRateMinute == None:
+			feedRateMinute = self.operatingFeedRatePerMinute
+		self.distanceFeedRate.addGcodeMovementZWithFeedRate( feedRateMinute, point, z )
 
-	def addGcodePathZ( self, feedrateMinute, path, z ):
+	def addGcodePathZ( self, feedRateMinute, path, z ):
 		"Add a gcode path, without modifying the extruder, to the output."
 		for point in path:
-			self.addGcodeMovementZ( feedrateMinute, point, z )
+			self.addGcodeMovementZ( feedRateMinute, point, z )
 
 	def addIfTravel( self, splitLine ):
 		"Add travel move around loops if the extruder is off."
@@ -178,24 +178,25 @@ class CombSkein:
 		if not self.extruderActive and self.oldLocation != None:
 			if len( self.getBetweens() ) > 0:
 				highestZ = max( location.z, self.oldLocation.z )
-				self.addGcodePathZ( self.travelFeedratePerMinute, self.getAroundBetweenPath( location ), highestZ )
+				self.addGcodePathZ( self.travelFeedRatePerMinute, self.getAroundBetweenPath( location ), highestZ )
 		self.oldLocation = location
 
 	def addPathBeforeEnd( self, aroundBetweenPath, location, loop ):
 		"Add the path before the end of the loop."
-		halfFillInset = 0.5 * self.fillInset
-		if self.arrivalInsetFollowDistance < halfFillInset:
+		if self.arrivalInsetFollowDistance < self.lessThanFillInset:
 			return
+		slightlyMoreThanLessThanFillInset = 1.01 * self.lessThanFillInset
+		muchGreaterThanLessThanFillInset = 2.5 * self.lessThanFillInset
 		locationComplex = location.dropAxis( 2 )
 		closestInset = None
 		closestDistanceIndex = euclidean.DistanceIndex( 999999999999999999.0, - 1 )
 		loop = euclidean.getAwayPoints( loop, self.perimeterWidth )
-		circleNodes = intercircle.getCircleNodesFromLoop( loop, self.fillInset )
+		circleNodes = intercircle.getCircleNodesFromLoop( loop, slightlyMoreThanLessThanFillInset )
 		centers = []
 		centers = intercircle.getCentersFromCircleNodes( circleNodes )
 		for center in centers:
-			inset = intercircle.getInsetFromClockwiseLoop( center, halfFillInset )
-			if intercircle.isLargeSameDirection( inset, center, self.fillInset ):
+			inset = intercircle.getInsetFromClockwiseLoop( center, self.lessThanFillInset )
+			if intercircle.isLargeSameDirection( inset, center, muchGreaterThanLessThanFillInset ):
 				if euclidean.isPathInsideLoop( loop, inset ) == euclidean.isWiddershins( loop ):
 					distanceIndex = euclidean.getNearestDistanceIndex( locationComplex, inset )
 					if distanceIndex.distance < closestDistanceIndex.distance:
@@ -213,9 +214,9 @@ class CombSkein:
 		pathBeforeArrival = euclidean.getClippedAtEndLoopPath( self.arrivalInsetFollowDistance, closestInset )
 		pointBeforeArrival = pathBeforeArrival[ - 1 ]
 		aroundBetweenPath.append( pointBeforeArrival )
-		if self.arrivalInsetFollowDistance <= halfFillInset:
+		if self.arrivalInsetFollowDistance <= self.lessThanFillInset:
 			return
-		aroundBetweenPath += euclidean.getClippedAtEndLoopPath( halfFillInset, closestInset )[ len( pathBeforeArrival ) - 1 : ]
+		aroundBetweenPath += euclidean.getClippedAtEndLoopPath( self.lessThanFillInset, closestInset )[ len( pathBeforeArrival ) - 1 : ]
 
 	def addPathBetween( self, aroundBetweenPath, betweenFirst, betweenSecond, isLeavingPerimeter, loopFirst ):
 		"Add a path between the perimeter and the fill."
@@ -263,7 +264,7 @@ class CombSkein:
 			loop = euclidean.getLoopStartingNearest( perimeterHalfWidth, self.beforeLoopLocation, loop )
 		if jitterDistance != 0.0:
 			loop = self.getJitteredLoop( jitterDistance, loop )
-			loop = euclidean.getAwayPoints( loop, 0.2 * self.fillInset )
+			loop = euclidean.getAwayPoints( loop, 0.2 * self.perimeterWidth )
 		self.loopPath.path = loop + [ loop[ 0 ] ]
 		self.addGcodeFromThreadZ( self.loopPath.path, self.loopPath.z )
 		self.loopPath = None
@@ -301,18 +302,10 @@ class CombSkein:
 			return self.betweenTable[ self.layerZ ]
 		if self.layerZ not in self.layerTable:
 			return []
-		halfFillInset = 0.5 * self.fillInset
-		betweens = []
+		self.betweenTable[ self.layerZ ] = []
 		for boundaryLoop in self.layerTable[ self.layerZ ]:
-			circleNodes = intercircle.getCircleNodesFromLoop( boundaryLoop, self.fillInset )
-			centers = intercircle.getCentersFromCircleNodes( circleNodes )
-			for center in centers:
-				inset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, halfFillInset )
-				if intercircle.isLargeSameDirection( inset, center, self.fillInset ):
-					if euclidean.isPathInsideLoop( boundaryLoop, inset ) == euclidean.isWiddershins( boundaryLoop ):
-						betweens.append( inset )
-		self.betweenTable[ self.layerZ ] = betweens
-		return betweens
+			self.betweenTable[ self.layerZ ] += intercircle.getInsetLoopsFromLoop( self.lessThanFillInset, boundaryLoop )
+		return self.betweenTable[ self.layerZ ]
 
 	def getCraftedGcode( self, combPreferences, gcodeText ):
 		"Parse gcode text and store the comb gcode."
@@ -370,7 +363,7 @@ class CombSkein:
 				closestBetween = between
 				closestDistanceIndex = distanceIndex
 		if closestBetween == None:
-			print( 'This should never happen, closestBetween should always exist.' )
+			print( 'This should never happen, closestBetween should always exist in getOutloopLocation in comb.' )
 			print( point )
 			print( self.getBetweens() )
 			return pointComplex
@@ -378,9 +371,7 @@ class CombSkein:
 		segmentBegin = closestBetween[ closestIndex ]
 		segmentEnd = closestBetween[ ( closestIndex + 1 ) % len( closestBetween ) ]
 		nearestPoint = euclidean.getNearestPointOnSegment( segmentBegin, segmentEnd, pointComplex )
-		distanceToNearestPoint = abs( pointComplex - nearestPoint )
-		nearestMinusOld = 1.5 * ( nearestPoint - pointComplex )
-		return pointComplex + nearestMinusOld
+		return pointComplex + 1.1 * ( nearestPoint - pointComplex )
 
 	def getStartIndex( self, xIntersections ):
 		"Get the start index of the intersections."
@@ -399,7 +390,7 @@ class CombSkein:
 		"Add a movement to the output."
 		self.distanceFeedRate.resetLocationOutput()
 		self.extruderActive = False
-		self.feedrateMinute = None
+		self.feedRateMinute = None
 		self.isLoopPerimeter = False
 		self.layerGolden = 0.0
 		self.loopPath = None
@@ -454,7 +445,7 @@ class CombSkein:
 	def linearMove( self, splitLine ):
 		"Add to loop path if this is a loop or path."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
+		self.feedRateMinute = gcodec.getFeedRateMinute( self.feedRateMinute, splitLine )
 		if self.isLoopPerimeter:
 			if self.isNextExtruderOn():
 				self.loopPath = euclidean.PathZ( location.z )
@@ -514,16 +505,17 @@ class CombSkein:
 				self.distanceFeedRate.addLine( '(<procedureDone> comb </procedureDone>)' )
 				return
 			elif firstWord == '(<fillInset>':
-				self.fillInset = float( splitLine[ 1 ] )
-			elif firstWord == '(<operatingFeedratePerSecond>':
-				self.operatingFeedratePerMinute = 60.0 * float( splitLine[ 1 ] )
+				fillInset = float( splitLine[ 1 ] )
+				self.lessThanFillInset = 0.8 * fillInset # should be a fair way before the extrusion and loop interface
+			elif firstWord == '(<operatingFeedRatePerSecond>':
+				self.operatingFeedRatePerMinute = 60.0 * float( splitLine[ 1 ] )
 			elif firstWord == '(<perimeterWidth>':
 				self.perimeterWidth = float( splitLine[ 1 ] )
 				self.arrivalInsetFollowDistance = combPreferences.arrivalInsetFollowDistanceOverExtrusionWidth.value * self.perimeterWidth
 				self.jitter = combPreferences.jitterOverExtrusionWidth.value * self.perimeterWidth
 				self.minimumPerimeterDepartureDistance = combPreferences.minimumPerimeterDepartureDistanceOverExtrusionWidth.value * self.perimeterWidth
-			elif firstWord == '(<travelFeedratePerSecond>':
-				self.travelFeedratePerMinute = 60.0 * float( splitLine[ 1 ] )
+			elif firstWord == '(<travelFeedRatePerSecond>':
+				self.travelFeedRatePerMinute = 60.0 * float( splitLine[ 1 ] )
 			self.distanceFeedRate.addLine( line )
 
 	def parseLine( self, combPreferences, line ):
@@ -555,7 +547,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

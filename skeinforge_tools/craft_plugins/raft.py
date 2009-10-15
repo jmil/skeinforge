@@ -1,97 +1,95 @@
 """
 Raft is a script to create a reusable raft, elevate the nozzle and set the temperature.
 
-Allan Ecker aka The Masked Retriever's has written the following two quicktips for raft.
-"Skeinforge Quicktip: The Raft, Part 1" at: http://blog.thingiverse.com/2009/07/14/skeinforge-quicktip-the-raft-part-1/
-"Skeinforge Quicktip: The Raft, Part II": http://blog.thingiverse.com/2009/08/04/skeinforge-quicktip-the-raft-part-ii/
+Allan Ecker aka The Masked Retriever's has written two quicktips for raft which follow below.
+"Skeinforge Quicktip: The Raft, Part 1" at:
+http://blog.thingiverse.com/2009/07/14/skeinforge-quicktip-the-raft-part-1/
+"Skeinforge Quicktip: The Raft, Part II" at:
+http://blog.thingiverse.com/2009/08/04/skeinforge-quicktip-the-raft-part-ii/
 
-The default 'Activate Raft' checkbox is on.  When it is on, the functions described below will work, when it is off, the
-functions will not be called.  The raft script sets the temperature.  If the "Activate Raft, Elevate Nozzle, Orbit and Set
-Altitude" checkbox is checked, the script will also create a raft, elevate the nozzle, orbit and set the altitude of the bottom
-of the raft.
+The default 'Activate Raft' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions will not be called.  The
+raft script sets the temperature.  If the "Activate Raft, Elevate Nozzle, Orbit and Set Altitude" checkbox is checked, the script will also create a raft,
+elevate the nozzle, orbit and set the altitude of the bottom of the raft.
 
-Raft is based on the Nophead's reusable raft, which has a base layer running one way, and a couple of perpendicular layers
-above.  Each set of layers can be set to a different temperature.  There is the option of having the extruder orbit the raft for a
-while, so the heater barrel has time to reach a different temperature, without ooze accumulating around the nozzle.  To run
-raft, in a shell type:
-> python raft.py
+Raft is based on the Nophead's reusable raft, which has a base layer running one way, and a couple of perpendicular layers above.  Each set of layers
+can be set to a different temperature.  There is the option of having the extruder orbit the raft for a while, so the heater barrel has time to reach a
+different temperature, without ooze accumulating around the nozzle.
 
-The important values for the raft preferences are the temperatures of the raft, the first layer and the next layers.  These will be
-different for each material.  The default preferences for ABS, HDPE, PCL & PLA are extrapolated from Nophead's
-experiments.  To change the material, in a shell type:
-> python profile.py
+The important values for the raft preferences are the temperatures of the raft, the first layer and the next layers.  These will be different for each
+material.  The default preferences for ABS, HDPE, PCL & PLA are extrapolated from Nophead's experiments.
 
-This brings up the profile preferences dialog.  In that dialog you can add or delete a profile on the listbox and you change
-the selected profile.  After you can change the selected profile, run raft again.  If there are preferences for the new profile,
-those will be in the raft dialog.  If there are no preferences for the new profile, the preferences will be set to defaults and you
-will have to set new preferences for the new profile.
+This brings up the profile preferences dialog.  In that dialog you can add or delete a profile on the listbox and you change the selected profile.  After you
+can change the selected profile, run raft again.  If there are preferences for the new profile, those will be in the raft dialog.  If there are no preferences
+for the new profile, the preferences will be set to defaults and you will have to set new preferences for the new profile.
 
-The "Base Infill Density" preference is the infill density ratio of the base of the raft, the default ratio is half.  The "Base Layer
-Height over Layer Thickness" preference is the ratio of the height & width of the base layer compared to the height and width
-of the shape infill, the default is two.  The feedrate will be slower for raft layers which have thicker extrusions than the shape
-infill.  The "Base Layers" preference is the number of base layers, the default is one.  The "Base Nozzle Lift over Half Base
-Layer Thickness" is the amount the nozzle is above the center of the extrusion divided by half the base layer thickness.
+The "Base Infill Density" preference is the infill density ratio of the base of the raft, the default ratio is half.  The "Base Layer Height over Layer
+Thickness" preference is the ratio of the height & width of the base layer compared to the height and width of the shape infill, the default is two.  The
+feed rate will be slower for raft layers which have thicker extrusions than the shape infill.  The "Base Layers" preference is the number of base layers,
+the default is one.  The "Base Nozzle Lift over Base Layer Thickness" is the amount the nozzle is above the center of the extrusion divided by the base
+layer thickness.
 
-The interface of the raft has equivalent preferences called "Interface Infill Density", "Interface Layer Thickness over Extrusion
-Height", "Interface Layers" and "Interface Nozzle Lift over Half Base Layer Thickness".  The shape has the equivalent
-preference of called "Operating Nozzle Lift over Half Layer Thickness".
+The interface of the raft has equivalent preferences called "Interface Infill Density", "Interface Layer Thickness over Extrusion Height", "Interface
+Layers" and "Interface Nozzle Lift over Base Layer Thickness".  The shape has the equivalent preference of called "Operating Nozzle Lift over Layer
+Thickness".
 
 The altitude that the bottom of the raft will be set to the "Bottom Altitude" preference.
 
-The raft fills a rectangle whose size is the rectangle around the bottom layer of the shape expanded on each side by the
-"Raft Outset Radius over Extrusion Width" preference times the extrusion width, minus the "Infill Overhang" ratio times the
-width of the extrusion of the raft.
+The raft fills a rectangle whose size is the rectangle around the bottom layer of the shape expanded on each side by the "Raft Outset Radius over
+Extrusion Width" preference times the extrusion width, minus the "Infill Overhang" ratio times the width of the extrusion of the raft.
 
-In the "Support Material Choice" radio button group, if "No Support Material" is selected then raft will not add support
-material, this is the default because the raft takes time to generate.  If "Support Material Everywhere" is selected, support
-material will be added wherever there are overhangs, even inside the object; because support material inside objects is hard
-or impossible to remove, this option should only be chosen if the shape has a cavity that needs support and there is some
-way to extract the support material.  If "Support Material on Exterior Only" is selected, support material will be added only
-the exterior of the object; this is the best option for most objects which require support material.  The "Support Minimum
-Angle" preference is the minimum angle that a surface overhangs before support material is added, the default is sixty
-degrees. The "Support Flowrate over Operating Flowrate" is the ratio of the flowrate when the support is extruded over the
-operating flowrate.  With a number less than one, the support flowrate will be smaller so the support will be thinner and
-easier to remove, the default is 0.9.  The "Support Gap over Perimeter Extrusion Width" is the gap between the support
-material and the object over the perimeter extrusion width, the default is 0.5.
+In the "Support Material Choice" radio button group, if "No Support Material" is selected then raft will not add support material, this is the default
+because the raft takes time to generate.  If "Support Material Everywhere" is selected, support material will be added wherever there are overhangs,
+even inside the object; because support material inside objects is hard or impossible to remove, this option should only be chosen if the shape has a
+cavity that needs support and there is some way to extract the support material.  If "Support Material on Exterior Only" is selected, support material
+will be added only the exterior of the object; this is the best option for most objects which require support material.  The "Support Minimum Angle"
+preference is the minimum angle that a surface overhangs before support material is added, the default is sixty degrees. The "Support Flowrate over
+Operating Flowrate" is the ratio of the flow rate when the support is extruded over the operating flow rate.  With a number less than one, the support
+flow rate will be smaller so the support will be thinner and easier to remove, the default is 0.9.  The "Support Gap over Perimeter Extrusion Width" is
+the gap between the support material and the object over the perimeter extrusion width, the default is 0.5.
 
-If support material is generated, then if there is a file support_start.txt, it will add that to the start of the support gcode. After
-it has added the support gcode, it will add the file support_end.txt if it exists.  Raft does not care if the text file names are
-capitalized, but some file systems do not handle file name cases properly, so to be on the safe side you should give them
-lower case names.  Raft looks for those files in the alterations folder in the .skeinforge folder in the home directory. If it
-doesn't find the file it then looks in the alterations folder in the skeinforge_tools folder. If it doesn't find anything there it looks
-in the skeinforge_tools folder.
+If support material is generated, then if there is a file support_start.gcode, it will add that to the start of the support gcode. After it has added the
+support gcode, it will add the file support_end.gcode if it exists.  Raft does not care if the text file names are capitalized, but some file systems do not
+handle file name cases properly, so to be on the safe side you should give them lower case names.  Raft looks for those files in the alterations folder in
+the .skeinforge folder in the home directory. If it doesn't find the file it then looks in the alterations folder in the skeinforge_tools folder. If it doesn't find
+anything there it looks in the skeinforge_tools folder.
 
-The extruder will orbit for at least "Temperature Change Time Before Raft" seconds before extruding the raft.  It will orbit for
-at least "Temperature Change Time Before First Layer Outline" seconds before extruding the outline of the first layer of the
-shape.  It will orbit for at least "Temperature Change Time Before Next Threads" seconds before extruding within the outline
-of the first layer of the shape and before extruding the next layers of the shape.  It will orbit for at least "Temperature
-Change Time Before Support Layers" seconds before extruding the support layers.  It will orbit for at least "Temperature
-Change Time Before Supported Layers" seconds before extruding the layer of the shape above the support layer.  If a time
-is zero, it will not orbit.
+The extruder will orbit for at least "Temperature Change Time Before Raft" seconds before extruding the raft.  It will orbit for at least "Temperature
+Change Time Before First Layer Outline" seconds before extruding the outline of the first layer of the shape.  It will orbit for at least "Temperature
+Change Time Before Next Threads" seconds before extruding within the outline of the first layer of the shape and before extruding the next layers of
+the shape.  It will orbit for at least "Temperature Change Time Before Support Layers" seconds before extruding the support layers.  It will orbit for at
+least "Temperature Change Time Before Supported Layers" seconds before extruding the layer of the shape above the support layer.  If a time is zero,
+it will not orbit.
 
-The "Temperature of Raft" preference sets the temperature of the raft.  The "Temperature of Shape First Layer Outline"
-preference sets the temperature of the outline of the first layer of the shape.  The "Temperature of Shape First Layer Within"
-preference sets the temperature within the outline of the first layer of the shape.  The "Temperature of Shape Next Layers"
-preference sets the temperature of the next layers of the shape.  The "Temperature of Support Layers" preference sets the
-temperature of the support layer.  The "Temperature of Supported Layers" preference sets the temperature of the layer of the
-shape above the support layer.
+The "Temperature of Raft" preference sets the temperature of the raft.  The "Temperature of Shape First Layer Outline" preference sets the temperature
+of the outline of the first layer of the shape.  The "Temperature of Shape First Layer Within" preference sets the temperature within the outline of the
+first layer of the shape.  The "Temperature of Shape Next Layers" preference sets the temperature of the next layers of the shape.  The "Temperature
+of Support Layers" preference sets the temperature of the support layer.  The "Temperature of Supported Layers" preference sets the temperature of
+the layer of the shape above the support layer.
 
-The following examples raft the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the folder
-which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and raft.py.  The raft function will raft if "Activate Raft, Elevate Nozzle,
-Orbit and Set Altitude" is true, which can be set in the dialog or by changing the preferences file 'raft.csv' with a text editor or a
-spreadsheet program set to separate tabs.  The functions writeOutput and getChainGcode check to see if the text has
-been rafted, if not they call getChainGcode in speed.py to get speeded gcode; once they have the speeded text, then
-they raft.  Pictures of rafting in action are available from the Metalab blog at:
+The 'Temperature of Bed' preference sets the temperature of the bed.  As of October 2009, no hardware supports this, but if it ever does it will have a
+setting from the software.  If the temperature is less than - 300 Celcius, no M109 bed temperature setting will be added to the gcode, the default is
+- 1060.0.  The 'Temperature of Chamber' preference sets the temperature of the bed.  As of October 2009, no hardware supports this, but if it ever does
+it will have a setting from the software.  If the temperature is less than - 300 Celcius, no M110 chamber temperature setting will be added to the gcode,
+the default is - 1030.0.
+
+The following examples raft the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
+and raft.py.  Pictures of rafting in action are available from the Metalab blog at:
 http://reprap.soup.io/?search=rafting
 
 
 > python raft.py
-This brings up the dialog, after clicking 'Raft', the following is printed:
-File Screw Holder Bottom.stl is being chain rafted.
-The rafted file is saved as Screw Holder Bottom_raft.gcode
+This brings up the raft dialog.
 
 
->python
+> python raft.py Screw Holder Bottom.stl
+The raft tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The raft tool has created the file:
+Screw Holder Bottom_raft.gcode
+
+
+> python
 Python 2.5.1 (r251:54863, Sep 22 2007, 01:43:31)
 [GCC 4.2.1 (SUSE Linux)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
@@ -100,10 +98,14 @@ Type "help", "copyright", "credits" or "license" for more information.
 This brings up the raft dialog.
 
 
->>> raft.writeOutput()
+>>> raft.writeOutput( 'Screw Holder Bottom.stl' )
 Screw Holder Bottom.stl
-File Screw Holder Bottom.stl is being chain rafted.
-The rafted file is saved as Screw Holder Bottom_raft.gcode
+The raft tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The raft tool has created the file:
+Screw Holder Bottom_raft.gcode
+
 
 """
 
@@ -160,10 +162,6 @@ def getCrossHatchPointLine( crossHatchPointLineTable, y ):
 	if not crossHatchPointLineTable.has_key( y ):
 		crossHatchPointLineTable[ y ] = {}
 	return crossHatchPointLineTable[ y ]
-
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( RaftPreferences() )
 
 def getEndpointsFromYIntersections( x, yIntersections ):
 	"Get endpoints from the y intersections."
@@ -226,6 +224,10 @@ def getJoinOfXIntersectionIndexes( xIntersectionIndexList ):
 			xIntersectionList.append( xIntersectionIndex.x )
 	return xIntersectionList
 
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return RaftPreferences()
+
 def joinSegmentTables( fromTable, intoTable ):
 	"Join both segment tables and put the join into the intoTable."
 	intoTableKeys = intoTable.keys()
@@ -273,12 +275,11 @@ def subtractFill( fillXIntersectionIndexTable, supportSegmentLayerTable ):
 			del supportSegmentLayerTable[ supportSegmentLayerTableKey ]
 
 def writeOutput( fileName = '' ):
-	"""Raft a gcode linear move file.  Chain raft the gcode if it is not already rafted.
-	If no fileName is specified, raft the first unmodified gcode file in this folder."""
+	"Raft a gcode linear move file."
 	fileName = interpret.getFirstTranslatorFileNameUnmodified( fileName )
 	if fileName == '':
 		return
-	consecution.writeChainText( fileName, ' is being chain rafted.', 'The rafted file is saved as ', 'raft' )
+	consecution.writeChainTextWithNounMessage( fileName, 'raft' )
 
 
 class RaftPreferences:
@@ -297,8 +298,8 @@ class RaftPreferences:
 		self.archive.append( self.baseLayerThicknessOverLayerThickness )
 		self.baseLayers = preferences.IntPreference().getFromValue( 'Base Layers (integer):', 1 )
 		self.archive.append( self.baseLayers )
-		self.baseNozzleLiftOverHalfBaseLayerThickness = preferences.FloatPreference().getFromValue( 'Base Nozzle Lift over Half Base Layer Thickness (ratio):', 0.75 )
-		self.archive.append( self.baseNozzleLiftOverHalfBaseLayerThickness )
+		self.baseNozzleLiftOverBaseLayerThickness = preferences.FloatPreference().getFromValue( 'Base Nozzle Lift over Base Layer Thickness (ratio):', 0.375 )
+		self.archive.append( self.baseNozzleLiftOverBaseLayerThickness )
 		self.bottomAltitude = preferences.FloatPreference().getFromValue( 'Bottom Altitude:', 0.0 )
 		self.archive.append( self.bottomAltitude )
 		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Rafted', '' )
@@ -311,13 +312,13 @@ class RaftPreferences:
 		self.archive.append( self.interfaceLayerThicknessOverLayerThickness )
 		self.interfaceLayers = preferences.IntPreference().getFromValue( 'Interface Layers (integer):', 2 )
 		self.archive.append( self.interfaceLayers )
-		self.interfaceNozzleLiftOverHalfInterfaceLayerThickness = preferences.FloatPreference().getFromValue( 'Interface Nozzle Lift over Half Interface Layer Thickness (ratio):', 1.0 )
-		self.archive.append( self.interfaceNozzleLiftOverHalfInterfaceLayerThickness )
-		self.operatingNozzleLiftOverHalfLayerThickness = preferences.FloatPreference().getFromValue( 'Operating Nozzle Lift over Half Layer Thickness (ratio):', 1.0 )
-		self.archive.append( self.operatingNozzleLiftOverHalfLayerThickness )
-		self.raftOutsetRadiusOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Raft Outset Radius over Extrusion Width (ratio):', 15.0 )
+		self.interfaceNozzleLiftOverInterfaceLayerThickness = preferences.FloatPreference().getFromValue( 'Interface Nozzle Lift over Interface Layer Thickness (ratio):', 0.45 )
+		self.archive.append( self.interfaceNozzleLiftOverInterfaceLayerThickness )
+		self.operatingNozzleLiftOverLayerThickness = preferences.FloatPreference().getFromValue( 'Operating Nozzle Lift over Layer Thickness (ratio):', 0.5 )
+		self.archive.append( self.operatingNozzleLiftOverLayerThickness )
+		self.raftOutsetRadiusOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Raft Outset Radius over Extrusion Width (ratio):', 8.0 )
 		self.archive.append( self.raftOutsetRadiusOverExtrusionWidth )
-		self.supportCrossHatch = preferences.BooleanPreference().getFromValue( 'Support Cross Hatch:', False )
+		self.supportCrossHatch = preferences.BooleanPreference().getFromValue( 'Support Cross Hatch:', True )
 		self.archive.append( self.supportCrossHatch )
 		self.supportFlowrateOverOperatingFlowrate = preferences.FloatPreference().getFromValue( 'Support Flowrate over Operating Flowrate (ratio):', 1.0 )
 		self.archive.append( self.supportFlowrateOverOperatingFlowrate )
@@ -325,11 +326,11 @@ class RaftPreferences:
 		self.archive.append( self.supportGapOverPerimeterExtrusionWidth )
 		self.supportMaterialChoice = preferences.MenuButtonDisplay().getFromName( 'Support Material Choice: ' )
 		self.archive.append( self.supportMaterialChoice )
-		self.supportChoiceNoSupportMaterial = preferences.MenuRadio().getFromMenuButtonDisplay( self.supportMaterialChoice, 'No Support Material', True )
+		self.supportChoiceNoSupportMaterial = preferences.MenuRadio().getFromMenuButtonDisplay( self.supportMaterialChoice, 'No Support', True )
 		self.archive.append( self.supportChoiceNoSupportMaterial )
-		self.supportChoiceSupportMateriaEverywhere = preferences.MenuRadio().getFromMenuButtonDisplay( self.supportMaterialChoice, 'Support Material Everywhere', False )
+		self.supportChoiceSupportMateriaEverywhere = preferences.MenuRadio().getFromMenuButtonDisplay( self.supportMaterialChoice, 'Support Everywhere', False )
 		self.archive.append( self.supportChoiceSupportMateriaEverywhere )
-		self.supportChoiceSupportMaterialOnExteriorOnly = preferences.MenuRadio().getFromMenuButtonDisplay( self.supportMaterialChoice, 'Support Material on Exterior Only', False )
+		self.supportChoiceSupportMaterialOnExteriorOnly = preferences.MenuRadio().getFromMenuButtonDisplay( self.supportMaterialChoice, 'Support on Exterior Only', False )
 		self.archive.append( self.supportChoiceSupportMaterialOnExteriorOnly )
 		self.supportMinimumAngle = preferences.FloatPreference().getFromValue( 'Support Minimum Angle (degrees):', 60.0 )
 		self.archive.append( self.supportMinimumAngle )
@@ -343,6 +344,10 @@ class RaftPreferences:
 		self.archive.append( self.temperatureChangeTimeBeforeSupportLayers )
 		self.temperatureChangeTimeBeforeSupportedLayers = preferences.FloatPreference().getFromValue( 'Temperature Change Time Before Supported Layers (seconds):', 150.0 )
 		self.archive.append( self.temperatureChangeTimeBeforeSupportedLayers )
+		self.temperatureBed = preferences.FloatPreference().getFromValue( 'Temperature of Bed (Celcius):', - 1060.0 )
+		self.archive.append( self.temperatureBed )
+		self.temperatureChamber = preferences.FloatPreference().getFromValue( 'Temperature of Chamber (Celcius):', - 1030.0 )
+		self.archive.append( self.temperatureChamber )
 		self.temperatureRaft = preferences.FloatPreference().getFromValue( 'Temperature of Raft (Celcius):', 200.0 )
 		self.archive.append( self.temperatureRaft )
 		self.temperatureShapeFirstLayerOutline = preferences.FloatPreference().getFromValue( 'Temperature of Shape First Layer Outline (Celcius):', 220.0 )
@@ -357,7 +362,7 @@ class RaftPreferences:
 		self.archive.append( self.temperatureShapeSupportedLayers )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Raft'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.raft.html' )
 
 	def execute( self ):
@@ -376,7 +381,7 @@ class RaftSkein:
 		self.distanceFeedRate = gcodec.DistanceFeedRate()
 		self.extrusionStart = True
 		self.extrusionTop = 0.0
-		self.feedrateMinute = 961.0
+		self.feedRateMinute = 961.0
 		self.interfaceStepsUntilEnd = []
 		self.isFirstLayerWithinTemperatureAdded = False
 		self.isStartupEarly = False
@@ -391,25 +396,24 @@ class RaftSkein:
 		self.operatingFlowrateString = None
 		self.operatingLayerEndLine = '(<operatingLayerEnd> </operatingLayerEnd>)'
 		self.operatingJump = None
-		self.orbitalFeedratePerSecond = 2.01
+		self.orbitalFeedRatePerSecond = 2.01
 		self.perimeterWidth = 0.6
 		self.supportFlowrateString = None
 		self.supportLayers = []
 		self.supportSegmentTables = []
-		self.travelFeedratePerMinute = None
+		self.travelFeedRatePerMinute = None
 
 	def addBaseLayer( self, baseExtrusionWidth, baseStep, stepBegin, stepEnd ):
 		"Add a base layer."
 		baseLayerThickness = self.layerThickness * self.baseLayerThicknessOverLayerThickness
-		halfBaseLayerThickness = 0.5 * baseLayerThickness
 		halfBaseExtrusionWidth = 0.5 * baseExtrusionWidth
 		stepsUntilEnd = self.getStepsUntilEnd( stepBegin.real + halfBaseExtrusionWidth, stepEnd.real, baseStep )
 		baseOverhang = self.raftPreferences.infillOverhang.value * halfBaseExtrusionWidth - halfBaseExtrusionWidth
 		beginY = stepBegin.imag - baseOverhang
 		endY = stepEnd.imag + baseOverhang
 		segments = []
-		zCenter = self.extrusionTop + halfBaseLayerThickness
-		z = zCenter + halfBaseLayerThickness * self.raftPreferences.baseNozzleLiftOverHalfBaseLayerThickness.value
+		zCenter = self.extrusionTop + 0.5 * baseLayerThickness
+		z = zCenter + baseLayerThickness * self.raftPreferences.baseNozzleLiftOverBaseLayerThickness.value
 		for x in stepsUntilEnd:
 			begin = complex( x, beginY )
 			end = complex( x, endY )
@@ -419,21 +423,20 @@ class RaftSkein:
 			return
 		self.addLayerFromSegments( baseLayerThickness, self.baseLayerThicknessOverLayerThickness, segments, z )
 
-	def addFlowrateLineIfNecessary( self, flowrateString ):
-		"Add a line of flowrate if different."
-		if flowrateString == self.oldFlowrateString:
+	def addFlowrateLineIfNecessary( self, flowRateString ):
+		"Add a line of flow rate if different."
+		if flowRateString == self.oldFlowrateString:
 			return
-		if flowrateString != None:
-			self.distanceFeedRate.addLine( 'M108 S' + flowrateString ) # Set flowrate.
-		self.oldFlowrateString = flowrateString
+		if flowRateString != None:
+			self.distanceFeedRate.addLine( 'M108 S' + flowRateString )
+		self.oldFlowrateString = flowRateString
 
 	def addInterfaceLayer( self ):
 		"Add an interface layer."
 		interfaceLayerThickness = self.layerThickness * self.interfaceLayerThicknessOverLayerThickness
-		halfInterfaceLayerThickness = 0.5 * interfaceLayerThickness
 		segments = []
-		zCenter = self.extrusionTop + halfInterfaceLayerThickness
-		z = zCenter + halfInterfaceLayerThickness * self.raftPreferences.interfaceNozzleLiftOverHalfInterfaceLayerThickness.value
+		zCenter = self.extrusionTop + 0.5 * interfaceLayerThickness
+		z = zCenter + interfaceLayerThickness * self.raftPreferences.interfaceNozzleLiftOverInterfaceLayerThickness.value
 		for y in self.interfaceStepsUntilEnd:
 			begin = complex( self.interfaceBeginX, y )
 			end = complex( self.interfaceEndX, y )
@@ -446,7 +449,7 @@ class RaftSkein:
 	def addLayerFromSegments( self, layerLayerThickness, layerThicknessRatio, segments, z ):
 		"Add a layer from segments and raise the extrusion top."
 		layerThicknessRatioSquared = layerThicknessRatio * layerThicknessRatio
-		feedrateMinute = self.feedrateMinute / layerThicknessRatioSquared
+		feedRateMinute = self.feedRateMinute / layerThicknessRatioSquared
 		firstSegment = segments[ 0 ]
 		nearestPoint = firstSegment[ 1 ].point
 		path = [ firstSegment[ 0 ].point, nearestPoint ]
@@ -463,7 +466,7 @@ class RaftSkein:
 		self.addLayerLine( z )
 		if layerThicknessRatioSquared != 1.0:
 			self.distanceFeedRate.addExtrusionDistanceRatio( 1.0 / layerThicknessRatioSquared )
-		self.distanceFeedRate.addGcodeFromFeedRateThreadZ( feedrateMinute, path, z )
+		self.distanceFeedRate.addGcodeFromFeedRateThreadZ( feedRateMinute, path, z )
 		self.extrusionTop += layerLayerThickness
 
 	def addLayerLine( self, z ):
@@ -472,6 +475,12 @@ class RaftSkein:
 			self.distanceFeedRate.addLine( '(</layer>)' )
 		self.distanceFeedRate.addLine( '(<layer> ' + self.distanceFeedRate.getRounded( z ) + ' )' ) # Indicate that a new layer is starting.
 		self.layerStarted = True
+
+	def addParameterIfAtLeastMinusThreeHundred( self, firstWord, parameter ):
+		"Add the parameter if it is at least minus three hundred."
+		if parameter < - 300.0:
+			return
+		self.distanceFeedRate.addLine( firstWord + ' S' + euclidean.getRoundedToThreePlaces( parameter ) ) # Set bed temperature.
 
 	def addRaft( self ):
 		"Add the raft."
@@ -485,7 +494,6 @@ class RaftSkein:
 		self.interfaceStep = interfaceExtrusionWidth / self.raftPreferences.interfaceInfillDensity.value
 		self.setCornersZ()
 		self.cornerLowComplex = self.cornerLow.dropAxis( 2 )
-		halfLayerThickness = 0.5 * self.layerThickness
 		self.complexHigh = complexRadius + self.cornerHighComplex
 		self.complexLow = self.cornerLowComplex - complexRadius
 		extent = self.complexHigh - self.complexLow
@@ -498,25 +506,28 @@ class RaftSkein:
 		zBegin = self.extrusionTop + self.layerThickness
 		beginLoop = euclidean.getSquareLoop( self.cornerLowComplex, self.cornerHighComplex )
 		extrudeRaft = self.raftPreferences.baseLayers.value > 0 or self.raftPreferences.interfaceLayers.value > 0
+		self.addParameterIfAtLeastMinusThreeHundred( 'M109', self.raftPreferences.temperatureBed.value ) # Set bed temperature.
+		self.addParameterIfAtLeastMinusThreeHundred( 'M110', self.raftPreferences.temperatureChamber.value ) # Set chamber temperature.
 		if extrudeRaft:
 			self.addTemperature( self.raftPreferences.temperatureRaft.value )
 		else:
 			self.addTemperature( self.raftPreferences.temperatureShapeFirstLayerOutline.value )
-		self.addLayerLine( zBegin )
-		intercircle.addOrbits( beginLoop, self, self.raftPreferences.temperatureChangeBeforeTimeRaft.value, zBegin )
+		if intercircle.orbitsAreLarge( beginLoop, self.raftPreferences.temperatureChangeBeforeTimeRaft.value ):
+			self.addLayerLine( zBegin )
+			intercircle.addOrbitsIfLarge( beginLoop, self, self.raftPreferences.temperatureChangeBeforeTimeRaft.value, zBegin )
 		for baseLayerIndex in xrange( self.raftPreferences.baseLayers.value ):
 			self.addBaseLayer( baseExtrusionWidth, baseStep, stepBegin, stepEnd )
 		self.setInterfaceVariables( interfaceExtrusionWidth, stepBegin, stepEnd )
 		for interfaceLayerIndex in xrange( self.raftPreferences.interfaceLayers.value ):
 			self.addInterfaceLayer()
-		self.operatingJump = self.extrusionTop - self.cornerLow.z + halfLayerThickness + halfLayerThickness * self.raftPreferences.operatingNozzleLiftOverHalfLayerThickness.value
+		self.operatingJump = self.extrusionTop - self.cornerLow.z + 0.5 * self.layerThickness + self.layerThickness * self.raftPreferences.operatingNozzleLiftOverLayerThickness.value
 		self.setBoundaryLayers()
 		if extrudeRaft and len( self.boundaryLayers ) > 0:
 			boundaryZ = self.boundaryLayers[ 0 ].z
 			self.addLayerLine( boundaryZ )
 			self.addTemperature( self.raftPreferences.temperatureShapeFirstLayerOutline.value )
 			squareLoop = euclidean.getSquareLoop( stepBegin, stepEnd )
-			intercircle.addOrbits( squareLoop, self, self.raftPreferences.temperatureChangeTimeBeforeFirstLayerOutline.value, boundaryZ )
+			intercircle.addOrbitsIfLarge( squareLoop, self, self.raftPreferences.temperatureChangeTimeBeforeFirstLayerOutline.value, boundaryZ )
 			self.addLineLayerStart = False
 
 	def addSupportSegmentTable( self, layerIndex ):
@@ -551,7 +562,7 @@ class RaftSkein:
 
 	def addSupportLayerTemperature( self, endpoints, z ):
 		"Add support layer and temperature before the object layer."
-		self.distanceFeedRate.addLines( self.supportStartLines )
+		self.distanceFeedRate.addLinesSetAbsoluteDistanceMode( self.supportStartLines )
 		self.addTemperatureOrbits( endpoints, self.raftPreferences.temperatureShapeSupportLayers, self.raftPreferences.temperatureChangeTimeBeforeSupportLayers, z )
 		aroundPixelTable = {}
 		layerFillInset = 0.9 * self.perimeterWidth
@@ -564,10 +575,10 @@ class RaftSkein:
 		paths = euclidean.getPathsFromEndpoints( endpoints, layerFillInset, aroundPixelTable, aroundWidth )
 		self.addFlowrateLineIfNecessary( self.supportFlowrateString )
 		for path in paths:
-			self.distanceFeedRate.addGcodeFromFeedRateThreadZ( self.feedrateMinute, path, z )
+			self.distanceFeedRate.addGcodeFromFeedRateThreadZ( self.feedRateMinute, path, z )
 		self.addFlowrateLineIfNecessary( self.operatingFlowrateString )
 		self.addTemperatureOrbits( endpoints, self.raftPreferences.temperatureShapeSupportedLayers, self.raftPreferences.temperatureChangeTimeBeforeSupportedLayers, z )
-		self.distanceFeedRate.addLines( self.supportEndLines )
+		self.distanceFeedRate.addLinesSetAbsoluteDistanceMode( self.supportEndLines )
 
 	def addTemperature( self, temperature ):
 		"Add a line of temperature."
@@ -586,14 +597,14 @@ class RaftSkein:
 				layerCornerHigh = euclidean.getMaximum( layerCornerHigh, endpoint.point )
 				layerCornerLow = euclidean.getMinimum( layerCornerLow, endpoint.point )
 			squareLoop = euclidean.getSquareLoop( layerCornerLow, layerCornerHigh )
-			intercircle.addOrbits( squareLoop, self, temperatureTimeChangePreference.value, z )
+			intercircle.addOrbitsIfLarge( squareLoop, self, temperatureTimeChangePreference.value, z )
 			return
 		perimeterInset = 0.4 * self.perimeterWidth
 		insetBoundaryLoops = intercircle.getInsetLoopsFromLoops( perimeterInset, boundaryLoops )
 		if len( insetBoundaryLoops ) < 1:
 			insetBoundaryLoops = boundaryLoops
 		largestLoop = euclidean.getLargestLoop( insetBoundaryLoops )
-		intercircle.addOrbits( largestLoop, self, temperatureTimeChangePreference.value, z )
+		intercircle.addOrbitsIfLarge( largestLoop, self, temperatureTimeChangePreference.value, z )
 
 	def addToFillXIntersectionIndexTables( self, fillXIntersectionIndexTables, layerIndex ):
 		"Add fill segments from the boundary layers."
@@ -640,9 +651,9 @@ class RaftSkein:
 	def getCraftedGcode( self, gcodeText, raftPreferences ):
 		"Parse gcode text and store the raft gcode."
 		self.raftPreferences = raftPreferences
-		self.supportEndText = preferences.getFileInGivenPreferencesDirectory( os.path.dirname( __file__ ), 'Support_End.txt' )
+		self.supportEndText = preferences.getFileInAlterationsOrGivenDirectory( os.path.dirname( __file__ ), 'Support_End.gcode' )
 		self.supportEndLines = gcodec.getTextLines( self.supportEndText )
-		self.supportStartText = preferences.getFileInGivenPreferencesDirectory( os.path.dirname( __file__ ), 'Support_Start.txt' )
+		self.supportStartText = preferences.getFileInAlterationsOrGivenDirectory( os.path.dirname( __file__ ), 'Support_Start.gcode' )
 		self.supportStartLines = gcodec.getTextLines( self.supportStartText )
 		self.minimumSupportRatio = math.tan( math.radians( raftPreferences.supportMinimumAngle.value ) )
 		self.raftOutsetRadius = self.raftPreferences.raftOutsetRadiusOverExtrusionWidth.value * self.perimeterWidth
@@ -663,9 +674,9 @@ class RaftSkein:
 		return self.distanceFeedRate.getBoundaryLine( location )
 
 	def getRaftedLine( self, splitLine ):
-		"Get elevated gcode line with operating feedrate."
+		"Get elevated gcode line with operating feed rate."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
+		self.feedRateMinute = gcodec.getFeedRateMinute( self.feedRateMinute, splitLine )
 		self.oldLocation = location
 		z = location.z
 		if self.operatingJump != None:
@@ -677,7 +688,7 @@ class RaftSkein:
 				boundaryLoops = self.boundaryLayers[ self.layerIndex ].loops
 				if len( boundaryLoops ) > 1:
 					intercircle.addOperatingOrbits( boundaryLoops, euclidean.getXYComplexFromVector3( self.oldLocation ), self, self.raftPreferences.temperatureChangeTimeBeforeNextThreads.value, z )
-		return self.distanceFeedRate.getLinearGcodeMovementWithFeedrate( self.feedrateMinute, location.dropAxis( 2 ), z )
+		return self.distanceFeedRate.getLinearGcodeMovementWithFeedRate( self.feedRateMinute, location.dropAxis( 2 ), z )
 
 	def getStepsUntilEnd( self, begin, end, stepSize ):
 		"Get steps from the beginning until the end."
@@ -753,15 +764,15 @@ class RaftSkein:
 				return
 			elif firstWord == '(<layerThickness>':
 				self.layerThickness = float( splitLine[ 1 ] )
-			elif firstWord == '(<orbitalFeedratePerSecond>':
-				self.orbitalFeedratePerSecond = float( splitLine[ 1 ] )
-			elif firstWord == '(<operatingFeedratePerSecond>':
-				self.feedrateMinute = 60.0 * float( splitLine[ 1 ] )
+			elif firstWord == '(<orbitalFeedRatePerSecond>':
+				self.orbitalFeedRatePerSecond = float( splitLine[ 1 ] )
+			elif firstWord == '(<operatingFeedRatePerSecond>':
+				self.feedRateMinute = 60.0 * float( splitLine[ 1 ] )
 			elif firstWord == '(<perimeterWidth>':
 				self.perimeterWidth = float( splitLine[ 1 ] )
 				self.supportOutset = self.perimeterWidth + self.perimeterWidth * self.raftPreferences.supportGapOverPerimeterExtrusionWidth.value
-			elif firstWord == '(<travelFeedratePerSecond>':
-				self.travelFeedratePerMinute = 60.0 * float( splitLine[ 1 ] )
+			elif firstWord == '(<travelFeedRatePerSecond>':
+				self.travelFeedRatePerMinute = 60.0 * float( splitLine[ 1 ] )
 			self.distanceFeedRate.addLine( line )
 
 	def parseLine( self, line ):
@@ -920,7 +931,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

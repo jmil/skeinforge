@@ -71,25 +71,6 @@ def addFacesGivenVertices( triangleMesh, vertexIndexTable, vertices ):
 	for vertexIndex in xrange( 0, len( vertices ), 3 ):
 		triangleMesh.faces.append( getFaceGivenLines( triangleMesh, vertexIndex, vertexIndexTable, vertices ) )
 
-def getFaceGivenLines( triangleMesh, vertexStartIndex, vertexIndexTable, vertices ):
-	"Add face given line index and lines."
-	face = triangle_mesh.Face()
-	face.index = len( triangleMesh.faces )
-	for vertexIndex in xrange( vertexStartIndex, vertexStartIndex + 3 ):
-		vertex = vertices[ vertexIndex ]
-		vertexUniqueIndex = len( vertexIndexTable )
-		if str( vertex ) in vertexIndexTable:
-			vertexUniqueIndex = vertexIndexTable[ str( vertex ) ]
-		else:
-			vertexIndexTable[ str( vertex ) ] = vertexUniqueIndex
-			triangleMesh.vertices.append( vertex )
-		face.vertexIndexes.append( vertexUniqueIndex )
-	return face
-
-def getFloatGivenBinary( byteIndex, stlData ):
-	"Get vertex given stl vertex line."
-	return unpack( 'f', stlData[ byteIndex : byteIndex + 4 ] )[ 0 ]
-
 def getCarving( fileName = '' ):
 	"Get the triangle mesh for the stl file."
 	if fileName == '':
@@ -113,12 +94,31 @@ def getCarving( fileName = '' ):
 	triangleMesh.setEdgesForAllFaces()
 	return triangleMesh
 
+def getFaceGivenLines( triangleMesh, vertexStartIndex, vertexIndexTable, vertices ):
+	"Add face given line index and lines."
+	face = triangle_mesh.Face()
+	face.index = len( triangleMesh.faces )
+	for vertexIndex in xrange( vertexStartIndex, vertexStartIndex + 3 ):
+		vertex = vertices[ vertexIndex ]
+		vertexUniqueIndex = len( vertexIndexTable )
+		if str( vertex ) in vertexIndexTable:
+			vertexUniqueIndex = vertexIndexTable[ str( vertex ) ]
+		else:
+			vertexIndexTable[ str( vertex ) ] = vertexUniqueIndex
+			triangleMesh.vertices.append( vertex )
+		face.vertexIndexes.append( vertexUniqueIndex )
+	return face
+
 def getFloat( floatString ):
 	"Get the float, replacing commas if necessary because an inferior program is using a comma instead of a point for the decimal point."
 	try:
 		return float( floatString )
 	except:
 		return float( floatString.replace( ',', '.' ) )
+
+def getFloatGivenBinary( byteIndex, stlData ):
+	"Get vertex given stl vertex line."
+	return unpack( 'f', stlData[ byteIndex : byteIndex + 4 ] )[ 0 ]
 
 def getVertexGivenBinary( byteIndex, stlData ):
 	"Get vertex given stl vertex line."

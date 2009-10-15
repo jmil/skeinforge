@@ -88,11 +88,11 @@ class g2gif:
         if firstWord == 'M101':
             self.do_move = 1
 
-    # Set the feedrate to the gcode split line.
-    def setFeedrate( self, splitLine ):
+    # Set the feedRate to the gcode split line.
+    def setFeedRate( self, splitLine ):
         indexOfF = indexOfStartingWithSecond( "F", splitLine )
         if indexOfF > 0:
-            self.feedrateMinute = getDoubleAfterFirstLetter( splitLine[ indexOfF ] )
+            self.feedRateMinute = getDoubleAfterFirstLetter( splitLine[ indexOfF ] )
 
     # Set a point to the gcode split line.
     def setPointComponent( self, point, splitLine ):
@@ -107,7 +107,7 @@ class g2gif:
 
     def linearMove( self, splitLine ):
         location = Vector3()
-        self.setFeedrate( splitLine )
+        self.setFeedRate( splitLine )
         self.setPointComponent( location, splitLine )
         if location.z != self.last_pos.z:
             if self.image:

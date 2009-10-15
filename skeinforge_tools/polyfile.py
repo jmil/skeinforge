@@ -38,10 +38,6 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( PolyfilePreferences() )
-
 def getFileOrGcodeDirectory( fileName, wasCancelled, words = [] ):
 	"Get the gcode files in the directory the file is in if directory preference is true.  Otherwise, return the file in a list."
 	if isEmptyOrCancelled( fileName, wasCancelled ):
@@ -66,15 +62,13 @@ def getFileOrDirectoryTypesUnmodifiedGcode( fileName, fileTypes, wasCancelled ):
 		return gcodec.getFilesWithFileTypesWithoutWords( fileTypes, [], fileName ) + gcodec.getUnmodifiedGCodeFiles( fileName )
 	return [ fileName ]
 
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return PolyfilePreferences()
+
 def isDirectoryPreference():
 	"Determine if the directory preference is true."
-	polyfilePreferences = PolyfilePreferences()
-	preferences.getReadPreferences( polyfilePreferences )
-#	if polyfilePreferences.directoryPreference.value:
-#		print( '"Execute All Unmodified Files in a Directory" is selected, so all the unmodified files in the directory will be executed.  To only execute one file, change the preference in polyfile.' )
-#	else:
-#		print( '"Execute File" is selected, so only the opened file will be executed.  To execute all the unmodified files in the directory, change the preference in polyfile.' )
-	return polyfilePreferences.directoryPreference.value
+	return preferences.getReadPreferences( PolyfilePreferences() ).directoryPreference.value
 
 def isEmptyOrCancelled( fileName, wasCancelled ):
 	"Determine if the fileName is empty or the dialog was cancelled."
@@ -96,16 +90,13 @@ class PolyfilePreferences:
 		self.archive.append( self.filePreference )
 		#Create the archive, title of the dialog & preferences fileName.
 		self.executeTitle = None
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.polyfile.html' )
 
 
 def main():
 	"Display the file or directory dialog."
-	if len( sys.argv ) > 1:
-		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
-	else:
-		getDisplayedPreferences().root.mainloop()
+	preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

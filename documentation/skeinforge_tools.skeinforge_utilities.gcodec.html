@@ -77,6 +77,8 @@ many&nbsp;lines&nbsp;of&nbsp;text<br>
 
 <dl><dt><a name="DistanceFeedRate-addLines"><strong>addLines</strong></a>(self, lines)</dt><dd><tt>Add&nbsp;lines&nbsp;of&nbsp;text&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 
+<dl><dt><a name="DistanceFeedRate-addLinesSetAbsoluteDistanceMode"><strong>addLinesSetAbsoluteDistanceMode</strong></a>(self, lines)</dt><dd><tt>Add&nbsp;lines&nbsp;of&nbsp;text&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
+
 <dl><dt><a name="DistanceFeedRate-addPerimeterBlock"><strong>addPerimeterBlock</strong></a>(self, loop, z)</dt><dd><tt>Add&nbsp;the&nbsp;perimeter&nbsp;gcode&nbsp;block&nbsp;for&nbsp;the&nbsp;loop.</tt></dd></dl>
 
 <dl><dt><a name="DistanceFeedRate-addTagBracketedLine"><strong>addTagBracketedLine</strong></a>(self, tagName, value)</dt><dd><tt>Add&nbsp;a&nbsp;begin&nbsp;tag,&nbsp;balue&nbsp;and&nbsp;end&nbsp;tag.</tt></dd></dl>
@@ -89,15 +91,23 @@ many&nbsp;lines&nbsp;of&nbsp;text<br>
 
 <dl><dt><a name="DistanceFeedRate-getFirstWordMovement"><strong>getFirstWordMovement</strong></a>(self, firstWord, location)</dt><dd><tt>Get&nbsp;the&nbsp;start&nbsp;of&nbsp;the&nbsp;arc&nbsp;line.</tt></dd></dl>
 
+<dl><dt><a name="DistanceFeedRate-getLineWithX"><strong>getLineWithX</strong></a>(self, line, splitLine, x)</dt><dd><tt>Get&nbsp;the&nbsp;line&nbsp;with&nbsp;an&nbsp;x.</tt></dd></dl>
+
+<dl><dt><a name="DistanceFeedRate-getLineWithY"><strong>getLineWithY</strong></a>(self, line, splitLine, y)</dt><dd><tt>Get&nbsp;the&nbsp;line&nbsp;with&nbsp;a&nbsp;y.</tt></dd></dl>
+
+<dl><dt><a name="DistanceFeedRate-getLineWithZ"><strong>getLineWithZ</strong></a>(self, line, splitLine, z)</dt><dd><tt>Get&nbsp;the&nbsp;line&nbsp;with&nbsp;a&nbsp;z.</tt></dd></dl>
+
+<dl><dt><a name="DistanceFeedRate-getLineWithZLimitedFeedRate"><strong>getLineWithZLimitedFeedRate</strong></a>(self, feedRateMinute, line, splitLine, location)</dt><dd><tt>Get&nbsp;a&nbsp;replaced&nbsp;limited&nbsp;gcode&nbsp;movement&nbsp;line.</tt></dd></dl>
+
 <dl><dt><a name="DistanceFeedRate-getLinearGcodeMovement"><strong>getLinearGcodeMovement</strong></a>(self, point, z)</dt><dd><tt>Get&nbsp;a&nbsp;linear&nbsp;gcode&nbsp;movement.</tt></dd></dl>
 
-<dl><dt><a name="DistanceFeedRate-getLinearGcodeMovementWithFeedrate"><strong>getLinearGcodeMovementWithFeedrate</strong></a>(self, feedRateMinute, point, z)</dt><dd><tt>Get&nbsp;a&nbsp;z&nbsp;limited&nbsp;gcode&nbsp;movement.</tt></dd></dl>
+<dl><dt><a name="DistanceFeedRate-getLinearGcodeMovementWithFeedRate"><strong>getLinearGcodeMovementWithFeedRate</strong></a>(self, feedRateMinute, point, z)</dt><dd><tt>Get&nbsp;a&nbsp;z&nbsp;limited&nbsp;gcode&nbsp;movement.</tt></dd></dl>
 
 <dl><dt><a name="DistanceFeedRate-getLinearGcodeMovementWithZLimitedFeedRate"><strong>getLinearGcodeMovementWithZLimitedFeedRate</strong></a>(self, feedRateMinute, location)</dt><dd><tt>Get&nbsp;a&nbsp;z&nbsp;limited&nbsp;gcode&nbsp;movement.</tt></dd></dl>
 
 <dl><dt><a name="DistanceFeedRate-getRounded"><strong>getRounded</strong></a>(self, number)</dt><dd><tt>Get&nbsp;number&nbsp;rounded&nbsp;to&nbsp;the&nbsp;number&nbsp;of&nbsp;carried&nbsp;decimal&nbsp;places&nbsp;as&nbsp;a&nbsp;string.</tt></dd></dl>
 
-<dl><dt><a name="DistanceFeedRate-getZLimitedFeedrate"><strong>getZLimitedFeedrate</strong></a>(self, deltaZ, distance, feedRateMinute)</dt><dd><tt>Get&nbsp;the&nbsp;z&nbsp;limited&nbsp;feed&nbsp;rate.</tt></dd></dl>
+<dl><dt><a name="DistanceFeedRate-getZLimitedFeedRate"><strong>getZLimitedFeedRate</strong></a>(self, deltaZ, distance, feedRateMinute)</dt><dd><tt>Get&nbsp;the&nbsp;z&nbsp;limited&nbsp;feed&nbsp;rate.</tt></dd></dl>
 
 <dl><dt><a name="DistanceFeedRate-parseSplitLine"><strong>parseSplitLine</strong></a>(self, firstWord, splitLine)</dt><dd><tt>Parse&nbsp;gcode&nbsp;split&nbsp;line&nbsp;and&nbsp;store&nbsp;the&nbsp;parameters.</tt></dd></dl>
 
@@ -112,32 +122,23 @@ many&nbsp;lines&nbsp;of&nbsp;text<br>
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><dl><dt><a name="-createInitFile"><strong>createInitFile</strong></a>()</dt><dd><tt>Create&nbsp;the&nbsp;__init__.py&nbsp;file.</tt></dd></dl>
  <dl><dt><a name="-findWords"><strong>findWords</strong></a>(fileNames, search)</dt><dd><tt>Find&nbsp;in&nbsp;files&nbsp;the&nbsp;search.</tt></dd></dl>
- <dl><dt><a name="-getDoubleAfterFirstLetter"><strong>getDoubleAfterFirstLetter</strong></a>(word)</dt><dd><tt>Get&nbsp;the&nbsp;double&nbsp;value&nbsp;of&nbsp;the&nbsp;word&nbsp;after&nbsp;the&nbsp;first&nbsp;letter.<br>
-&nbsp;<br>
-Keyword&nbsp;arguments:<br>
-word&nbsp;--&nbsp;string&nbsp;with&nbsp;value&nbsp;starting&nbsp;after&nbsp;the&nbsp;first&nbsp;letter</tt></dd></dl>
+ <dl><dt><a name="-getAbsoluteFolderPath"><strong>getAbsoluteFolderPath</strong></a>(filePath, folderName<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;the&nbsp;double&nbsp;value&nbsp;of&nbsp;the&nbsp;word&nbsp;after&nbsp;the&nbsp;first&nbsp;letter.</tt></dd></dl>
+ <dl><dt><a name="-getDoubleAfterFirstLetter"><strong>getDoubleAfterFirstLetter</strong></a>(word)</dt><dd><tt>Get&nbsp;the&nbsp;double&nbsp;value&nbsp;of&nbsp;the&nbsp;word&nbsp;after&nbsp;the&nbsp;first&nbsp;letter.</tt></dd></dl>
  <dl><dt><a name="-getDoubleForLetter"><strong>getDoubleForLetter</strong></a>(letter, splitLine)</dt><dd><tt>Get&nbsp;the&nbsp;double&nbsp;value&nbsp;of&nbsp;the&nbsp;word&nbsp;after&nbsp;the&nbsp;first&nbsp;occurence&nbsp;of&nbsp;the&nbsp;letter&nbsp;in&nbsp;the&nbsp;split&nbsp;line.</tt></dd></dl>
  <dl><dt><a name="-getDoubleFromCharacterSplitLine"><strong>getDoubleFromCharacterSplitLine</strong></a>(character, splitLine)</dt><dd><tt>Get&nbsp;the&nbsp;double&nbsp;value&nbsp;of&nbsp;the&nbsp;string&nbsp;after&nbsp;the&nbsp;first&nbsp;occurence&nbsp;of&nbsp;the&nbsp;character&nbsp;in&nbsp;the&nbsp;split&nbsp;line.</tt></dd></dl>
  <dl><dt><a name="-getDoubleFromCharacterSplitLineValue"><strong>getDoubleFromCharacterSplitLineValue</strong></a>(character, splitLine, value)</dt><dd><tt>Get&nbsp;the&nbsp;double&nbsp;value&nbsp;of&nbsp;the&nbsp;string&nbsp;after&nbsp;the&nbsp;first&nbsp;occurence&nbsp;of&nbsp;the&nbsp;character&nbsp;in&nbsp;the&nbsp;split&nbsp;line,&nbsp;if&nbsp;it&nbsp;does&nbsp;not&nbsp;exist&nbsp;return&nbsp;the&nbsp;value.</tt></dd></dl>
- <dl><dt><a name="-getFeedrateMinute"><strong>getFeedrateMinute</strong></a>(feedrateMinute, splitLine)</dt><dd><tt>Get&nbsp;the&nbsp;feedrate&nbsp;per&nbsp;minute&nbsp;if&nbsp;the&nbsp;split&nbsp;line&nbsp;has&nbsp;a&nbsp;feedrate.</tt></dd></dl>
+ <dl><dt><a name="-getFeedRateMinute"><strong>getFeedRateMinute</strong></a>(feedRateMinute, splitLine)</dt><dd><tt>Get&nbsp;the&nbsp;feed&nbsp;rate&nbsp;per&nbsp;minute&nbsp;if&nbsp;the&nbsp;split&nbsp;line&nbsp;has&nbsp;a&nbsp;feed&nbsp;rate.</tt></dd></dl>
  <dl><dt><a name="-getFileText"><strong>getFileText</strong></a>(fileName, readMode<font color="#909090">='r'</font>, printWarning<font color="#909090">=True</font>)</dt><dd><tt>Get&nbsp;the&nbsp;entire&nbsp;text&nbsp;of&nbsp;a&nbsp;file.</tt></dd></dl>
  <dl><dt><a name="-getFileTextInFileDirectory"><strong>getFileTextInFileDirectory</strong></a>(fileInDirectory, fileName, readMode<font color="#909090">='r'</font>)</dt><dd><tt>Get&nbsp;the&nbsp;entire&nbsp;text&nbsp;of&nbsp;a&nbsp;file&nbsp;in&nbsp;the&nbsp;directory&nbsp;of&nbsp;the&nbsp;file&nbsp;in&nbsp;directory.</tt></dd></dl>
- <dl><dt><a name="-getFilesWithFileTypeWithoutWords"><strong>getFilesWithFileTypeWithoutWords</strong></a>(fileType, words<font color="#909090">=[]</font>, fileInDirectory<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;files&nbsp;which&nbsp;have&nbsp;a&nbsp;given&nbsp;file&nbsp;type,&nbsp;but&nbsp;with&nbsp;do&nbsp;not&nbsp;contain&nbsp;a&nbsp;word&nbsp;in&nbsp;a&nbsp;list.<br>
-&nbsp;<br>
-Keyword&nbsp;arguments:<br>
-fileType&nbsp;--&nbsp;file&nbsp;type&nbsp;required<br>
-words&nbsp;--&nbsp;list&nbsp;of&nbsp;words&nbsp;which&nbsp;the&nbsp;file&nbsp;must&nbsp;not&nbsp;have</tt></dd></dl>
- <dl><dt><a name="-getFilesWithFileTypesWithoutWords"><strong>getFilesWithFileTypesWithoutWords</strong></a>(fileTypes, words<font color="#909090">=[]</font>, fileInDirectory<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;files&nbsp;which&nbsp;have&nbsp;a&nbsp;given&nbsp;file&nbsp;type,&nbsp;but&nbsp;with&nbsp;do&nbsp;not&nbsp;contain&nbsp;a&nbsp;word&nbsp;in&nbsp;a&nbsp;list.<br>
-&nbsp;<br>
-Keyword&nbsp;arguments:<br>
-fileType&nbsp;--&nbsp;file&nbsp;types&nbsp;required<br>
-words&nbsp;--&nbsp;list&nbsp;of&nbsp;words&nbsp;which&nbsp;the&nbsp;file&nbsp;must&nbsp;not&nbsp;have</tt></dd></dl>
+ <dl><dt><a name="-getFilesWithFileTypeWithoutWords"><strong>getFilesWithFileTypeWithoutWords</strong></a>(fileType, words<font color="#909090">=[]</font>, fileInDirectory<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;files&nbsp;which&nbsp;have&nbsp;a&nbsp;given&nbsp;file&nbsp;type,&nbsp;but&nbsp;with&nbsp;do&nbsp;not&nbsp;contain&nbsp;a&nbsp;word&nbsp;in&nbsp;a&nbsp;list.</tt></dd></dl>
+ <dl><dt><a name="-getFilesWithFileTypesWithoutWords"><strong>getFilesWithFileTypesWithoutWords</strong></a>(fileTypes, words<font color="#909090">=[]</font>, fileInDirectory<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;files&nbsp;which&nbsp;have&nbsp;a&nbsp;given&nbsp;file&nbsp;type,&nbsp;but&nbsp;with&nbsp;do&nbsp;not&nbsp;contain&nbsp;a&nbsp;word&nbsp;in&nbsp;a&nbsp;list.</tt></dd></dl>
  <dl><dt><a name="-getFirstWord"><strong>getFirstWord</strong></a>(splitLine)</dt><dd><tt>Get&nbsp;the&nbsp;first&nbsp;word&nbsp;of&nbsp;a&nbsp;split&nbsp;line.</tt></dd></dl>
  <dl><dt><a name="-getGcodeFileText"><strong>getGcodeFileText</strong></a>(fileName, gcodeText)</dt><dd><tt>Get&nbsp;the&nbsp;gcode&nbsp;text&nbsp;from&nbsp;a&nbsp;file&nbsp;if&nbsp;it&nbsp;the&nbsp;gcode&nbsp;text&nbsp;is&nbsp;empty&nbsp;and&nbsp;if&nbsp;the&nbsp;file&nbsp;is&nbsp;a&nbsp;gcode&nbsp;file.</tt></dd></dl>
  <dl><dt><a name="-getHasSuffix"><strong>getHasSuffix</strong></a>(name, suffix)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;word&nbsp;ends&nbsp;with&nbsp;the&nbsp;suffix.</tt></dd></dl>
  <dl><dt><a name="-getLocationFromSplitLine"><strong>getLocationFromSplitLine</strong></a>(oldLocation, splitLine)</dt><dd><tt>Get&nbsp;the&nbsp;location&nbsp;from&nbsp;the&nbsp;split&nbsp;line.</tt></dd></dl>
  <dl><dt><a name="-getModule"><strong>getModule</strong></a>(fileName, folderName, moduleFilename)</dt><dd><tt>Get&nbsp;the&nbsp;module&nbsp;from&nbsp;the&nbsp;fileName&nbsp;and&nbsp;folder&nbsp;name.</tt></dd></dl>
- <dl><dt><a name="-getPluginFilenames"><strong>getPluginFilenames</strong></a>(folderName, moduleFilename)</dt><dd><tt>Get&nbsp;the&nbsp;fileNames&nbsp;of&nbsp;the&nbsp;python&nbsp;plugins&nbsp;in&nbsp;the&nbsp;export_plugins&nbsp;folder.</tt></dd></dl>
+ <dl><dt><a name="-getModuleWithPath"><strong>getModuleWithPath</strong></a>(fileName, folderPath)</dt><dd><tt>Get&nbsp;the&nbsp;module&nbsp;from&nbsp;the&nbsp;fileName&nbsp;and&nbsp;folder&nbsp;name.</tt></dd></dl>
+ <dl><dt><a name="-getPluginFilenamesFromDirectoryPath"><strong>getPluginFilenamesFromDirectoryPath</strong></a>(directoryPath)</dt><dd><tt>Get&nbsp;the&nbsp;file&nbsp;names&nbsp;of&nbsp;the&nbsp;python&nbsp;plugins&nbsp;in&nbsp;the&nbsp;directory&nbsp;path.</tt></dd></dl>
  <dl><dt><a name="-getPythonDirectoryNames"><strong>getPythonDirectoryNames</strong></a>(directoryName)</dt><dd><tt>Get&nbsp;the&nbsp;python&nbsp;directories.</tt></dd></dl>
  <dl><dt><a name="-getPythonDirectoryNamesRecursively"><strong>getPythonDirectoryNamesRecursively</strong></a>(directoryName<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;the&nbsp;python&nbsp;directories&nbsp;recursively.</tt></dd></dl>
  <dl><dt><a name="-getPythonFilenamesExceptInit"><strong>getPythonFilenamesExceptInit</strong></a>(fileInDirectory<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;the&nbsp;python&nbsp;fileNames&nbsp;of&nbsp;the&nbsp;directory&nbsp;which&nbsp;the&nbsp;fileInDirectory&nbsp;is&nbsp;in,&nbsp;except&nbsp;for&nbsp;the&nbsp;__init__.py&nbsp;file.</tt></dd></dl>

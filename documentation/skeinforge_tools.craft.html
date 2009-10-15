@@ -11,11 +11,7 @@
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/craft.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/craft.py</a></font></td></tr></table>
     <p><tt>Craft&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;access&nbsp;the&nbsp;plugins&nbsp;which&nbsp;craft&nbsp;a&nbsp;gcode&nbsp;file.<br>
 &nbsp;<br>
-An&nbsp;explanation&nbsp;of&nbsp;the&nbsp;gcodes&nbsp;is&nbsp;at:<br>
-<a href="http://reprap.org/bin/view/Main/Arduino_GCode_Interpreter">http://reprap.org/bin/view/Main/Arduino_GCode_Interpreter</a><br>
-&nbsp;<br>
-A&nbsp;gode&nbsp;example&nbsp;is&nbsp;at:<br>
-<a href="http://forums.reprap.org/file.php?12,file=565">http://forums.reprap.org/file.php?12,file=565</a></tt></p>
+The&nbsp;plugin&nbsp;buttons&nbsp;which&nbsp;are&nbsp;commonly&nbsp;used&nbsp;are&nbsp;bolded&nbsp;and&nbsp;the&nbsp;ones&nbsp;which&nbsp;are&nbsp;rarely&nbsp;used&nbsp;have&nbsp;normal&nbsp;font&nbsp;weight.</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -25,11 +21,12 @@ A&nbsp;gode&nbsp;example&nbsp;is&nbsp;at:<br>
 <tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="__init__.html">__init__</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.consecution.html">skeinforge_tools.skeinforge_utilities.consecution</a><br>
-</td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.interpret.html">skeinforge_tools.skeinforge_utilities.interpret</a><br>
-<a href="skeinforge_tools.polyfile.html">skeinforge_tools.polyfile</a><br>
-</td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.preferences.html">skeinforge_tools.skeinforge_utilities.preferences</a><br>
-<a href="sys.html">sys</a><br>
-</td><td width="25%" valign=top></td></tr></table></td></tr></table><p>
+</td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
+<a href="skeinforge_tools.skeinforge_utilities.interpret.html">skeinforge_tools.skeinforge_utilities.interpret</a><br>
+</td><td width="25%" valign=top><a href="skeinforge_tools.polyfile.html">skeinforge_tools.polyfile</a><br>
+<a href="skeinforge_tools.skeinforge_utilities.preferences.html">skeinforge_tools.skeinforge_utilities.preferences</a><br>
+</td><td width="25%" valign=top><a href="sys.html">sys</a><br>
+</td></tr></table></td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ee77aa">
 <td colspan=3 valign=bottom>&nbsp;<br>
@@ -61,7 +58,7 @@ A&nbsp;gode&nbsp;example&nbsp;is&nbsp;at:<br>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><dl><dt><a name="-getCraftPluginFilenames"><strong>getCraftPluginFilenames</strong></a>()</dt><dd><tt>Get&nbsp;craft&nbsp;plugin&nbsp;fileNames.</tt></dd></dl>
- <dl><dt><a name="-getDisplayedPreferences"><strong>getDisplayedPreferences</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;displayed&nbsp;preferences.</tt></dd></dl>
+ <dl><dt><a name="-getPreferencesConstructor"><strong>getPreferencesConstructor</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;preferences&nbsp;constructor.</tt></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>Display&nbsp;the&nbsp;craft&nbsp;dialog.</tt></dd></dl>
  <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName<font color="#909090">=''</font>)</dt><dd><tt>Craft&nbsp;a&nbsp;gcode&nbsp;file.&nbsp;&nbsp;If&nbsp;no&nbsp;fileName&nbsp;is&nbsp;specified,&nbsp;comment&nbsp;the&nbsp;first&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder&nbsp;that&nbsp;is&nbsp;not&nbsp;modified.</tt></dd></dl>
 </td></tr></table><p>

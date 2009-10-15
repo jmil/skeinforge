@@ -10,23 +10,28 @@ http://shane.willowrise.com/archives/delay-compensation-in-firmware/
 
 The "Delay (milliseconds)" preference is the delay on the microprocessor that will be at least partially compensated for.  The
 default is 28 milliseconds, which Shane found for the Arduino.  The "Maximum Speed" ratio is the maximum amount that the
-feedrate will be sped up to, compared to the original feedrate, the default is 1.5.
+feedRate will be sped up to, compared to the original feedRate, the default is 1.5.
 
-To run unpause, in a shell type:
+The equation to set the feedRate is from Shane Hathaway's description at:
+http://shane.willowrise.com/archives/delay-compensation-in-firmware/
+
+The following examples unpause the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
+and unpause.py.
+
+
 > python unpause.py
-
-The following examples unpause the files Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains
-Screw Holder Bottom.stl & unpause.py.  The function writeOutput checks to see if the text has been unpaused, if not they call
-getChainGcode in home.py to home the text; once they have the homed text, then it unpauses.
+This brings up the unpause dialog.
 
 
-> python unpause.py
-This brings up the dialog, after clicking 'Unpause', the following is printed:
-File Screw Holder Bottom.stl is being chain unpaused.
-The unpaused file is saved as Screw Holder Bottom_unpause.gcode
+> python unpause.py Screw Holder Bottom.stl
+The unpause tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The unpause tool has created the file:
+.. Screw Holder Bottom_unpause.gcode
 
 
->python
+> python
 Python 2.5.1 (r251:54863, Sep 22 2007, 01:43:31)
 [GCC 4.2.1 (SUSE Linux)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
@@ -36,12 +41,12 @@ This brings up the unpause dialog.
 
 
 >>> unpause.writeOutput()
+The unpause tool is parsing the file:
 Screw Holder Bottom.stl
-File Screw Holder Bottom.stl is being chain unpaused.
-The unpaused file is saved as Screw Holder Bottom_unpause.gcode
+..
+The unpause tool has created the file:
+.. Screw Holder Bottom_unpause.gcode
 
-The equation to set the feedrate is from Shane Hathaway's description at:
-http://shane.willowrise.com/archives/delay-compensation-in-firmware/
 """
 
 from __future__ import absolute_import
@@ -78,9 +83,9 @@ def getCraftedTextFromText( gcodeText, unpausePreferences = None ):
 		return gcodeText
 	return UnpauseSkein().getCraftedGcode( unpausePreferences, gcodeText )
 
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( UnpausePreferences() )
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return UnpausePreferences()
 
 def getSelectedPlugin( unpausePreferences ):
 	"Get the selected plugin."
@@ -90,11 +95,10 @@ def getSelectedPlugin( unpausePreferences ):
 	return None
 
 def writeOutput( fileName = '' ):
-	"Unpause a gcode linear move file.  Chain unpause the gcode if it is not already unpaused.  If no fileName is specified, unpause the first unmodified gcode file in this folder."
+	"Unpause a gcode linear move file."
 	fileName = interpret.getFirstTranslatorFileNameUnmodified( fileName )
-	if fileName == '':
-		return
-	consecution.writeChainText( fileName, ' is being chain unpaused.', 'The unpaused file is saved as ', 'unpause' )
+	if fileName != '':
+		consecution.writeChainTextWithNounMessage( fileName, 'unpause' )
 
 
 class UnpausePreferences:
@@ -113,7 +117,7 @@ class UnpausePreferences:
 		self.archive.append( self.maximumSpeed )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Unpause'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.unpause.html' )
 
 	def execute( self ):
@@ -128,7 +132,7 @@ class UnpauseSkein:
 	def __init__( self ):
 		self.distanceFeedRate = gcodec.DistanceFeedRate()
 		self.extruderActive = False
-		self.feedrateMinute = 959.0
+		self.feedRateMinute = 959.0
 		self.lineIndex = 0
 		self.lines = None
 		self.oldLocation = None
@@ -146,25 +150,25 @@ class UnpauseSkein:
 			self.parseLine( line )
 		return self.distanceFeedRate.output.getvalue()
 
-	def getUnpausedFeedrateMinute( self, location, splitLine ):
-		"Get the feedrate which will compensate for the pause."
-		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
+	def getUnpausedFeedRateMinute( self, location, splitLine ):
+		"Get the feedRate which will compensate for the pause."
+		self.feedRateMinute = gcodec.getFeedRateMinute( self.feedRateMinute, splitLine )
 		if self.oldLocation == None:
-			return self.feedrateMinute
+			return self.feedRateMinute
 		distance = location.distance( self.oldLocation )
 		if distance <= 0.0:
-			return self.feedrateMinute
-		specifiedFeedrateSecond = self.feedrateMinute / 60.0
-		resultantReciprocal = 1.0 - self.delaySecond / distance * specifiedFeedrateSecond
+			return self.feedRateMinute
+		specifiedFeedRateSecond = self.feedRateMinute / 60.0
+		resultantReciprocal = 1.0 - self.delaySecond / distance * specifiedFeedRateSecond
 		if resultantReciprocal < self.minimumSpeedUpReciprocal:
-			return self.feedrateMinute * self.maximumSpeed
-		return self.feedrateMinute / resultantReciprocal
+			return self.feedRateMinute * self.maximumSpeed
+		return self.feedRateMinute / resultantReciprocal
 
 	def getUnpausedArcMovement( self, line, splitLine ):
 		"Get an unpaused arc movement."
 		if self.oldLocation == None:
 			return line
-		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
+		self.feedRateMinute = gcodec.getFeedRateMinute( self.feedRateMinute, splitLine )
 		relativeLocation = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		location = self.oldLocation + relativeLocation
 		self.oldLocation = location
@@ -185,9 +189,9 @@ class UnpauseSkein:
 		distance = abs( arcDistanceZ )
 		if distance <= 0.0:
 			return ''
-		feedRateMinute = self.distanceFeedRate.getZLimitedFeedrate( deltaZ, distance, self.feedrateMinute )
+		feedRateMinute = self.distanceFeedRate.getZLimitedFeedRate( deltaZ, distance, self.feedRateMinute )
 		indexOfF = gcodec.indexOfStartingWithSecond( "F", splitLine )
-		if indexOfF > 0 and feedRateMinute != self.feedrateMinute:
+		if indexOfF > 0 and feedRateMinute != self.feedRateMinute:
 			feedRateStringOriginal = splitLine[ indexOfF ]
 			feedRateStringReplacement = 'F' + self.distanceFeedRate.getRounded( feedRateMinute )
 			return line.replace( feedRateStringOriginal, feedRateStringReplacement )
@@ -196,9 +200,9 @@ class UnpauseSkein:
 	def getUnpausedLinearMovement( self, splitLine ):
 		"Get an unpaused linear movement."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-		unpausedFeedrateMinute = self.getUnpausedFeedrateMinute( location, splitLine )
+		unpausedFeedRateMinute = self.getUnpausedFeedRateMinute( location, splitLine )
 		self.oldLocation = location
-		return self.distanceFeedRate.getLinearGcodeMovementWithFeedrate( unpausedFeedrateMinute, location.dropAxis( 2 ), location.z )
+		return self.distanceFeedRate.getLinearGcodeMovementWithFeedRate( unpausedFeedRateMinute, location.dropAxis( 2 ), location.z )
 
 	def parseInitialization( self ):
 		"Parse gcode initialization and store the parameters."
@@ -230,7 +234,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

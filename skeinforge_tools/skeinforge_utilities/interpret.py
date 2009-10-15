@@ -55,7 +55,7 @@ def getGNUTranslatorFilesUnmodified():
 
 def getImportPluginFilenames():
 	"Get analyze plugin fileNames."
-	return gcodec.getPluginFilenames( 'import_plugins', os.path.dirname( __file__ ) )
+	return gcodec.getPluginFilenamesFromDirectoryPath( gcodec.getAbsoluteFolderPath( os.path.dirname( __file__ ), 'import_plugins' ) )
 
 def getTranslatorFileTypeTuples():
 	"Get the file types from the translators in the import plugins folder."

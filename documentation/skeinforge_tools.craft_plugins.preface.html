@@ -13,13 +13,11 @@
 &nbsp;<br>
 Preface&nbsp;converts&nbsp;the&nbsp;svg&nbsp;slices&nbsp;into&nbsp;gcode&nbsp;extrusion&nbsp;layers,&nbsp;optionally&nbsp;prefaced&nbsp;with&nbsp;some&nbsp;gcode&nbsp;commands.<br>
 &nbsp;<br>
-If&nbsp;"Add&nbsp;M110&nbsp;GCode&nbsp;for&nbsp;Compatibility&nbsp;with&nbsp;Nophead's&nbsp;Code"&nbsp;is&nbsp;chosen,&nbsp;then&nbsp;preface&nbsp;will&nbsp;add&nbsp;an&nbsp;M110&nbsp;line&nbsp;for&nbsp;compatibility&nbsp;with<br>
-Nophead's&nbsp;parser,&nbsp;the&nbsp;default&nbsp;is&nbsp;off.&nbsp;&nbsp;If&nbsp;"Set&nbsp;Positioning&nbsp;to&nbsp;Absolute"&nbsp;is&nbsp;chosen,&nbsp;preface&nbsp;will&nbsp;add&nbsp;the&nbsp;G90&nbsp;command&nbsp;to&nbsp;set&nbsp;positioning&nbsp;to<br>
-absolute,&nbsp;the&nbsp;default&nbsp;is&nbsp;on.&nbsp;&nbsp;If&nbsp;"Set&nbsp;Units&nbsp;to&nbsp;Millimeters"&nbsp;is&nbsp;chosen,&nbsp;preface&nbsp;will&nbsp;add&nbsp;the&nbsp;G21&nbsp;command&nbsp;to&nbsp;set&nbsp;the&nbsp;units&nbsp;to&nbsp;millimeters,&nbsp;the<br>
-default&nbsp;is&nbsp;on.&nbsp;&nbsp;If&nbsp;the&nbsp;"Start&nbsp;at&nbsp;Home"&nbsp;preference&nbsp;is&nbsp;selected,&nbsp;the&nbsp;G28&nbsp;go&nbsp;to&nbsp;home&nbsp;gcode&nbsp;will&nbsp;be&nbsp;added&nbsp;at&nbsp;the&nbsp;beginning&nbsp;of&nbsp;the&nbsp;file,&nbsp;the<br>
-default&nbsp;is&nbsp;off.&nbsp;&nbsp;If&nbsp;the&nbsp;"Turn&nbsp;Extruder&nbsp;Off&nbsp;at&nbsp;Shut&nbsp;Down"&nbsp;preference&nbsp;is&nbsp;selected,&nbsp;the&nbsp;M103&nbsp;turn&nbsp;extruder&nbsp;off&nbsp;gcode&nbsp;will&nbsp;be&nbsp;added&nbsp;at&nbsp;the&nbsp;end<br>
-of&nbsp;the&nbsp;file,&nbsp;the&nbsp;default&nbsp;is&nbsp;on.&nbsp;&nbsp;If&nbsp;the&nbsp;"Turn&nbsp;Extruder&nbsp;Off&nbsp;at&nbsp;Start&nbsp;Up"&nbsp;preference&nbsp;is&nbsp;selected,&nbsp;the&nbsp;M103&nbsp;turn&nbsp;extruder&nbsp;off&nbsp;gcode&nbsp;will&nbsp;be&nbsp;added<br>
-at&nbsp;the&nbsp;beginning&nbsp;of&nbsp;the&nbsp;file,&nbsp;the&nbsp;default&nbsp;is&nbsp;on.<br>
+If&nbsp;"Set&nbsp;Positioning&nbsp;to&nbsp;Absolute"&nbsp;is&nbsp;chosen,&nbsp;preface&nbsp;will&nbsp;add&nbsp;the&nbsp;G90&nbsp;command&nbsp;to&nbsp;set&nbsp;positioning&nbsp;to&nbsp;absolute,&nbsp;the&nbsp;default&nbsp;is&nbsp;on.&nbsp;&nbsp;If&nbsp;"Set&nbsp;Units&nbsp;to&nbsp;Millimeters"<br>
+is&nbsp;chosen,&nbsp;preface&nbsp;will&nbsp;add&nbsp;the&nbsp;G21&nbsp;command&nbsp;to&nbsp;set&nbsp;the&nbsp;units&nbsp;to&nbsp;millimeters,&nbsp;the&nbsp;default&nbsp;is&nbsp;on.&nbsp;&nbsp;If&nbsp;the&nbsp;"Start&nbsp;at&nbsp;Home"&nbsp;preference&nbsp;is&nbsp;selected,&nbsp;the&nbsp;G28&nbsp;go<br>
+to&nbsp;home&nbsp;gcode&nbsp;will&nbsp;be&nbsp;added&nbsp;at&nbsp;the&nbsp;beginning&nbsp;of&nbsp;the&nbsp;file,&nbsp;the&nbsp;default&nbsp;is&nbsp;off.&nbsp;&nbsp;If&nbsp;the&nbsp;"Turn&nbsp;Extruder&nbsp;Off&nbsp;at&nbsp;Shut&nbsp;Down"&nbsp;preference&nbsp;is&nbsp;selected,&nbsp;the&nbsp;M103&nbsp;turn<br>
+extruder&nbsp;off&nbsp;gcode&nbsp;will&nbsp;be&nbsp;added&nbsp;at&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;file,&nbsp;the&nbsp;default&nbsp;is&nbsp;on.&nbsp;&nbsp;If&nbsp;the&nbsp;"Turn&nbsp;Extruder&nbsp;Off&nbsp;at&nbsp;Start&nbsp;Up"&nbsp;preference&nbsp;is&nbsp;selected,&nbsp;the&nbsp;M103&nbsp;turn<br>
+extruder&nbsp;off&nbsp;gcode&nbsp;will&nbsp;be&nbsp;added&nbsp;at&nbsp;the&nbsp;beginning&nbsp;of&nbsp;the&nbsp;file,&nbsp;the&nbsp;default&nbsp;is&nbsp;on.<br>
 &nbsp;<br>
 Preface&nbsp;also&nbsp;gives&nbsp;the&nbsp;option&nbsp;of&nbsp;using&nbsp;Adrian's&nbsp;extruder&nbsp;distance&nbsp;E&nbsp;value&nbsp;in&nbsp;the&nbsp;gcode&nbsp;lines,&nbsp;as&nbsp;described&nbsp;at:<br>
 <a href="http://blog.reprap.org/2009/05/4d-printing.html">http://blog.reprap.org/2009/05/4d-printing.html</a><br>
@@ -27,25 +25,30 @@ Preface&nbsp;also&nbsp;gives&nbsp;the&nbsp;option&nbsp;of&nbsp;using&nbsp;Adrian
 and&nbsp;in&nbsp;Erik&nbsp;de&nbsp;Bruijn's&nbsp;conversion&nbsp;script&nbsp;page&nbsp;at:<br>
 <a href="http://objects.reprap.org/wiki/3D-to-5D-Gcode.php">http://objects.reprap.org/wiki/3D-to-5D-Gcode.php</a><br>
 &nbsp;<br>
-The&nbsp;extrusion&nbsp;distance&nbsp;format&nbsp;is&nbsp;either&nbsp;"Do&nbsp;Not&nbsp;Add&nbsp;Extrusion&nbsp;Distance",&nbsp;which&nbsp;gives&nbsp;standard&nbsp;XYZ&nbsp;&amp;&nbsp;Feed&nbsp;Rate&nbsp;gcode,&nbsp;this&nbsp;is&nbsp;the<br>
-default&nbsp;choice.&nbsp;&nbsp;If&nbsp;"Extrusion&nbsp;Distance&nbsp;Absolute"&nbsp;is&nbsp;chosen,&nbsp;the&nbsp;extrusion&nbsp;distance&nbsp;output&nbsp;will&nbsp;be&nbsp;the&nbsp;total&nbsp;extrusion&nbsp;distance&nbsp;to&nbsp;that&nbsp;gcode<br>
-line.&nbsp;&nbsp;If&nbsp;"Extrusion&nbsp;Distance&nbsp;Relative"&nbsp;is&nbsp;chosen,&nbsp;the&nbsp;extrusion&nbsp;distance&nbsp;output&nbsp;will&nbsp;be&nbsp;the&nbsp;extrusion&nbsp;distance&nbsp;from&nbsp;the&nbsp;last&nbsp;gcode&nbsp;line.<br>
+The&nbsp;extrusion&nbsp;distance&nbsp;format&nbsp;is&nbsp;either&nbsp;"Do&nbsp;Not&nbsp;Add&nbsp;Extrusion&nbsp;Distance",&nbsp;which&nbsp;gives&nbsp;standard&nbsp;XYZ&nbsp;&amp;&nbsp;Feed&nbsp;Rate&nbsp;gcode,&nbsp;this&nbsp;is&nbsp;the&nbsp;default&nbsp;choice.&nbsp;&nbsp;If<br>
+"Extrusion&nbsp;Distance&nbsp;Absolute"&nbsp;is&nbsp;chosen,&nbsp;the&nbsp;extrusion&nbsp;distance&nbsp;output&nbsp;will&nbsp;be&nbsp;the&nbsp;total&nbsp;extrusion&nbsp;distance&nbsp;to&nbsp;that&nbsp;gcode&nbsp;line.&nbsp;&nbsp;If&nbsp;"Extrusion&nbsp;Distance<br>
+Relative"&nbsp;is&nbsp;chosen,&nbsp;the&nbsp;extrusion&nbsp;distance&nbsp;output&nbsp;will&nbsp;be&nbsp;the&nbsp;extrusion&nbsp;distance&nbsp;from&nbsp;the&nbsp;last&nbsp;gcode&nbsp;line.<br>
 &nbsp;<br>
-When&nbsp;preface&nbsp;is&nbsp;generating&nbsp;the&nbsp;code,&nbsp;if&nbsp;there&nbsp;is&nbsp;a&nbsp;file&nbsp;with&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;"Name&nbsp;of&nbsp;Start&nbsp;File"&nbsp;setting,&nbsp;the&nbsp;default&nbsp;being&nbsp;start.txt,&nbsp;it&nbsp;will&nbsp;be<br>
-added&nbsp;that&nbsp;to&nbsp;the&nbsp;very&nbsp;beginning&nbsp;of&nbsp;the&nbsp;gcode.&nbsp;&nbsp;If&nbsp;there&nbsp;is&nbsp;a&nbsp;file&nbsp;with&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;"Name&nbsp;of&nbsp;End&nbsp;File"&nbsp;setting,&nbsp;the&nbsp;default&nbsp;being&nbsp;end.txt,<br>
-it&nbsp;will&nbsp;be&nbsp;added&nbsp;to&nbsp;the&nbsp;very&nbsp;end.&nbsp;&nbsp;Preface&nbsp;does&nbsp;not&nbsp;care&nbsp;if&nbsp;the&nbsp;text&nbsp;file&nbsp;names&nbsp;are&nbsp;capitalized,&nbsp;but&nbsp;some&nbsp;file&nbsp;systems&nbsp;do&nbsp;not&nbsp;handle&nbsp;file<br>
-name&nbsp;cases&nbsp;properly,&nbsp;so&nbsp;to&nbsp;be&nbsp;on&nbsp;the&nbsp;safe&nbsp;side&nbsp;you&nbsp;should&nbsp;give&nbsp;them&nbsp;lower&nbsp;case&nbsp;names.&nbsp;&nbsp;Preface&nbsp;looks&nbsp;for&nbsp;those&nbsp;files&nbsp;in&nbsp;the&nbsp;alterations<br>
-folder&nbsp;in&nbsp;the&nbsp;.skeinforge&nbsp;folder&nbsp;in&nbsp;the&nbsp;home&nbsp;directory.&nbsp;If&nbsp;it&nbsp;doesn't&nbsp;find&nbsp;the&nbsp;file&nbsp;it&nbsp;then&nbsp;looks&nbsp;in&nbsp;the&nbsp;alterations&nbsp;folder&nbsp;in&nbsp;the&nbsp;skeinforge_tools<br>
-folder.&nbsp;&nbsp;If&nbsp;it&nbsp;doesn't&nbsp;find&nbsp;anything&nbsp;there&nbsp;it&nbsp;looks&nbsp;in&nbsp;the&nbsp;craft_plugins&nbsp;folder.<br>
+When&nbsp;preface&nbsp;is&nbsp;generating&nbsp;the&nbsp;code,&nbsp;if&nbsp;there&nbsp;is&nbsp;a&nbsp;file&nbsp;with&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;"Name&nbsp;of&nbsp;Start&nbsp;File"&nbsp;setting,&nbsp;the&nbsp;default&nbsp;being&nbsp;start.gcode,&nbsp;it&nbsp;will&nbsp;be&nbsp;added&nbsp;that<br>
+to&nbsp;the&nbsp;very&nbsp;beginning&nbsp;of&nbsp;the&nbsp;gcode.&nbsp;&nbsp;If&nbsp;there&nbsp;is&nbsp;a&nbsp;file&nbsp;with&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;"Name&nbsp;of&nbsp;End&nbsp;File"&nbsp;setting,&nbsp;the&nbsp;default&nbsp;being&nbsp;end.gcode,&nbsp;it&nbsp;will&nbsp;be&nbsp;added&nbsp;to&nbsp;the<br>
+very&nbsp;end.&nbsp;&nbsp;Preface&nbsp;does&nbsp;not&nbsp;care&nbsp;if&nbsp;the&nbsp;text&nbsp;file&nbsp;names&nbsp;are&nbsp;capitalized,&nbsp;but&nbsp;some&nbsp;file&nbsp;systems&nbsp;do&nbsp;not&nbsp;handle&nbsp;file&nbsp;name&nbsp;cases&nbsp;properly,&nbsp;so&nbsp;to&nbsp;be&nbsp;on&nbsp;the&nbsp;safe<br>
+side&nbsp;you&nbsp;should&nbsp;give&nbsp;them&nbsp;lower&nbsp;case&nbsp;names.&nbsp;&nbsp;Preface&nbsp;looks&nbsp;for&nbsp;those&nbsp;files&nbsp;in&nbsp;the&nbsp;alterations&nbsp;folder&nbsp;in&nbsp;the&nbsp;.skeinforge&nbsp;folder&nbsp;in&nbsp;the&nbsp;home&nbsp;directory.&nbsp;If&nbsp;it<br>
+doesn't&nbsp;find&nbsp;the&nbsp;file&nbsp;it&nbsp;then&nbsp;looks&nbsp;in&nbsp;the&nbsp;alterations&nbsp;folder&nbsp;in&nbsp;the&nbsp;skeinforge_tools&nbsp;folder.&nbsp;&nbsp;If&nbsp;it&nbsp;doesn't&nbsp;find&nbsp;anything&nbsp;there&nbsp;it&nbsp;looks&nbsp;in&nbsp;the&nbsp;craft_plugins&nbsp;folder.<br>
 &nbsp;<br>
-The&nbsp;following&nbsp;examples&nbsp;preface&nbsp;the&nbsp;files&nbsp;Screw&nbsp;Holder&nbsp;Bottom.gcode&nbsp;&amp;&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in<br>
-the&nbsp;folder&nbsp;which&nbsp;contains&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;and&nbsp;preface.py.<br>
+The&nbsp;following&nbsp;examples&nbsp;preface&nbsp;the&nbsp;file&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+and&nbsp;preface.py.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python&nbsp;preface.py<br>
-This&nbsp;brings&nbsp;up&nbsp;the&nbsp;dialog,&nbsp;after&nbsp;clicking&nbsp;'Preface',&nbsp;the&nbsp;following&nbsp;is&nbsp;printed:<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;prefaced.<br>
-The&nbsp;prefaced&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_preface.gcode<br>
+This&nbsp;brings&nbsp;up&nbsp;the&nbsp;preface&nbsp;dialog.<br>
+&nbsp;<br>
+&nbsp;<br>
+&gt;&nbsp;python&nbsp;preface.py&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+The&nbsp;preface&nbsp;tool&nbsp;is&nbsp;parsing&nbsp;the&nbsp;file:<br>
+Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+..<br>
+The&nbsp;preface&nbsp;tool&nbsp;has&nbsp;created&nbsp;the&nbsp;file:<br>
+..&nbsp;Screw&nbsp;Holder&nbsp;Bottom_preface.gcode<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python<br>
@@ -54,15 +57,15 @@ Python&nbsp;2.5.1&nbsp;(r251:54863,&nbsp;Sep&nbsp;22&nbsp;2007,&nbsp;01:43:31)<b
 Type&nbsp;"help",&nbsp;"copyright",&nbsp;"credits"&nbsp;or&nbsp;"license"&nbsp;for&nbsp;more&nbsp;information.<br>
 &gt;&gt;&gt;&nbsp;import&nbsp;preface<br>
 &gt;&gt;&gt;&nbsp;preface.<a href="#-main">main</a>()<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;prefaced.<br>
-The&nbsp;prefaced&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_preface.gcode<br>
-It&nbsp;took&nbsp;3&nbsp;seconds&nbsp;to&nbsp;preface&nbsp;the&nbsp;file.<br>
+This&nbsp;brings&nbsp;up&nbsp;the&nbsp;preface&nbsp;dialog.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&gt;&gt;&nbsp;preface.<a href="#-writeOutput">writeOutput</a>()<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;prefaced.<br>
-The&nbsp;prefaced&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_preface.gcode<br>
-It&nbsp;took&nbsp;3&nbsp;seconds&nbsp;to&nbsp;preface&nbsp;the&nbsp;file.</tt></p>
+The&nbsp;preface&nbsp;tool&nbsp;is&nbsp;parsing&nbsp;the&nbsp;file:<br>
+Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+..<br>
+The&nbsp;preface&nbsp;tool&nbsp;has&nbsp;created&nbsp;the&nbsp;file:<br>
+..&nbsp;Screw&nbsp;Holder&nbsp;Bottom_preface.gcode</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -148,7 +151,7 @@ It&nbsp;took&nbsp;3&nbsp;seconds&nbsp;to&nbsp;preface&nbsp;the&nbsp;file.</tt></
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><dl><dt><a name="-getCraftedText"><strong>getCraftedText</strong></a>(fileName, text<font color="#909090">=''</font>, prefacePreferences<font color="#909090">=None</font>)</dt><dd><tt>Preface&nbsp;and&nbsp;convert&nbsp;an&nbsp;svg&nbsp;file&nbsp;or&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-getCraftedTextFromText"><strong>getCraftedTextFromText</strong></a>(text, prefacePreferences<font color="#909090">=None</font>)</dt><dd><tt>Preface&nbsp;and&nbsp;convert&nbsp;an&nbsp;svg&nbsp;text.</tt></dd></dl>
- <dl><dt><a name="-getDisplayedPreferences"><strong>getDisplayedPreferences</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;displayed&nbsp;preferences.</tt></dd></dl>
+ <dl><dt><a name="-getPreferencesConstructor"><strong>getPreferencesConstructor</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;preferences&nbsp;constructor.</tt></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>Display&nbsp;the&nbsp;preface&nbsp;dialog.</tt></dd></dl>
  <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName<font color="#909090">=''</font>)</dt><dd><tt>Preface&nbsp;the&nbsp;carving&nbsp;of&nbsp;a&nbsp;gcode&nbsp;file.&nbsp;&nbsp;If&nbsp;no&nbsp;fileName&nbsp;is&nbsp;specified,&nbsp;preface&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
 </td></tr></table><p>

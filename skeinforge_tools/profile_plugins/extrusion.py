@@ -5,7 +5,7 @@ On the extrusion dialog, clicking the 'Add Profile' button will duplicate the se
 input field.  For example, if ABS is selected and the name ABS_black is in the input field, clicking the 'Add Profile'
 button will duplicate ABS and save it as ABS_black.  The 'Delete Profile' button deletes the selected profile.
 
-The profile selection is the preference.  If you hit 'Save Preferences' the selection will be saved, if you hit 'Cancel' the
+The profile selection is the preference.  If you hit 'Save and Close' the selection will be saved, if you hit 'Cancel' the
 selection will not be saved.  However; adding and deleting a profile is a permanent action, for example 'Cancel' will not
 bring back any deleted profiles.
 
@@ -37,13 +37,9 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( ExtrusionPreferences() )
-
 def getCraftSequence():
-	"Get the craft sequence."
-	return 'carve,preface,inset,fill,multiply,speed,raft,tower,comb,clip,cool,stretch,hop,wipe,oozebane,fillet,home,unpause,export'.split( ',' )
+	"Get the sequence carve,preface,inset,fill,multiply,speed,raft,tower,comb,clip,cool,stretch,hop,wipe,oozebane,home,lash,fillet,unpause,export."
+	return 'carve,preface,inset,fill,multiply,speed,raft,tower,comb,clip,cool,stretch,hop,wipe,oozebane,home,lash,fillet,unpause,export'.split( ',' )
 
 def getPreferencesConstructor():
 	"Get the preferences constructor."
@@ -54,7 +50,7 @@ class ExtrusionPreferences:
 	"A class to handle the export preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
-		preferences.setCraftProfileArchive( 'ABS', self, 'skeinforge_tools.craft_types.extrusion.html' )
+		preferences.setCraftProfileArchive( getCraftSequence(), 'ABS', self, 'skeinforge_tools.craft_types.extrusion.html' )
 
 
 def main():
@@ -62,7 +58,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

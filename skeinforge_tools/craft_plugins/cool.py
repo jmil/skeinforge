@@ -1,54 +1,42 @@
 """
 Cool is a script to cool the shape.
 
-Allan Ecker aka The Masked Retriever's has written the following quicktip for cool.
-"Skeinforge Quicktip: Cool" at: http://blog.thingiverse.com/2009/07/28/skeinforge-quicktip-cool/
+Allan Ecker aka The Masked Retriever's has written the quicktip for cool which follows below.
+"Skeinforge Quicktip: Cool" at:
+http://blog.thingiverse.com/2009/07/28/skeinforge-quicktip-cool/
 
-The default 'Activate Cool' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions
-will not be called.
+The default 'Activate Cool' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions will not be called.
 
-The important value for the cool preferences is "Minimum Layer Time (seconds)" which is the minimum amount of time the
-extruder will spend on a layer.  If it takes less time to extrude the layer than the minimum layer time, cool adds orbits with the
-extruder off to give the layer time to cool, so that the next layer is not extruded on a molten base.  The orbits will be around the
-largest island on that layer.  If the area of the largest island is as large as the square of the "Minimum Orbital Radius" then the
-orbits will be just within the island.  If the island is smaller, then the orbits will be in a square of the "Minimum Orbital Radius"
-around the center of the island.
+The important value for the cool preferences is "Minimum Layer Time (seconds)" which is the minimum amount of time the extruder will spend on a
+layer.  If it takes less time to extrude the layer than the minimum layer time, cool adds orbits with the extruder off to give the layer time to cool, so
+that the next layer is not extruded on a molten base.  The orbits will be around the largest island on that layer.  If the area of the largest island is as
+large as the square of the "Minimum Orbital Radius" then the orbits will be just within the island.  If the island is smaller, then the orbits will be in a
+square of the "Minimum Orbital Radius" around the center of the island.
 
-Before the orbits, if there is a file cool_start.txt, cool will add that to the start of the orbits. After it has added the orbits, it will
-add the file cool_end.txt if it exists.  Cool does not care if the text file names are capitalized, but some file systems do not
-handle file name cases properly, so to be on the safe side you should give them lower case names.  Cool looks for those files
-in the alterations folder in the .skeinforge folder in the home directory. If it doesn't find the file it then looks in the alterations
-folder in the skeinforge_tools folder. If it doesn't find anything there it looks in the skeinforge_tools folder.  The cool start and
-end text idea is from:
+Before the orbits, if there is a file cool_start.gcode, cool will add that to the start of the orbits. After it has added the orbits, it will add the file
+cool_end.gcode if it exists.  Cool does not care if the text file names are capitalized, but some file systems do not handle file name cases properly, so
+to be on the safe side you should give them lower case names.  Cool looks for those files in the alterations folder in the .skeinforge folder in the home
+directory. If it doesn't find the file it then looks in the alterations folder in the skeinforge_tools folder. If it doesn't find anything there it looks in the
+skeinforge_tools folder.  The cool start and end text idea is from:
 http://makerhahn.blogspot.com/2008/10/yay-minimug.html
 
-If the 'Turn Fan On at Beginning' preference is true, cool will turn the fan on at the beginning of the fabrication.  If the
-'Turn Fan Off at Ending' preference is true, cool will turn the fan off at the ending of the fabrication.
+If the 'Turn Fan On at Beginning' preference is true, cool will turn the fan on at the beginning of the fabrication.  If the 'Turn Fan Off at Ending' preference
+is true, cool will turn the fan off at the ending of the fabrication.
 
-To run cool, in a shell which cool is in type:
-> python cool.py
-
-The following examples cool the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the
-folder which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and cool.py.  The cool function will cool if the 'Activate Cool'
-checkbox is on.  The functions writeOutput and getChainGcode check to see if the text has been cooled, if not they
-call the getChainGcode in clip.py to clip the text; once they have the clipped text, then they cool.
+The following examples cool the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
+and cool.py.
 
 
 > python cool.py
-This brings up the dialog, after clicking 'Cool', the following is printed:
-File Screw Holder Bottom.stl is being chain cooled.
-The extrusion fill density ratio is 0.853
-The cooled file is saved as Screw Holder Bottom.gcode
-The scalable vector graphics file is saved as Hollow_Square_cool.svg
-It took 34 seconds to cool the file.
+This brings up the cool dialog.
 
 
 > python cool.py Screw Holder Bottom.stl
-File Screw Holder Bottom.stl is being chain cooled.
-The extrusion fill density ratio is 0.853
-The cooled file is saved as Screw Holder Bottom.gcode
-The scalable vector graphics file is saved as Hollow_Square_cool.svg
-It took 34 seconds to cool the file.
+The cool tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The cool tool has created the file:
+.. Screw Holder Bottom_cool.gcode
 
 
 > python
@@ -61,11 +49,11 @@ This brings up the cool dialog.
 
 
 >>> cool.writeOutput()
-File Screw Holder Bottom.stl is being chain cooled.
-The extrusion fill density ratio is 0.853
-The cooled file is saved as Screw Holder Bottom.gcode
-The scalable vector graphics file is saved as Hollow_Square_cool.svg
-It took 34 seconds to cool the file.
+The cool tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The cool tool has created the file:
+.. Screw Holder Bottom_cool.gcode
 
 """
 
@@ -104,16 +92,15 @@ def getCraftedTextFromText( gcodeText, coolPreferences = None ):
 		return gcodeText
 	return CoolSkein().getCraftedGcode( gcodeText, coolPreferences )
 
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( CoolPreferences() )
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return CoolPreferences()
 
 def writeOutput( fileName = '' ):
 	"Cool a gcode linear move file.  Chain cool the gcode if it is not already cooled. If no fileName is specified, cool the first unmodified gcode file in this folder."
 	fileName = interpret.getFirstTranslatorFileNameUnmodified( fileName )
-	if fileName == '':
-		return
-	consecution.writeChainText( fileName, ' is being chain cooled.', 'The cooled file is saved as ', 'cool' )
+	if fileName != '':
+		consecution.writeChainTextWithNounMessage( fileName, 'cool' )
 
 
 class CoolPreferences:
@@ -136,7 +123,7 @@ class CoolPreferences:
 		self.archive.append( self.turnFanOffAtEnding )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Cool'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.cool.html' )
 
 	def execute( self ):
@@ -151,7 +138,7 @@ class CoolSkein:
 	def __init__( self ):
 		self.boundaryLayer = None
 		self.distanceFeedRate = gcodec.DistanceFeedRate()
-		self.feedrateMinute = 960.0
+		self.feedRateMinute = 960.0
 		self.highestZ = - 99999999.9
 		self.layerTime = 0.0
 		self.lineIndex = 0
@@ -176,18 +163,18 @@ class CoolSkein:
 		pointComplex = euclidean.getXYComplexFromVector3( self.oldLocation )
 		if pointComplex != None:
 			largestLoop = euclidean.getLoopStartingNearest( self.perimeterWidth, pointComplex, largestLoop )
-		intercircle.addOrbits( largestLoop, self, remainingOrbitTime, self.highestZ )
+		intercircle.addOrbitsIfLarge( largestLoop, self, remainingOrbitTime, self.highestZ )
 
-	def addGcodeFromFeedrateMovementZ( self, feedrateMinute, point, z ):
+	def addGcodeFromFeedRateMovementZ( self, feedRateMinute, point, z ):
 		"Add a movement to the output."
-		self.distanceFeedRate.addLine( self.distanceFeedRate.getLinearGcodeMovementWithFeedrate( feedrateMinute, point, z ) )
+		self.distanceFeedRate.addLine( self.distanceFeedRate.getLinearGcodeMovementWithFeedRate( feedRateMinute, point, z ) )
 
 	def getCraftedGcode( self, gcodeText, coolPreferences ):
 		"Parse gcode text and store the cool gcode."
 		self.coolPreferences = coolPreferences
-		self.coolEndText = preferences.getFileInGivenPreferencesDirectory( os.path.dirname( __file__ ), 'Cool_End.txt' )
+		self.coolEndText = preferences.getFileInAlterationsOrGivenDirectory( os.path.dirname( __file__ ), 'Cool_End.gcode' )
 		self.coolEndLines = gcodec.getTextLines( self.coolEndText )
-		self.coolStartText = preferences.getFileInGivenPreferencesDirectory( os.path.dirname( __file__ ), 'Cool_Start.txt' )
+		self.coolStartText = preferences.getFileInAlterationsOrGivenDirectory( os.path.dirname( __file__ ), 'Cool_Start.gcode' )
 		self.coolStartLines = gcodec.getTextLines( self.coolStartText )
 		self.halfCorner = complex( coolPreferences.minimumOrbitalRadius.value, coolPreferences.minimumOrbitalRadius.value )
 		self.lines = gcodec.getTextLines( gcodeText )
@@ -202,11 +189,11 @@ class CoolSkein:
 
 	def linearMove( self, splitLine ):
 		"Add line to time spent on layer."
-		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
+		self.feedRateMinute = gcodec.getFeedRateMinute( self.feedRateMinute, splitLine )
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		if self.oldLocation != None:
-			feedrateSecond = self.feedrateMinute / 60.0
-			self.layerTime += location.distance( self.oldLocation ) / feedrateSecond
+			feedRateSecond = self.feedRateMinute / 60.0
+			self.layerTime += location.distance( self.oldLocation ) / feedRateSecond
 		self.highestZ = max( location.z, self.highestZ )
 		self.oldLocation = location
 
@@ -224,8 +211,8 @@ class CoolSkein:
 			elif firstWord == '(</extruderInitialization>)':
 				self.distanceFeedRate.addLine( '(<procedureDone> cool </procedureDone>)' )
 				return
-			elif firstWord == '(<orbitalFeedratePerSecond>':
-				self.orbitalFeedratePerSecond = float( splitLine[ 1 ] )
+			elif firstWord == '(<orbitalFeedRatePerSecond>':
+				self.orbitalFeedRatePerSecond = float( splitLine[ 1 ] )
 			self.distanceFeedRate.addLine( line )
 
 	def parseLine( self, line ):
@@ -240,7 +227,7 @@ class CoolSkein:
 			self.boundaryLoop.append( gcodec.getLocationFromSplitLine( None, splitLine ).dropAxis( 2 ) )
 		elif firstWord == '(<layer>':
 			self.distanceFeedRate.addLine( line )
-			self.distanceFeedRate.addLines( self.coolStartLines )
+			self.distanceFeedRate.addLinesSetAbsoluteDistanceMode( self.coolStartLines )
 			remainingOrbitTime = self.coolPreferences.minimumLayerTime.value - self.layerTime
 			if remainingOrbitTime > 0.0 and self.boundaryLayer != None:
 				self.addCoolOrbits( remainingOrbitTime )
@@ -248,7 +235,7 @@ class CoolSkein:
 			self.boundaryLayer = euclidean.LoopLayer( z )
 			self.highestZ = z
 			self.layerTime = 0.0
-			self.distanceFeedRate.addLines( self.coolEndLines )
+			self.distanceFeedRate.addLinesSetAbsoluteDistanceMode( self.coolEndLines )
 			return
 		elif firstWord == '(<surroundingLoop>)':
 			self.boundaryLoop = []
@@ -261,7 +248,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

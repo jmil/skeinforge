@@ -1,11 +1,7 @@
 """
 Craft is a script to access the plugins which craft a gcode file.
 
-An explanation of the gcodes is at:
-http://reprap.org/bin/view/Main/Arduino_GCode_Interpreter
-
-A gode example is at:
-http://forums.reprap.org/file.php?12,file=565
+The plugin buttons which are commonly used are bolded and the ones which are rarely used have normal font weight.
 
 """
 
@@ -14,6 +10,7 @@ from __future__ import absolute_import
 import __init__
 
 from skeinforge_tools.skeinforge_utilities import consecution
+from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import polyfile
@@ -31,9 +28,9 @@ def getCraftPluginFilenames():
 	craftSequence.sort()
 	return craftSequence
 
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( CraftPreferences() )
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return CraftPreferences()
 
 def writeOutput( fileName = '' ):
 	"Craft a gcode file.  If no fileName is specified, comment the first gcode file in this folder that is not modified."
@@ -50,13 +47,13 @@ class CraftPreferences:
 		self.archive = []
 		self.craftLabel = preferences.LabelDisplay().getFromName( 'Open Preferences: ' )
 		self.archive.append( self.craftLabel )
-		importantFilenames = [ 'carve', 'raft', 'speed' ]
-		self.archive += preferences.getDisplayToolButtons( 'craft_plugins', importantFilenames, __file__, getCraftPluginFilenames(), [] )
+		importantFilenames = [ 'carve', 'chop', 'feed', 'flow', 'lift', 'raft', 'speed' ]
+		self.archive += preferences.getDisplayToolButtons( gcodec.getAbsoluteFolderPath( __file__, 'craft_plugins' ), importantFilenames, getCraftPluginFilenames(), [] )
 		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Crafted', '' )
 		self.archive.append( self.fileNameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Craft'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft.html' )
 
 	def execute( self ):
@@ -71,7 +68,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

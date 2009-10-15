@@ -9,10 +9,11 @@
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="skeinforge_tools.html"><font color="#ffffff">skeinforge_tools</font></a>.<a href="skeinforge_tools.craft_plugins.html"><font color="#ffffff">craft_plugins</font></a>.fill</strong></big></big> ($Date: 2008/28/04 $)</font></td
 ><td align=right valign=bottom
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/craft_plugins/fill.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/craft_plugins/fill.py</a></font></td></tr></table>
-    <p><tt>Fill&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;fill&nbsp;the&nbsp;inset&nbsp;outlines&nbsp;of&nbsp;a&nbsp;gcode&nbsp;file.<br>
+    <p><tt>Fill&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;fill&nbsp;the&nbsp;perimeters&nbsp;of&nbsp;a&nbsp;gcode&nbsp;file.<br>
 &nbsp;<br>
-Allan&nbsp;Ecker&nbsp;aka&nbsp;The&nbsp;Masked&nbsp;Retriever's&nbsp;has&nbsp;written&nbsp;the&nbsp;following&nbsp;quicktip&nbsp;for&nbsp;fill.<br>
-"Skeinforge&nbsp;Quicktip:&nbsp;Fill"&nbsp;at:&nbsp;<a href="http://blog.thingiverse.com/2009/07/21/mysteries-of-skeinforge-fill/">http://blog.thingiverse.com/2009/07/21/mysteries-of-skeinforge-fill/</a><br>
+Allan&nbsp;Ecker&nbsp;aka&nbsp;The&nbsp;Masked&nbsp;Retriever's&nbsp;has&nbsp;written&nbsp;the&nbsp;quicktip&nbsp;for&nbsp;fill&nbsp;which&nbsp;follows&nbsp;below.<br>
+"Skeinforge&nbsp;Quicktip:&nbsp;Fill"&nbsp;at:<br>
+<a href="http://blog.thingiverse.com/2009/07/21/mysteries-of-skeinforge-fill/">http://blog.thingiverse.com/2009/07/21/mysteries-of-skeinforge-fill/</a><br>
 &nbsp;<br>
 The&nbsp;diaphragm&nbsp;is&nbsp;a&nbsp;solid&nbsp;group&nbsp;of&nbsp;layers,&nbsp;at&nbsp;regular&nbsp;intervals.&nbsp;&nbsp;It&nbsp;can&nbsp;be&nbsp;used&nbsp;with&nbsp;a&nbsp;sparse&nbsp;infill&nbsp;to&nbsp;give&nbsp;the&nbsp;object&nbsp;watertight,&nbsp;horizontal<br>
 compartments&nbsp;and/or&nbsp;a&nbsp;higher&nbsp;shear&nbsp;strength.&nbsp;&nbsp;The&nbsp;"Diaphragm&nbsp;Period"&nbsp;is&nbsp;the&nbsp;number&nbsp;of&nbsp;layers&nbsp;between&nbsp;diaphrams.&nbsp;&nbsp;The&nbsp;"Diaphragm<br>
@@ -62,31 +63,52 @@ zero,&nbsp;the&nbsp;entire&nbsp;object&nbsp;will&nbsp;be&nbsp;composed&nbsp;of&n
 through&nbsp;the&nbsp;surface&nbsp;and&nbsp;with&nbsp;a&nbsp;value&nbsp;of&nbsp;three,&nbsp;the&nbsp;object&nbsp;could&nbsp;be&nbsp;watertight.&nbsp;&nbsp;The&nbsp;higher&nbsp;the&nbsp;solid&nbsp;surface&nbsp;thickness,&nbsp;the&nbsp;stronger&nbsp;and<br>
 heavier&nbsp;the&nbsp;object&nbsp;will&nbsp;be.&nbsp;&nbsp;The&nbsp;default&nbsp;is&nbsp;three.<br>
 &nbsp;<br>
-The&nbsp;following&nbsp;examples&nbsp;fill&nbsp;the&nbsp;files&nbsp;Screw&nbsp;Holder&nbsp;Bottom.gcode&nbsp;&amp;&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which<br>
-contains&nbsp;Screw&nbsp;Holder&nbsp;Bottom.gcode,&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;and&nbsp;fill.py.<br>
+The&nbsp;'Thread&nbsp;Sequence&nbsp;Choice'&nbsp;is&nbsp;the&nbsp;sequence&nbsp;in&nbsp;which&nbsp;the&nbsp;threads&nbsp;will&nbsp;be&nbsp;extruded.&nbsp;&nbsp;There&nbsp;are&nbsp;three&nbsp;kinds&nbsp;of&nbsp;thread,&nbsp;the&nbsp;perimeter<br>
+threads&nbsp;on&nbsp;the&nbsp;outside&nbsp;of&nbsp;the&nbsp;object,&nbsp;the&nbsp;loop&nbsp;threads&nbsp;aka&nbsp;inner&nbsp;shell&nbsp;threads,&nbsp;and&nbsp;the&nbsp;interior&nbsp;infill&nbsp;threads.&nbsp;&nbsp;This&nbsp;gives&nbsp;the&nbsp;following&nbsp;six<br>
+sequence&nbsp;combinations:<br>
+'Infill&nbsp;&gt;&nbsp;Loops&nbsp;&gt;&nbsp;Perimeter'<br>
+'Infill&nbsp;&gt;&nbsp;Perimeter&nbsp;&gt;&nbsp;Loops'<br>
+'Loops&nbsp;&gt;&nbsp;Infill&nbsp;&gt;&nbsp;Perimeter'<br>
+'Loops&nbsp;&gt;&nbsp;Perimeter&nbsp;&gt;&nbsp;Infill'<br>
+'Perimeter&nbsp;&gt;&nbsp;Infill&nbsp;&gt;&nbsp;Loops'<br>
+'Perimeter&nbsp;&gt;&nbsp;Loops&nbsp;&gt;&nbsp;Infill'<br>
+&nbsp;<br>
+The&nbsp;default&nbsp;choice&nbsp;is&nbsp;'Perimeter&nbsp;&gt;&nbsp;Loops&nbsp;&gt;&nbsp;Infill',&nbsp;which&nbsp;the&nbsp;default&nbsp;stretch&nbsp;parameters&nbsp;are&nbsp;based&nbsp;on.&nbsp;&nbsp;If&nbsp;you&nbsp;change&nbsp;from&nbsp;the&nbsp;default<br>
+sequence&nbsp;choice&nbsp;preference&nbsp;of&nbsp;perimeter,&nbsp;then&nbsp;loops,&nbsp;then&nbsp;infill,&nbsp;the&nbsp;optimal&nbsp;stretch&nbsp;thread&nbsp;parameters&nbsp;would&nbsp;also&nbsp;be&nbsp;different.&nbsp;&nbsp;In&nbsp;general,<br>
+if&nbsp;the&nbsp;infill&nbsp;is&nbsp;extruded&nbsp;first,&nbsp;the&nbsp;infill&nbsp;would&nbsp;have&nbsp;to&nbsp;be&nbsp;stretched&nbsp;more&nbsp;so&nbsp;that&nbsp;even&nbsp;after&nbsp;the&nbsp;filament&nbsp;shrinkage,&nbsp;it&nbsp;would&nbsp;still&nbsp;be&nbsp;long&nbsp;enough<br>
+to&nbsp;connect&nbsp;to&nbsp;the&nbsp;loop&nbsp;or&nbsp;perimeter.<br>
+&nbsp;<br>
+The&nbsp;following&nbsp;examples&nbsp;fill&nbsp;the&nbsp;file&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+and&nbsp;fill.py.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python&nbsp;fill.py<br>
-This&nbsp;brings&nbsp;up&nbsp;the&nbsp;dialog,&nbsp;after&nbsp;clicking&nbsp;'Fill',&nbsp;the&nbsp;following&nbsp;is&nbsp;printed:<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;filled.<br>
-The&nbsp;filled&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_fill.gcode<br>
+This&nbsp;brings&nbsp;up&nbsp;the&nbsp;fill&nbsp;dialog.<br>
 &nbsp;<br>
 &nbsp;<br>
-&gt;python<br>
+&gt;&nbsp;python&nbsp;fill.py&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+The&nbsp;fill&nbsp;tool&nbsp;is&nbsp;parsing&nbsp;the&nbsp;file:<br>
+Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+..<br>
+The&nbsp;fill&nbsp;tool&nbsp;has&nbsp;created&nbsp;the&nbsp;file:<br>
+..&nbsp;Screw&nbsp;Holder&nbsp;Bottom_fill.gcode<br>
+&nbsp;<br>
+&nbsp;<br>
+&gt;&nbsp;python<br>
 Python&nbsp;2.5.1&nbsp;(r251:54863,&nbsp;Sep&nbsp;22&nbsp;2007,&nbsp;01:43:31)<br>
 [GCC&nbsp;4.2.1&nbsp;(SUSE&nbsp;Linux)]&nbsp;on&nbsp;linux2<br>
 Type&nbsp;"help",&nbsp;"copyright",&nbsp;"credits"&nbsp;or&nbsp;"license"&nbsp;for&nbsp;more&nbsp;information.<br>
 &gt;&gt;&gt;&nbsp;import&nbsp;fill<br>
 &gt;&gt;&gt;&nbsp;fill.<a href="#-main">main</a>()<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;filled.<br>
-The&nbsp;filled&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_fill.gcode<br>
-It&nbsp;took&nbsp;3&nbsp;seconds&nbsp;to&nbsp;fill&nbsp;the&nbsp;file.<br>
+This&nbsp;brings&nbsp;up&nbsp;the&nbsp;fill&nbsp;dialog.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&gt;&gt;&nbsp;fill.<a href="#-writeOutput">writeOutput</a>()<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;filled.<br>
-The&nbsp;filled&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_fill.gcode<br>
-It&nbsp;took&nbsp;3&nbsp;seconds&nbsp;to&nbsp;fill&nbsp;the&nbsp;file.</tt></p>
+The&nbsp;fill&nbsp;tool&nbsp;is&nbsp;parsing&nbsp;the&nbsp;file:<br>
+Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+..<br>
+The&nbsp;fill&nbsp;tool&nbsp;has&nbsp;created&nbsp;the&nbsp;file:<br>
+..&nbsp;Screw&nbsp;Holder&nbsp;Bottom_fill.gcode</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -223,7 +245,7 @@ It&nbsp;took&nbsp;3&nbsp;seconds&nbsp;to&nbsp;fill&nbsp;the&nbsp;file.</tt></p>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><dl><dt><a name="-addAroundGridPoint"><strong>addAroundGridPoint</strong></a>(arounds, gridPoint, gridPointInsetX, gridPointInsetY, gridPoints, gridSearchRadius, isBothOrNone, isDoubleJunction, isJunctionWide, paths, pixelTable, width)</dt><dd><tt>Add&nbsp;the&nbsp;path&nbsp;around&nbsp;the&nbsp;grid&nbsp;point.</tt></dd></dl>
- <dl><dt><a name="-addPath"><strong>addPath</strong></a>(extrusionWidth, fill, path, rotationPlaneAngle)</dt><dd><tt>Add&nbsp;simplified&nbsp;path&nbsp;to&nbsp;fill.</tt></dd></dl>
+ <dl><dt><a name="-addPath"><strong>addPath</strong></a>(extrusionWidth, infillPaths, path, rotationPlaneAngle)</dt><dd><tt>Add&nbsp;simplified&nbsp;path&nbsp;to&nbsp;fill.</tt></dd></dl>
  <dl><dt><a name="-addPointOnPath"><strong>addPointOnPath</strong></a>(path, pixelTable, point, pointIndex, width)</dt><dd><tt>Add&nbsp;a&nbsp;point&nbsp;to&nbsp;a&nbsp;path&nbsp;and&nbsp;the&nbsp;pixel&nbsp;table.</tt></dd></dl>
  <dl><dt><a name="-addShortenedLineSegment"><strong>addShortenedLineSegment</strong></a>(lineSegment, shortenDistance, shortenedSegments)</dt><dd><tt>Add&nbsp;shortened&nbsp;line&nbsp;segment.</tt></dd></dl>
  <dl><dt><a name="-addSparseEndpoints"><strong>addSparseEndpoints</strong></a>(doubleExtrusionWidth, endpoints, fillLine, horizontalSegments, infillSolidity, removedEndpoints, solidSurfaceThickness, surroundingXIntersections)</dt><dd><tt>Add&nbsp;sparse&nbsp;endpoints.</tt></dd></dl>
@@ -237,13 +259,13 @@ It&nbsp;took&nbsp;3&nbsp;seconds&nbsp;to&nbsp;fill&nbsp;the&nbsp;file.</tt></p>
  <dl><dt><a name="-getAdditionalLength"><strong>getAdditionalLength</strong></a>(path, point, pointIndex)</dt><dd><tt>Get&nbsp;the&nbsp;additional&nbsp;length&nbsp;added&nbsp;by&nbsp;inserting&nbsp;a&nbsp;point&nbsp;into&nbsp;a&nbsp;path.</tt></dd></dl>
  <dl><dt><a name="-getClosestOppositeIntersectionPaths"><strong>getClosestOppositeIntersectionPaths</strong></a>(yIntersectionPaths)</dt><dd><tt>Get&nbsp;the&nbsp;close&nbsp;to&nbsp;center&nbsp;paths,&nbsp;starting&nbsp;with&nbsp;the&nbsp;first&nbsp;and&nbsp;an&nbsp;additional&nbsp;opposite&nbsp;if&nbsp;it&nbsp;exists.</tt></dd></dl>
  <dl><dt><a name="-getCraftedText"><strong>getCraftedText</strong></a>(fileName, text<font color="#909090">=''</font>, fillPreferences<font color="#909090">=None</font>)</dt><dd><tt>Fill&nbsp;the&nbsp;inset&nbsp;file&nbsp;or&nbsp;text.</tt></dd></dl>
- <dl><dt><a name="-getCraftedTextFromText"><strong>getCraftedTextFromText</strong></a>(gcodeText, fillPreferences<font color="#909090">=None</font>)</dt><dd><tt>Fill&nbsp;the&nbsp;inset&nbsp;text.</tt></dd></dl>
- <dl><dt><a name="-getDisplayedPreferences"><strong>getDisplayedPreferences</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;displayed&nbsp;preferences.</tt></dd></dl>
+ <dl><dt><a name="-getCraftedTextFromText"><strong>getCraftedTextFromText</strong></a>(gcodeText, fillPreferences<font color="#909090">=None</font>)</dt><dd><tt>Fill&nbsp;the&nbsp;inset&nbsp;text.self.</tt></dd></dl>
  <dl><dt><a name="-getExtraFillLoops"><strong>getExtraFillLoops</strong></a>(insideLoops, outsideLoop, radius)</dt><dd><tt>Get&nbsp;extra&nbsp;loops&nbsp;between&nbsp;inside&nbsp;and&nbsp;outside&nbsp;loops.</tt></dd></dl>
  <dl><dt><a name="-getHorizontalSegmentsFromLoopLists"><strong>getHorizontalSegmentsFromLoopLists</strong></a>(fillLoops, alreadyFilledArounds, y)</dt><dd><tt>Get&nbsp;horizontal&nbsp;segments&nbsp;inside&nbsp;loops.</tt></dd></dl>
  <dl><dt><a name="-getIntersectionOfXIntersectionIndexes"><strong>getIntersectionOfXIntersectionIndexes</strong></a>(totalSolidSurfaceThickness, xIntersectionIndexList)</dt><dd><tt>Get&nbsp;x&nbsp;intersections&nbsp;from&nbsp;surrounding&nbsp;layers.</tt></dd></dl>
  <dl><dt><a name="-getNonIntersectingGridPointLine"><strong>getNonIntersectingGridPointLine</strong></a>(gridPointInsetX, isJunctionWide, paths, pixelTable, yIntersectionPath, width)</dt><dd><tt>Get&nbsp;the&nbsp;points&nbsp;around&nbsp;the&nbsp;grid&nbsp;point&nbsp;that&nbsp;is&nbsp;junction&nbsp;wide&nbsp;that&nbsp;do&nbsp;not&nbsp;intersect.</tt></dd></dl>
  <dl><dt><a name="-getPlusMinusSign"><strong>getPlusMinusSign</strong></a>(number)</dt><dd><tt>Get&nbsp;one&nbsp;if&nbsp;the&nbsp;number&nbsp;is&nbsp;zero&nbsp;or&nbsp;positive&nbsp;else&nbsp;negative&nbsp;one.</tt></dd></dl>
+ <dl><dt><a name="-getPreferencesConstructor"><strong>getPreferencesConstructor</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;preferences&nbsp;constructor.</tt></dd></dl>
  <dl><dt><a name="-getSurroundingXIntersections"><strong>getSurroundingXIntersections</strong></a>(doubleSolidSurfaceThickness, surroundingCarves, y)</dt><dd><tt>Get&nbsp;x&nbsp;intersections&nbsp;from&nbsp;surrounding&nbsp;layers.</tt></dd></dl>
  <dl><dt><a name="-getWithLeastLength"><strong>getWithLeastLength</strong></a>(path, point)</dt><dd><tt>Insert&nbsp;a&nbsp;point&nbsp;into&nbsp;a&nbsp;path,&nbsp;at&nbsp;the&nbsp;index&nbsp;at&nbsp;which&nbsp;the&nbsp;path&nbsp;would&nbsp;be&nbsp;shortest.</tt></dd></dl>
  <dl><dt><a name="-getYIntersection"><strong>getYIntersection</strong></a>(firstPoint, secondPoint, x)</dt><dd><tt>Get&nbsp;where&nbsp;the&nbsp;line&nbsp;crosses&nbsp;x.</tt></dd></dl>
@@ -266,7 +288,7 @@ It&nbsp;took&nbsp;3&nbsp;seconds&nbsp;to&nbsp;fill&nbsp;the&nbsp;file.</tt></p>
  <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>Display&nbsp;the&nbsp;fill&nbsp;dialog.</tt></dd></dl>
  <dl><dt><a name="-removeEndpoints"><strong>removeEndpoints</strong></a>(aroundPixelTable, layerExtrusionWidth, paths, removedEndpoints, aroundWidth)</dt><dd><tt>Remove&nbsp;endpoints&nbsp;which&nbsp;are&nbsp;added&nbsp;to&nbsp;the&nbsp;path.</tt></dd></dl>
  <dl><dt><a name="-setIsOutside"><strong>setIsOutside</strong></a>(yCloseToCenterPath, yIntersectionPaths)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;yCloseToCenterPath&nbsp;is&nbsp;outside.</tt></dd></dl>
- <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName<font color="#909090">=''</font>)</dt><dd><tt>Fill&nbsp;the&nbsp;carves&nbsp;of&nbsp;a&nbsp;gcode&nbsp;file.&nbsp;&nbsp;Chain&nbsp;carve&nbsp;the&nbsp;file&nbsp;if&nbsp;it&nbsp;is&nbsp;a&nbsp;GNU&nbsp;TriangulatedSurface&nbsp;file.&nbsp;&nbsp;If&nbsp;no&nbsp;fileName&nbsp;is&nbsp;specified,&nbsp;fill&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
+ <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName<font color="#909090">=''</font>)</dt><dd><tt>Fill&nbsp;an&nbsp;inset&nbsp;gcode&nbsp;file.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">

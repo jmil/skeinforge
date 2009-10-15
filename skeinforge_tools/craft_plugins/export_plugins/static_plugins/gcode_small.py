@@ -1,13 +1,13 @@
 """
-Gcode_small is an export plugin to remove the comments and the redundant z and feedrate parameters from a gcode file.
+Gcode_small is an export plugin to remove the comments and the redundant z and feedRate parameters from a gcode file.
 
-An export plugin is a script in the export_plugins folder which has the functions getOuput, isArchivable and writeOutput.  It is
-meant to be run from the export tool.  To ensure that the plugin works on platforms which do not handle file capitalization
-properly, give the plugin a lower case name.
+An export plugin is a script in the export_plugins folder which has the functions getOuput, and writeOutput.  It is meant to be
+run from the export tool.  To ensure that the plugin works on platforms which do not handle file capitalization properly, give the
+plugin a lower case name.
 
-The getOuput function of this script takes a gcode text and returns that text without comments and redundant z and feedrate
+The getOuput function of this script takes a gcode text and returns that text without comments and redundant z and feedRate
 parameters.  The writeOutput function of this script takes a gcode text and writes that text without comments and redundant z
-and feedrate parameterscomments to a file.
+and feedRate parameterscomments to a file.
 
 Many of the functions in this script are copied from gcodec in skeinforge_utilities.  They are copied rather than imported so
 developers making new plugins do not have to learn about gcodec, the code here is all they need to learn.
@@ -24,11 +24,9 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 def getOutput( gcodeText ):
-	"""Get the exported version of a gcode file.  This function, isArchivable and writeOutput are the only necessary functions in a skeinforge export plugin.
+	"""Get the exported version of a gcode file.  This function, and writeOutput are the only necessary functions in a skeinforge export plugin.
 	If this plugin writes an output than should not be printed, an empty string should be returned."""
-	skein = GcodeSmallSkein()
-	skein.parseGcode( gcodeText )
-	return skein.output.getvalue()
+	return GcodeSmallSkein().getCraftedGcode( gcodeText )
 
 def getStringFromCharacterSplitLine( character, splitLine ):
 	"Get the string after the first occurence of the character in the split line."
@@ -56,27 +54,24 @@ def indexOfStartingWithSecond( letter, splitLine ):
 			return wordIndex
 	return - 1
 
-def isArchivable():
-	"Return whether or not this plugin is archivable."
-	return False
-
 def isReplacable():
 	"Return whether or not the output from this plugin is replacable.  This should be true if the output is text and false if it is binary."
 	return True
 
 
 class GcodeSmallSkein:
-	"A class to remove redundant z and feedrate parameters from a skein of extrusions."
+	"A class to remove redundant z and feedRate parameters from a skein of extrusions."
 	def __init__( self ):
-		self.lastFeedrateString = None
+		self.lastFeedRateString = None
 		self.lastZString = None
 		self.output = cStringIO.StringIO()
 
-	def parseGcode( self, gcodeText ):
+	def getCraftedGcode( self, gcodeText ):
 		"Parse gcode text and store the gcode."
 		lines = getTextLines( gcodeText )
 		for line in lines:
 			self.parseLine( line )
+		return self.output.getvalue()
 
 	def parseLine( self, line ):
 		"Parse a gcode line."
@@ -94,7 +89,7 @@ class GcodeSmallSkein:
 		xString = getStringFromCharacterSplitLine( 'X', splitLine )
 		yString = getStringFromCharacterSplitLine( 'Y', splitLine )
 		zString = getStringFromCharacterSplitLine( 'Z', splitLine )
-		feedrateString = getStringFromCharacterSplitLine( 'F', splitLine )
+		feedRateString = getStringFromCharacterSplitLine( 'F', splitLine )
 		self.output.write( 'G1' )
 		if xString != None:
 			self.output.write( ' X' + xString )
@@ -102,8 +97,8 @@ class GcodeSmallSkein:
 			self.output.write( ' Y' + yString )
 		if zString != None and zString != self.lastZString:
 			self.output.write( ' Z' + zString )
-		if feedrateString != None and feedrateString != self.lastFeedrateString:
-			self.output.write( ' F' + feedrateString )
-		self.lastFeedrateString = feedrateString
+		if feedRateString != None and feedRateString != self.lastFeedRateString:
+			self.output.write( ' F' + feedRateString )
+		self.lastFeedRateString = feedRateString
 		self.lastZString = zString
 		self.output.write( '\n' )

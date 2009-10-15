@@ -11,34 +11,28 @@
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/craft_plugins/home.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/craft_plugins/home.py</a></font></td></tr></table>
     <p><tt>Home&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;home&nbsp;the&nbsp;nozzle.<br>
 &nbsp;<br>
-The&nbsp;default&nbsp;'Activate&nbsp;Home'&nbsp;checkbox&nbsp;is&nbsp;on.&nbsp;&nbsp;When&nbsp;it&nbsp;is&nbsp;on,&nbsp;the&nbsp;functions&nbsp;described&nbsp;below&nbsp;will&nbsp;work,&nbsp;when&nbsp;it&nbsp;is&nbsp;off,&nbsp;the&nbsp;functions<br>
-will&nbsp;not&nbsp;be&nbsp;called.<br>
+The&nbsp;default&nbsp;'Activate&nbsp;Home'&nbsp;checkbox&nbsp;is&nbsp;on.&nbsp;&nbsp;When&nbsp;it&nbsp;is&nbsp;on,&nbsp;the&nbsp;functions&nbsp;described&nbsp;below&nbsp;will&nbsp;work,&nbsp;when&nbsp;it&nbsp;is&nbsp;off,&nbsp;the&nbsp;functions&nbsp;will&nbsp;not&nbsp;be&nbsp;called.<br>
 &nbsp;<br>
-At&nbsp;the&nbsp;beginning&nbsp;of&nbsp;a&nbsp;each&nbsp;layer,&nbsp;home&nbsp;will&nbsp;add&nbsp;the&nbsp;commands&nbsp;of&nbsp;a&nbsp;gcode&nbsp;script&nbsp;with&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;"Name&nbsp;of&nbsp;Homing&nbsp;File"<br>
-setting,&nbsp;if&nbsp;one&nbsp;exists.&nbsp;&nbsp;The&nbsp;default&nbsp;name&nbsp;is&nbsp;homing.text.&nbsp;&nbsp;Home&nbsp;does&nbsp;not&nbsp;care&nbsp;if&nbsp;the&nbsp;text&nbsp;file&nbsp;names&nbsp;are&nbsp;capitalized,&nbsp;but&nbsp;some&nbsp;file<br>
-systems&nbsp;do&nbsp;not&nbsp;handle&nbsp;file&nbsp;name&nbsp;cases&nbsp;properly,&nbsp;so&nbsp;to&nbsp;be&nbsp;on&nbsp;the&nbsp;safe&nbsp;side&nbsp;you&nbsp;should&nbsp;give&nbsp;them&nbsp;lower&nbsp;case&nbsp;names.&nbsp;&nbsp;Home<br>
-looks&nbsp;for&nbsp;those&nbsp;files&nbsp;in&nbsp;the&nbsp;alterations&nbsp;folder&nbsp;in&nbsp;the&nbsp;.skeinforge&nbsp;folder&nbsp;in&nbsp;the&nbsp;home&nbsp;directory.&nbsp;If&nbsp;it&nbsp;doesn't&nbsp;find&nbsp;the&nbsp;file&nbsp;it&nbsp;then&nbsp;looks<br>
-in&nbsp;the&nbsp;alterations&nbsp;folder&nbsp;in&nbsp;the&nbsp;skeinforge_tools&nbsp;folder.&nbsp;&nbsp;If&nbsp;it&nbsp;doesn't&nbsp;find&nbsp;anything&nbsp;there&nbsp;it&nbsp;looks&nbsp;in&nbsp;the&nbsp;craft_plugins&nbsp;folder.<br>
+At&nbsp;the&nbsp;beginning&nbsp;of&nbsp;a&nbsp;each&nbsp;layer,&nbsp;home&nbsp;will&nbsp;add&nbsp;the&nbsp;commands&nbsp;of&nbsp;a&nbsp;gcode&nbsp;script&nbsp;with&nbsp;the&nbsp;name&nbsp;of&nbsp;the&nbsp;"Name&nbsp;of&nbsp;Homing&nbsp;File"&nbsp;setting,&nbsp;if&nbsp;one&nbsp;exists.&nbsp;&nbsp;The<br>
+default&nbsp;name&nbsp;is&nbsp;homing.gcode.&nbsp;&nbsp;Home&nbsp;does&nbsp;not&nbsp;care&nbsp;if&nbsp;the&nbsp;text&nbsp;file&nbsp;names&nbsp;are&nbsp;capitalized,&nbsp;but&nbsp;some&nbsp;file&nbsp;systems&nbsp;do&nbsp;not&nbsp;handle&nbsp;file&nbsp;name&nbsp;cases<br>
+properly,&nbsp;so&nbsp;to&nbsp;be&nbsp;on&nbsp;the&nbsp;safe&nbsp;side&nbsp;you&nbsp;should&nbsp;give&nbsp;them&nbsp;lower&nbsp;case&nbsp;names.&nbsp;&nbsp;Home&nbsp;looks&nbsp;for&nbsp;those&nbsp;files&nbsp;in&nbsp;the&nbsp;alterations&nbsp;folder&nbsp;in&nbsp;the&nbsp;.skeinforge&nbsp;folder<br>
+in&nbsp;the&nbsp;home&nbsp;directory.&nbsp;If&nbsp;it&nbsp;doesn't&nbsp;find&nbsp;the&nbsp;file&nbsp;it&nbsp;then&nbsp;looks&nbsp;in&nbsp;the&nbsp;alterations&nbsp;folder&nbsp;in&nbsp;the&nbsp;skeinforge_tools&nbsp;folder.&nbsp;&nbsp;If&nbsp;it&nbsp;doesn't&nbsp;find&nbsp;anything&nbsp;there&nbsp;it&nbsp;looks<br>
+in&nbsp;the&nbsp;craft_plugins&nbsp;folder.<br>
 &nbsp;<br>
-To&nbsp;run&nbsp;home,&nbsp;in&nbsp;a&nbsp;shell&nbsp;which&nbsp;home&nbsp;is&nbsp;in&nbsp;type:<br>
-&gt;&nbsp;python&nbsp;home.py<br>
-&nbsp;<br>
-The&nbsp;following&nbsp;examples&nbsp;homes&nbsp;the&nbsp;files&nbsp;Screw&nbsp;Holder&nbsp;Bottom.gcode&nbsp;&amp;&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a<br>
-terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains&nbsp;Screw&nbsp;Holder&nbsp;Bottom.gcode,&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;and&nbsp;home.py.&nbsp;&nbsp;The&nbsp;home&nbsp;function<br>
-will&nbsp;home&nbsp;if&nbsp;the&nbsp;'Activate&nbsp;Home'&nbsp;checkbox&nbsp;is&nbsp;on.&nbsp;&nbsp;The&nbsp;functions&nbsp;writeOutput&nbsp;and&nbsp;getChainGcode&nbsp;check&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text<br>
-has&nbsp;been&nbsp;homed,&nbsp;if&nbsp;not&nbsp;they&nbsp;call&nbsp;the&nbsp;getChainGcode&nbsp;in&nbsp;fillet.py&nbsp;to&nbsp;fillet&nbsp;the&nbsp;text;&nbsp;once&nbsp;they&nbsp;have&nbsp;the<br>
-filleted&nbsp;text,&nbsp;then&nbsp;they&nbsp;home.<br>
+The&nbsp;following&nbsp;examples&nbsp;home&nbsp;the&nbsp;file&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+and&nbsp;home.py.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python&nbsp;home.py<br>
-This&nbsp;brings&nbsp;up&nbsp;the&nbsp;dialog,&nbsp;after&nbsp;clicking&nbsp;'Home',&nbsp;the&nbsp;following&nbsp;is&nbsp;printed:<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;homed.<br>
-The&nbsp;homed&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_home.gcode<br>
+This&nbsp;brings&nbsp;up&nbsp;the&nbsp;home&nbsp;dialog.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python&nbsp;home.py&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;homed.<br>
-The&nbsp;homed&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_home.gcode<br>
+The&nbsp;home&nbsp;tool&nbsp;is&nbsp;parsing&nbsp;the&nbsp;file:<br>
+Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+..<br>
+The&nbsp;home&nbsp;tool&nbsp;has&nbsp;created&nbsp;the&nbsp;file:<br>
+..&nbsp;Screw&nbsp;Holder&nbsp;Bottom_home.gcode<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python<br>
@@ -51,8 +45,11 @@ This&nbsp;brings&nbsp;up&nbsp;the&nbsp;home&nbsp;dialog.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&gt;&gt;&nbsp;home.<a href="#-writeOutput">writeOutput</a>()<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;homed.<br>
-The&nbsp;homed&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_home.gcode</tt></p>
+The&nbsp;home&nbsp;tool&nbsp;is&nbsp;parsing&nbsp;the&nbsp;file:<br>
+Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+..<br>
+The&nbsp;home&nbsp;tool&nbsp;has&nbsp;created&nbsp;the&nbsp;file:<br>
+..&nbsp;Screw&nbsp;Holder&nbsp;Bottom_home.gcode</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -128,7 +125,7 @@ The&nbsp;homed&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><dl><dt><a name="-getCraftedText"><strong>getCraftedText</strong></a>(fileName, text, homePreferences<font color="#909090">=None</font>)</dt><dd><tt>Home&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file&nbsp;or&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-getCraftedTextFromText"><strong>getCraftedTextFromText</strong></a>(gcodeText, homePreferences<font color="#909090">=None</font>)</dt><dd><tt>Home&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
- <dl><dt><a name="-getDisplayedPreferences"><strong>getDisplayedPreferences</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;displayed&nbsp;preferences.</tt></dd></dl>
+ <dl><dt><a name="-getPreferencesConstructor"><strong>getPreferencesConstructor</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;preferences&nbsp;constructor.</tt></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>Display&nbsp;the&nbsp;home&nbsp;dialog.</tt></dd></dl>
  <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName<font color="#909090">=''</font>)</dt><dd><tt>Home&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;Chain&nbsp;home&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;homed.&nbsp;If&nbsp;no&nbsp;fileName&nbsp;is&nbsp;specified,&nbsp;home&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
 </td></tr></table><p>

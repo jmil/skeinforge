@@ -163,7 +163,10 @@ function viewAll(){
 		y = (1 * i + 1) * ( margin + sliceDimensionY * unitScale) + i * textHeight
 		layers[i].setAttributeNS(null,'transform','translate(' + x + ', ' + y + ')')
 		transform = 'scale(' + unitScale + ' ' + (unitScale * -1) + ') translate(' + (sliceMinX * -1) + ' ' + (sliceMinY * -1) + ')'
-		layers[i].getElementsByTagName('path')[0].setAttributeNS(null,'transform',transform)
+		pathElements = layers[i].getElementsByTagName('path')
+		for (var pathElementIndex = 0; pathElementIndex<pathElements.length; pathElementIndex++){
+			pathElements[pathElementIndex].setAttributeNS(null,'transform',transform)
+		}
 		layers[i].setAttributeNS(null,'visibility','visible')
 		layers[i].getElementsByTagName('text')[0].setAttributeNS(null,'visibility','visible')
 	}
@@ -192,7 +195,10 @@ function viewSingle(){
 		layers[i].setAttributeNS(null,'visibility','hidden')
 		layers[i].getElementsByTagName('text')[0].setAttributeNS(null,'visibility','hidden')
 		transform = 'scale(' + scale + ' ' + (scale * -1) + ') translate(' + (sliceMinX * -1) + ' ' + (sliceMinY * -1) + ')'
-		layers[i].getElementsByTagName('path')[0].setAttributeNS(null,'transform',transform)
+		pathElements = layers[i].getElementsByTagName('path')
+		for (var pathElementIndex = 0; pathElementIndex<pathElements.length; pathElementIndex++){
+			pathElements[pathElementIndex].setAttributeNS(null,'transform',transform)
+		}
 	}
 	
 	//show control box

@@ -19,25 +19,25 @@ The default angle is sixty degrees.
 
 The "Tower Start Layer" is the layer which the script starts extruding towers, after the last raft layer which does not have
 support material.  It is best to not tower at least the first layer because the temperature of the first layer should sometimes be
-different than that of the other layers.  The default preference is one.  To run tower, in a shell type:
-> python tower.py
+different than that of the other layers.  The default preference is one.
 
-The following examples tower the files Screw Holder Bottom.gcode & Screw Holder Bottom.stl.  The examples are run in a terminal in the folder
-which contains Screw Holder Bottom.gcode, Screw Holder Bottom.stl and tower.py.  The tower function will tower if 'Maximum Tower Layers' is
-greater than zero, which can be set in the dialog or by changing the preferences file 'tower.csv' with a text editor or a spreadsheet
-program set to separate tabs.  The functions writeOutput and getChainGcode check to see if the text has been towered,
-if not they call the getChainGcode in raft.py to raft the text; once they have the rafted text, then they tower.  Pictures of
-towering in action are available from the Metalab blog at:
-http://reprap.soup.io/?search=towering
+The following examples tower the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
+and tower.py.
 
 
 > python tower.py
-This brings up the dialog, after clicking 'Tower', the following is printed:
-File Screw Holder Bottom.stl is being chain towered.
-The towered file is saved as Screw Holder Bottom_tower.gcode
+This brings up the tower dialog.
 
 
->python
+> python tower.py Screw Holder Bottom.stl
+The tower tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The tower tool has created the file:
+.. Screw Holder Bottom_tower.gcode
+
+
+> python
 Python 2.5.1 (r251:54863, Sep 22 2007, 01:43:31)
 [GCC 4.2.1 (SUSE Linux)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
@@ -47,9 +47,11 @@ This brings up the tower dialog.
 
 
 >>> tower.writeOutput()
+The tower tool is parsing the file:
 Screw Holder Bottom.stl
-File Screw Holder Bottom.stl is being chain towered.
-The towered file is saved as Screw Holder Bottom_tower.gcode
+..
+The tower tool has created the file:
+.. Screw Holder Bottom_tower.gcode
 
 """
 
@@ -87,9 +89,9 @@ def getCraftedTextFromText( gcodeText, towerPreferences = None ):
 		return gcodeText
 	return TowerSkein().getCraftedGcode( gcodeText, towerPreferences )
 
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( TowerPreferences() )
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return TowerPreferences()
 
 def transferFillLoops( fillLoops, surroundingLoop ):
 	"Transfer fill loops."
@@ -103,12 +105,10 @@ def transferFillLoopsToSurroundingLoops( fillLoops, surroundingLoops ):
 		transferFillLoops( fillLoops, surroundingLoop )
 
 def writeOutput( fileName = '' ):
-	"""Tower a gcode linear move file.  Chain tower the gcode if it is not already towered.
-	If no fileName is specified, tower the first unmodified gcode file in this folder."""
+	"Tower a gcode linear move file."
 	fileName = interpret.getFirstTranslatorFileNameUnmodified( fileName )
-	if fileName == '':
-		return
-	consecution.writeChainText( fileName, ' is being chain towered.', 'The towered file is saved as ', 'tower' )
+	if fileName != '':
+		consecution.writeChainTextWithNounMessage( fileName, 'tower' )
 
 
 class ThreadLayer:
@@ -133,19 +133,19 @@ class TowerPreferences:
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		self.archive = []
-		self.activateTower = preferences.BooleanPreference().getFromValue( 'Activate Tower', True )
+		self.activateTower = preferences.BooleanPreference().getFromValue( 'Activate Tower', False )
 		self.archive.append( self.activateTower )
 		self.extruderPossibleCollisionConeAngle = preferences.FloatPreference().getFromValue( 'Extruder Possible Collision Cone Angle (degrees):', 60.0 )
 		self.archive.append( self.extruderPossibleCollisionConeAngle )
 		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Towered', '' )
 		self.archive.append( self.fileNameInput )
-		self.maximumTowerHeight = preferences.IntPreference().getFromValue( 'Maximum Tower Height (layers):', 0 )
+		self.maximumTowerHeight = preferences.IntPreference().getFromValue( 'Maximum Tower Height (layers):', 5 )
 		self.archive.append( self.maximumTowerHeight )
 		self.towerStartLayer = preferences.IntPreference().getFromValue( 'Tower Start Layer (integer):', 1 )
 		self.archive.append( self.towerStartLayer )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Tower'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.tower.html' )
 
 	def execute( self ):
@@ -159,11 +159,11 @@ class TowerSkein:
 	"A class to tower a skein of extrusions."
 	def __init__( self ):
 		self.afterExtrusionLines = []
-		self.beforeExtrusionLines = None
+		self.beforeExtrusionLines = []
 		self.distanceFeedRate = gcodec.DistanceFeedRate()
 		self.extruderActive = False
-		self.feedrateMinute = 959.0
-		self.feedrateTable = {}
+		self.feedRateMinute = 959.0
+		self.feedRateTable = {}
 		self.halfLayerThickness = 0.4
 		self.islandLayers = []
 		self.isLayerStarted = False
@@ -176,14 +176,14 @@ class TowerSkein:
 		self.oldLocation = None
 		self.oldOrderedLocation = Vector3()
 		self.oldZ = - 999999999.0
-		self.outsideExtrudedFirst = True
 		self.perimeterWidth = 0.6
 		self.shutdownLineIndex = sys.maxint
 		self.surroundingLoop = None
 		self.thread = None
 		self.threadLayer = None
 		self.threadLayers = []
-		self.travelFeedratePerMinute = None
+		self.threadSequence = [ 'perimeter', 'loops', 'infill' ]
+		self.travelFeedRatePerMinute = None
 
 	def addEntireLayer( self, layerIndex ):
 		"Add entire thread layer."
@@ -207,8 +207,8 @@ class TowerSkein:
 						truncatedLength = max( 0.5 * toPointLength, toPointLength - self.perimeterWidth )
 						complexToPointTruncated = complexToPoint * truncatedLength / toPointLength
 						highPoint = oldLocationComplex + complexToPointTruncated
-				self.addGcodeMovementZ( self.travelFeedratePerMinute, highPoint, z )
-			self.addGcodeMovementZ( self.travelFeedratePerMinute, firstPoint, z )
+				self.addGcodeMovementZ( self.travelFeedRatePerMinute, highPoint, z )
+			self.addGcodeMovementZ( self.travelFeedRatePerMinute, firstPoint, z )
 			self.oldZ = z
 		else:
 			print( "zero length vertex positions array which was skipped over, this should never happen" )
@@ -216,15 +216,15 @@ class TowerSkein:
 			return
 		self.distanceFeedRate.addLine( 'M101' ) # Turn extruder on.
 		for point in thread[ 1 : ]:
-			self.addGcodeMovementZ( self.feedrateMinute, point, z )
+			self.addGcodeMovementZ( self.feedRateMinute, point, z )
 		self.distanceFeedRate.addLine( "M103" ) # Turn extruder off.
 
-	def addGcodeMovementZ( self, feedrateMinute, point, z ):
+	def addGcodeMovementZ( self, feedRateMinute, point, z ):
 		"Add a movement to the output."
 		pointVector3 = Vector3( point.real, point.imag, z )
-		if pointVector3 in self.feedrateTable:
-			feedrateMinute = self.feedrateTable[ pointVector3 ]
-		self.distanceFeedRate.addGcodeMovementZWithFeedRate( feedrateMinute, point, z )
+		if pointVector3 in self.feedRateTable:
+			feedRateMinute = self.feedRateTable[ pointVector3 ]
+		self.distanceFeedRate.addGcodeMovementZWithFeedRate( feedRateMinute, point, z )
 
 	def addIfTravel( self, splitLine ):
 		"Add travel move around loops if this the extruder is off."
@@ -239,6 +239,15 @@ class TowerSkein:
 		euclidean.transferPathsToSurroundingLoops( threadLayer.paths[ : ], surroundingLoops )
 		transferFillLoopsToSurroundingLoops( threadLayer.loops[ : ], surroundingLoops )
 		self.islandLayers.append( surroundingLoops )
+
+	def addThreadLayerIfNone( self ):
+		"Add a thread layer if it is none."
+		if self.threadLayer != None:
+			return
+		self.threadLayer = ThreadLayer()
+		self.threadLayers.append( self.threadLayer )
+		self.threadLayer.beforeExtrusionLines = self.beforeExtrusionLines
+		self.beforeExtrusionLines = []
 
 	def addToExtrusion( self, location ):
 		"Add a location to the thread."
@@ -319,7 +328,7 @@ class TowerSkein:
 		self.distanceFeedRate.addLines( self.lines[ self.shutdownLineIndex : ] )
 		return self.distanceFeedRate.output.getvalue()
 
-	def getRemovedIslandAddLayerLinesIfDifferent( self,  islands, layerIndex ):
+	def getRemovedIslandAddLayerLinesIfDifferent( self, islands, layerIndex ):
 		"Add gcode lines for the layer if it is different than the old bottom layer index."
 		threadLayer = None
 		if layerIndex != self.oldLayerIndex:
@@ -349,8 +358,8 @@ class TowerSkein:
 	def linearMove( self, splitLine ):
 		"Add a linear move to the loop."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-		self.feedrateMinute = gcodec.getFeedrateMinute( self.feedrateMinute, splitLine )
-		self.feedrateTable[ location ] = self.feedrateMinute
+		self.feedRateMinute = gcodec.getFeedRateMinute( self.feedRateMinute, splitLine )
+		self.feedRateTable[ location ] = self.feedRateMinute
 		if self.extruderActive:
 			self.addToExtrusion( location )
 		self.oldLocation = location
@@ -367,12 +376,12 @@ class TowerSkein:
 				return
 			elif firstWord == '(<layerThickness>':
 				self.halfLayerThickness = 0.5 * float( splitLine[ 1 ] )
-			elif firstWord == '(<outsideExtrudedFirst>':
-				self.outsideExtrudedFirst = bool( splitLine[ 1 ] )
+			elif firstWord == '(<threadSequenceString>':
+				self.threadSequence = [ splitLine[ 1 ], splitLine[ 2 ], splitLine[ 3 ] ]
 			elif firstWord == '(<perimeterWidth>':
 				self.perimeterWidth = float( splitLine[ 1 ] )
-			elif firstWord == '(<travelFeedratePerSecond>':
-				self.travelFeedratePerMinute = 60.0 * float( splitLine[ 1 ] )
+			elif firstWord == '(<travelFeedRatePerSecond>':
+				self.travelFeedRatePerMinute = 60.0 * float( splitLine[ 1 ] )
 			self.distanceFeedRate.addLine( line )
 
 	def parseLine( self, lineIndex ):
@@ -384,6 +393,7 @@ class TowerSkein:
 		firstWord = splitLine[ 0 ]
 		self.afterExtrusionLines.append( line )
 		if firstWord == 'G1':
+			self.addThreadLayerIfNone()
 			self.linearMove( splitLine )
 		if firstWord == 'M101':
 			self.extruderActive = True
@@ -399,11 +409,10 @@ class TowerSkein:
 		elif firstWord == '(</extrusion>)':
 			self.shutdownLineIndex = lineIndex
 		elif firstWord == '(<layer>':
-			if self.beforeExtrusionLines != None:
-				self.distanceFeedRate.addLines( self.beforeExtrusionLines )
-			self.beforeExtrusionLines = []
+			self.beforeExtrusionLines = [ line ]
 			self.threadLayer = None
 			self.thread = None
+			return
 		elif firstWord == '(</layer>)':
 			if self.threadLayer != None:
 				self.threadLayer.afterExtrusionLines = self.afterExtrusionLines
@@ -417,19 +426,14 @@ class TowerSkein:
 		elif firstWord == '(</perimeter>)':
 			self.afterExtrusionLines = []
 		elif firstWord == '(<surroundingLoop>)':
-			self.surroundingLoop = euclidean.SurroundingLoop( self.outsideExtrudedFirst )
-			if self.threadLayer == None:
-				self.threadLayer = ThreadLayer()
-				if self.beforeExtrusionLines != None:
-					self.threadLayer.beforeExtrusionLines = self.beforeExtrusionLines
-					self.beforeExtrusionLines = None
-				self.threadLayers.append( self.threadLayer )
+			self.surroundingLoop = euclidean.SurroundingLoop( self.threadSequence )
+			self.addThreadLayerIfNone()
 			self.threadLayer.surroundingLoops.append( self.surroundingLoop )
 			self.threadLayer.boundaries.append( self.surroundingLoop.boundary )
 		elif firstWord == '(</surroundingLoop>)':
 			self.afterExtrusionLines = []
 			self.surroundingLoop = None
-		if self.beforeExtrusionLines != None:
+		if len( self.beforeExtrusionLines ) > 0:
 			self.beforeExtrusionLines.append( line )
 
 	def parseUntilOperatingLayer( self ):
@@ -448,7 +452,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

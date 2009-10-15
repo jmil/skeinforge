@@ -19,19 +19,20 @@ layer&nbsp;thickness,&nbsp;the&nbsp;default&nbsp;is&nbsp;1.0.&nbsp;&nbsp;The&nbs
 will&nbsp;be&nbsp;raised.&nbsp;&nbsp;An&nbsp;angle&nbsp;of&nbsp;ninety&nbsp;means&nbsp;that&nbsp;the&nbsp;extruder&nbsp;will&nbsp;go&nbsp;straight&nbsp;up&nbsp;as&nbsp;soon&nbsp;as&nbsp;it&nbsp;is&nbsp;not&nbsp;extruding&nbsp;and&nbsp;a&nbsp;low&nbsp;angle<br>
 means&nbsp;the&nbsp;extruder&nbsp;path&nbsp;will&nbsp;gradually&nbsp;rise&nbsp;to&nbsp;the&nbsp;hop&nbsp;height,&nbsp;the&nbsp;default&nbsp;is&nbsp;20&nbsp;degrees.<br>
 &nbsp;<br>
-To&nbsp;run&nbsp;hop,&nbsp;in&nbsp;a&nbsp;shell&nbsp;which&nbsp;hop&nbsp;is&nbsp;in&nbsp;type:<br>
-&gt;&nbsp;python&nbsp;hop.py<br>
-&nbsp;<br>
-The&nbsp;following&nbsp;examples&nbsp;hop&nbsp;the&nbsp;files&nbsp;Screw&nbsp;Holder&nbsp;Bottom.gcode&nbsp;&amp;&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the<br>
-folder&nbsp;which&nbsp;contains&nbsp;Screw&nbsp;Holder&nbsp;Bottom.gcode,&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;and&nbsp;hop.py.&nbsp;&nbsp;The&nbsp;hop&nbsp;function&nbsp;will&nbsp;hop&nbsp;if&nbsp;the&nbsp;'Activate&nbsp;Hop'<br>
-checkbox&nbsp;is&nbsp;on.&nbsp;&nbsp;The&nbsp;functions&nbsp;writeOutput&nbsp;and&nbsp;getChainGcode&nbsp;check&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text&nbsp;has&nbsp;been&nbsp;hopped,&nbsp;if&nbsp;not&nbsp;they<br>
-call&nbsp;the&nbsp;getChainGcode&nbsp;in&nbsp;stretch.py&nbsp;to&nbsp;stretch&nbsp;the&nbsp;text;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;stretched&nbsp;text,&nbsp;then&nbsp;they&nbsp;hop.<br>
+The&nbsp;following&nbsp;examples&nbsp;hop&nbsp;the&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+and&nbsp;hop.py.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python&nbsp;hop.py<br>
-This&nbsp;brings&nbsp;up&nbsp;the&nbsp;dialog,&nbsp;after&nbsp;clicking&nbsp;'Hop',&nbsp;the&nbsp;following&nbsp;is&nbsp;printed:<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;hopped.<br>
-The&nbsp;hopped&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_hop.gcode<br>
+This&nbsp;brings&nbsp;up&nbsp;the&nbsp;hop&nbsp;dialog.<br>
+&nbsp;<br>
+&nbsp;<br>
+&gt;&nbsp;python&nbsp;hop.py&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+The&nbsp;hop&nbsp;tool&nbsp;is&nbsp;parsing&nbsp;the&nbsp;file:<br>
+Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+..<br>
+The&nbsp;hop&nbsp;tool&nbsp;has&nbsp;created&nbsp;the&nbsp;file:<br>
+..&nbsp;Screw&nbsp;Holder&nbsp;Bottom_hop.gcode<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&nbsp;python<br>
@@ -44,9 +45,11 @@ This&nbsp;brings&nbsp;up&nbsp;the&nbsp;hop&nbsp;dialog.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&gt;&gt;&nbsp;hop.<a href="#-writeOutput">writeOutput</a>()<br>
+The&nbsp;hop&nbsp;tool&nbsp;is&nbsp;parsing&nbsp;the&nbsp;file:<br>
 Screw&nbsp;Holder&nbsp;Bottom.stl<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;hopped.<br>
-The&nbsp;hopped&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_hop.gcode</tt></p>
+..<br>
+The&nbsp;hop&nbsp;tool&nbsp;has&nbsp;created&nbsp;the&nbsp;file:<br>
+..&nbsp;Screw&nbsp;Holder&nbsp;Bottom_hop.gcode</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -121,7 +124,7 @@ The&nbsp;hopped&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><dl><dt><a name="-getCraftedText"><strong>getCraftedText</strong></a>(fileName, text, hopPreferences<font color="#909090">=None</font>)</dt><dd><tt>Hop&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-getCraftedTextFromText"><strong>getCraftedTextFromText</strong></a>(gcodeText, hopPreferences<font color="#909090">=None</font>)</dt><dd><tt>Hop&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
- <dl><dt><a name="-getDisplayedPreferences"><strong>getDisplayedPreferences</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;displayed&nbsp;preferences.</tt></dd></dl>
+ <dl><dt><a name="-getPreferencesConstructor"><strong>getPreferencesConstructor</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;preferences&nbsp;constructor.</tt></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>Display&nbsp;the&nbsp;hop&nbsp;dialog.</tt></dd></dl>
  <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName<font color="#909090">=''</font>)</dt><dd><tt>Hop&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;Chain&nbsp;hop&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;hopped.&nbsp;If&nbsp;no&nbsp;fileName&nbsp;is&nbsp;specified,&nbsp;hop&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
 </td></tr></table><p>

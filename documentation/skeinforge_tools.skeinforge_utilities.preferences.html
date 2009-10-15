@@ -44,16 +44,22 @@
 <dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#DeleteProfile">DeleteProfile</a>
 </font></dt></dl>
 </dd>
-<dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#DisplayToolButtonBesidePrevious">DisplayToolButtonBesidePrevious</a>
+<dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#CloseListener">CloseListener</a>
+</font></dt><dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#DeleteProfileDialog">DeleteProfileDialog</a>
+</font></dt><dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#DisplayToolButtonBesidePrevious">DisplayToolButtonBesidePrevious</a>
 </font></dt><dd>
 <dl>
-<dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#DisplayToolButton">DisplayToolButton</a>
+<dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#DisplayProfileButton">DisplayProfileButton</a>
+</font></dt><dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#DisplayToolButton">DisplayToolButton</a>
 </font></dt></dl>
 </dd>
-<dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#LabelDisplay">LabelDisplay</a>
+<dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#FileHelpMenuBar">FileHelpMenuBar</a>
+</font></dt><dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#HelpPage">HelpPage</a>
+</font></dt><dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#LabelDisplay">LabelDisplay</a>
 </font></dt><dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#MenuButtonDisplay">MenuButtonDisplay</a>
 </font></dt><dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#PreferencesDialog">PreferencesDialog</a>
 </font></dt><dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#ProfileList">ProfileList</a>
+</font></dt><dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#ProfileMenuRadio">ProfileMenuRadio</a>
 </font></dt><dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#ProfilePreferences">ProfilePreferences</a>
 </font></dt><dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#StringPreference">StringPreference</a>
 </font></dt><dd>
@@ -78,11 +84,14 @@
 </font></dt></dl>
 </dd>
 <dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#ListPreference">ListPreference</a>
-</font></dt><dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#ListboxPreference">ListboxPreference</a>
+</font></dt><dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#ProfileListboxPreference">ProfileListboxPreference</a>
+</font></dt><dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#TextPreference">TextPreference</a>
 </font></dt><dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#WindowPosition">WindowPosition</a>
 </font></dt></dl>
 </dd>
-</dl>
+<dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#TokenConversion">TokenConversion</a>
+</font></dt><dt><font face="helvetica, arial"><a href="skeinforge_tools.skeinforge_utilities.preferences.html#ToolDialog">ToolDialog</a>
+</font></dt></dl>
  <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ffc8d8">
@@ -125,7 +134,7 @@
 
 <dl><dt><a name="AddProfile-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;add&nbsp;listbox&nbsp;selection&nbsp;is&nbsp;not&nbsp;archivable.</tt></dd></dl>
 
-<dl><dt><a name="AddProfile-getFromListboxPreference"><strong>getFromListboxPreference</strong></a>(self, listboxPreference)</dt><dd><tt>Initialize.</tt></dd></dl>
+<dl><dt><a name="AddProfile-getFromProfileListboxPreference"><strong>getFromProfileListboxPreference</strong></a>(self, profileListboxPreference)</dt><dd><tt>Initialize.</tt></dd></dl>
 
 <dl><dt><a name="AddProfile-setToDisplay"><strong>setToDisplay</strong></a>(self)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;add&nbsp;listbox&nbsp;selection&nbsp;is&nbsp;not&nbsp;archivable.</tt></dd></dl>
 
@@ -164,6 +173,22 @@ Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preference
 <dl><dt><a name="BooleanPreference-setValueToSplitLine"><strong>setValueToSplitLine</strong></a>(self, lineIndex, lines, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;value&nbsp;to&nbsp;the&nbsp;second&nbsp;word&nbsp;of&nbsp;a&nbsp;split&nbsp;line.</tt></dd></dl>
 
 <dl><dt><a name="BooleanPreference-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Write&nbsp;tab&nbsp;separated&nbsp;name&nbsp;and&nbsp;value&nbsp;to&nbsp;the&nbsp;archive&nbsp;writer.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="CloseListener">class <strong>CloseListener</strong></a></font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;class&nbsp;to&nbsp;listen&nbsp;to&nbsp;link&nbsp;a&nbsp;window&nbsp;to&nbsp;the&nbsp;globalPreferencesDialogTable.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="CloseListener-__init__"><strong>__init__</strong></a>(self, lowerName, window)</dt><dd><tt>Add&nbsp;the&nbsp;root&nbsp;to&nbsp;the&nbsp;globalPreferencesDialogTable.</tt></dd></dl>
+
+<dl><dt><a name="CloseListener-listenToWidget"><strong>listenToWidget</strong></a>(self, widget)</dt><dd><tt>Listen&nbsp;to&nbsp;the&nbsp;destroy&nbsp;message&nbsp;of&nbsp;the&nbsp;widget.</tt></dd></dl>
+
+<dl><dt><a name="CloseListener-wasClosed"><strong>wasClosed</strong></a>(self, event)</dt><dd><tt>The&nbsp;dialog&nbsp;was&nbsp;closed.</tt></dd></dl>
 
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -215,11 +240,59 @@ Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preference
 
 <dl><dt><a name="DeleteProfile-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;add&nbsp;listbox&nbsp;selection&nbsp;is&nbsp;not&nbsp;archivable.</tt></dd></dl>
 
-<dl><dt><a name="DeleteProfile-getFromListboxPreference"><strong>getFromListboxPreference</strong></a>(self, listboxPreference)</dt><dd><tt>Initialize.</tt></dd></dl>
+<dl><dt><a name="DeleteProfile-getFromProfileListboxPreference"><strong>getFromProfileListboxPreference</strong></a>(self, profileListboxPreference)</dt><dd><tt>Initialize.</tt></dd></dl>
 
 <dl><dt><a name="DeleteProfile-setToDisplay"><strong>setToDisplay</strong></a>(self)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;add&nbsp;listbox&nbsp;selection&nbsp;is&nbsp;not&nbsp;archivable.</tt></dd></dl>
 
 <dl><dt><a name="DeleteProfile-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;add&nbsp;listbox&nbsp;selection&nbsp;is&nbsp;not&nbsp;archivable.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="DeleteProfileDialog">class <strong>DeleteProfileDialog</strong></a></font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="DeleteProfileDialog-__init__"><strong>__init__</strong></a>(self, profileListboxPreference, root)</dt><dd><tt>Display&nbsp;a&nbsp;delete&nbsp;dialog.</tt></dd></dl>
+
+<dl><dt><a name="DeleteProfileDialog-delete"><strong>delete</strong></a>(self)</dt><dd><tt>Delete&nbsp;the&nbsp;selection&nbsp;of&nbsp;a&nbsp;listbox&nbsp;preference.</tt></dd></dl>
+
+<dl><dt><a name="DeleteProfileDialog-no"><strong>no</strong></a>(self)</dt><dd><tt>The&nbsp;dialog&nbsp;was&nbsp;closed.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="DisplayProfileButton">class <strong>DisplayProfileButton</strong></a>(<a href="skeinforge_tools.skeinforge_utilities.preferences.html#DisplayToolButtonBesidePrevious">DisplayToolButtonBesidePrevious</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;class&nbsp;to&nbsp;display&nbsp;the&nbsp;profile&nbsp;button.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="DisplayProfileButton-addToDialog"><strong>addToDialog</strong></a>(self, preferencesDialog)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;dialog.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preferences.html#DisplayToolButtonBesidePrevious">DisplayToolButtonBesidePrevious</a>:<br>
+<dl><dt><a name="DisplayProfileButton-addButtonBesidesPrevious"><strong>addButtonBesidesPrevious</strong></a>(self, preferencesDialog)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;dialog.</tt></dd></dl>
+
+<dl><dt><a name="DisplayProfileButton-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;preference&nbsp;table.</tt></dd></dl>
+
+<dl><dt><a name="DisplayProfileButton-createDisplayButton"><strong>createDisplayButton</strong></a>(self, preferencesDialog)</dt><dd><tt>Create&nbsp;the&nbsp;display&nbsp;button.</tt></dd></dl>
+
+<dl><dt><a name="DisplayProfileButton-getFromFolderPath"><strong>getFromFolderPath</strong></a>(self, folderPath, important, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
+
+<dl><dt><a name="DisplayProfileButton-getLowerName"><strong>getLowerName</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;lower&nbsp;case&nbsp;name.</tt></dd></dl>
+
+<dl><dt><a name="DisplayProfileButton-openDialog"><strong>openDialog</strong></a>(self)</dt><dd><tt>Create&nbsp;the&nbsp;display&nbsp;button.</tt></dd></dl>
+
+<dl><dt><a name="DisplayProfileButton-setToDisplay"><strong>setToDisplay</strong></a>(self)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;button&nbsp;does&nbsp;not&nbsp;have&nbsp;a&nbsp;state.</tt></dd></dl>
+
+<dl><dt><a name="DisplayProfileButton-setValueToSplitLine"><strong>setValueToSplitLine</strong></a>(self, lineIndex, lines, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;value&nbsp;to&nbsp;the&nbsp;second&nbsp;word&nbsp;of&nbsp;a&nbsp;split&nbsp;line.</tt></dd></dl>
+
+<dl><dt><a name="DisplayProfileButton-setValueToString"><strong>setValueToString</strong></a>(self, valueString)</dt><dd><tt>Set&nbsp;the&nbsp;string&nbsp;to&nbsp;the&nbsp;value&nbsp;string.</tt></dd></dl>
+
+<dl><dt><a name="DisplayProfileButton-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Write&nbsp;tab&nbsp;separated&nbsp;name&nbsp;and&nbsp;value&nbsp;to&nbsp;the&nbsp;archive&nbsp;writer.</tt></dd></dl>
 
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -235,17 +308,13 @@ Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preference
 
 <hr>
 Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preferences.html#DisplayToolButtonBesidePrevious">DisplayToolButtonBesidePrevious</a>:<br>
-<dl><dt><a name="DisplayToolButton-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;preference&nbsp;table.</tt></dd></dl>
+<dl><dt><a name="DisplayToolButton-addButtonBesidesPrevious"><strong>addButtonBesidesPrevious</strong></a>(self, preferencesDialog)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;dialog.</tt></dd></dl>
 
-<dl><dt><a name="DisplayToolButton-close"><strong>close</strong></a>(self)</dt><dd><tt>The&nbsp;close&nbsp;listener&nbsp;has&nbsp;been&nbsp;executed.</tt></dd></dl>
+<dl><dt><a name="DisplayToolButton-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;preference&nbsp;table.</tt></dd></dl>
 
 <dl><dt><a name="DisplayToolButton-createDisplayButton"><strong>createDisplayButton</strong></a>(self, preferencesDialog)</dt><dd><tt>Create&nbsp;the&nbsp;display&nbsp;button.</tt></dd></dl>
 
-<dl><dt><a name="DisplayToolButton-displayTool"><strong>displayTool</strong></a>(self)</dt><dd><tt>Display&nbsp;the&nbsp;tool&nbsp;preferences&nbsp;dialog.</tt></dd></dl>
-
-<dl><dt><a name="DisplayToolButton-getCapitalizedName"><strong>getCapitalizedName</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;capitalized&nbsp;name.</tt></dd></dl>
-
-<dl><dt><a name="DisplayToolButton-getFromFolderName"><strong>getFromFolderName</strong></a>(self, folderName, important, moduleFilename, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
+<dl><dt><a name="DisplayToolButton-getFromFolderPath"><strong>getFromFolderPath</strong></a>(self, folderPath, important, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
 
 <dl><dt><a name="DisplayToolButton-getLowerName"><strong>getLowerName</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;lower&nbsp;case&nbsp;name.</tt></dd></dl>
 
@@ -269,19 +338,15 @@ Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preference
 <td colspan=2><tt>A&nbsp;class&nbsp;to&nbsp;display&nbsp;the&nbsp;tool&nbsp;preferences&nbsp;dialog&nbsp;beside&nbsp;the&nbsp;previous&nbsp;preference&nbsp;dialog&nbsp;element.<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
+<dl><dt><a name="DisplayToolButtonBesidePrevious-addButtonBesidesPrevious"><strong>addButtonBesidesPrevious</strong></a>(self, preferencesDialog)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;dialog.</tt></dd></dl>
+
 <dl><dt><a name="DisplayToolButtonBesidePrevious-addToDialog"><strong>addToDialog</strong></a>(self, preferencesDialog)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;dialog.</tt></dd></dl>
 
 <dl><dt><a name="DisplayToolButtonBesidePrevious-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;preference&nbsp;table.</tt></dd></dl>
 
-<dl><dt><a name="DisplayToolButtonBesidePrevious-close"><strong>close</strong></a>(self)</dt><dd><tt>The&nbsp;close&nbsp;listener&nbsp;has&nbsp;been&nbsp;executed.</tt></dd></dl>
-
 <dl><dt><a name="DisplayToolButtonBesidePrevious-createDisplayButton"><strong>createDisplayButton</strong></a>(self, preferencesDialog)</dt><dd><tt>Create&nbsp;the&nbsp;display&nbsp;button.</tt></dd></dl>
 
-<dl><dt><a name="DisplayToolButtonBesidePrevious-displayTool"><strong>displayTool</strong></a>(self)</dt><dd><tt>Display&nbsp;the&nbsp;tool&nbsp;preferences&nbsp;dialog.</tt></dd></dl>
-
-<dl><dt><a name="DisplayToolButtonBesidePrevious-getCapitalizedName"><strong>getCapitalizedName</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;capitalized&nbsp;name.</tt></dd></dl>
-
-<dl><dt><a name="DisplayToolButtonBesidePrevious-getFromFolderName"><strong>getFromFolderName</strong></a>(self, folderName, important, moduleFilename, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
+<dl><dt><a name="DisplayToolButtonBesidePrevious-getFromFolderPath"><strong>getFromFolderPath</strong></a>(self, folderPath, important, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
 
 <dl><dt><a name="DisplayToolButtonBesidePrevious-getLowerName"><strong>getLowerName</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;lower&nbsp;case&nbsp;name.</tt></dd></dl>
 
@@ -294,6 +359,30 @@ Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preference
 <dl><dt><a name="DisplayToolButtonBesidePrevious-setValueToString"><strong>setValueToString</strong></a>(self, valueString)</dt><dd><tt>Set&nbsp;the&nbsp;string&nbsp;to&nbsp;the&nbsp;value&nbsp;string.</tt></dd></dl>
 
 <dl><dt><a name="DisplayToolButtonBesidePrevious-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Write&nbsp;tab&nbsp;separated&nbsp;name&nbsp;and&nbsp;value&nbsp;to&nbsp;the&nbsp;archive&nbsp;writer.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="FileHelpMenuBar">class <strong>FileHelpMenuBar</strong></a></font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="FileHelpMenuBar-__init__"><strong>__init__</strong></a>(self, root)</dt><dd><tt>Create&nbsp;a&nbsp;menu&nbsp;bar&nbsp;with&nbsp;a&nbsp;file&nbsp;and&nbsp;help&nbsp;menu.</tt></dd></dl>
+
+<dl><dt><a name="FileHelpMenuBar-addProfilePluginMenu"><strong>addProfilePluginMenu</strong></a>(self, craftTypeName, profilePluginFilename)</dt><dd><tt>Add&nbsp;a&nbsp;profile&nbsp;plugin&nbsp;menu.</tt></dd></dl>
+
+<dl><dt><a name="FileHelpMenuBar-addToolPluginMenu"><strong>addToolPluginMenu</strong></a>(self, directoryFolders, pluginFilename)</dt><dd><tt>Add&nbsp;a&nbsp;tool&nbsp;plugin&nbsp;menu.</tt></dd></dl>
+
+<dl><dt><a name="FileHelpMenuBar-addToolPluginSubmenu"><strong>addToolPluginSubmenu</strong></a>(self, pluginFolderPath, subDirectoryFolders, submenuFilename, toolSubmenu)</dt><dd><tt>Add&nbsp;a&nbsp;tool&nbsp;plugin&nbsp;submenu.</tt></dd></dl>
+
+<dl><dt><a name="FileHelpMenuBar-addToolPluginSubmenus"><strong>addToolPluginSubmenus</strong></a>(self, capitalizedPluginFilename, pluginFilename, pluginFolderName)</dt><dd><tt>Add&nbsp;a&nbsp;tool&nbsp;plugin&nbsp;submenus.</tt></dd></dl>
+
+<dl><dt><a name="FileHelpMenuBar-completeMenu"><strong>completeMenu</strong></a>(self, closeFunction, lowerName)</dt><dd><tt>Complete&nbsp;the&nbsp;menu.</tt></dd></dl>
+
+<dl><dt><a name="FileHelpMenuBar-completeProfilesMenu"><strong>completeProfilesMenu</strong></a>(self)</dt><dd><tt>Complete&nbsp;the&nbsp;menu.</tt></dd></dl>
+
+<dl><dt><a name="FileHelpMenuBar-save"><strong>save</strong></a>(self)</dt><dd><tt>Profile&nbsp;has&nbsp;been&nbsp;saved&nbsp;and&nbsp;profile&nbsp;menu&nbsp;should&nbsp;be&nbsp;updated.</tt></dd></dl>
 
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -345,7 +434,7 @@ Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preference
 <td colspan=2><tt>A&nbsp;class&nbsp;to&nbsp;display,&nbsp;read&nbsp;&amp;&nbsp;write&nbsp;a&nbsp;float.<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
-<dl><dt><a name="FloatPreference-addToDialog"><strong>addToDialog</strong></a>(self, preferencesDialog)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;dialog.</tt></dd></dl>
+<dl><dt><a name="FloatPreference-setStateToValue"><strong>setStateToValue</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;entry&nbsp;to&nbsp;the&nbsp;value.</tt></dd></dl>
 
 <dl><dt><a name="FloatPreference-setUpdateFunction"><strong>setUpdateFunction</strong></a>(self, updateFunction)</dt><dd><tt>Set&nbsp;the&nbsp;update&nbsp;function.</tt></dd></dl>
 
@@ -355,17 +444,35 @@ Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preference
 Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preferences.html#StringPreference">StringPreference</a>:<br>
 <dl><dt><a name="FloatPreference-__init__"><strong>__init__</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;update&nbsp;function&nbsp;to&nbsp;none.</tt></dd></dl>
 
+<dl><dt><a name="FloatPreference-addToDialog"><strong>addToDialog</strong></a>(self, preferencesDialog)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;dialog.</tt></dd></dl>
+
 <dl><dt><a name="FloatPreference-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;preference&nbsp;table.</tt></dd></dl>
 
 <dl><dt><a name="FloatPreference-getFromValue"><strong>getFromValue</strong></a>(self, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
-
-<dl><dt><a name="FloatPreference-setStateToValue"><strong>setStateToValue</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;entry&nbsp;to&nbsp;the&nbsp;value.</tt></dd></dl>
 
 <dl><dt><a name="FloatPreference-setToDisplay"><strong>setToDisplay</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;string&nbsp;to&nbsp;the&nbsp;entry&nbsp;field.</tt></dd></dl>
 
 <dl><dt><a name="FloatPreference-setValueToSplitLine"><strong>setValueToSplitLine</strong></a>(self, lineIndex, lines, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;value&nbsp;to&nbsp;the&nbsp;second&nbsp;word&nbsp;of&nbsp;a&nbsp;split&nbsp;line.</tt></dd></dl>
 
 <dl><dt><a name="FloatPreference-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Write&nbsp;tab&nbsp;separated&nbsp;name&nbsp;and&nbsp;value&nbsp;to&nbsp;the&nbsp;archive&nbsp;writer.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="HelpPage">class <strong>HelpPage</strong></a></font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="HelpPage-getOpenFromAbsolute"><strong>getOpenFromAbsolute</strong></a>(self, hypertextAddress)</dt><dd><tt>Get&nbsp;the&nbsp;open&nbsp;help&nbsp;page&nbsp;function&nbsp;from&nbsp;the&nbsp;hypertext&nbsp;address.</tt></dd></dl>
+
+<dl><dt><a name="HelpPage-getOpenFromAfterHTTP"><strong>getOpenFromAfterHTTP</strong></a>(self, afterHTTP)</dt><dd><tt>Get&nbsp;the&nbsp;open&nbsp;help&nbsp;page&nbsp;function&nbsp;from&nbsp;the&nbsp;part&nbsp;of&nbsp;the&nbsp;address&nbsp;after&nbsp;the&nbsp;HTTP.</tt></dd></dl>
+
+<dl><dt><a name="HelpPage-getOpenFromAfterWWW"><strong>getOpenFromAfterWWW</strong></a>(self, afterWWW)</dt><dd><tt>Get&nbsp;the&nbsp;open&nbsp;help&nbsp;page&nbsp;function&nbsp;from&nbsp;the&nbsp;afterWWW&nbsp;of&nbsp;the&nbsp;address&nbsp;after&nbsp;the&nbsp;www.</tt></dd></dl>
+
+<dl><dt><a name="HelpPage-getOpenFromDocumentationSubName"><strong>getOpenFromDocumentationSubName</strong></a>(self, subName<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;the&nbsp;open&nbsp;help&nbsp;page&nbsp;function&nbsp;from&nbsp;the&nbsp;afterWWW&nbsp;of&nbsp;the&nbsp;address&nbsp;after&nbsp;the&nbsp;www.</tt></dd></dl>
+
+<dl><dt><a name="HelpPage-openPage"><strong>openPage</strong></a>(self)</dt><dd><tt>Open&nbsp;the&nbsp;browser&nbsp;to&nbsp;the&nbsp;hypertext&nbsp;address.</tt></dd></dl>
 
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -387,7 +494,7 @@ Methods defined here:<br>
 
 <hr>
 Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preferences.html#FloatPreference">FloatPreference</a>:<br>
-<dl><dt><a name="IntPreference-addToDialog"><strong>addToDialog</strong></a>(self, preferencesDialog)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;dialog.</tt></dd></dl>
+<dl><dt><a name="IntPreference-setStateToValue"><strong>setStateToValue</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;entry&nbsp;to&nbsp;the&nbsp;value.</tt></dd></dl>
 
 <dl><dt><a name="IntPreference-setUpdateFunction"><strong>setUpdateFunction</strong></a>(self, updateFunction)</dt><dd><tt>Set&nbsp;the&nbsp;update&nbsp;function.</tt></dd></dl>
 
@@ -395,11 +502,11 @@ Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preference
 Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preferences.html#StringPreference">StringPreference</a>:<br>
 <dl><dt><a name="IntPreference-__init__"><strong>__init__</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;update&nbsp;function&nbsp;to&nbsp;none.</tt></dd></dl>
 
+<dl><dt><a name="IntPreference-addToDialog"><strong>addToDialog</strong></a>(self, preferencesDialog)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;dialog.</tt></dd></dl>
+
 <dl><dt><a name="IntPreference-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;preference&nbsp;table.</tt></dd></dl>
 
 <dl><dt><a name="IntPreference-getFromValue"><strong>getFromValue</strong></a>(self, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
-
-<dl><dt><a name="IntPreference-setStateToValue"><strong>setStateToValue</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;entry&nbsp;to&nbsp;the&nbsp;value.</tt></dd></dl>
 
 <dl><dt><a name="IntPreference-setToDisplay"><strong>setToDisplay</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;string&nbsp;to&nbsp;the&nbsp;entry&nbsp;field.</tt></dd></dl>
 
@@ -463,61 +570,25 @@ Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preference
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ffc8d8">
 <td colspan=3 valign=bottom>&nbsp;<br>
-<font color="#000000" face="helvetica, arial"><a name="ListboxPreference">class <strong>ListboxPreference</strong></a>(<a href="skeinforge_tools.skeinforge_utilities.preferences.html#StringPreference">StringPreference</a>)</font></td></tr>
-    
-<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%">Methods defined here:<br>
-<dl><dt><a name="ListboxPreference-addToDialog"><strong>addToDialog</strong></a>(self, preferencesDialog)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;dialog.</tt></dd></dl>
-
-<dl><dt><a name="ListboxPreference-buttonReleaseOne"><strong>buttonReleaseOne</strong></a>(self, event)</dt><dd><tt>Button&nbsp;one&nbsp;released.</tt></dd></dl>
-
-<dl><dt><a name="ListboxPreference-getFromListPreference"><strong>getFromListPreference</strong></a>(self, listPreference, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
-
-<dl><dt><a name="ListboxPreference-getSelectedFolder"><strong>getSelectedFolder</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;selected&nbsp;folder.</tt></dd></dl>
-
-<dl><dt><a name="ListboxPreference-setListboxItems"><strong>setListboxItems</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;listbox&nbsp;items&nbsp;to&nbsp;the&nbsp;list&nbsp;preference.</tt></dd></dl>
-
-<dl><dt><a name="ListboxPreference-setToDisplay"><strong>setToDisplay</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;selection&nbsp;value&nbsp;to&nbsp;the&nbsp;listbox&nbsp;selection.</tt></dd></dl>
-
-<dl><dt><a name="ListboxPreference-setValueToIndex"><strong>setValueToIndex</strong></a>(self, index)</dt><dd><tt>Set&nbsp;the&nbsp;selection&nbsp;value&nbsp;to&nbsp;the&nbsp;index.</tt></dd></dl>
-
-<dl><dt><a name="ListboxPreference-setValueToString"><strong>setValueToString</strong></a>(self, valueString)</dt><dd><tt>Set&nbsp;the&nbsp;string&nbsp;to&nbsp;the&nbsp;value&nbsp;string.</tt></dd></dl>
-
-<hr>
-Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preferences.html#StringPreference">StringPreference</a>:<br>
-<dl><dt><a name="ListboxPreference-__init__"><strong>__init__</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;update&nbsp;function&nbsp;to&nbsp;none.</tt></dd></dl>
-
-<dl><dt><a name="ListboxPreference-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;preference&nbsp;table.</tt></dd></dl>
-
-<dl><dt><a name="ListboxPreference-getFromValue"><strong>getFromValue</strong></a>(self, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
-
-<dl><dt><a name="ListboxPreference-setStateToValue"><strong>setStateToValue</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;entry&nbsp;to&nbsp;the&nbsp;value.</tt></dd></dl>
-
-<dl><dt><a name="ListboxPreference-setUpdateFunction"><strong>setUpdateFunction</strong></a>(self, updateFunction)</dt><dd><tt>Set&nbsp;the&nbsp;update&nbsp;function.</tt></dd></dl>
-
-<dl><dt><a name="ListboxPreference-setValueToSplitLine"><strong>setValueToSplitLine</strong></a>(self, lineIndex, lines, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;value&nbsp;to&nbsp;the&nbsp;second&nbsp;word&nbsp;of&nbsp;a&nbsp;split&nbsp;line.</tt></dd></dl>
-
-<dl><dt><a name="ListboxPreference-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Write&nbsp;tab&nbsp;separated&nbsp;name&nbsp;and&nbsp;value&nbsp;to&nbsp;the&nbsp;archive&nbsp;writer.</tt></dd></dl>
-
-</td></tr></table> <p>
-<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
-<tr bgcolor="#ffc8d8">
-<td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#000000" face="helvetica, arial"><a name="MenuButtonDisplay">class <strong>MenuButtonDisplay</strong></a></font></td></tr>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
 <td colspan=2><tt>A&nbsp;class&nbsp;to&nbsp;add&nbsp;a&nbsp;menu&nbsp;button.<br>&nbsp;</tt></td></tr>
 <tr><td>&nbsp;</td>
 <td width="100%">Methods defined here:<br>
-<dl><dt><a name="MenuButtonDisplay-addToDialog"><strong>addToDialog</strong></a>(self, preferencesDialog)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;dialog.</tt></dd></dl>
+<dl><dt><a name="MenuButtonDisplay-addToDialog"><strong>addToDialog</strong></a>(self, preferencesDialog)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;this&nbsp;will&nbsp;be&nbsp;added&nbsp;to&nbsp;the&nbsp;dialog&nbsp;with&nbsp;getMenuButton.</tt></dd></dl>
 
 <dl><dt><a name="MenuButtonDisplay-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;label&nbsp;display&nbsp;is&nbsp;not&nbsp;archivable.</tt></dd></dl>
 
 <dl><dt><a name="MenuButtonDisplay-getFromName"><strong>getFromName</strong></a>(self, name)</dt><dd><tt>Initialize.</tt></dd></dl>
 
+<dl><dt><a name="MenuButtonDisplay-getMenuButton"><strong>getMenuButton</strong></a>(self, name)</dt><dd><tt>Get&nbsp;the&nbsp;menu&nbsp;button.</tt></dd></dl>
+
 <dl><dt><a name="MenuButtonDisplay-getName"><strong>getName</strong></a>(self)</dt><dd><tt>Get&nbsp;name&nbsp;for&nbsp;key&nbsp;sorting.</tt></dd></dl>
 
 <dl><dt><a name="MenuButtonDisplay-setToDisplay"><strong>setToDisplay</strong></a>(self)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;label&nbsp;display&nbsp;is&nbsp;not&nbsp;archivable.</tt></dd></dl>
+
+<dl><dt><a name="MenuButtonDisplay-setUpdateFunction"><strong>setUpdateFunction</strong></a>(self, updateFunction)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;menu&nbsp;button&nbsp;display&nbsp;does&nbsp;not&nbsp;have&nbsp;a&nbsp;value.</tt></dd></dl>
 
 <dl><dt><a name="MenuButtonDisplay-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;label&nbsp;display&nbsp;is&nbsp;not&nbsp;archivable.</tt></dd></dl>
 
@@ -542,8 +613,6 @@ Methods defined here:<br>
 <dl><dt><a name="MenuRadio-clickRadio"><strong>clickRadio</strong></a>(self)</dt><dd><tt>Workaround&nbsp;for&nbsp;Tkinter&nbsp;bug,&nbsp;invoke&nbsp;and&nbsp;set&nbsp;the&nbsp;value&nbsp;when&nbsp;clicked.</tt></dd></dl>
 
 <dl><dt><a name="MenuRadio-getFromMenuButtonDisplay"><strong>getFromMenuButtonDisplay</strong></a>(self, menuButtonDisplay, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
-
-<dl><dt><a name="MenuRadio-getStringVar"><strong>getStringVar</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;StringVar&nbsp;for&nbsp;this&nbsp;radio&nbsp;button&nbsp;group.</tt></dd></dl>
 
 <dl><dt><a name="MenuRadio-invokeSetString"><strong>invokeSetString</strong></a>(self)</dt><dd><tt>Workaround&nbsp;for&nbsp;Tkinter&nbsp;bug,&nbsp;invoke&nbsp;and&nbsp;set&nbsp;the&nbsp;value.</tt></dd></dl>
 
@@ -585,15 +654,17 @@ Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preference
 
 <dl><dt><a name="PreferencesDialog-addButtons"><strong>addButtons</strong></a>(self, displayPreferences, root)</dt><dd><tt>Add&nbsp;buttons&nbsp;to&nbsp;the&nbsp;dialog.</tt></dd></dl>
 
+<dl><dt><a name="PreferencesDialog-addEmptyRow"><strong>addEmptyRow</strong></a>(self)</dt><dd><tt>Add&nbsp;an&nbsp;empty&nbsp;row.</tt></dd></dl>
+
 <dl><dt><a name="PreferencesDialog-close"><strong>close</strong></a>(self)</dt><dd><tt>The&nbsp;dialog&nbsp;was&nbsp;closed.</tt></dd></dl>
+
+<dl><dt><a name="PreferencesDialog-closeIfNotFirstAndOnly"><strong>closeIfNotFirstAndOnly</strong></a>(self)</dt><dd><tt>The&nbsp;dialog&nbsp;was&nbsp;closed.</tt></dd></dl>
 
 <dl><dt><a name="PreferencesDialog-execute"><strong>execute</strong></a>(self)</dt><dd><tt>The&nbsp;execute&nbsp;button&nbsp;was&nbsp;clicked.</tt></dd></dl>
 
-<dl><dt><a name="PreferencesDialog-openHelpPage"><strong>openHelpPage</strong></a>(self)</dt><dd><tt>Open&nbsp;the&nbsp;browser&nbsp;to&nbsp;the&nbsp;help&nbsp;page.</tt></dd></dl>
+<dl><dt><a name="PreferencesDialog-save"><strong>save</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;preferences&nbsp;to&nbsp;the&nbsp;dialog&nbsp;then&nbsp;write&nbsp;them.</tt></dd></dl>
 
-<dl><dt><a name="PreferencesDialog-savePreferences"><strong>savePreferences</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;preferences&nbsp;to&nbsp;the&nbsp;dialog&nbsp;then&nbsp;write&nbsp;them.</tt></dd></dl>
-
-<dl><dt><a name="PreferencesDialog-savePreferencesDestroy"><strong>savePreferencesDestroy</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;preferences&nbsp;to&nbsp;the&nbsp;dialog,&nbsp;write&nbsp;them,&nbsp;then&nbsp;destroy&nbsp;the&nbsp;window.</tt></dd></dl>
+<dl><dt><a name="PreferencesDialog-saveClose"><strong>saveClose</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;preferences&nbsp;to&nbsp;the&nbsp;dialog,&nbsp;write&nbsp;them,&nbsp;then&nbsp;destroy&nbsp;the&nbsp;window.</tt></dd></dl>
 
 <dl><dt><a name="PreferencesDialog-setWindowPositionDeiconify"><strong>setWindowPositionDeiconify</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;window&nbsp;position&nbsp;if&nbsp;that&nbsp;preference&nbsp;exists.</tt></dd></dl>
 
@@ -622,6 +693,64 @@ Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preference
 <dl><dt><a name="ProfileList-setValueToFolders"><strong>setValueToFolders</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;value&nbsp;to&nbsp;the&nbsp;folders&nbsp;in&nbsp;the&nbsp;profiles&nbsp;directories.</tt></dd></dl>
 
 <dl><dt><a name="ProfileList-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Do&nbsp;nothing&nbsp;because&nbsp;the&nbsp;profile&nbsp;list&nbsp;is&nbsp;not&nbsp;archivable.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ProfileListboxPreference">class <strong>ProfileListboxPreference</strong></a>(<a href="skeinforge_tools.skeinforge_utilities.preferences.html#StringPreference">StringPreference</a>)</font></td></tr>
+    
+<tr><td bgcolor="#ffc8d8"><tt>&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="ProfileListboxPreference-addToDialog"><strong>addToDialog</strong></a>(self, preferencesDialog)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;dialog.</tt></dd></dl>
+
+<dl><dt><a name="ProfileListboxPreference-buttonReleaseOne"><strong>buttonReleaseOne</strong></a>(self, event)</dt><dd><tt>Button&nbsp;one&nbsp;released.</tt></dd></dl>
+
+<dl><dt><a name="ProfileListboxPreference-focusIn"><strong>focusIn</strong></a>(self, event)</dt><dd><tt>The&nbsp;root&nbsp;has&nbsp;gained&nbsp;focus.</tt></dd></dl>
+
+<dl><dt><a name="ProfileListboxPreference-getFromListPreference"><strong>getFromListPreference</strong></a>(self, listPreference, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
+
+<dl><dt><a name="ProfileListboxPreference-getSelectedFolder"><strong>getSelectedFolder</strong></a>(self)</dt><dd><tt>Get&nbsp;the&nbsp;selected&nbsp;folder.</tt></dd></dl>
+
+<dl><dt><a name="ProfileListboxPreference-setListboxItems"><strong>setListboxItems</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;listbox&nbsp;items&nbsp;to&nbsp;the&nbsp;list&nbsp;preference.</tt></dd></dl>
+
+<dl><dt><a name="ProfileListboxPreference-setToDisplay"><strong>setToDisplay</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;selection&nbsp;value&nbsp;to&nbsp;the&nbsp;listbox&nbsp;selection.</tt></dd></dl>
+
+<dl><dt><a name="ProfileListboxPreference-setValueToIndex"><strong>setValueToIndex</strong></a>(self, index)</dt><dd><tt>Set&nbsp;the&nbsp;selection&nbsp;value&nbsp;to&nbsp;the&nbsp;index.</tt></dd></dl>
+
+<dl><dt><a name="ProfileListboxPreference-setValueToString"><strong>setValueToString</strong></a>(self, valueString)</dt><dd><tt>Set&nbsp;the&nbsp;string&nbsp;to&nbsp;the&nbsp;value&nbsp;string.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preferences.html#StringPreference">StringPreference</a>:<br>
+<dl><dt><a name="ProfileListboxPreference-__init__"><strong>__init__</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;update&nbsp;function&nbsp;to&nbsp;none.</tt></dd></dl>
+
+<dl><dt><a name="ProfileListboxPreference-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;preference&nbsp;table.</tt></dd></dl>
+
+<dl><dt><a name="ProfileListboxPreference-getFromValue"><strong>getFromValue</strong></a>(self, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
+
+<dl><dt><a name="ProfileListboxPreference-setStateToValue"><strong>setStateToValue</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;entry&nbsp;to&nbsp;the&nbsp;value.</tt></dd></dl>
+
+<dl><dt><a name="ProfileListboxPreference-setUpdateFunction"><strong>setUpdateFunction</strong></a>(self, updateFunction)</dt><dd><tt>Set&nbsp;the&nbsp;update&nbsp;function.</tt></dd></dl>
+
+<dl><dt><a name="ProfileListboxPreference-setValueToSplitLine"><strong>setValueToSplitLine</strong></a>(self, lineIndex, lines, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;value&nbsp;to&nbsp;the&nbsp;second&nbsp;word&nbsp;of&nbsp;a&nbsp;split&nbsp;line.</tt></dd></dl>
+
+<dl><dt><a name="ProfileListboxPreference-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Write&nbsp;tab&nbsp;separated&nbsp;name&nbsp;and&nbsp;value&nbsp;to&nbsp;the&nbsp;archive&nbsp;writer.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ProfileMenuRadio">class <strong>ProfileMenuRadio</strong></a></font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;class&nbsp;to&nbsp;display&nbsp;a&nbsp;profile&nbsp;menu&nbsp;radio&nbsp;button.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="ProfileMenuRadio-__init__"><strong>__init__</strong></a>(self, profilePluginFilename, menu, name, radioVar, value)</dt><dd><tt>Create&nbsp;a&nbsp;profile&nbsp;menu&nbsp;radio.</tt></dd></dl>
+
+<dl><dt><a name="ProfileMenuRadio-clickRadio"><strong>clickRadio</strong></a>(self)</dt><dd><tt>Workaround&nbsp;for&nbsp;Tkinter&nbsp;bug,&nbsp;invoke&nbsp;and&nbsp;set&nbsp;the&nbsp;value&nbsp;when&nbsp;clicked.</tt></dd></dl>
+
+<dl><dt><a name="ProfileMenuRadio-invokeSetString"><strong>invokeSetString</strong></a>(self)</dt><dd><tt>Workaround&nbsp;for&nbsp;Tkinter&nbsp;bug,&nbsp;invoke&nbsp;and&nbsp;set&nbsp;the&nbsp;value.</tt></dd></dl>
 
 </td></tr></table> <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -774,6 +903,70 @@ Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preference
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#ffc8d8">
 <td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="TextPreference">class <strong>TextPreference</strong></a>(<a href="skeinforge_tools.skeinforge_utilities.preferences.html#StringPreference">StringPreference</a>)</font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;class&nbsp;to&nbsp;display,&nbsp;read&nbsp;&amp;&nbsp;write&nbsp;a&nbsp;text.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="TextPreference-__init__"><strong>__init__</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;update&nbsp;function&nbsp;to&nbsp;none.</tt></dd></dl>
+
+<dl><dt><a name="TextPreference-addToDialog"><strong>addToDialog</strong></a>(self, preferencesDialog)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;dialog.</tt></dd></dl>
+
+<dl><dt><a name="TextPreference-setStateToValue"><strong>setStateToValue</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;entry&nbsp;to&nbsp;the&nbsp;value.</tt></dd></dl>
+
+<dl><dt><a name="TextPreference-setToDisplay"><strong>setToDisplay</strong></a>(self)</dt><dd><tt>Set&nbsp;the&nbsp;string&nbsp;to&nbsp;the&nbsp;entry&nbsp;field.</tt></dd></dl>
+
+<dl><dt><a name="TextPreference-setValueToSplitLine"><strong>setValueToSplitLine</strong></a>(self, lineIndex, lines, splitLine)</dt><dd><tt>Set&nbsp;the&nbsp;value&nbsp;to&nbsp;the&nbsp;second&nbsp;word&nbsp;of&nbsp;a&nbsp;split&nbsp;line.</tt></dd></dl>
+
+<dl><dt><a name="TextPreference-writeToArchiveWriter"><strong>writeToArchiveWriter</strong></a>(self, archiveWriter)</dt><dd><tt>Write&nbsp;tab&nbsp;separated&nbsp;name&nbsp;and&nbsp;value&nbsp;to&nbsp;the&nbsp;archive&nbsp;writer.</tt></dd></dl>
+
+<hr>
+Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preferences.html#StringPreference">StringPreference</a>:<br>
+<dl><dt><a name="TextPreference-addToPreferenceTable"><strong>addToPreferenceTable</strong></a>(self, preferenceTable)</dt><dd><tt>Add&nbsp;this&nbsp;to&nbsp;the&nbsp;preference&nbsp;table.</tt></dd></dl>
+
+<dl><dt><a name="TextPreference-getFromValue"><strong>getFromValue</strong></a>(self, name, value)</dt><dd><tt>Initialize.</tt></dd></dl>
+
+<dl><dt><a name="TextPreference-setUpdateFunction"><strong>setUpdateFunction</strong></a>(self, updateFunction)</dt><dd><tt>Set&nbsp;the&nbsp;update&nbsp;function.</tt></dd></dl>
+
+<dl><dt><a name="TextPreference-setValueToString"><strong>setValueToString</strong></a>(self, valueString)</dt><dd><tt>Set&nbsp;the&nbsp;string&nbsp;to&nbsp;the&nbsp;value&nbsp;string.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="TokenConversion">class <strong>TokenConversion</strong></a></font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;class&nbsp;to&nbsp;convert&nbsp;tokens&nbsp;in&nbsp;a&nbsp;string.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="TokenConversion-__init__"><strong>__init__</strong></a>(self, name<font color="#909090">='replaceToken'</font>, token<font color="#909090">='___replaced___'</font>)</dt><dd><tt>Set&nbsp;the&nbsp;name&nbsp;and&nbsp;token.</tt></dd></dl>
+
+<dl><dt><a name="TokenConversion-getNamedString"><strong>getNamedString</strong></a>(self, text)</dt><dd><tt>Get&nbsp;a&nbsp;string&nbsp;with&nbsp;the&nbsp;tokens&nbsp;changed&nbsp;to&nbsp;names.</tt></dd></dl>
+
+<dl><dt><a name="TokenConversion-getTokenizedString"><strong>getTokenizedString</strong></a>(self, text)</dt><dd><tt>Get&nbsp;a&nbsp;string&nbsp;with&nbsp;the&nbsp;names&nbsp;changed&nbsp;to&nbsp;tokens.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#000000" face="helvetica, arial"><a name="ToolDialog">class <strong>ToolDialog</strong></a></font></td></tr>
+    
+<tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
+<td colspan=2><tt>A&nbsp;class&nbsp;to&nbsp;display&nbsp;the&nbsp;tool&nbsp;preferences&nbsp;dialog.<br>&nbsp;</tt></td></tr>
+<tr><td>&nbsp;</td>
+<td width="100%">Methods defined here:<br>
+<dl><dt><a name="ToolDialog-addPluginToMenu"><strong>addPluginToMenu</strong></a>(self, filePath, menu, name)</dt><dd><tt>Add&nbsp;the&nbsp;display&nbsp;command&nbsp;to&nbsp;the&nbsp;menu.</tt></dd></dl>
+
+<dl><dt><a name="ToolDialog-display"><strong>display</strong></a>(self)</dt><dd><tt>Display&nbsp;the&nbsp;tool&nbsp;preferences&nbsp;dialog.</tt></dd></dl>
+
+<dl><dt><a name="ToolDialog-getDisplayFromFolderPath"><strong>getDisplayFromFolderPath</strong></a>(self, filePath, name)</dt><dd><tt>Initialize&nbsp;and&nbsp;return&nbsp;display&nbsp;function.</tt></dd></dl>
+
+</td></tr></table> <p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#ffc8d8">
+<td colspan=3 valign=bottom>&nbsp;<br>
 <font color="#000000" face="helvetica, arial"><a name="WindowPosition">class <strong>WindowPosition</strong></a>(<a href="skeinforge_tools.skeinforge_utilities.preferences.html#StringPreference">StringPreference</a>)</font></td></tr>
     
 <tr bgcolor="#ffc8d8"><td rowspan=2><tt>&nbsp;&nbsp;&nbsp;</tt></td>
@@ -817,10 +1010,12 @@ Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preference
  <dl><dt><a name="-getCraftTypePluginModule"><strong>getCraftTypePluginModule</strong></a>(craftTypeName<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;the&nbsp;craft&nbsp;type&nbsp;plugin&nbsp;module.</tt></dd></dl>
  <dl><dt><a name="-getCraftTypeProfilesDirectoryPath"><strong>getCraftTypeProfilesDirectoryPath</strong></a>(subfolder<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;the&nbsp;craft&nbsp;type&nbsp;profiles&nbsp;directory&nbsp;path,&nbsp;which&nbsp;is&nbsp;the&nbsp;preferences&nbsp;directory&nbsp;joined&nbsp;with&nbsp;profiles,&nbsp;joined&nbsp;in&nbsp;turn&nbsp;with&nbsp;the&nbsp;craft&nbsp;type.</tt></dd></dl>
  <dl><dt><a name="-getDirectoryInAboveDirectory"><strong>getDirectoryInAboveDirectory</strong></a>(directory)</dt><dd><tt>Get&nbsp;the&nbsp;directory&nbsp;in&nbsp;the&nbsp;above&nbsp;directory.</tt></dd></dl>
- <dl><dt><a name="-getDisplayToolButtons"><strong>getDisplayToolButtons</strong></a>(folderName, importantFilenames, moduleFilename, toolFileNames, visibleFilenames)</dt><dd><tt>Get&nbsp;the&nbsp;display&nbsp;tool&nbsp;buttons.</tt></dd></dl>
+ <dl><dt><a name="-getDisplayToolButtons"><strong>getDisplayToolButtons</strong></a>(directoryPath, importantFilenames, toolFileNames, visibleFilenames)</dt><dd><tt>Get&nbsp;the&nbsp;display&nbsp;tool&nbsp;buttons.</tt></dd></dl>
  <dl><dt><a name="-getDisplayedDialogFromConstructor"><strong>getDisplayedDialogFromConstructor</strong></a>(displayPreferences)</dt><dd><tt>Display&nbsp;the&nbsp;preferences&nbsp;dialog.</tt></dd></dl>
+ <dl><dt><a name="-getDocumentationPath"><strong>getDocumentationPath</strong></a>(subName<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;the&nbsp;documentation&nbsp;file&nbsp;path.</tt></dd></dl>
+ <dl><dt><a name="-getEachWordCapitalized"><strong>getEachWordCapitalized</strong></a>(name)</dt><dd><tt>Get&nbsp;the&nbsp;capitalized&nbsp;name.</tt></dd></dl>
+ <dl><dt><a name="-getFileInAlterationsOrGivenDirectory"><strong>getFileInAlterationsOrGivenDirectory</strong></a>(directory, fileName)</dt><dd><tt>Get&nbsp;the&nbsp;file&nbsp;from&nbsp;the&nbsp;fileName&nbsp;or&nbsp;the&nbsp;lowercase&nbsp;fileName&nbsp;in&nbsp;the&nbsp;alterations&nbsp;directories,&nbsp;if&nbsp;there&nbsp;is&nbsp;no&nbsp;file&nbsp;look&nbsp;in&nbsp;the&nbsp;given&nbsp;directory.</tt></dd></dl>
  <dl><dt><a name="-getFileInGivenDirectory"><strong>getFileInGivenDirectory</strong></a>(directory, fileName)</dt><dd><tt>Get&nbsp;the&nbsp;file&nbsp;from&nbsp;the&nbsp;fileName&nbsp;or&nbsp;the&nbsp;lowercase&nbsp;fileName&nbsp;in&nbsp;the&nbsp;given&nbsp;directory.</tt></dd></dl>
- <dl><dt><a name="-getFileInGivenPreferencesDirectory"><strong>getFileInGivenPreferencesDirectory</strong></a>(directory, fileName)</dt><dd><tt>Get&nbsp;the&nbsp;file&nbsp;from&nbsp;the&nbsp;fileName&nbsp;or&nbsp;the&nbsp;lowercase&nbsp;fileName&nbsp;in&nbsp;the&nbsp;given&nbsp;directory,&nbsp;if&nbsp;there&nbsp;is&nbsp;no&nbsp;file&nbsp;look&nbsp;in&nbsp;the&nbsp;alterations&nbsp;folder&nbsp;in&nbsp;the&nbsp;preferences&nbsp;directory.</tt></dd></dl>
  <dl><dt><a name="-getFileTextGivenDirectoryFileName"><strong>getFileTextGivenDirectoryFileName</strong></a>(directory, fileName)</dt><dd><tt>Get&nbsp;the&nbsp;entire&nbsp;text&nbsp;of&nbsp;a&nbsp;file&nbsp;with&nbsp;the&nbsp;given&nbsp;file&nbsp;name&nbsp;in&nbsp;the&nbsp;given&nbsp;directory.</tt></dd></dl>
  <dl><dt><a name="-getFolders"><strong>getFolders</strong></a>(directory)</dt><dd><tt>Get&nbsp;the&nbsp;folder&nbsp;list&nbsp;in&nbsp;a&nbsp;directory.</tt></dd></dl>
  <dl><dt><a name="-getLowerNameSetHelpTitleWindowPosition"><strong>getLowerNameSetHelpTitleWindowPosition</strong></a>(displayPreferences, fileNameHelp)</dt><dd><tt>Set&nbsp;the&nbsp;help&nbsp;&amp;&nbsp;preferences&nbsp;file&nbsp;path,&nbsp;the&nbsp;title&nbsp;and&nbsp;the&nbsp;window&nbsp;position&nbsp;archiver.</tt></dd></dl>
@@ -830,15 +1025,20 @@ Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preference
  <dl><dt><a name="-getReadPreferences"><strong>getReadPreferences</strong></a>(archivablePreferences)</dt><dd><tt>Read&nbsp;and&nbsp;return&nbsp;preferences&nbsp;from&nbsp;a&nbsp;file.</tt></dd></dl>
  <dl><dt><a name="-getReadProfilePreferences"><strong>getReadProfilePreferences</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;read&nbsp;profile&nbsp;preferences.</tt></dd></dl>
  <dl><dt><a name="-getSelectedCraftTypeProfile"><strong>getSelectedCraftTypeProfile</strong></a>(craftTypeName<font color="#909090">=''</font>)</dt><dd><tt>Get&nbsp;the&nbsp;selected&nbsp;profile.getPreferencesConstructor</tt></dd></dl>
- <dl><dt><a name="-getSelectedPluginModule"><strong>getSelectedPluginModule</strong></a>(folderName, moduleFilename, plugins)</dt><dd><tt>Get&nbsp;the&nbsp;selected&nbsp;plugin&nbsp;module.</tt></dd></dl>
+ <dl><dt><a name="-getSelectedPluginModuleFromPath"><strong>getSelectedPluginModuleFromPath</strong></a>(filePath, plugins)</dt><dd><tt>Get&nbsp;the&nbsp;selected&nbsp;plugin&nbsp;module.</tt></dd></dl>
  <dl><dt><a name="-getSelectedPluginName"><strong>getSelectedPluginName</strong></a>(plugins)</dt><dd><tt>Get&nbsp;the&nbsp;selected&nbsp;plugin&nbsp;name.</tt></dd></dl>
  <dl><dt><a name="-getSubfolderWithBasename"><strong>getSubfolderWithBasename</strong></a>(basename, directory)</dt><dd><tt>Get&nbsp;the&nbsp;subfolder&nbsp;in&nbsp;the&nbsp;directory&nbsp;with&nbsp;the&nbsp;basename.</tt></dd></dl>
  <dl><dt><a name="-makeDirectory"><strong>makeDirectory</strong></a>(directory)</dt><dd><tt>Make&nbsp;a&nbsp;directory&nbsp;if&nbsp;it&nbsp;does&nbsp;not&nbsp;already&nbsp;exist.</tt></dd></dl>
  <dl><dt><a name="-openWebPage"><strong>openWebPage</strong></a>(webPagePath)</dt><dd><tt>Open&nbsp;a&nbsp;web&nbsp;page&nbsp;in&nbsp;a&nbsp;browser.</tt></dd></dl>
+ <dl><dt><a name="-quitWindow"><strong>quitWindow</strong></a>(root)</dt><dd><tt>Quit&nbsp;a&nbsp;window.</tt></dd></dl>
+ <dl><dt><a name="-quitWindows"><strong>quitWindows</strong></a>()</dt><dd><tt>Quit&nbsp;all&nbsp;windows.</tt></dd></dl>
  <dl><dt><a name="-readPreferencesFromText"><strong>readPreferencesFromText</strong></a>(archivablePreferences, text)</dt><dd><tt>Read&nbsp;preferences&nbsp;from&nbsp;a&nbsp;text.</tt></dd></dl>
+ <dl><dt><a name="-removeFromTable"><strong>removeFromTable</strong></a>(hashtable, key)</dt><dd><tt>Remove&nbsp;an&nbsp;entry&nbsp;from&nbsp;a&nbsp;hashtable&nbsp;if&nbsp;it&nbsp;exists.</tt></dd></dl>
  <dl><dt><a name="-setArchiveToLine"><strong>setArchiveToLine</strong></a>(lineIndex, lines, preferenceTable)</dt><dd><tt>Set&nbsp;an&nbsp;archive&nbsp;to&nbsp;a&nbsp;preference&nbsp;line.</tt></dd></dl>
- <dl><dt><a name="-setCraftProfileArchive"><strong>setCraftProfileArchive</strong></a>(defaultProfile, displayPreferences, fileNameHelp)</dt><dd><tt>Set&nbsp;the&nbsp;craft&nbsp;profile&nbsp;archive.</tt></dd></dl>
+ <dl><dt><a name="-setCraftProfileArchive"><strong>setCraftProfileArchive</strong></a>(craftSequence, defaultProfile, displayPreferences, fileNameHelp)</dt><dd><tt>Set&nbsp;the&nbsp;craft&nbsp;profile&nbsp;archive.</tt></dd></dl>
  <dl><dt><a name="-setHelpPreferencesFileNameTitleWindowPosition"><strong>setHelpPreferencesFileNameTitleWindowPosition</strong></a>(displayPreferences, fileNameHelp)</dt><dd><tt>Set&nbsp;the&nbsp;help&nbsp;&amp;&nbsp;preferences&nbsp;file&nbsp;path,&nbsp;the&nbsp;title&nbsp;and&nbsp;the&nbsp;window&nbsp;position&nbsp;archiver.</tt></dd></dl>
+ <dl><dt><a name="-startMainLoopFromConstructor"><strong>startMainLoopFromConstructor</strong></a>(displayPreferences)</dt><dd><tt>Display&nbsp;the&nbsp;preferences&nbsp;dialog&nbsp;and&nbsp;start&nbsp;the&nbsp;main&nbsp;loop.</tt></dd></dl>
+ <dl><dt><a name="-updateProfileSaveListeners"><strong>updateProfileSaveListeners</strong></a>()</dt><dd><tt>Call&nbsp;the&nbsp;save&nbsp;function&nbsp;of&nbsp;all&nbsp;the&nbsp;update&nbsp;profile&nbsp;save&nbsp;listeners.</tt></dd></dl>
  <dl><dt><a name="-writePreferences"><strong>writePreferences</strong></a>(archivablePreferences)</dt><dd><tt>Write&nbsp;the&nbsp;preferences&nbsp;to&nbsp;a&nbsp;file.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -851,6 +1051,9 @@ Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.preference
 <strong>__date__</strong> = '$Date: 2008/23/04 $'<br>
 <strong>__license__</strong> = 'GPL 3.0'<br>
 <strong>absolute_import</strong> = _Feature((2, 5, 0, 'alpha', 1), (2, 7, 0, 'alpha', 0), 16384)<br>
+<strong>globalCloseTables</strong> = [{}, {}]<br>
+<strong>globalPreferencesDialogTable</strong> = {}<br>
+<strong>globalProfileSaveListenerTable</strong> = {}<br>
 <strong>globalSpreadsheetSeparator</strong> = '<font color="#c040c0">\t</font>'</td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#7799ee">

@@ -21,6 +21,8 @@ gcode.&nbsp;&nbsp;If&nbsp;you&nbsp;want&nbsp;to&nbsp;use&nbsp;all&nbsp;the&nbsp;
 The&nbsp;skeinforge&nbsp;module&nbsp;provides&nbsp;a&nbsp;single&nbsp;place&nbsp;to&nbsp;call&nbsp;up&nbsp;all&nbsp;the&nbsp;preference&nbsp;dialogs.&nbsp;&nbsp;When&nbsp;the&nbsp;'Skeinforge'&nbsp;button&nbsp;is&nbsp;clicked,<br>
 skeinforge&nbsp;calls&nbsp;export,&nbsp;since&nbsp;that&nbsp;is&nbsp;the&nbsp;end&nbsp;of&nbsp;the&nbsp;chain.<br>
 &nbsp;<br>
+The&nbsp;plugin&nbsp;buttons&nbsp;which&nbsp;are&nbsp;commonly&nbsp;used&nbsp;are&nbsp;bolded&nbsp;and&nbsp;the&nbsp;ones&nbsp;which&nbsp;are&nbsp;rarely&nbsp;used&nbsp;have&nbsp;normal&nbsp;font&nbsp;weight.<br>
+&nbsp;<br>
 To&nbsp;run&nbsp;skeinforge,&nbsp;type&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;same&nbsp;folder&nbsp;as&nbsp;skeinforge:<br>
 &gt;&nbsp;python&nbsp;skeinforge.py<br>
 &nbsp;<br>
@@ -68,9 +70,15 @@ If&nbsp;you&nbsp;want&nbsp;python&nbsp;and&nbsp;Tkinter&nbsp;together&nbsp;on&nb
 from&nbsp;Active&nbsp;State&nbsp;at:<br>
 <a href="http://www.activestate.com/Products/activepython/feature_list.mhtml">http://www.activestate.com/Products/activepython/feature_list.mhtml</a><br>
 &nbsp;<br>
-Skeinforge&nbsp;imports&nbsp;Stereolithography&nbsp;(.stl)&nbsp;files&nbsp;or&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;(.gts)&nbsp;files.&nbsp;&nbsp;The&nbsp;import&nbsp;plugin&nbsp;for&nbsp;STL&nbsp;files&nbsp;is<br>
-experimental&nbsp;and&nbsp;if&nbsp;it&nbsp;doesn't&nbsp;work,&nbsp;an&nbsp;indirect&nbsp;way&nbsp;to&nbsp;import&nbsp;an&nbsp;STL&nbsp;file&nbsp;is&nbsp;by&nbsp;turning&nbsp;it&nbsp;into&nbsp;a&nbsp;GTS&nbsp;file&nbsp;is&nbsp;by&nbsp;using&nbsp;the&nbsp;Export&nbsp;GNU<br>
-Triangulated&nbsp;Surface&nbsp;script&nbsp;at:<br>
+The&nbsp;computation&nbsp;intensive&nbsp;python&nbsp;modules&nbsp;will&nbsp;use&nbsp;psyco&nbsp;if&nbsp;it&nbsp;is&nbsp;available&nbsp;and&nbsp;run&nbsp;about&nbsp;twice&nbsp;as&nbsp;fast.&nbsp;&nbsp;Psyco&nbsp;is&nbsp;described&nbsp;at:<br>
+<a href="http://psyco.sourceforge.net/index.html">http://psyco.sourceforge.net/index.html</a><br>
+&nbsp;<br>
+The&nbsp;psyco&nbsp;download&nbsp;page&nbsp;is:<br>
+<a href="http://psyco.sourceforge.net/download.html">http://psyco.sourceforge.net/download.html</a><br>
+&nbsp;<br>
+Skeinforge&nbsp;imports&nbsp;Stereolithography&nbsp;(.stl)&nbsp;files&nbsp;or&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;(.gts)&nbsp;files.&nbsp;&nbsp;If&nbsp;importing&nbsp;an&nbsp;STL&nbsp;file&nbsp;directly&nbsp;doesn't<br>
+work,&nbsp;an&nbsp;indirect&nbsp;way&nbsp;to&nbsp;import&nbsp;an&nbsp;STL&nbsp;file&nbsp;is&nbsp;by&nbsp;turning&nbsp;it&nbsp;into&nbsp;a&nbsp;GTS&nbsp;file&nbsp;is&nbsp;by&nbsp;using&nbsp;the&nbsp;Export&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;script<br>
+at:<br>
 <a href="http://members.axion.net/~enrique/Export%20GNU%20Triangulated%20Surface.bsh">http://members.axion.net/~enrique/Export%20GNU%20Triangulated%20Surface.bsh</a><br>
 &nbsp;<br>
 The&nbsp;Export&nbsp;GNU&nbsp;Triangulated&nbsp;Surface&nbsp;script&nbsp;is&nbsp;also&nbsp;in&nbsp;the&nbsp;Art&nbsp;of&nbsp;Illusion&nbsp;folder,&nbsp;which&nbsp;is&nbsp;in&nbsp;the&nbsp;same&nbsp;folder&nbsp;as&nbsp;skeinforge.py.&nbsp;&nbsp;To<br>
@@ -87,23 +95,6 @@ Or&nbsp;you&nbsp;can&nbsp;turn&nbsp;files&nbsp;into&nbsp;gcode&nbsp;by&nbsp;addi
 &gt;&nbsp;python&nbsp;skeinforge.py&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl<br>
 &nbsp;<br>
 &nbsp;<br>
-&nbsp;<br>
-End&nbsp;of&nbsp;the&nbsp;Beginning<br>
-&nbsp;<br>
-When&nbsp;carve&nbsp;is&nbsp;generating&nbsp;the&nbsp;code,&nbsp;if&nbsp;there&nbsp;is&nbsp;a&nbsp;file&nbsp;start.txt,&nbsp;it&nbsp;will&nbsp;add&nbsp;that&nbsp;to&nbsp;the&nbsp;very&nbsp;beginning&nbsp;of&nbsp;the&nbsp;gcode.&nbsp;&nbsp;After&nbsp;it&nbsp;has<br>
-added&nbsp;some&nbsp;initialization&nbsp;code&nbsp;and&nbsp;just&nbsp;before&nbsp;it&nbsp;adds&nbsp;the&nbsp;extrusion&nbsp;gcode,&nbsp;it&nbsp;will&nbsp;add&nbsp;the&nbsp;file&nbsp;endofthebeginning.txt&nbsp;if&nbsp;it&nbsp;exists.<br>
-At&nbsp;the&nbsp;very&nbsp;end,&nbsp;it&nbsp;will&nbsp;add&nbsp;the&nbsp;file&nbsp;end.txt&nbsp;if&nbsp;it&nbsp;exists.&nbsp;&nbsp;Carve&nbsp;does&nbsp;not&nbsp;care&nbsp;if&nbsp;the&nbsp;text&nbsp;file&nbsp;names&nbsp;are&nbsp;capitalized,&nbsp;but&nbsp;some&nbsp;file<br>
-systems&nbsp;do&nbsp;not&nbsp;handle&nbsp;file&nbsp;name&nbsp;cases&nbsp;properly,&nbsp;so&nbsp;to&nbsp;be&nbsp;on&nbsp;the&nbsp;safe&nbsp;side&nbsp;you&nbsp;should&nbsp;give&nbsp;them&nbsp;lower&nbsp;case&nbsp;names.&nbsp;&nbsp;It&nbsp;will<br>
-first&nbsp;look&nbsp;for&nbsp;the&nbsp;file&nbsp;in&nbsp;the&nbsp;same&nbsp;directory&nbsp;as&nbsp;carve,&nbsp;if&nbsp;it&nbsp;does&nbsp;not&nbsp;find&nbsp;it&nbsp;it&nbsp;will&nbsp;look&nbsp;in&nbsp;~/.skeinforge/gcode_scripts.<br>
-&nbsp;<br>
-The&nbsp;computation&nbsp;intensive&nbsp;python&nbsp;modules&nbsp;will&nbsp;use&nbsp;psyco&nbsp;if&nbsp;it&nbsp;is&nbsp;available&nbsp;and&nbsp;run&nbsp;about&nbsp;twice&nbsp;as&nbsp;fast.&nbsp;&nbsp;Psyco&nbsp;is&nbsp;described&nbsp;at:<br>
-<a href="http://psyco.sourceforge.net/index.html">http://psyco.sourceforge.net/index.html</a><br>
-&nbsp;<br>
-The&nbsp;psyco&nbsp;download&nbsp;page&nbsp;is:<br>
-<a href="http://psyco.sourceforge.net/download.html">http://psyco.sourceforge.net/download.html</a><br>
-&nbsp;<br>
-&nbsp;<br>
-&nbsp;<br>
 Documentation<br>
 &nbsp;<br>
 The&nbsp;documentation&nbsp;is&nbsp;in&nbsp;the&nbsp;documentation&nbsp;folder,&nbsp;in&nbsp;the&nbsp;doc&nbsp;strings&nbsp;for&nbsp;each&nbsp;module&nbsp;and&nbsp;it&nbsp;can&nbsp;be&nbsp;called&nbsp;from&nbsp;the&nbsp;'?'<br>
@@ -117,6 +108,10 @@ Then&nbsp;move&nbsp;all&nbsp;the&nbsp;generated&nbsp;html&nbsp;files&nbsp;to&nbs
 &nbsp;<br>
 There&nbsp;is&nbsp;a&nbsp;manual&nbsp;at:<br>
 <a href="http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge">http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge</a><br>
+&nbsp;<br>
+A&nbsp;list&nbsp;of&nbsp;other&nbsp;tutorials&nbsp;is&nbsp;at:<br>
+<a href="http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge#Tutorials">http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge#Tutorials</a><br>
+&nbsp;<br>
 &nbsp;<br>
 &nbsp;<br>
 Fabrication<br>
@@ -152,6 +147,7 @@ There&nbsp;is&nbsp;a&nbsp;board&nbsp;about&nbsp;printing&nbsp;issues&nbsp;at:<br
 &nbsp;<br>
 You&nbsp;can&nbsp;buy&nbsp;fabricators&nbsp;at:<br>
 <a href="http://www.bitsfrombytes.com/">http://www.bitsfrombytes.com/</a><br>
+&nbsp;<br>
 &nbsp;<br>
 &nbsp;<br>
 File&nbsp;Formats<br>
@@ -302,7 +298,8 @@ This&nbsp;brings&nbsp;up&nbsp;the&nbsp;skeinforge&nbsp;dialog.</tt></p>
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-getSkeinforgeToolFilenames"><strong>getSkeinforgeToolFilenames</strong></a>()</dt><dd><tt>Get&nbsp;skeinforge&nbsp;plugin&nbsp;fileNames.</tt></dd></dl>
+<td width="100%"><dl><dt><a name="-getPreferencesConstructor"><strong>getPreferencesConstructor</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;preferences&nbsp;constructor.</tt></dd></dl>
+ <dl><dt><a name="-getSkeinforgeToolFilenames"><strong>getSkeinforgeToolFilenames</strong></a>()</dt><dd><tt>Get&nbsp;skeinforge&nbsp;plugin&nbsp;fileNames.</tt></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>Display&nbsp;the&nbsp;skeinforge&nbsp;dialog.</tt></dd></dl>
  <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName<font color="#909090">=''</font>)</dt><dd><tt>Craft&nbsp;a&nbsp;gcode&nbsp;file.</tt></dd></dl>
 </td></tr></table><p>

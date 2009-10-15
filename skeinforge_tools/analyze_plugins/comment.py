@@ -67,9 +67,9 @@ def getCommentGcode( gcodeText ):
 	skein.parseGcode( gcodeText )
 	return skein.output.getvalue()
 
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( CommentPreferences() )
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return CommentPreferences()
 
 def writeCommentFileGivenText( fileName, gcodeText ):
 	"Write a commented gcode file for a gcode file."
@@ -167,7 +167,7 @@ class CommentPreferences:
 		self.archive.append( self.fileNameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Write Comments'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.analyze_plugins.comment.html' )
 
 	def execute( self ):
@@ -182,7 +182,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

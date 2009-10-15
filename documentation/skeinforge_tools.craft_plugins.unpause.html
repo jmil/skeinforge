@@ -20,23 +20,28 @@ microprocessor.&nbsp;&nbsp;The&nbsp;description&nbsp;is&nbsp;at:<br>
 &nbsp;<br>
 The&nbsp;"Delay&nbsp;(milliseconds)"&nbsp;preference&nbsp;is&nbsp;the&nbsp;delay&nbsp;on&nbsp;the&nbsp;microprocessor&nbsp;that&nbsp;will&nbsp;be&nbsp;at&nbsp;least&nbsp;partially&nbsp;compensated&nbsp;for.&nbsp;&nbsp;The<br>
 default&nbsp;is&nbsp;28&nbsp;milliseconds,&nbsp;which&nbsp;Shane&nbsp;found&nbsp;for&nbsp;the&nbsp;Arduino.&nbsp;&nbsp;The&nbsp;"Maximum&nbsp;Speed"&nbsp;ratio&nbsp;is&nbsp;the&nbsp;maximum&nbsp;amount&nbsp;that&nbsp;the<br>
-feedrate&nbsp;will&nbsp;be&nbsp;sped&nbsp;up&nbsp;to,&nbsp;compared&nbsp;to&nbsp;the&nbsp;original&nbsp;feedrate,&nbsp;the&nbsp;default&nbsp;is&nbsp;1.5.<br>
+feedRate&nbsp;will&nbsp;be&nbsp;sped&nbsp;up&nbsp;to,&nbsp;compared&nbsp;to&nbsp;the&nbsp;original&nbsp;feedRate,&nbsp;the&nbsp;default&nbsp;is&nbsp;1.5.<br>
 &nbsp;<br>
-To&nbsp;run&nbsp;unpause,&nbsp;in&nbsp;a&nbsp;shell&nbsp;type:<br>
+The&nbsp;equation&nbsp;to&nbsp;set&nbsp;the&nbsp;feedRate&nbsp;is&nbsp;from&nbsp;Shane&nbsp;Hathaway's&nbsp;description&nbsp;at:<br>
+<a href="http://shane.willowrise.com/archives/delay-compensation-in-firmware/">http://shane.willowrise.com/archives/delay-compensation-in-firmware/</a><br>
+&nbsp;<br>
+The&nbsp;following&nbsp;examples&nbsp;unpause&nbsp;the&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+and&nbsp;unpause.py.<br>
+&nbsp;<br>
+&nbsp;<br>
 &gt;&nbsp;python&nbsp;unpause.py<br>
-&nbsp;<br>
-The&nbsp;following&nbsp;examples&nbsp;unpause&nbsp;the&nbsp;files&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl.&nbsp;&nbsp;The&nbsp;examples&nbsp;are&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains<br>
-Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;&amp;&nbsp;unpause.py.&nbsp;&nbsp;The&nbsp;function&nbsp;writeOutput&nbsp;checks&nbsp;to&nbsp;see&nbsp;if&nbsp;the&nbsp;text&nbsp;has&nbsp;been&nbsp;unpaused,&nbsp;if&nbsp;not&nbsp;they&nbsp;call<br>
-getChainGcode&nbsp;in&nbsp;home.py&nbsp;to&nbsp;home&nbsp;the&nbsp;text;&nbsp;once&nbsp;they&nbsp;have&nbsp;the&nbsp;homed&nbsp;text,&nbsp;then&nbsp;it&nbsp;unpauses.<br>
+This&nbsp;brings&nbsp;up&nbsp;the&nbsp;unpause&nbsp;dialog.<br>
 &nbsp;<br>
 &nbsp;<br>
-&gt;&nbsp;python&nbsp;unpause.py<br>
-This&nbsp;brings&nbsp;up&nbsp;the&nbsp;dialog,&nbsp;after&nbsp;clicking&nbsp;'Unpause',&nbsp;the&nbsp;following&nbsp;is&nbsp;printed:<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;unpaused.<br>
-The&nbsp;unpaused&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_unpause.gcode<br>
+&gt;&nbsp;python&nbsp;unpause.py&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+The&nbsp;unpause&nbsp;tool&nbsp;is&nbsp;parsing&nbsp;the&nbsp;file:<br>
+Screw&nbsp;Holder&nbsp;Bottom.stl<br>
+..<br>
+The&nbsp;unpause&nbsp;tool&nbsp;has&nbsp;created&nbsp;the&nbsp;file:<br>
+..&nbsp;Screw&nbsp;Holder&nbsp;Bottom_unpause.gcode<br>
 &nbsp;<br>
 &nbsp;<br>
-&gt;python<br>
+&gt;&nbsp;python<br>
 Python&nbsp;2.5.1&nbsp;(r251:54863,&nbsp;Sep&nbsp;22&nbsp;2007,&nbsp;01:43:31)<br>
 [GCC&nbsp;4.2.1&nbsp;(SUSE&nbsp;Linux)]&nbsp;on&nbsp;linux2<br>
 Type&nbsp;"help",&nbsp;"copyright",&nbsp;"credits"&nbsp;or&nbsp;"license"&nbsp;for&nbsp;more&nbsp;information.<br>
@@ -46,12 +51,11 @@ This&nbsp;brings&nbsp;up&nbsp;the&nbsp;unpause&nbsp;dialog.<br>
 &nbsp;<br>
 &nbsp;<br>
 &gt;&gt;&gt;&nbsp;unpause.<a href="#-writeOutput">writeOutput</a>()<br>
+The&nbsp;unpause&nbsp;tool&nbsp;is&nbsp;parsing&nbsp;the&nbsp;file:<br>
 Screw&nbsp;Holder&nbsp;Bottom.stl<br>
-File&nbsp;Screw&nbsp;Holder&nbsp;Bottom.stl&nbsp;is&nbsp;being&nbsp;chain&nbsp;unpaused.<br>
-The&nbsp;unpaused&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw&nbsp;Holder&nbsp;Bottom_unpause.gcode<br>
-&nbsp;<br>
-The&nbsp;equation&nbsp;to&nbsp;set&nbsp;the&nbsp;feedrate&nbsp;is&nbsp;from&nbsp;Shane&nbsp;Hathaway's&nbsp;description&nbsp;at:<br>
-<a href="http://shane.willowrise.com/archives/delay-compensation-in-firmware/">http://shane.willowrise.com/archives/delay-compensation-in-firmware/</a></tt></p>
+..<br>
+The&nbsp;unpause&nbsp;tool&nbsp;has&nbsp;created&nbsp;the&nbsp;file:<br>
+..&nbsp;Screw&nbsp;Holder&nbsp;Bottom_unpause.gcode</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -110,7 +114,7 @@ The&nbsp;equation&nbsp;to&nbsp;set&nbsp;the&nbsp;feedrate&nbsp;is&nbsp;from&nbsp
 
 <dl><dt><a name="UnpauseSkein-getUnpausedArcMovement"><strong>getUnpausedArcMovement</strong></a>(self, line, splitLine)</dt><dd><tt>Get&nbsp;an&nbsp;unpaused&nbsp;arc&nbsp;movement.</tt></dd></dl>
 
-<dl><dt><a name="UnpauseSkein-getUnpausedFeedrateMinute"><strong>getUnpausedFeedrateMinute</strong></a>(self, location, splitLine)</dt><dd><tt>Get&nbsp;the&nbsp;feedrate&nbsp;which&nbsp;will&nbsp;compensate&nbsp;for&nbsp;the&nbsp;pause.</tt></dd></dl>
+<dl><dt><a name="UnpauseSkein-getUnpausedFeedRateMinute"><strong>getUnpausedFeedRateMinute</strong></a>(self, location, splitLine)</dt><dd><tt>Get&nbsp;the&nbsp;feedRate&nbsp;which&nbsp;will&nbsp;compensate&nbsp;for&nbsp;the&nbsp;pause.</tt></dd></dl>
 
 <dl><dt><a name="UnpauseSkein-getUnpausedLinearMovement"><strong>getUnpausedLinearMovement</strong></a>(self, splitLine)</dt><dd><tt>Get&nbsp;an&nbsp;unpaused&nbsp;linear&nbsp;movement.</tt></dd></dl>
 
@@ -127,10 +131,10 @@ The&nbsp;equation&nbsp;to&nbsp;set&nbsp;the&nbsp;feedrate&nbsp;is&nbsp;from&nbsp
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
 <td width="100%"><dl><dt><a name="-getCraftedText"><strong>getCraftedText</strong></a>(fileName, text, unpausePreferences<font color="#909090">=None</font>)</dt><dd><tt>Unpause&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file&nbsp;or&nbsp;text.</tt></dd></dl>
  <dl><dt><a name="-getCraftedTextFromText"><strong>getCraftedTextFromText</strong></a>(gcodeText, unpausePreferences<font color="#909090">=None</font>)</dt><dd><tt>Unpause&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;text.</tt></dd></dl>
- <dl><dt><a name="-getDisplayedPreferences"><strong>getDisplayedPreferences</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;displayed&nbsp;preferences.</tt></dd></dl>
+ <dl><dt><a name="-getPreferencesConstructor"><strong>getPreferencesConstructor</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;preferences&nbsp;constructor.</tt></dd></dl>
  <dl><dt><a name="-getSelectedPlugin"><strong>getSelectedPlugin</strong></a>(unpausePreferences)</dt><dd><tt>Get&nbsp;the&nbsp;selected&nbsp;plugin.</tt></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>Display&nbsp;the&nbsp;unpause&nbsp;dialog.</tt></dd></dl>
- <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName<font color="#909090">=''</font>)</dt><dd><tt>Unpause&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.&nbsp;&nbsp;Chain&nbsp;unpause&nbsp;the&nbsp;gcode&nbsp;if&nbsp;it&nbsp;is&nbsp;not&nbsp;already&nbsp;unpaused.&nbsp;&nbsp;If&nbsp;no&nbsp;fileName&nbsp;is&nbsp;specified,&nbsp;unpause&nbsp;the&nbsp;first&nbsp;unmodified&nbsp;gcode&nbsp;file&nbsp;in&nbsp;this&nbsp;folder.</tt></dd></dl>
+ <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName<font color="#909090">=''</font>)</dt><dd><tt>Unpause&nbsp;a&nbsp;gcode&nbsp;linear&nbsp;move&nbsp;file.</tt></dd></dl>
 </td></tr></table><p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#55aa55">

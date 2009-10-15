@@ -1,6 +1,8 @@
 """
 Analyze is a script to access the plugins which analyze a gcode file.
 
+The plugin buttons which are commonly used are bolded and the ones which are rarely used have normal font weight.
+
 An explanation of the gcodes is at:
 http://reprap.org/bin/view/Main/Arduino_GCode_Interpreter
 
@@ -27,11 +29,11 @@ __license__ = "GPL 3.0"
 
 def getAnalyzePluginFilenames():
 	"Get analyze plugin fileNames."
-	return gcodec.getPluginFilenames( 'analyze_plugins', __file__ )
+	return gcodec.getPluginFilenamesFromDirectoryPath( gcodec.getAbsoluteFolderPath( __file__, 'analyze_plugins' ) )
 
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( AnalyzePreferences() )
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return AnalyzePreferences()
 
 def writeOutput( fileName = '', gcodeText = '' ):
 	"Analyze a gcode file.  If no fileName is specified, comment the first gcode file in this folder that is not modified."
@@ -59,12 +61,12 @@ class AnalyzePreferences:
 		self.analyzeLabel = preferences.LabelDisplay().getFromName( 'Open Preferences: ' )
 		self.archive.append( self.analyzeLabel )
 		importantFilenames = [ 'behold', 'skeinview', 'statistic' ]
-		self.archive += preferences.getDisplayToolButtons( 'analyze_plugins', importantFilenames, __file__, getAnalyzePluginFilenames(), [] )
+		self.archive += preferences.getDisplayToolButtons( gcodec.getAbsoluteFolderPath( __file__, 'analyze_plugins' ), importantFilenames, getAnalyzePluginFilenames(), [] )
 		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Analyzed', '' )
 		self.archive.append( self.fileNameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Analyze'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.analyze.html' )
 
 	def execute( self ):
@@ -79,7 +81,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()

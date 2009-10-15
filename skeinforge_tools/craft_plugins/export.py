@@ -20,21 +20,23 @@ edited in a text editor or a spreadsheet.
 
 An export plugin is a script in the export_plugins folder which has the functions getOuput and writeOutput.
 
-To run export, in a shell type:
-> python export.py
-
-The following examples export the files Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains
-Screw Holder Bottom.stl & export.py.  The function writeOutput checks to see if the text has been exported, if not they call
-getUnpauseChainGcode in unpause.py to unpause the text; once they have the unpaused text, then it exports.
+The following examples export the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains
+Screw Holder Bottom.stl and export.py.
 
 
 > python export.py
-This brings up the dialog, after clicking 'Export', the following is printed:
-File Screw Holder Bottom.stl is being chain exported.
-The exported file is saved as Screw Holder Bottom_export.gcode
+This brings up the export dialog.
 
 
->python
+> python export.py Screw Holder Bottom.stl
+The export tool is parsing the file:
+Screw Holder Bottom.stl
+..
+The export tool has created the file:
+.. Screw Holder Bottom_export.gcode
+
+
+> python
 Python 2.5.1 (r251:54863, Sep 22 2007, 01:43:31)
 [GCC 4.2.1 (SUSE Linux)] on linux2
 Type "help", "copyright", "credits" or "license" for more information.
@@ -44,9 +46,11 @@ This brings up the export dialog.
 
 
 >>> export.writeOutput()
+The export tool is parsing the file:
 Screw Holder Bottom.stl
-File Screw Holder Bottom.stl is being chain exported.
-The exported file is saved as Screw Holder Bottom_export.gcode
+..
+The export tool has created the file:
+.. Screw Holder Bottom_export.gcode
 
 """
 
@@ -54,7 +58,6 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from datetime import date
 from skeinforge_tools import analyze
 from skeinforge_tools import polyfile
 from skeinforge_tools.skeinforge_utilities import consecution
@@ -74,6 +77,16 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
+def getCraftedTextFromText( gcodeText, exportPreferences = None ):
+	"Export a gcode linear move text."
+	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'export' ):
+		return gcodeText
+	if exportPreferences == None:
+		exportPreferences = preferences.getReadPreferences( ExportPreferences() )
+	if not exportPreferences.activateExport.value:
+		return gcodeText
+	return ExportSkein().getCraftedGcode( exportPreferences, gcodeText )
+
 def getDistanceGcode( exportText ):
 	"Get gcode lines with distance variable added.G2 X-0.148 Y-0.062 Z0.0 I-0.148 J0.148G2 X-0.148 Y-0.062 Z0.0 R0.21"
 	lines = gcodec.getTextLines( exportText )
@@ -91,23 +104,13 @@ def getDistanceGcode( exportText ):
 			oldLocation = location
 	return exportText
 
-def getCraftedTextFromText( gcodeText, exportPreferences = None ):
-	"Export a gcode linear move text."
-	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'export' ):
-		return gcodeText
-	if exportPreferences == None:
-		exportPreferences = preferences.getReadPreferences( ExportPreferences() )
-	if not exportPreferences.activateExport.value:
-		return gcodeText
-	return ExportSkein().getCraftedGcode( exportPreferences, gcodeText )
-
-def getDisplayedPreferences():
-	"Get the displayed preferences."
-	return preferences.getDisplayedDialogFromConstructor( ExportPreferences() )
+def getPreferencesConstructor():
+	"Get the preferences constructor."
+	return ExportPreferences()
 
 def getReplaced( exportText ):
 	"Get text with words replaced according to replace.csv file."
-	replaceText = preferences.getFileInGivenPreferencesDirectory( os.path.dirname( __file__ ), 'Replace.csv' )
+	replaceText = preferences.getFileInAlterationsOrGivenDirectory( os.path.dirname( __file__ ), 'Replace.csv' )
 	if replaceText == '':
 		return exportText
 	lines = gcodec.getTextLines( replaceText )
@@ -119,11 +122,15 @@ def getReplaced( exportText ):
 			exportText = exportText.replace( splitLine[ 0 ], splitLine[ 1 ] )
 	return exportText
 
+def getSelectedPluginModule( plugins ):
+	"Get the selected plugin module."
+	for plugin in plugins:
+		if plugin.value:
+			return gcodec.getModuleWithPath( plugin.name, plugin.directoryPath )
+	return None
+
 def writeOutput( fileName = '' ):
-	"""Export a gcode linear move file.  Chain export the gcode if it is not already exported.
-	If no fileName is specified, export the first unmodified gcode file in this folder."""
-	if os.path.abspath( __file__ ) == '/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/craft_plugins/export.py': #check to see if this script is on Enrique's computer
-		gcodec.writeFileText( gcodec.getVersionFileName(), date.today().isoformat() )
+	"Export a gcode linear move file."
 	fileName = interpret.getFirstTranslatorFileNameUnmodified( fileName )
 	if fileName == '':
 		return
@@ -140,7 +147,7 @@ def writeOutput( fileName = '' ):
 	analyze.writeOutput( suffixFilename, gcodeText )
 	exportChainGcode = getCraftedTextFromText( gcodeText, exportPreferences )
 	replacableExportChainGcode = None
-	selectedPluginModule = preferences.getSelectedPluginModule( 'export_plugins', __file__, exportPreferences.exportPlugins )
+	selectedPluginModule = getSelectedPluginModule( exportPreferences.exportPlugins )
 	if selectedPluginModule == None:
 		replacableExportChainGcode = exportChainGcode
 	else:
@@ -171,15 +178,25 @@ class ExportPreferences:
 		self.archive.append( self.alsoSendOutputTo )
 		self.deleteComments = preferences.BooleanPreference().getFromValue( 'Delete Comments', True )
 		self.archive.append( self.deleteComments )
-		exportPluginFilenames = gcodec.getPluginFilenames( 'export_plugins', __file__ )
+		exportPluginsFolderPath = gcodec.getAbsoluteFolderPath( __file__, 'export_plugins' )
+		exportStaticDirectoryPath = os.path.join( exportPluginsFolderPath, 'static_plugins' )
+		exportPluginFilenames = gcodec.getPluginFilenamesFromDirectoryPath( exportPluginsFolderPath )
+		exportStaticPluginFilenames = gcodec.getPluginFilenamesFromDirectoryPath( exportStaticDirectoryPath )
 		self.exportLabel = preferences.LabelDisplay().getFromName( 'Export Operations: ' )
 		self.archive.append( self.exportLabel )
 		self.exportOperations = []
 		self.exportPlugins = []
 		exportRadio = []
 		self.doNotChangeOutput = preferences.RadioCapitalized().getFromRadio( 'Do Not Change Output', exportRadio, True )
+		self.doNotChangeOutput.directoryPath = None
+		allExportPluginFilenames = exportPluginFilenames + exportStaticPluginFilenames
 		for exportPluginFilename in exportPluginFilenames:
 			exportPlugin = preferences.RadioCapitalized().getFromRadio( exportPluginFilename, exportRadio, False )
+			exportPlugin.directoryPath = exportPluginsFolderPath
+			self.exportPlugins.append( exportPlugin )
+		for exportStaticPluginFilename in exportStaticPluginFilenames:
+			exportPlugin = preferences.RadioCapitalized().getFromRadio( exportStaticPluginFilename, exportRadio, False )
+			exportPlugin.directoryPath = exportStaticDirectoryPath
 			self.exportPlugins.append( exportPlugin )
 		self.exportOperations = [ self.doNotChangeOutput ]
 		self.exportOperations += self.exportPlugins
@@ -187,12 +204,9 @@ class ExportPreferences:
 		self.exportOperationsButtons = []
 		for exportOperation in self.exportOperations:
 			self.exportOperationsButtons.append( exportOperation )
-			if exportOperation != self.doNotChangeOutput:
-				pluginModule = gcodec.getModule( exportOperation.name, 'export_plugins', __file__ )
-				if pluginModule != None:
-					if pluginModule.isArchivable():
-						displayToolButtonBesidePrevious = preferences.DisplayToolButtonBesidePrevious().getFromFolderName( 'export_plugins', False, __file__, exportOperation.name, 0 )
-						self.exportOperationsButtons.append( displayToolButtonBesidePrevious )
+			if exportOperation.directoryPath == exportPluginsFolderPath:
+				displayToolButtonBesidePrevious = preferences.DisplayToolButtonBesidePrevious().getFromFolderPath( exportPluginsFolderPath, False, exportOperation.name, False )
+				self.exportOperationsButtons.append( displayToolButtonBesidePrevious )
 		self.archive += self.exportOperationsButtons
 		self.fileExtension = preferences.StringPreference().getFromValue( 'File Extension:', 'gcode' )
 		self.archive.append( self.fileExtension )
@@ -200,7 +214,7 @@ class ExportPreferences:
 		self.archive.append( self.fileNameInput )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Export'
-		self.saveTitle = 'Save Preferences'
+		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.export.html' )
 
 	def execute( self ):
@@ -272,7 +286,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		getDisplayedPreferences().root.mainloop()
+		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
 
 if __name__ == "__main__":
 	main()
