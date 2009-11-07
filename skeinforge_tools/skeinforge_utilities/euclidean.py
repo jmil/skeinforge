@@ -3,8 +3,7 @@ Euclidean is a collection of python utilities for complex numbers, paths, polygo
 
 To use euclidean, install python 2.x on your machine, which is avaliable from http://www.python.org/download/
 
-Then in the folder which euclidean is in, type 'python' in a shell to run the python interpreter.  Finally type
-'import euclidean' to import these utilities and 'from vector3 import Vector3' to import the Vector3 class.
+Then in the folder which euclidean is in, type 'python' in a shell to run the python interpreter.  Finally type 'import euclidean' to import these utilities and 'from vector3 import Vector3' to import the Vector3 class.
 
 
 Below are examples of euclidean use.
@@ -41,7 +40,7 @@ __license__ = "GPL 3.0"
 
 
 def addCircleToPixelTable( pixelTable, pointComplex ):
-	"Add pixel to the pixel table."
+	"Add circle to the pixel table."
 	xStep = int( round( pointComplex.real ) )
 	yStep = int( round( pointComplex.imag ) )
 	for xCircleStep in xrange( xStep - 2, xStep + 3 ):
@@ -49,13 +48,21 @@ def addCircleToPixelTable( pixelTable, pointComplex ):
 			stepKey = ( xCircleStep, yCircleStep )
 			pixelTable[ stepKey ] = None
 
+def addElementToListTable( element, key, listTable ):
+	"Add an element to the list table."
+	if key in listTable:
+		listTable[ key ].append( element )
+	else:
+		listTable[ key ] = [ element ]
+
 def addElementToPixelList( element, pixelTable, x, y ):
 	"Add an element to the pixel list."
 	stepKey = getStepKey( x, y )
-	if stepKey in pixelTable:
-		pixelTable[ stepKey ].append( element )
-	else:
-		pixelTable[ stepKey ] = [ element ]
+	addElementToListTable( element, stepKey, pixelTable )
+
+def addElementToPixelListFromPoint( element, pixelTable, point ):
+	"Add an element to the pixel list."
+	addElementToPixelList( element, pixelTable, int( round( point.real ) ), int( round( point.imag ) ) )
 
 def addLoopToPixelTable( loop, pixelTable, width ):
 	"Add loop to the pixel table."
@@ -170,7 +177,34 @@ def addToThreadsRemoveFromSurroundings( oldOrderedLocation, surroundingLoops, sk
 	while len( surroundingLoops ) > 0:
 		getTransferClosestSurroundingLoop( oldOrderedLocation, surroundingLoops, skein )
 
-def addXIntersectionIndexes( loop, solidIndex, xIntersectionIndexList, y ):
+def addXIntersectionIndexesFromLoop( frontOverWidth, loop, solidIndex, xIntersectionIndexLists, width, yList ):
+	"Add the x intersection indexes for a loop."
+	for pointIndex in xrange( len( loop ) ):
+		pointBegin = loop[ pointIndex ]
+		pointEnd = loop[ ( pointIndex + 1 ) % len( loop ) ]
+		if pointBegin.imag > pointEnd.imag:
+			pointOriginal = pointBegin
+			pointBegin = pointEnd
+			pointEnd = pointOriginal
+		fillBegin = int( math.ceil( pointBegin.imag / width - frontOverWidth ) )
+		fillBegin = max( 0, fillBegin )
+		fillEnd = int( math.ceil( pointEnd.imag / width - frontOverWidth ) )
+		fillEnd = min( len( xIntersectionIndexLists ), fillEnd )
+		if fillEnd > fillBegin:
+			secondMinusFirstComplex = pointEnd - pointBegin
+			secondMinusFirstImaginaryOverReal = secondMinusFirstComplex.real / secondMinusFirstComplex.imag
+			beginRealMinusImaginary = pointBegin.real - pointBegin.imag * secondMinusFirstImaginaryOverReal
+			for fillLine in xrange( fillBegin, fillEnd ):
+				xIntersection = yList[ fillLine ] * secondMinusFirstImaginaryOverReal + beginRealMinusImaginary
+				xIntersectionIndexList = xIntersectionIndexLists[ fillLine ]
+				xIntersectionIndexList.append( XIntersectionIndex( solidIndex, xIntersection ) )
+
+def addXIntersectionIndexesFromLoops( frontOverWidth, loops, solidIndex, xIntersectionIndexLists, width, yList ):
+	"Add the x intersection indexes for a loop."
+	for loop in loops:
+		addXIntersectionIndexesFromLoop( frontOverWidth, loop, solidIndex, xIntersectionIndexLists, width, yList )
+
+def addXIntersectionIndexesFromLoopY( loop, solidIndex, xIntersectionIndexList, y ):
 	"Add the x intersection indexes for a loop."
 	for pointIndex in xrange( len( loop ) ):
 		pointFirst = loop[ pointIndex ]
@@ -181,17 +215,17 @@ def addXIntersectionIndexes( loop, solidIndex, xIntersectionIndexList, y ):
 			xIntersection = getXIntersection( pointFirst, pointSecond, y )
 			xIntersectionIndexList.append( XIntersectionIndex( solidIndex, xIntersection ) )
 
-def addXIntersectionIndexesFromLoopLists( loopLists, xIntersectionIndexList, y ):
+def addXIntersectionIndexesFromLoopListsY( loopLists, xIntersectionIndexList, y ):
 	"Add the x intersection indexes for the loop lists."
 	for loopListIndex in xrange( len( loopLists ) ):
 		loopList = loopLists[ loopListIndex ]
 		for loop in loopList:
-			addXIntersectionIndexes( loop, loopListIndex, xIntersectionIndexList, y )
+			addXIntersectionIndexesFromLoopY( loop, loopListIndex, xIntersectionIndexList, y )
 
-def addXIntersectionIndexesFromLoops( loops, solidIndex, xIntersectionIndexList, y ):
+def addXIntersectionIndexesFromLoopsY( loops, solidIndex, xIntersectionIndexList, y ):
 	"Add the x intersection indexes for the loops."
 	for loop in loops:
-		addXIntersectionIndexes( loop, solidIndex, xIntersectionIndexList, y )
+		addXIntersectionIndexesFromLoopY( loop, solidIndex, xIntersectionIndexList, y )
 
 def addXIntersections( loop, xIntersections, y ):
 	"Add the x intersections for a loop."
@@ -217,11 +251,7 @@ def compareSegmentLength( endpoint, otherEndpoint ):
 	return 0
 
 def getAngleAroundZAxisDifference( subtractFromVec3, subtractVec3 ):
-	"""Get the angle around the Z axis difference between a pair of Vector3s.
-
-	Keyword arguments:
-	subtractFromVec3 -- Vector3 whose angle will be subtracted from
-	subtractVec3 -- Vector3 whose angle will be subtracted"""
+	"Get the angle around the Z axis difference between a pair of Vector3s."
 	subtractVectorMirror = complex( subtractVec3.x , - subtractVec3.y )
 	differenceVector = getRoundZAxisByPlaneAngle( subtractVectorMirror, subtractFromVec3 )
 	return math.atan2( differenceVector.y, differenceVector.x )
@@ -372,6 +402,22 @@ def getFrontOfLoops( loops ):
 		print( "This should never happen, there are no loops for getFrontOfLoops in euclidean." )
 	return front
 
+def getFrontOverWidthAddXListYList( front, loopLists, numberOfLines, xIntersectionIndexLists, width, yList ):
+	"Get the front over width and add the x intersection index lists and ylist."
+	frontOverWidth = getFrontOverWidthAddYList( front, numberOfLines, xIntersectionIndexLists, width, yList )
+	for loopListIndex in xrange( len( loopLists ) ):
+		loopList = loopLists[ loopListIndex ]
+		addXIntersectionIndexesFromLoops( frontOverWidth, loopList, loopListIndex, xIntersectionIndexLists, width, yList )
+	return frontOverWidth
+
+def getFrontOverWidthAddYList( front, numberOfLines, xIntersectionIndexLists, width, yList ):
+	"Get the front over width and add the x intersection index lists and ylist."
+	frontOverWidth = front / width
+	for fillLine in xrange( numberOfLines ):
+		yList.append( front + float( fillLine ) * width )
+		xIntersectionIndexLists.append( [] )
+	return frontOverWidth
+
 def getHalfSimplifiedLoop( loopComplex, radius, remainder ):
 	"Get the loop with half of the points inside the channel removed."
 	if len( loopComplex ) < 2:
@@ -403,6 +449,19 @@ def getHalfSimplifiedPath( path, radius, remainder ):
 		elif not isWithinChannel( channelRadius, pointIndex, path ):
 			simplified.append( point )
 	return simplified
+
+def getHorizontalSegmentListsFromLoopLists( alreadyFilledArounds, front, numberOfLines, rotatedFillLoops, width ):
+	"Get horizontal segment lists inside loops."
+	xIntersectionIndexLists = []
+	yList = []
+	frontOverWidth = getFrontOverWidthAddXListYList( front, alreadyFilledArounds, numberOfLines, xIntersectionIndexLists, width, yList )
+	addXIntersectionIndexesFromLoops( frontOverWidth, rotatedFillLoops, - 1, xIntersectionIndexLists, width, yList )
+	horizontalSegmentLists = []
+	for xIntersectionIndexListIndex in xrange( len( xIntersectionIndexLists ) ):
+		xIntersectionIndexList = xIntersectionIndexLists[ xIntersectionIndexListIndex ]
+		lineSegments = getSegmentsFromXIntersectionIndexes( xIntersectionIndexList, yList[ xIntersectionIndexListIndex ] )
+		horizontalSegmentLists.append( lineSegments )
+	return horizontalSegmentLists
 
 def getInsidesAddToOutsides( loops, outsides ):
 	"Add loops to either the insides or outsides."
@@ -441,6 +500,13 @@ def getLeftPoint( pointComplexes ):
 			leftmost = pointComplex.real
 			leftPointComplex = pointComplex
 	return leftPointComplex
+
+def getListTableElements( listTable ):
+	"Get all the element in a list table."
+	listTableElements = []
+	for listTableValue in listTable.values():
+		listTableElements += listTableValue
+	return listTableElements
 
 def getLoopStartingNearest( extrusionHalfWidth, location, loop ):
 	"Add to threads from the last location from loop."
@@ -579,14 +645,33 @@ def getPathsFromEndpoints( endpoints, fillInset, pixelTable, width ):
 				otherEndpoint = endpointFirst.otherEndpoint
 	addPointToPath( path, pixelTable, endpointFirst.point, width )
 	addPointToPath( path, pixelTable, otherEndpoint.point, width )
-	while len( endpoints ) > 1:
+	oneOverEndpointWidth = 0.2 / fillInset
+	endpointTable = {}
+	for endpoint in endpoints:
+		addElementToPixelListFromPoint( endpoint, endpointTable, endpoint.point * oneOverEndpointWidth )
+	while len( endpointTable ) > 0:
+		if len( endpointTable ) == 1:
+			if len( endpointTable.values()[ 0 ] ) < 2:
+				return
+		endpoints = getSquareValuesFromPoint( endpointTable, otherEndpoint.point * oneOverEndpointWidth )
 		nextEndpoint = otherEndpoint.getNearestMiss( endpoints, path, pixelTable, width )
 		if nextEndpoint == None:
 			path = []
 			paths.append( path )
+			endpoints = getListTableElements( endpointTable )
 			nextEndpoint = otherEndpoint.getNearestEndpoint( endpoints )
+# this commented code should be faster than the getListTableElements code, but it isn't, someday a spiral algorithim could be tried
+#			endpoints = getSquareValuesFromPoint( endpointTable, otherEndpoint.point * oneOverEndpointWidth )
+#			nextEndpoint = otherEndpoint.getNearestEndpoint( endpoints )
+#			if nextEndpoint == None:
+#				endpoints = []
+#				for endpointTableValue in endpointTable.values():
+#					endpoints.append( endpointTableValue[ 0 ] )
+#				nextEndpoint = otherEndpoint.getNearestEndpoint( endpoints )
+#				endpoints = getSquareValuesFromPoint( endpointTable, nextEndpoint.point * oneOverEndpointWidth )
+#				nextEndpoint = otherEndpoint.getNearestEndpoint( endpoints )
 		addPointToPath( path, pixelTable, nextEndpoint.point, width )
-		endpoints.remove( nextEndpoint )
+		removeElementFromPixelListFromPoint( nextEndpoint, endpointTable, nextEndpoint.point * oneOverEndpointWidth )
 		otherEndpoint = nextEndpoint.otherEndpoint
 		hop = nextEndpoint.getHop( fillInset, path )
 		if hop != None:
@@ -596,7 +681,7 @@ def getPathsFromEndpoints( endpoints, fillInset, pixelTable, width ):
 			path = [ hop ]
 			paths.append( path )
 		addPointToPath( path, pixelTable, otherEndpoint.point, width )
-		endpoints.remove( otherEndpoint )
+		removeElementFromPixelListFromPoint( otherEndpoint, endpointTable, otherEndpoint.point * oneOverEndpointWidth )
 	return paths
 
 def getPlaneDot( vec3First, vec3Second ):
@@ -746,9 +831,17 @@ def getSquareValues( pixelTable, x, y ):
 				squareValues += pixelTable[ stepKey ]
 	return squareValues
 
+def getSquareValuesFromPoint( pixelTable, point ):
+	"Get a list of the values in a square around the point."
+	return getSquareValues( pixelTable, int( round( point.real ) ), int( round( point.imag ) ) )
+
 def getStepKey( x, y ):
 	"Get step key for x and y."
 	return ( x, y )
+
+def getStepKeyFromPoint( point ):
+	"Get step key for the point."
+	return ( int( round( point.real ) ), int( round( point.imag ) ) )
 
 def getThreeSignificantFigures( number ):
 	"Get number rounded to three significant figures as a string."
@@ -757,7 +850,7 @@ def getThreeSignificantFigures( number ):
 		return getRoundedToDecimalPlacesString( 1, number )
 	if absoluteNumber < 0.000000001:
 		return getRoundedToDecimalPlacesString( 12, number )
-	return getRoundedToDecimalPlacesString( 2 - math.floor( math.log10( absoluteNumber ) ), number )
+	return getRoundedToDecimalPlacesString( 1 - math.floor( math.log10( absoluteNumber ) ), number )
 
 def getTransferClosestSurroundingLoop( oldOrderedLocation, remainingSurroundingLoops, skein ):
 	"Get and transfer the closest remaining surrounding loop."
@@ -798,7 +891,7 @@ def getXIntersection( firstComplex, secondComplex, y ):
 	"Get where the line crosses y."
 	secondMinusFirstComplex = secondComplex - firstComplex
 	yMinusFirst = y - firstComplex.imag
-	return yMinusFirst / secondMinusFirstComplex.imag * secondMinusFirstComplex.real + firstComplex.real
+	return yMinusFirst * secondMinusFirstComplex.real / secondMinusFirstComplex.imag + firstComplex.real
 
 def getXIntersectionsFromIntersections( xIntersectionIndexList ):
 	"Get x intersections from the x intersection index list, in other words subtract non negative intersections from negatives."
@@ -823,13 +916,6 @@ def getXYComplexFromVector3( vector3 ):
 	if vector3 == None:
 		return None
 	return vector3.dropAxis( 2 )
-
-def getWiddershinsDotGiven( complexFirst, complexSecond ):
-	"Get the magintude of the positive dot product plus one of the x and y components of a pair of complexes, with the reversed sign of the cross product."
-	dot = getDotProductPlusOne( complexFirst, complexSecond )
-	if getCrossProduct( complexFirst, complexSecond ) >= 0.0:
-		return - dot
-	return dot
 
 def getZComponentCrossProduct( vec3First, vec3Second ):
 	"Get z component cross product of a pair of Vector3s."
@@ -978,6 +1064,22 @@ def isXSegmentIntersectingPaths( paths, segmentFirstX, segmentSecondX, segmentYM
 			if isLineIntersectingInsideXSegment( segmentFirstX, segmentSecondX, pointFirst, pointSecond, y ):
 				return True
 	return False
+
+def removeElementFromListTable( element, key, listTable ):
+	"Remove an element from the list table."
+	if key not in listTable:
+		return
+	elementList = listTable[ key ]
+	if len( elementList ) < 2:
+		del listTable[ key ]
+		return
+	if element in elementList:
+		elementList.remove( element )
+
+def removeElementFromPixelListFromPoint( element, pixelTable, point ):
+	"Remove an element from the pixel list."
+	stepKey = getStepKeyFromPoint( point )
+	removeElementFromListTable( element, stepKey, pixelTable )
 
 def removePixelTableFromPixelTable( pixelTableToBeRemoved, pixelTableToBeRemovedFrom ):
 	"Remove pixel from the pixel table."
@@ -1278,4 +1380,4 @@ class XIntersectionIndex:
 
 	def __repr__( self ):
 		"Get the string representation of this x intersection."
-		return '%s, %s' % ( self.index, self.x )
+		return 'XIntersectionIndex index %s; x %s ' % ( self.index, self.x )

@@ -1,20 +1,15 @@
 """
 Multiply is a script to multiply the shape into an array of copies arranged in a table.
 
-The default 'Activate Multiply' checkbox is on.  When it is on, the functions described below will work, when it is off, the
-functions will not be called.
+The default 'Activate Multiply' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions will not be called.
 
 The center of the shape will be moved to the "Center X" and "Center Y" coordinates.
 
-The "Number of Columns" preference is the number of columns in the array table.  The "Number of Rows" is the number of rows
-in the table.  The "Separation over Extrusion Width" is the ratio of separation between the shape copies over the extrusion width.
+The "Number of Columns" preference is the number of columns in the array table.  The "Number of Rows" is the number of rows in the table.  The "Separation over Extrusion Width" is the ratio of separation between the shape copies over the extrusion width.
 
-Besides using the multiply tool, another way of printing many copies of the model is to duplicate the model in Art of Illusion,
-however many times you want, with the appropriate offsets.  Then you can either use the Join Objects script in the scripts
-submenu to create a combined shape or you can export the whole scene as an xml file, which skeinforge can then slice.
+Besides using the multiply tool, another way of printing many copies of the model is to duplicate the model in Art of Illusion, however many times you want, with the appropriate offsets.  Then you can either use the Join Objects script in the scripts submenu to create a combined shape or you can export the whole scene as an xml file, which skeinforge can then slice.
 
-The following examples multiply the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
-and multiply.py.
+The following examples multiply the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and multiply.py.
 
 
 > python multiply.py
@@ -59,7 +54,7 @@ from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools.skeinforge_utilities import interpret
-from skeinforge_tools import polyfile
+from skeinforge_tools.meta_plugins import polyfile
 import math
 import sys
 
@@ -69,23 +64,23 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def getCraftedText( fileName, text = '', multiplyPreferences = None ):
+def getCraftedText( fileName, text = '', multiplyRepository = None ):
 	"Multiply the fill file or text."
-	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), multiplyPreferences )
+	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), multiplyRepository )
 
-def getCraftedTextFromText( gcodeText, multiplyPreferences = None ):
+def getCraftedTextFromText( gcodeText, multiplyRepository = None ):
 	"Multiply the fill text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'multiply' ):
 		return gcodeText
-	if multiplyPreferences == None:
-		multiplyPreferences = preferences.getReadPreferences( MultiplyPreferences() )
-	if not multiplyPreferences.activateMultiply.value:
+	if multiplyRepository == None:
+		multiplyRepository = preferences.getReadRepository( MultiplyRepository() )
+	if not multiplyRepository.activateMultiply.value:
 		return gcodeText
-	return MultiplySkein().getCraftedGcode( gcodeText, multiplyPreferences )
+	return MultiplySkein().getCraftedGcode( gcodeText, multiplyRepository )
 
-def getPreferencesConstructor():
-	"Get the preferences constructor."
-	return MultiplyPreferences()
+def getRepositoryConstructor():
+	"Get the repository constructor."
+	return MultiplyRepository()
 
 def writeOutput( fileName = '' ):
 	"Multiply a gcode linear move file."
@@ -94,29 +89,21 @@ def writeOutput( fileName = '' ):
 		consecution.writeChainTextWithNounMessage( fileName, 'multiply' )
 
 
-class MultiplyPreferences:
+class MultiplyRepository:
 	"A class to handle the multiply preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
-		self.archive = []
-		self.activateMultiply = preferences.BooleanPreference().getFromValue( 'Activate Multiply:', False )
-		self.archive.append( self.activateMultiply )
-		self.centerX = preferences.FloatPreference().getFromValue( 'Center X (mm):', 0.0 )
-		self.archive.append( self.centerX )
-		self.centerY = preferences.FloatPreference().getFromValue( 'Center Y (mm):', 0.0 )
-		self.archive.append( self.centerY )
-		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Multiplied', '' )
-		self.archive.append( self.fileNameInput )
-		self.numberOfColumns = preferences.IntPreference().getFromValue( 'Number of Columns (integer):', 1 )
-		self.archive.append( self.numberOfColumns )
-		self.numberOfRows = preferences.IntPreference().getFromValue( 'Number of Rows (integer):', 1 )
-		self.archive.append( self.numberOfRows )
-		self.separationOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Separation over Extrusion Width (ratio):', 15.0 )
-		self.archive.append( self.separationOverExtrusionWidth )
+		preferences.addListsToRepository( self )
+		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Multiplied', self, '' )
+		self.activateMultiply = preferences.BooleanPreference().getFromValue( 'Activate Multiply:', self, False )
+		self.centerX = preferences.FloatPreference().getFromValue( 'Center X (mm):', self, 0.0 )
+		self.centerY = preferences.FloatPreference().getFromValue( 'Center Y (mm):', self, 0.0 )
+		self.numberOfColumns = preferences.IntPreference().getFromValue( 'Number of Columns (integer):', self, 1 )
+		self.numberOfRows = preferences.IntPreference().getFromValue( 'Number of Rows (integer):', self, 1 )
+		self.separationOverExtrusionWidth = preferences.FloatPreference().getFromValue( 'Separation over Extrusion Width (ratio):', self, 15.0 )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Multiply'
-		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.multiply.html' )
 
 	def execute( self ):
@@ -155,11 +142,11 @@ class MultiplySkein:
 		"Add multiplied layer to the output."
 		self.addRemoveThroughLayer()
 		offset = self.centerOffset - self.arrayCenter - self.shapeCenter
-		for rowIndex in xrange( self.multiplyPreferences.numberOfRows.value ):
+		for rowIndex in xrange( self.multiplyRepository.numberOfRows.value ):
 			yRowOffset = float( rowIndex ) * self.extentPlusSeparation.imag
 			if self.layerIndex % 2 == 1:
 				yRowOffset = self.arrayExtent.imag - yRowOffset
-			for columnIndex in xrange( self.multiplyPreferences.numberOfColumns.value ):
+			for columnIndex in xrange( self.multiplyRepository.numberOfColumns.value ):
 				xColumnOffset = float( columnIndex ) * self.extentPlusSeparation.real
 				if self.rowIndex % 2 == 1:
 					xColumnOffset = self.arrayExtent.real - xColumnOffset
@@ -181,12 +168,12 @@ class MultiplySkein:
 				self.layerLines = self.layerLines[ layerLineIndex + 1 : ]
 				return
 
-	def getCraftedGcode( self, gcodeText, multiplyPreferences ):
+	def getCraftedGcode( self, gcodeText, multiplyRepository ):
 		"Parse gcode text and store the multiply gcode."
-		self.centerOffset = complex( multiplyPreferences.centerX.value, multiplyPreferences.centerY.value )
-		self.multiplyPreferences = multiplyPreferences
-		self.numberOfColumns = multiplyPreferences.numberOfColumns.value
-		self.numberOfRows = multiplyPreferences.numberOfRows.value
+		self.centerOffset = complex( multiplyRepository.centerX.value, multiplyRepository.centerY.value )
+		self.multiplyRepository = multiplyRepository
+		self.numberOfColumns = multiplyRepository.numberOfColumns.value
+		self.numberOfRows = multiplyRepository.numberOfRows.value
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.parseInitialization()
 		self.setCorners()
@@ -247,7 +234,7 @@ class MultiplySkein:
 		cornerLowComplex = euclidean.getMinimumFromPoints( locationComplexes )
 		self.extent = cornerHighComplex - cornerLowComplex
 		self.shapeCenter = 0.5 * ( cornerHighComplex + cornerLowComplex )
-		self.separation = self.multiplyPreferences.separationOverExtrusionWidth.value * self.absolutePerimeterWidth
+		self.separation = self.multiplyRepository.separationOverExtrusionWidth.value * self.absolutePerimeterWidth
 		self.extentPlusSeparation = self.extent + complex( self.separation, self.separation )
 		columnsMinusOne = self.numberOfColumns - 1
 		rowsMinusOne = self.numberOfRows - 1
@@ -260,7 +247,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
+		preferences.startMainLoopFromConstructor( getRepositoryConstructor() )
 
 if __name__ == "__main__":
 	main()

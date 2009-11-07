@@ -3,8 +3,7 @@ Triangle Mesh holds the faces and edges of a triangular mesh.
 
 It can read from and write to a GNU Triangulated Surface (.gts) file.
 
-The following examples carve the GNU Triangulated Surface file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which
-contains Screw Holder Bottom.stl and triangle_mesh.py.
+The following examples carve the GNU Triangulated Surface file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and triangle_mesh.py.
 
 
 >python
@@ -202,24 +201,45 @@ def getDoubledRoundZ( overhangingSegment, segmentRoundZ ):
 	roundZLength = abs( roundZ )
 	return roundZ * roundZ / roundZLength
 
-def getInclusiveLoops( allPoints, corners, importRadius, isInteriorWanted ):
+def getInclusiveLoops( allPoints, corners, importRadius, isInteriorWanted = True ):
 	"Get loops which include most of the points."
 	circleNodes = intercircle.getCircleNodesFromPoints( allPoints, importRadius )
 	centers = intercircle.getCentersFromCircleNodes( circleNodes )
-	loops = intercircle.getLoopsFromLoopsDirection( True, centers )
+	clockwiseLoops = []
+	inclusiveLoops = []
+	tinyRadius = 0.03 * importRadius
+	for loop in centers:
+		if len( loop ) > 2:
+			insetPoint = getInsetPoint( loop, tinyRadius )
+			if getNumberOfOddIntersectionsFromLoops( insetPoint, centers ) % 4 == 0:
+				inclusiveLoops.append( loop )
+			else:
+				clockwiseLoops.append( loop )
 	pointTable = {}
-	for loop in loops:
-		addLoopToPointTable( loop, pointTable )
+	for inclusiveLoop in inclusiveLoops:
+		addLoopToPointTable( inclusiveLoop, pointTable )
 	if not isInteriorWanted:
-		return getLoopsWithCorners( corners, importRadius, loops, pointTable )
-	clockwiseLoops = getLoopsInOrderOfArea( compareAreaDescending, intercircle.getLoopsFromLoopsDirection( False, centers ) )
-	clockwiseLoops.reverse()
+		return getLoopsWithCorners( corners, importRadius, inclusiveLoops, pointTable )
+	clockwiseLoops = getLoopsInOrderOfArea( compareAreaDescending, clockwiseLoops )
 	for clockwiseLoop in clockwiseLoops:
-		if len( clockwiseLoop ) > 2 and euclidean.getMaximumSpan( clockwiseLoop ) > 2.5 * importRadius:
-			if getOverlapRatio( clockwiseLoop, pointTable ) < 0.45:
-				loops.append( clockwiseLoop )
+			if getOverlapRatio( clockwiseLoop, pointTable ) < 0.1:
+				inclusiveLoops.append( clockwiseLoop )
 				addLoopToPointTable( clockwiseLoop, pointTable )
-	return getLoopsWithCorners( corners, importRadius, loops, pointTable )
+	return getLoopsWithCorners( corners, importRadius, inclusiveLoops, pointTable )
+
+def getInsetPoint( loop, tinyRadius ):
+	"Get the inset vertex."
+	pointIndex = getWideAnglePointIndex( loop )
+	point = loop[ pointIndex % len( loop ) ]
+	afterPoint = loop[ ( pointIndex + 1 ) % len( loop ) ]
+	beforePoint = loop[ ( pointIndex - 1 ) % len( loop ) ]
+	afterSegmentNormalized = euclidean.getNormalized( afterPoint - point )
+	beforeSegmentNormalized = euclidean.getNormalized( beforePoint - point )
+	afterClockwise = complex( afterSegmentNormalized.imag, - afterSegmentNormalized.real )
+	beforeWiddershins = complex( - beforeSegmentNormalized.imag, beforeSegmentNormalized.real )
+	midpoint = afterClockwise + beforeWiddershins
+	midpointNormalized = midpoint / abs( midpoint )
+	return point + midpointNormalized * tinyRadius
 
 def getLoopsFromCorrectMesh( edges, faces, vertices, z ):
 	"Get loops from a carve of a correct mesh."
@@ -268,7 +288,7 @@ def getLoopsFromUnprovenMesh( edges, faces, importRadius, vertices, z ):
 	for edgePairValue in edgePairTable.values():
 		addPointsAtZ( edgePairValue, allPoints, importRadius, vertices, z )
 	pointTable = {}
-	return getInclusiveLoops( allPoints, corners, importRadius, True )
+	return getInclusiveLoops( allPoints, corners, importRadius )
 
 def getLoopsInOrderOfArea( compareAreaFunction, loops ):
 	"Get the loops in the order of area according to the compare function."
@@ -310,6 +330,13 @@ def getNextEdgeIndexAroundZ( edge, faces, remainingEdgeTable ):
 				return edgeIndex
 	return - 1
 
+def getNumberOfOddIntersectionsFromLoops( leftPoint, loops ):
+	"Get the number of odd intersections with the loops."
+	totalNumberOfOddIntersections = 0
+	for loop in loops:
+		totalNumberOfOddIntersections += ( euclidean.getNumberOfIntersectionsToLeft( loop, leftPoint ) % 2 )
+	return totalNumberOfOddIntersections
+
 def getOverhangDirection( belowOutsetLoops, segmentBegin, segmentEnd ):
 	"Add to span direction from the endpoint segments which overhang the layer below."
 	segment = segmentEnd - segmentBegin
@@ -324,7 +351,7 @@ def getOverhangDirection( belowOutsetLoops, segmentBegin, segmentEnd ):
 	for belowLoopIndex in xrange( len( belowOutsetLoops ) ):
 		belowLoop = belowOutsetLoops[ belowLoopIndex ]
 		rotatedOutset = euclidean.getPointsRoundZAxis( segmentYMirror, belowLoop )
-		euclidean.addXIntersectionIndexes( rotatedOutset, belowLoopIndex, solidXIntersectionList, y )
+		euclidean.addXIntersectionIndexesFromLoopY( rotatedOutset, belowLoopIndex, solidXIntersectionList, y )
 	overhangingSegments = euclidean.getSegmentsFromXIntersectionIndexes( solidXIntersectionList, y )
 	overhangDirection = complex()
 	for overhangingSegment in overhangingSegments:
@@ -379,6 +406,24 @@ def getTriangleMesh( fileName = '' ):
 		return None
 	triangleMesh = TriangleMesh().getFromGNUTriangulatedSurfaceText( gnuTriangulatedSurfaceText )
 	return triangleMesh
+
+def getWideAnglePointIndex( loop ):
+	"Get a point index which has a wide enough angle, most point indexes have a wide enough angle, this is just to make sure."
+	dotProductMinimum = 9999999.9
+	widestPointIndex = 0
+	for pointIndex in xrange( len( loop ) ):
+		point = loop[ pointIndex % len( loop ) ]
+		afterPoint = loop[ ( pointIndex + 1 ) % len( loop ) ]
+		beforePoint = loop[ ( pointIndex - 1 ) % len( loop ) ]
+		afterSegmentNormalized = euclidean.getNormalized( afterPoint - point )
+		beforeSegmentNormalized = euclidean.getNormalized( beforePoint - point )
+		dotProduct = euclidean.getDotProduct( afterSegmentNormalized, beforeSegmentNormalized )
+		if dotProduct < .99:
+			return pointIndex
+		if dotProduct < dotProductMinimum:
+			dotProductMinimum = dotProduct
+			widestPointIndex = pointIndex
+	return widestPointIndex
 
 def getZoneInterval( layerThickness ):
 	"Get the zone interval around the slice height."

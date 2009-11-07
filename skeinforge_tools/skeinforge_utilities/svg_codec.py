@@ -28,7 +28,8 @@ def getCarving( fileName ):
 	for importPluginFilename in importPluginFilenames:
 		fileTypeDot = '.' + importPluginFilename
 		if fileName[ - len( fileTypeDot ) : ].lower() == fileTypeDot:
-			pluginModule = gcodec.getModule( importPluginFilename, 'import_plugins', os.path.dirname( __file__ ) )
+			importPluginsDirectoryPath = gcodec.getAbsoluteFolderPath( os.path.dirname( __file__ ), 'import_plugins' )
+			pluginModule = gcodec.getModuleWithDirectoryPath( importPluginsDirectoryPath, importPluginFilename )
 			if pluginModule != None:
 				return pluginModule.getCarving( fileName )
 	print( 'Could not find plugin to handle ' + fileName )

@@ -1,16 +1,11 @@
 """
 Hop is a script to raise the extruder when it is not extruding.
 
-The default 'Activate Hop' checkbox is off.  It is off because Vik and Nophead found better results without hopping.  When it
-is on, the functions described below will work, when it is off, the functions will not be called.
+The default 'Activate Hop' checkbox is off.  It is off because Vik and Nophead found better results without hopping.  When it is on, the functions described below will work, when it is off, the functions will not be called.
 
-The important value for the hop preferences is "Hop Over Layer Thickness (ratio)" which is the ratio of the hop height over the
-layer thickness, the default is 1.0.  The 'Minimum Hop Angle (degrees)' is the minimum angle that the path of the extruder
-will be raised.  An angle of ninety means that the extruder will go straight up as soon as it is not extruding and a low angle
-means the extruder path will gradually rise to the hop height, the default is 20 degrees.
+The important value for the hop preferences is "Hop Over Layer Thickness (ratio)" which is the ratio of the hop height over the layer thickness, the default is 1.0.  The 'Minimum Hop Angle (degrees)' is the minimum angle that the path of the extruder will be raised.  An angle of ninety means that the extruder will go straight up as soon as it is not extruding and a low angle means the extruder path will gradually rise to the hop height, the default is 20 degrees.
 
-The following examples hop the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
-and hop.py.
+The following examples hop the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and hop.py.
 
 
 > python hop.py
@@ -47,7 +42,7 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools import polyfile
+from skeinforge_tools.meta_plugins import polyfile
 from skeinforge_tools.skeinforge_utilities import consecution
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
@@ -62,23 +57,23 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def getCraftedText( fileName, text, hopPreferences = None ):
+def getCraftedText( fileName, text, hopRepository = None ):
 	"Hop a gcode linear move text."
-	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), hopPreferences )
+	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), hopRepository )
 
-def getCraftedTextFromText( gcodeText, hopPreferences = None ):
+def getCraftedTextFromText( gcodeText, hopRepository = None ):
 	"Hop a gcode linear move text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'hop' ):
 		return gcodeText
-	if hopPreferences == None:
-		hopPreferences = preferences.getReadPreferences( HopPreferences() )
-	if not hopPreferences.activateHop.value:
+	if hopRepository == None:
+		hopRepository = preferences.getReadRepository( HopRepository() )
+	if not hopRepository.activateHop.value:
 		return gcodeText
-	return HopSkein().getCraftedGcode( gcodeText, hopPreferences )
+	return HopSkein().getCraftedGcode( gcodeText, hopRepository )
 
-def getPreferencesConstructor():
-	"Get the preferences constructor."
-	return HopPreferences()
+def getRepositoryConstructor():
+	"Get the repository constructor."
+	return HopRepository()
 
 def writeOutput( fileName = '' ):
 	"Hop a gcode linear move file.  Chain hop the gcode if it is not already hopped. If no fileName is specified, hop the first unmodified gcode file in this folder."
@@ -87,23 +82,18 @@ def writeOutput( fileName = '' ):
 		consecution.writeChainTextWithNounMessage( fileName, 'hop' )
 
 
-class HopPreferences:
+class HopRepository:
 	"A class to handle the hop preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
-		self.archive = []
-		self.activateHop = preferences.BooleanPreference().getFromValue( 'Activate Hop', False )
-		self.archive.append( self.activateHop )
-		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Hopped', '' )
-		self.archive.append( self.fileNameInput )
-		self.hopOverLayerThickness = preferences.FloatPreference().getFromValue( 'Hop Over Layer Thickness (ratio):', 1.0 )
-		self.archive.append( self.hopOverLayerThickness )
-		self.minimumHopAngle = preferences.FloatPreference().getFromValue( 'Minimum Hop Angle (degrees):', 30.0 )
-		self.archive.append( self.minimumHopAngle )
+		preferences.addListsToRepository( self )
+		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Hopped', self, '' )
+		self.activateHop = preferences.BooleanPreference().getFromValue( 'Activate Hop', self, False )
+		self.hopOverLayerThickness = preferences.FloatPreference().getFromValue( 'Hop Over Layer Thickness (ratio):', self, 1.0 )
+		self.minimumHopAngle = preferences.FloatPreference().getFromValue( 'Minimum Hop Angle (degrees):', self, 30.0 )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Hop'
-		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.hop.html' )
 
 	def execute( self ):
@@ -126,11 +116,11 @@ class HopSkein:
 		self.lines = None
 		self.oldLocation = None
 
-	def getCraftedGcode( self, gcodeText, hopPreferences ):
+	def getCraftedGcode( self, gcodeText, hopRepository ):
 		"Parse gcode text and store the hop gcode."
 		self.lines = gcodec.getTextLines( gcodeText )
-		self.minimumSlope = math.tan( math.radians( hopPreferences.minimumHopAngle.value ) )
-		self.parseInitialization( hopPreferences )
+		self.minimumSlope = math.tan( math.radians( hopRepository.minimumHopAngle.value ) )
+		self.parseInitialization( hopRepository )
 		for self.lineIndex in xrange( self.lineIndex, len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			self.parseLine( line )
@@ -189,7 +179,7 @@ class HopSkein:
 				return False
 		return False
 
-	def parseInitialization( self, hopPreferences ):
+	def parseInitialization( self, hopRepository ):
 		"Parse gcode initialization and store the parameters."
 		for self.lineIndex in xrange( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
@@ -198,7 +188,7 @@ class HopSkein:
 			self.distanceFeedRate.parseSplitLine( firstWord, splitLine )
 			if firstWord == '(<layerThickness>':
 				layerThickness = float( splitLine[ 1 ] )
-				self.hopHeight = hopPreferences.hopOverLayerThickness.value * layerThickness
+				self.hopHeight = hopRepository.hopOverLayerThickness.value * layerThickness
 				self.hopDistance = self.hopHeight / self.minimumSlope
 				self.minimumDistance = 0.5 * layerThickness
 			elif firstWord == '(</extruderInitialization>)':
@@ -229,7 +219,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
+		preferences.startMainLoopFromConstructor( getRepositoryConstructor() )
 
 if __name__ == "__main__":
 	main()

@@ -3,14 +3,9 @@ Home is a script to home the nozzle.
 
 The default 'Activate Home' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions will not be called.
 
-At the beginning of a each layer, home will add the commands of a gcode script with the name of the "Name of Homing File" setting, if one exists.  The
-default name is homing.gcode.  Home does not care if the text file names are capitalized, but some file systems do not handle file name cases
-properly, so to be on the safe side you should give them lower case names.  Home looks for those files in the alterations folder in the .skeinforge folder
-in the home directory. If it doesn't find the file it then looks in the alterations folder in the skeinforge_tools folder.  If it doesn't find anything there it looks
-in the craft_plugins folder.
+At the beginning of a each layer, home will add the commands of a gcode script with the name of the "Name of Homing File" setting, if one exists.  The default name is homing.gcode.  Home does not care if the text file names are capitalized, but some file systems do not handle file name cases properly, so to be on the safe side you should give them lower case names.  Home looks for those files in the alterations folder in the .skeinforge folder in the home directory. If it doesn't find the file it then looks in the alterations folder in the skeinforge_tools folder.  If it doesn't find anything there it looks in the craft_plugins folder.
 
-The following examples home the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
-and home.py.
+The following examples home the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and home.py.
 
 
 > python home.py
@@ -47,7 +42,7 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools import polyfile
+from skeinforge_tools.meta_plugins import polyfile
 from skeinforge_tools.skeinforge_utilities import consecution
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
@@ -64,23 +59,23 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def getCraftedText( fileName, text, homePreferences = None ):
+def getCraftedText( fileName, text, homeRepository = None ):
 	"Home a gcode linear move file or text."
-	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), homePreferences )
+	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), homeRepository )
 
-def getCraftedTextFromText( gcodeText, homePreferences = None ):
+def getCraftedTextFromText( gcodeText, homeRepository = None ):
 	"Home a gcode linear move text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'home' ):
 		return gcodeText
-	if homePreferences == None:
-		homePreferences = preferences.getReadPreferences( HomePreferences() )
-	if not homePreferences.activateHome.value:
+	if homeRepository == None:
+		homeRepository = preferences.getReadRepository( HomeRepository() )
+	if not homeRepository.activateHome.value:
 		return gcodeText
-	return HomeSkein().getCraftedGcode( gcodeText, homePreferences )
+	return HomeSkein().getCraftedGcode( gcodeText, homeRepository )
 
-def getPreferencesConstructor():
-	"Get the preferences constructor."
-	return HomePreferences()
+def getRepositoryConstructor():
+	"Get the repository constructor."
+	return HomeRepository()
 
 def writeOutput( fileName = '' ):
 	"Home a gcode linear move file.  Chain home the gcode if it is not already homed. If no fileName is specified, home the first unmodified gcode file in this folder."
@@ -89,21 +84,17 @@ def writeOutput( fileName = '' ):
 		consecution.writeChainTextWithNounMessage( fileName, 'home' )
 
 
-class HomePreferences:
+class HomeRepository:
 	"A class to handle the home preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
-		self.archive = []
-		self.activateHome = preferences.BooleanPreference().getFromValue( 'Activate Home', True )
-		self.archive.append( self.activateHome )
-		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Homed', '' )
-		self.archive.append( self.fileNameInput )
-		self.nameOfHomingFile = preferences.StringPreference().getFromValue( 'Name of Homing File:', 'homing.gcode' )
-		self.archive.append( self.nameOfHomingFile )
+		preferences.addListsToRepository( self )
+		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Homed', self, '' )
+		self.activateHome = preferences.BooleanPreference().getFromValue( 'Activate Home', self, True )
+		self.nameOfHomingFile = preferences.StringPreference().getFromValue( 'Name of Homing File:', self, 'homing.gcode' )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Home'
-		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.home.html' )
 
 	def execute( self ):
@@ -157,19 +148,19 @@ class HomeSkein:
 		if self.extruderActive:
 			self.distanceFeedRate.addLine( 'M101' )
 
-	def getCraftedGcode( self, gcodeText, homePreferences ):
+	def getCraftedGcode( self, gcodeText, homeRepository ):
 		"Parse gcode text and store the home gcode."
 		self.lines = gcodec.getTextLines( gcodeText )
-		self.homePreferences = homePreferences
-		self.parseInitialization( homePreferences )
-		self.homingText = preferences.getFileInAlterationsOrGivenDirectory( os.path.dirname( __file__ ), homePreferences.nameOfHomingFile.value )
+		self.homeRepository = homeRepository
+		self.parseInitialization( homeRepository )
+		self.homingText = preferences.getFileInAlterationsOrGivenDirectory( os.path.dirname( __file__ ), homeRepository.nameOfHomingFile.value )
 		self.homingLines = gcodec.getTextLines( self.homingText )
 		for self.lineIndex in xrange( self.lineIndex, len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			self.parseLine( line )
 		return self.distanceFeedRate.output.getvalue()
 
-	def parseInitialization( self, homePreferences ):
+	def parseInitialization( self, homeRepository ):
 		"Parse gcode initialization and store the parameters."
 		for self.lineIndex in xrange( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
@@ -209,7 +200,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
+		preferences.startMainLoopFromConstructor( getRepositoryConstructor() )
 
 if __name__ == "__main__":
 	main()

@@ -1,7 +1,6 @@
-from __future__ import absolute_import
 import Image, ImageDraw, ImageChops
 from GifImagePlugin import getheader, getdata
-from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
+from vector3 import Vector3
 
 # Get the entire text of a file.
 # @param  fileName name of the file

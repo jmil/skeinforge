@@ -22,7 +22,8 @@ __license__ = "GPL 3.0"
 
 def getCraftModule( fileName ):
 	"Get craft module."
-	return gcodec.getModule( fileName, 'craft_plugins', os.path.dirname( os.path.abspath( __file__ ) ) )
+	craftPluginsDirectoryPath = gcodec.getAbsoluteFolderPath( os.path.dirname( __file__ ), 'craft_plugins' )
+	return gcodec.getModuleWithDirectoryPath( craftPluginsDirectoryPath, fileName )
 
 def getChainText( fileName, procedure ):
 	"Get a crafted shape file."

@@ -1,16 +1,11 @@
 """
 Gcode_small is an export plugin to remove the comments and the redundant z and feedRate parameters from a gcode file.
 
-An export plugin is a script in the export_plugins folder which has the functions getOuput, and writeOutput.  It is meant to be
-run from the export tool.  To ensure that the plugin works on platforms which do not handle file capitalization properly, give the
-plugin a lower case name.
+An export plugin is a script in the export_plugins folder which has the functions getOuput, and writeOutput.  It is meant to be run from the export tool.  To ensure that the plugin works on platforms which do not handle file capitalization properly, give the plugin a lower case name.
 
-The getOuput function of this script takes a gcode text and returns that text without comments and redundant z and feedRate
-parameters.  The writeOutput function of this script takes a gcode text and writes that text without comments and redundant z
-and feedRate parameterscomments to a file.
+The getOuput function of this script takes a gcode text and returns that text without comments and redundant z and feed rate parameters.  The writeOutput function of this script takes a gcode text and writes that text without comments and redundant z and feedRate parameterscomments to a file.
 
-Many of the functions in this script are copied from gcodec in skeinforge_utilities.  They are copied rather than imported so
-developers making new plugins do not have to learn about gcodec, the code here is all they need to learn.
+Many of the functions in this script are copied from gcodec in skeinforge_utilities.  They are copied rather than imported so developers making new plugins do not have to learn about gcodec, the code here is all they need to learn.
 
 """
 

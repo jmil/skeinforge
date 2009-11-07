@@ -1,5 +1,5 @@
 """
-Vec3 is a three dimensional vector class.
+Vector3 is a three dimensional vector class.
 
 Below are examples of Vector3 use.
 
@@ -223,7 +223,7 @@ class Vector3:
 		distance = 2 * ( self.x * normal.x + self.y * normal.y + self.z * normal.z )
 		return Vector3( self.x - distance * normal.x, self.y - distance * normal.y, self.z - distance * normal.z )
 
-	def setToVec3( self, other ):
+	def setToVector3( self, other ):
 		"Set this Vector3 to be identical to other one."
 		self.x = other.x
 		self.y = other.y

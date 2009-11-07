@@ -31,20 +31,19 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def getPreferencesConstructor():
-	"Get the preferences constructor."
-	return DescriptionPreferences()
+def getRepositoryConstructor():
+	"Get the repository constructor."
+	return DescriptionRepository()
 
 
-class DescriptionPreferences:
+class DescriptionRepository:
 	"A class to handle the description preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
-		self.archive = []
+		preferences.addListsToRepository( self )
 		description = 'Write your description of the profile here.\n\nSuggested format is a description, followed by a link to the profile post or web page.'
-		self.descriptionText = preferences.TextPreference().getFromValue( 'Description Text:', description )
-		self.archive.append( self.descriptionText )
+		self.descriptionText = preferences.TextPreference().getFromValue( 'Description Text:', self, description )
 		#Create the archive, title of the dialog & preferences fileName.
 		self.executeTitle = None
 		self.saveCloseTitle = 'Save and Close'
@@ -53,7 +52,7 @@ class DescriptionPreferences:
 
 def main():
 	"Display the file or directory dialog."
-	preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
+	preferences.startMainLoopFromConstructor( getRepositoryConstructor() )
 
 if __name__ == "__main__":
 	main()

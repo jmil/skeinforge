@@ -1,15 +1,11 @@
 """
 Outset is a script to outset the perimeters of a gcode file.
 
-Outset outsets the perimeters of the slices of a gcode file.  The outside perimeters will be outset by half the perimeter width,
-and the inside perimeters will be inset by half the perimeter width.  Outset is needed for subtractive machining, like cutting or
-milling.
+Outset outsets the perimeters of the slices of a gcode file.  The outside perimeters will be outset by half the perimeter width, and the inside perimeters will be inset by half the perimeter width.  Outset is needed for subtractive machining, like cutting or milling.
 
-The default 'Activate Outset' checkbox is on.  When it is on, the gcode will be outset, when it is off, the gcode will not be
-changed.
+The default 'Activate Outset' checkbox is on.  When it is on, the gcode will be outset, when it is off, the gcode will not be changed.
 
-The following examples outset the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains
-Screw Holder Bottom.stl and outset.py.
+The following examples outset the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and outset.py.
 
 
 > python outset.py
@@ -58,7 +54,7 @@ from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities import triangle_mesh
-from skeinforge_tools import polyfile
+from skeinforge_tools.meta_plugins import polyfile
 import sys
 
 
@@ -75,23 +71,23 @@ def compareAreaAscending( loopArea, otherLoopArea ):
 		return - 1
 	return 0
 
-def getCraftedText( fileName, text = '', outsetPreferences = None ):
+def getCraftedText( fileName, text = '', outsetRepository = None ):
 	"Outset the preface file or text."
-	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), outsetPreferences )
+	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), outsetRepository )
 
-def getCraftedTextFromText( gcodeText, outsetPreferences = None ):
+def getCraftedTextFromText( gcodeText, outsetRepository = None ):
 	"Outset the preface gcode text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'outset' ):
 		return gcodeText
-	if outsetPreferences == None:
-		outsetPreferences = preferences.getReadPreferences( OutsetPreferences() )
-	if not outsetPreferences.activateOutset.value:
+	if outsetRepository == None:
+		outsetRepository = preferences.getReadRepository( OutsetRepository() )
+	if not outsetRepository.activateOutset.value:
 		return gcodeText
-	return OutsetSkein().getCraftedGcode( outsetPreferences, gcodeText )
+	return OutsetSkein().getCraftedGcode( outsetRepository, gcodeText )
 
-def getPreferencesConstructor():
-	"Get the preferences constructor."
-	return OutsetPreferences()
+def getRepositoryConstructor():
+	"Get the repository constructor."
+	return OutsetRepository()
 
 def writeOutput( fileName = '' ):
 	"Outset the carving of a gcode file.  If no fileName is specified, outset the first unmodified gcode file in this folder."
@@ -100,19 +96,16 @@ def writeOutput( fileName = '' ):
 		consecution.writeChainTextWithNounMessage( fileName, 'outset' )
 
 
-class OutsetPreferences:
+class OutsetRepository:
 	"A class to handle the outset preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
-		self.archive = []
+		preferences.addListsToRepository( self )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
-		self.activateOutset = preferences.BooleanPreference().getFromValue( 'Activate Outset:', True )
-		self.archive.append( self.activateOutset )
-		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Outsetted', '' )
-		self.archive.append( self.fileNameInput )
+		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Outsetted', self, '' )
+		self.activateOutset = preferences.BooleanPreference().getFromValue( 'Activate Outset:', self, True )
 		self.executeTitle = 'Outset'
-		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.outset.html' )
 
 	def execute( self ):
@@ -156,9 +149,9 @@ class OutsetSkein:
 		"Add shutdown gcode to the output."
 		self.distanceFeedRate.addLines( self.shutdownLines )
 
-	def getCraftedGcode( self, outsetPreferences, gcodeText ):
+	def getCraftedGcode( self, outsetRepository, gcodeText ):
 		"Parse gcode text and store the bevel gcode."
-		self.outsetPreferences = outsetPreferences
+		self.outsetRepository = outsetRepository
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.parseInitialization()
 		for lineIndex in xrange( self.lineIndex, len( self.lines ) ):
@@ -210,7 +203,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
+		preferences.startMainLoopFromConstructor( getRepositoryConstructor() )
 
 if __name__ == "__main__":
 	main()

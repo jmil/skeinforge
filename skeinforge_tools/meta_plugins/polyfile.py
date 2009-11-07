@@ -1,11 +1,9 @@
 """
 Polyfile is a script to choose whether the skeinforge toolchain will operate on one file or all the files in a directory.
 
-Polyfile stores and lets the user change the preference of whether to operate on one file or all the files in a directory.  The default
-'Polyfile Choice' radio button group choice is 'Execute File'.  With 'Execute File' chosen, the toolchain will operate on only the
-chosen file.  When the chosen choice is 'Execute All Unmodified Files in a Directory', the toolchain will operate on all the
-unmodifed files in the directory that the chosen file is in.  To use the dialog to change the polyfile
-preferences, in a shell type:
+Polyfile stores and lets the user change the preference of whether to operate on one file or all the files in a directory.  The default 'Polyfile Choice' radio button group choice is 'Execute File'.  With 'Execute File' chosen, the toolchain will operate on only the chosen file.  When the chosen choice is 'Execute All Unmodified Files in a Directory', the toolchain will operate on all the unmodifed files in the directory that the chosen file is in.
+
+To use the dialog to change the polyfile preferences, in a shell type:
 > python polyfile.py
 
 Polyfile examples follow below.
@@ -62,32 +60,29 @@ def getFileOrDirectoryTypesUnmodifiedGcode( fileName, fileTypes, wasCancelled ):
 		return gcodec.getFilesWithFileTypesWithoutWords( fileTypes, [], fileName ) + gcodec.getUnmodifiedGCodeFiles( fileName )
 	return [ fileName ]
 
-def getPreferencesConstructor():
-	"Get the preferences constructor."
-	return PolyfilePreferences()
+def getRepositoryConstructor():
+	"Get the repository constructor."
+	return PolyfileRepository()
 
 def isDirectoryPreference():
 	"Determine if the directory preference is true."
-	return preferences.getReadPreferences( PolyfilePreferences() ).directoryPreference.value
+	return preferences.getReadRepository( PolyfileRepository() ).directoryPreference.value
 
 def isEmptyOrCancelled( fileName, wasCancelled ):
 	"Determine if the fileName is empty or the dialog was cancelled."
 	return str( fileName ) == '' or str( fileName ) == '()' or wasCancelled
 
 
-class PolyfilePreferences:
+class PolyfileRepository:
 	"A class to handle the polyfile preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
-		self.archive = []
-		self.directoryOrFileChoiceLabel = preferences.LabelDisplay().getFromName( 'Directory or File Choice: ' )
-		self.archive.append( self.directoryOrFileChoiceLabel )
+		preferences.addListsToRepository( self )
+		self.directoryOrFileChoiceLabel = preferences.LabelDisplay().getFromName( 'Directory or File Choice: ', self )
 		directoryRadio = []
-		self.directoryPreference = preferences.Radio().getFromRadio( 'Execute All Unmodified Files in a Directory', directoryRadio, False )
-		self.archive.append( self.directoryPreference )
-		self.filePreference = preferences.Radio().getFromRadio( 'Execute File', directoryRadio, True )
-		self.archive.append( self.filePreference )
+		self.directoryPreference = preferences.Radio().getFromRadio( 'Execute All Unmodified Files in a Directory', directoryRadio, self, False )
+		self.filePreference = preferences.Radio().getFromRadio( 'Execute File', directoryRadio, self, True )
 		#Create the archive, title of the dialog & preferences fileName.
 		self.executeTitle = None
 		self.saveCloseTitle = 'Save and Close'
@@ -96,7 +91,7 @@ class PolyfilePreferences:
 
 def main():
 	"Display the file or directory dialog."
-	preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
+	preferences.startMainLoopFromConstructor( getRepositoryConstructor() )
 
 if __name__ == "__main__":
 	main()

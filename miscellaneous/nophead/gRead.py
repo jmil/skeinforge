@@ -1,8 +1,4 @@
-from __future__ import absolute_import
-#Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
-import __init__
-
-from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
+from vector3 import Vector3
 
 # Get the entire text of a file.
 # @param  fileName name of the file

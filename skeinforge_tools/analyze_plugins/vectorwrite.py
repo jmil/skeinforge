@@ -1,15 +1,9 @@
 """
 Vectorwrite is a script to write Scalable Vector Graphics for a gcode file.
 
-The default 'Activate Vectorwrite' checkbox is on.  When it is on, the functions described below will work when called from the
-skeinforge toolchain, when it is off, the functions will not be called from the toolchain.  The functions will still be called, whether
-or not the 'Activate Vectorwrite' checkbox is on, when vectorwrite is run directly.
+The default 'Activate Vectorwrite' checkbox is on.  When it is on, the functions described below will work when called from the skeinforge toolchain, when it is off, the functions will not be called from the toolchain.  The functions will still be called, whether or not the 'Activate Vectorwrite' checkbox is on, when vectorwrite is run directly.
 
-The "Layer From" is the index of the bottom layer that will be displayed.  If the layer from is the default zero, the display will
-start from the lowest layer.  If the the layer from index is negative, then the display will start from the layer from index below the
-top layer.  The "Layer To" is the index of the top layer that will be displayed.  If the layer to index is a huge number like the
-default 999999999, the display will go to the top of the model, at least until we model habitats:)  If the layer to index is negative,
-then the display will go to the layer to index below the top layer.  The layer from until layer to index is a python slice.
+The "Layer From" is the index of the bottom layer that will be displayed.  If the layer from is the default zero, the display will start from the lowest layer.  If the the layer from index is negative, then the display will start from the layer from index below the top layer.  The "Layer To" is the index of the top layer that will be displayed.  If the layer to index is a huge number like the default 999999999, the display will go to the top of the model, at least until we model habitats:)  If the layer to index is negative, then the display will go to the layer to index below the top layer.  The layer from until layer to index is a python slice.
 
 To run vectorwrite, in a shell in the folder which vectorwrite is in type:
 > python vectorwrite.py
@@ -17,8 +11,7 @@ To run vectorwrite, in a shell in the folder which vectorwrite is in type:
 The Scalable Vector Graphics file can be opened by an SVG viewer or an SVG capable browser like Mozilla:
 http://www.mozilla.com/firefox/
 
-This example writes vector graphics for the gcode file Screw Holder.gcode.  This example is run in a terminal in the folder which
-contains Screw Holder.gcode and vectorwrite.py.
+This example writes vector graphics for the gcode file Screw Holder.gcode.  This example is run in a terminal in the folder which contains Screw Holder.gcode and vectorwrite.py.
 
 
 > python vectorwrite.py
@@ -49,7 +42,7 @@ from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities import svg_codec
-from skeinforge_tools import polyfile
+from skeinforge_tools.meta_plugins import polyfile
 import cStringIO
 import os
 import sys
@@ -62,8 +55,8 @@ __license__ = "GPL 3.0"
 
 
 #add open webbrowser first time file is created choice
-def getPreferencesConstructor():
-	"Get the preferences constructor."
+def getRepositoryConstructor():
+	"Get the repository constructor."
 	return VectorwritePreferences()
 
 def writeGivenPreferences( fileName, gcodeText, vectorwritePreferences ):
@@ -85,7 +78,7 @@ def writeGivenPreferences( fileName, gcodeText, vectorwritePreferences ):
 
 def writeOutput( fileName, gcodeText = '' ):
 	"Write scalable vector graphics for a skeinforge gcode file, if activate vectorwrite is selected."
-	vectorwritePreferences = preferences.getReadPreferences( VectorwritePreferences() )
+	vectorwritePreferences = preferences.getReadRepository( VectorwritePreferences() )
 	if not vectorwritePreferences.activateVectorwrite.value:
 		return
 	gcodeText = gcodec.getTextIfEmpty( fileName, gcodeText )
@@ -93,7 +86,7 @@ def writeOutput( fileName, gcodeText = '' ):
 
 def writeRegardless( fileName ):
 	"Write scalable vector graphics for a gcode file."
-	vectorwritePreferences = preferences.getReadPreferences( VectorwritePreferences() )
+	vectorwritePreferences = preferences.getReadRepository( VectorwritePreferences() )
 	gcodeText = gcodec.getFileText( fileName )
 	writeGivenPreferences( fileName, gcodeText, vectorwritePreferences )
 
@@ -103,15 +96,11 @@ class VectorwritePreferences:
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
-		self.archive = []
-		self.activateVectorwrite = preferences.BooleanPreference().getFromValue( 'Activate Vectorwrite', False )
-		self.archive.append( self.activateVectorwrite )
-		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Write Vector Graphics for', '' )
-		self.archive.append( self.fileNameInput )
-		self.layersFrom = preferences.IntPreference().getFromValue( 'Layers From (index):', 0 )
-		self.archive.append( self.layersFrom )
-		self.layersTo = preferences.IntPreference().getFromValue( 'Layers To (index):', 999999999 )
-		self.archive.append( self.layersTo )
+		preferences.addListsToRepository( self )
+		self.activateVectorwrite = preferences.BooleanPreference().getFromValue( 'Activate Vectorwrite', self, False )
+		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Write Vector Graphics for', self, '' )
+		self.layersFrom = preferences.IntPreference().getFromValue( 'Layers From (index):', self, 0 )
+		self.layersTo = preferences.IntPreference().getFromValue( 'Layers To (index):', self, 999999999 )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Vectorwrite'
 		self.saveCloseTitle = 'Save and Close'
@@ -229,7 +218,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeRegardless( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
+		preferences.startMainLoopFromConstructor( getRepositoryConstructor() )
 
 if __name__ == "__main__":
 	main()

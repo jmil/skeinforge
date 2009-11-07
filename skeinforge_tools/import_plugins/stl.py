@@ -1,9 +1,7 @@
 """
 The stl.py script is an import translator plugin to get a carving from an stl file.
 
-An import plugin is a script in the import_plugins folder which has the function getCarving.  It is meant to be run from the
-interpret tool.  To ensure that the plugin works on platforms which do not handle file capitalization properly, give the plugin
-a lower case name.
+An import plugin is a script in the import_plugins folder which has the function getCarving.  It is meant to be run from the interpret tool.  To ensure that the plugin works on platforms which do not handle file capitalization properly, give the plugin a lower case name.
 
 The getCarving function takes the file name of an stl file and returns the carving.
 
@@ -13,8 +11,7 @@ http://en.wikipedia.org/wiki/STL_(file_format)
 A good triangle surface format is the GNU Triangulated Surface format which is described at:
 http://gts.sourceforge.net/reference/gts-surfaces.html#GTS-SURFACE-WRITE
 
-This example gets a carving for the stl file Screw Holder Bottom.stl.  This example is run in a terminal in the folder which
-contains Screw Holder Bottom.stl and stl.py.
+This example gets a carving for the stl file Screw Holder Bottom.stl.  This example is run in a terminal in the folder which contains Screw Holder Bottom.stl and stl.py.
 
 
 > python

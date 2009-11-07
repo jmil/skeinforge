@@ -9,31 +9,29 @@
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="skeinforge_tools.html"><font color="#ffffff">skeinforge_tools</font></a>.<a href="skeinforge_tools.skeinforge_utilities.html"><font color="#ffffff">skeinforge_utilities</font></a>.xml_simple_parser</strong></big></big> ($Date: 2008/21/04 $)</font></td
 ><td align=right valign=bottom
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/skeinforge_utilities/xml_simple_parser.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/skeinforge_utilities/xml_simple_parser.py</a></font></td></tr></table>
-    <p><tt>The&nbsp;xml_simple_parser.py&nbsp;script&nbsp;is&nbsp;an&nbsp;xml&nbsp;parser&nbsp;that&nbsp;can&nbsp;parse&nbsp;a&nbsp;line&nbsp;separated&nbsp;xml&nbsp;text.<br>
-&nbsp;<br>
-This&nbsp;xml&nbsp;parser&nbsp;will&nbsp;read&nbsp;a&nbsp;line&nbsp;seperated&nbsp;xml&nbsp;text&nbsp;and&nbsp;produce&nbsp;a&nbsp;tree&nbsp;of&nbsp;the&nbsp;xml&nbsp;with&nbsp;a&nbsp;root&nbsp;element.&nbsp;&nbsp;Each&nbsp;element&nbsp;can<br>
-have&nbsp;an&nbsp;attribute&nbsp;table,&nbsp;children,&nbsp;a&nbsp;class&nbsp;name,&nbsp;parents,&nbsp;text&nbsp;and&nbsp;a&nbsp;link&nbsp;to&nbsp;the&nbsp;root&nbsp;element.<br>
-&nbsp;<br>
-This&nbsp;example&nbsp;gets&nbsp;an&nbsp;xml&nbsp;tree&nbsp;for&nbsp;the&nbsp;xml&nbsp;file&nbsp;boolean.xml.&nbsp;&nbsp;This&nbsp;example&nbsp;is&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;contains<br>
-boolean.xml&nbsp;and&nbsp;xml_simple_parser.py.<br>
-&nbsp;<br>
-&nbsp;<br>
-&gt;&nbsp;python<br>
-Python&nbsp;2.5.1&nbsp;(r251:54863,&nbsp;Sep&nbsp;22&nbsp;2007,&nbsp;01:43:31)<br>
-[GCC&nbsp;4.2.1&nbsp;(SUSE&nbsp;Linux)]&nbsp;on&nbsp;linux2<br>
-Type&nbsp;"help",&nbsp;"copyright",&nbsp;"credits"&nbsp;or&nbsp;"license"&nbsp;for&nbsp;more&nbsp;information.<br>
-&gt;&gt;&gt;&nbsp;file&nbsp;=&nbsp;open(&nbsp;'boolean.xml',&nbsp;'r'&nbsp;)<br>
-&gt;&gt;&gt;&nbsp;xmlText&nbsp;=&nbsp;file.read()<br>
-&gt;&gt;&gt;&nbsp;file.close()<br>
-&gt;&gt;&gt;&nbsp;from&nbsp;xml_simple_parser&nbsp;import&nbsp;<a href="#XMLSimpleParser">XMLSimpleParser</a><br>
-&gt;&gt;&gt;&nbsp;xmlParser&nbsp;=&nbsp;<a href="#XMLSimpleParser">XMLSimpleParser</a>(&nbsp;xmlText&nbsp;)<br>
-&gt;&gt;&gt;&nbsp;print(&nbsp;xmlParser&nbsp;)<br>
-&nbsp;&nbsp;?xml,&nbsp;{'version':&nbsp;'1.0'}<br>
-&nbsp;&nbsp;ArtOfIllusion,&nbsp;{'xmlns:bf':&nbsp;'//babelfiche/codec',&nbsp;'version':&nbsp;'2.0',&nbsp;'fileversion':&nbsp;'3'}<br>
-&nbsp;&nbsp;Scene,&nbsp;{'bf:id':&nbsp;'theScene'}<br>
-&nbsp;&nbsp;materials,&nbsp;{'bf:elem-type':&nbsp;'java.lang.Object',&nbsp;'bf:list':&nbsp;'collection',&nbsp;'bf:id':&nbsp;'1',&nbsp;'bf:type':&nbsp;'java.util.Vector'}<br>
+    <p><tt>The xml_simple_parser.py script is an xml parser that can parse a line separated xml text.<br>
+ <br>
+This xml parser will read a line seperated xml text and produce a tree of the xml with a root element.  Each element can have an attribute table, children, a class name, parents, text and a link to the root element.<br>
+ <br>
+This example gets an xml tree for the xml file boolean.xml.  This example is run in a terminal in the folder which contains boolean.xml and xml_simple_parser.py.<br>
+ <br>
+ <br>
+&gt; python<br>
+Python 2.5.1 (r251:54863, Sep 22 2007, 01:43:31)<br>
+[GCC 4.2.1 (SUSE Linux)] on linux2<br>
+Type "help", "copyright", "credits" or "license" for more information.<br>
+&gt;&gt;&gt; file = open( 'boolean.xml', 'r' )<br>
+&gt;&gt;&gt; xmlText = file.read()<br>
+&gt;&gt;&gt; file.close()<br>
+&gt;&gt;&gt; from xml_simple_parser import <a href="#XMLSimpleParser">XMLSimpleParser</a><br>
+&gt;&gt;&gt; xmlParser = <a href="#XMLSimpleParser">XMLSimpleParser</a>( xmlText )<br>
+&gt;&gt;&gt; print( xmlParser )<br>
+  ?xml, {'version': '1.0'}<br>
+  ArtOfIllusion, {'xmlns:bf': '//babelfiche/codec', 'version': '2.0', 'fileversion': '3'}<br>
+  Scene, {'bf:id': 'theScene'}<br>
+  materials, {'bf:elem-type': 'java.lang.Object', 'bf:list': 'collection', 'bf:id': '1', 'bf:type': 'java.util.Vector'}<br>
 ..<br>
-many&nbsp;more&nbsp;lines&nbsp;of&nbsp;the&nbsp;xml&nbsp;tree<br>
+many more lines of the xml tree<br>
 ..</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">

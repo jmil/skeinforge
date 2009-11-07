@@ -1,4 +1,3 @@
-from __future__ import absolute_import
 import sys
 try:
     import Tkinter
@@ -6,8 +5,8 @@ except:
     print( 'You do not have Tkinter, which is needed for the graphical interface.' )
     print( 'Information on how to download Tkinter is at:\nwww.tcl.tk/software/tcltk/' )
 try:
-    from skeinforge_tools.analyze_plugins.analyze_utilities.layers import *
-    from skeinforge_tools.analyze_plugins.analyze_utilities.gRead import *
+    from layers import *
+    from gRead import *
     import ImageTk
 except:
     print( 'You do not have the Python Imaging Library, which is needed by preview and gifview to view the gcode.' )

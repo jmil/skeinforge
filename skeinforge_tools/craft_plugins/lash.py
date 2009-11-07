@@ -6,12 +6,9 @@ http://objects.reprap.org/wiki/3D-to-5D-Gcode.php
 
 The default 'Activate Lash' checkbox is off.  When it is on, the functions described below will work, when it is off, the functions will not be called.
 
-The 'X Backlash' is the distance the tool head will be lashed in the X direction, the default is 0.2 mm.  The 'Y Backlash' is the distance the tool
-head will be lashed in the Y direction, the default is 0.2 mm.  These default values are from the settings in Erik's 3D-to-5D-Gcode, I believe the
-settings are used on his Darwin reprap.
+The 'X Backlash' is the distance the tool head will be lashed in the X direction, the default is 0.2 mm.  The 'Y Backlash' is the distance the tool head will be lashed in the Y direction, the default is 0.2 mm.  These default values are from the settings in Erik's 3D-to-5D-Gcode, I believe the settings are used on his Darwin reprap.
 
-The following examples lash the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
-and lash.py.
+The following examples lash the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and lash.py.
 
 
 > python lash.py
@@ -53,7 +50,7 @@ from skeinforge_tools.skeinforge_utilities import consecution
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import interpret
 from skeinforge_tools.skeinforge_utilities import preferences
-from skeinforge_tools import polyfile
+from skeinforge_tools.meta_plugins import polyfile
 import sys
 
 
@@ -62,23 +59,23 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def getCraftedText( fileName, text, lashPreferences = None ):
+def getCraftedText( fileName, text, lashRepository = None ):
 	"Get a lashed gcode linear move text."
-	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), lashPreferences )
+	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), lashRepository )
 
-def getCraftedTextFromText( gcodeText, lashPreferences = None ):
+def getCraftedTextFromText( gcodeText, lashRepository = None ):
 	"Get a lashed gcode linear move text from text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'lash' ):
 		return gcodeText
-	if lashPreferences == None:
-		lashPreferences = preferences.getReadPreferences( LashPreferences() )
-	if not lashPreferences.activateLash.value:
+	if lashRepository == None:
+		lashRepository = preferences.getReadRepository( LashRepository() )
+	if not lashRepository.activateLash.value:
 		return gcodeText
-	return LashSkein().getCraftedGcode( gcodeText, lashPreferences )
+	return LashSkein().getCraftedGcode( gcodeText, lashRepository )
 
-def getPreferencesConstructor():
-	"Get the preferences constructor."
-	return LashPreferences()
+def getRepositoryConstructor():
+	"Get the repository constructor."
+	return LashRepository()
 
 def writeOutput( fileName = '' ):
 	"Lash a gcode linear move file."
@@ -87,23 +84,18 @@ def writeOutput( fileName = '' ):
 		consecution.writeChainTextWithNounMessage( fileName, 'lash' )
 
 
-class LashPreferences:
+class LashRepository:
 	"A class to handle the lash preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
-		self.archive = []
-		self.activateLash = preferences.BooleanPreference().getFromValue( 'Activate Lash', False )
-		self.archive.append( self.activateLash )
-		self.xBacklash = preferences.FloatPreference().getFromValue( 'X Backlash (mm):', 0.2 )
-		self.archive.append( self.xBacklash )
-		self.yBacklash = preferences.FloatPreference().getFromValue( 'Y Backlash (mm):', 0.3 )
-		self.archive.append( self.yBacklash )
-		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Lashed', '' )
-		self.archive.append( self.fileNameInput )
+		preferences.addListsToRepository( self )
+		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Lashed', self, '' )
+		self.activateLash = preferences.BooleanPreference().getFromValue( 'Activate Lash', self, False )
+		self.xBacklash = preferences.FloatPreference().getFromValue( 'X Backlash (mm):', self, 0.2 )
+		self.yBacklash = preferences.FloatPreference().getFromValue( 'Y Backlash (mm):', self, 0.3 )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Lash'
-		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.lash.html' )
 
 	def execute( self ):
@@ -122,12 +114,12 @@ class LashSkein:
 		self.lines = None
 		self.oldLocation = None
 
-	def getCraftedGcode( self, gcodeText, lashPreferences ):
+	def getCraftedGcode( self, gcodeText, lashRepository ):
 		"Parse gcode text and store the lash gcode."
 		self.lines = gcodec.getTextLines( gcodeText )
-		self.lashPreferences = lashPreferences
-		self.xBacklash = lashPreferences.xBacklash.value
-		self.yBacklash = lashPreferences.yBacklash.value
+		self.lashRepository = lashRepository
+		self.xBacklash = lashRepository.xBacklash.value
+		self.yBacklash = lashRepository.yBacklash.value
 		self.parseInitialization()
 		for self.lineIndex in xrange( self.lineIndex, len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
@@ -178,7 +170,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
+		preferences.startMainLoopFromConstructor( getRepositoryConstructor() )
 
 if __name__ == "__main__":
 	main()

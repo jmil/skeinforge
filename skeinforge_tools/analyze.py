@@ -17,7 +17,7 @@ import __init__
 
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
-from skeinforge_tools import polyfile
+from skeinforge_tools.meta_plugins import polyfile
 import os
 import sys
 
@@ -27,46 +27,45 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def getAnalyzePluginFilenames():
-	"Get analyze plugin fileNames."
-	return gcodec.getPluginFilenamesFromDirectoryPath( gcodec.getAbsoluteFolderPath( __file__, 'analyze_plugins' ) )
+def addToMenu( master, menu, repository, window ):
+	"Add a tool plugin menu."
+	preferences.addPluginsParentToMenu( getPluginsDirectoryPath(), menu, __file__, getPluginFilenames() )
 
-def getPreferencesConstructor():
-	"Get the preferences constructor."
-	return AnalyzePreferences()
+def getPluginFilenames():
+	"Get analyze plugin fileNames."
+	return gcodec.getPluginFilenamesFromDirectoryPath( getPluginsDirectoryPath() )
+
+def getPluginsDirectoryPath():
+	"Get the plugins directory path."
+	return gcodec.getAbsoluteFolderPath( __file__, 'analyze_plugins' )
+
+def getRepositoryConstructor():
+	"Get the repository constructor."
+	return AnalyzeRepository()
 
 def writeOutput( fileName = '', gcodeText = '' ):
 	"Analyze a gcode file.  If no fileName is specified, comment the first gcode file in this folder that is not modified."
-	if fileName == '':
-		unmodified = gcodec.getUncommentedGcodeFiles()
-		if len( unmodified ) == 0:
-			print( "There is no gcode file in this folder that is not a comment file." )
-			return
-		fileName = unmodified[ 0 ]
-	if gcodeText == '':
-		gcodeText = gcodec.getFileText( fileName )
-	analyzePluginFilenames = getAnalyzePluginFilenames()
-	for analyzePluginFilename in analyzePluginFilenames:
-		pluginModule = gcodec.getModule( analyzePluginFilename, 'analyze_plugins', __file__ )
+	gcodeText = gcodec.getTextIfEmpty( fileName, gcodeText )
+	pluginFilenames = getPluginFilenames()
+	for pluginFilename in pluginFilenames:
+		analyzePluginsDirectoryPath = getPluginsDirectoryPath()
+		pluginModule = gcodec.getModuleWithDirectoryPath( analyzePluginsDirectoryPath, pluginFilename )
 		if pluginModule != None:
 			pluginModule.writeOutput( fileName, gcodeText )
 
 
-class AnalyzePreferences:
+class AnalyzeRepository:
 	"A class to handle the analyze preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
-		self.archive = []
-		self.analyzeLabel = preferences.LabelDisplay().getFromName( 'Open Preferences: ' )
-		self.archive.append( self.analyzeLabel )
+		preferences.addListsToRepository( self )
+		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Analyzed', self, '' )
+		self.analyzeLabel = preferences.LabelDisplay().getFromName( 'Open Preferences: ', self )
 		importantFilenames = [ 'behold', 'skeinview', 'statistic' ]
-		self.archive += preferences.getDisplayToolButtons( gcodec.getAbsoluteFolderPath( __file__, 'analyze_plugins' ), importantFilenames, getAnalyzePluginFilenames(), [] )
-		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Analyzed', '' )
-		self.archive.append( self.fileNameInput )
+		preferences.getDisplayToolButtonsRepository( getPluginsDirectoryPath(), importantFilenames, getPluginFilenames(), self )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Analyze'
-		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.analyze.html' )
 
 	def execute( self ):
@@ -81,7 +80,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
+		preferences.startMainLoopFromConstructor( getRepositoryConstructor() )
 
 if __name__ == "__main__":
 	main()

@@ -92,6 +92,13 @@ def getFeedRateMinute( feedRateMinute, splitLine ):
 		return getDoubleAfterFirstLetter( splitLine[ indexOfF ] )
 	return feedRateMinute
 
+def getFilePathWithUnderscoredBasename( fileName, suffix ):
+	"Get the file path with all spaces in the basename replaced with underscores."
+	suffixFilename = getUntilDot( fileName ) + suffix
+	suffixDirectoryName = os.path.dirname( suffixFilename )
+	suffixReplacedBaseName = os.path.basename( suffixFilename ).replace( ' ', '_' )
+	return os.path.join( suffixDirectoryName, suffixReplacedBaseName )
+
 def getFilesWithFileTypesWithoutWords( fileTypes, words = [], fileInDirectory = '' ):
 	"Get files which have a given file type, but with do not contain a word in a list."
 	filesWithFileTypes = []
@@ -176,21 +183,14 @@ def getLocationFromSplitLine( oldLocation, splitLine ):
 		getDoubleFromCharacterSplitLineValue( 'Y', splitLine, oldLocation.y ),
 		getDoubleFromCharacterSplitLineValue( 'Z', splitLine, oldLocation.z ) )
 
-def getModule( fileName, folderName, moduleFilename ):
-	"Get the module from the fileName and folder name."
-	absoluteDirectory = os.path.dirname( os.path.abspath( moduleFilename ) )
-	if folderName != '':
-		absoluteDirectory = os.path.join( absoluteDirectory, folderName )
-	return getModuleWithPath( fileName, absoluteDirectory )
-
-def getModuleWithPath( fileName, folderPath ):
+def getModuleWithDirectoryPath( directoryPath, fileName ):
 	"Get the module from the fileName and folder name."
 	if fileName == '':
 		print( 'The file name in getModule in gcodec was empty.' )
 		return None
 	originalSystemPath = sys.path[ : ]
 	try:
-		sys.path.insert( 0, folderPath )
+		sys.path.insert( 0, directoryPath )
 		folderPluginsModule = __import__( fileName )
 		sys.path = originalSystemPath
 		return folderPluginsModule
@@ -199,14 +199,16 @@ def getModuleWithPath( fileName, folderPath ):
 		print( why )
 		print( '' )
 		print( 'That error means; could not import a module with the fileName ' + fileName )
-		print( 'folder name ' + folderName )
-		print( 'and module fileName ' + moduleFilename )
-		print( 'giving an absolute directory name of ' + folderPath )
+		print( 'and an absolute directory name of ' + directoryPath )
 		print( '' )
 		print( 'The plugin could not be imported.  So to run ' + fileName + ' directly and at least get a more informative error message,' )
-		print( 'in a shell in the ' + folderName + ' folder type ' )
+		print( 'in a shell in the ' + directoryPath + ' folder type ' )
 		print( '> python ' + fileName + '.py' )
 	return None
+
+def getModuleWithPath( path ):
+	"Get the module from the path."
+	return getModuleWithDirectoryPath( os.path.dirname( path ), os.path.basename( path ) )
 
 def getPluginFilenamesFromDirectoryPath( directoryPath ):
 	"Get the file names of the python plugins in the directory path."
@@ -215,7 +217,7 @@ def getPluginFilenamesFromDirectoryPath( directoryPath ):
 	pluginFilenames = []
 	for fullPluginFilename in fullPluginFilenames:
 		pluginBasename = os.path.basename( fullPluginFilename )
-		pluginBasename = pluginBasename[ : pluginBasename.rfind( '.py' ) ]
+		pluginBasename = getUntilDot( pluginBasename )
 		pluginFilenames.append( pluginBasename )
 	return pluginFilenames
 
@@ -281,6 +283,13 @@ def getUnmodifiedGCodeFiles( fileInDirectory = '' ):
 	words = ' carve clip comb comment cool fill fillet hop inset oozebane raft stretch tower wipe'.replace( ' ', ' _' ).split()
 	return getFilesWithFileTypeWithoutWords( 'gcode', words, fileInDirectory )
 
+def getUntilDot( text ):
+	"Get the text until the dot, if any."
+	dotIndex = text.rfind( '.' )
+	if dotIndex < 0:
+		return text
+	return text[ : dotIndex ]
+
 def getVersionFileName():
 	"Get the file name of the version date."
 	return os.path.join( os.path.dirname( os.path.abspath( __file__ ) ), 'version.txt' )
@@ -302,12 +311,7 @@ def indexOfStartingWithSecond( letter, splitLine ):
 	return - 1
 
 def isFileWithFileTypeWithoutWords( fileType, fileName, words ):
-	"""Determine if file has a given file type, but with does not contain a word in a list.
-
-	Keyword arguments:
-	fileType -- file type required
-	fileName -- name of the file
-	words -- list of words which the fileName must not have"""
+	"Determine if file has a given file type, but with does not contain a word in a list."
 	fileName = os.path.basename( fileName )
 	fileTypeDot = '.' + fileType
 	if not getHasSuffix( fileName, fileTypeDot ):
@@ -363,7 +367,7 @@ def replaceWords( fileNames, original, replacement ):
 
 def writeFileMessageEnd( end, fileName, fileText, message ):
 	"Write to a fileName with a suffix and print a message."
-	suffixFilename = fileName[ : fileName.rfind( '.' ) ] + end
+	suffixFilename = getUntilDot( fileName ) + end
 	writeFileText( suffixFilename, fileText )
 	print( message + getSummarizedFilename( suffixFilename ) )
 
@@ -438,17 +442,19 @@ class DistanceFeedRate:
 			self.absoluteDistanceMode = True
 		elif firstWord == 'G91':
 			self.absoluteDistanceMode = False
-			return
 		if firstWord == '(<extrusionDistanceRatio>':
 			self.extrusionDistanceRatio = float( splitLine[ 1 ] )
 		elif firstWord == 'G1':
 			feedRateMinute = getFeedRateMinute( None, splitLine )
 			if self.absoluteDistanceMode:
 				location = getLocationFromSplitLine( self.oldAddedLocation, splitLine )
+				line = self.getLineWithZLimitedFeedRate( feedRateMinute, line, splitLine, location )
+				self.oldAddedLocation = location
 			else:
-				location = self.oldAddedLocation + getLocationFromSplitLine( None, splitLine )
-			line = self.getLineWithZLimitedFeedRate( feedRateMinute, line, splitLine, location )
-			self.oldAddedLocation = location
+				if self.oldAddedLocation == None:
+					print( 'Warning: There was no absolute location when the G91 command was parsed, so the absolute location will be set to the origin.' )
+					self.oldAddedLocation = Vector3()
+				self.oldAddedLocation += getLocationFromSplitLine( None, splitLine )
 		elif firstWord == 'G92':
 			self.oldAddedLocation = getLocationFromSplitLine( self.oldAddedLocation, splitLine )
 		elif firstWord == 'M101':
@@ -487,6 +493,7 @@ class DistanceFeedRate:
 		arcDistanceZ = complex( abs( afterCenterDifferenceAngle ) * radius, afterPointMinusBefore.z )
 		distance = abs( arcDistanceZ )
 		if distance <= 0.0:
+			print( 'this should never happen but does not really matter, distance <= 0.0 in getArcFeedRateString in gcodec.' )
 			return ''
 		feedRateMinute = self.getZLimitedFeedRate( deltaZ, distance, feedRateMinute )
 		return self.getExtrusionDistanceString( distance ) + ' F' + self.getRounded( feedRateMinute )

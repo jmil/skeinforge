@@ -5,8 +5,8 @@ Open File to be Prefaced
 Do Not Add Extrusion Distance	True
 Extrusion Distance Absolute	False
 Extrusion Distance Relative	False
-Name of End File:	end.txt
-Name of Start File:	start.txt
+Name of End File:	end.gcode
+Name of Start File:	start.gcode
 Set Positioning to Absolute	True
 Set Units to Millimeters	True
 Start at Home	False

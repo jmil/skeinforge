@@ -1,22 +1,17 @@
 """
 Unpause is a script to speed up a line segment to compensate for the delay of the microprocessor.
 
-The default 'Activate Unpause' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions
-will not be called.
+The default 'Activate Unpause' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions will not be called.
 
-The unpause script is based on the Shane Hathaway's patch to speed up a line segment to compensate for the delay of the
-microprocessor.  The description is at:
+The unpause script is based on the Shane Hathaway's patch to speed up a line segment to compensate for the delay of the microprocessor.  The description is at:
 http://shane.willowrise.com/archives/delay-compensation-in-firmware/
 
-The "Delay (milliseconds)" preference is the delay on the microprocessor that will be at least partially compensated for.  The
-default is 28 milliseconds, which Shane found for the Arduino.  The "Maximum Speed" ratio is the maximum amount that the
-feedRate will be sped up to, compared to the original feedRate, the default is 1.5.
+The "Delay (milliseconds)" preference is the delay on the microprocessor that will be at least partially compensated for.  The default is 28 milliseconds, which Shane found for the Arduino.  The "Maximum Speed" ratio is the maximum amount that the feed rate will be sped up to, compared to the original feed rate, the default is 1.5.
 
-The equation to set the feedRate is from Shane Hathaway's description at:
+The equation to set the feed rate is from Shane Hathaway's description at:
 http://shane.willowrise.com/archives/delay-compensation-in-firmware/
 
-The following examples unpause the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
-and unpause.py.
+The following examples unpause the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and unpause.py.
 
 
 > python unpause.py
@@ -53,7 +48,7 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools import polyfile
+from skeinforge_tools.meta_plugins import polyfile
 from skeinforge_tools.skeinforge_utilities import consecution
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
@@ -69,27 +64,27 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def getCraftedText( fileName, text, unpausePreferences = None ):
+def getCraftedText( fileName, text, unpauseRepository = None ):
 	"Unpause a gcode linear move file or text."
-	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), unpausePreferences )
+	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), unpauseRepository )
 
-def getCraftedTextFromText( gcodeText, unpausePreferences = None ):
+def getCraftedTextFromText( gcodeText, unpauseRepository = None ):
 	"Unpause a gcode linear move text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'unpause' ):
 		return gcodeText
-	if unpausePreferences == None:
-		unpausePreferences = preferences.getReadPreferences( UnpausePreferences() )
-	if not unpausePreferences.activateUnpause.value:
+	if unpauseRepository == None:
+		unpauseRepository = preferences.getReadRepository( UnpauseRepository() )
+	if not unpauseRepository.activateUnpause.value:
 		return gcodeText
-	return UnpauseSkein().getCraftedGcode( unpausePreferences, gcodeText )
+	return UnpauseSkein().getCraftedGcode( unpauseRepository, gcodeText )
 
-def getPreferencesConstructor():
-	"Get the preferences constructor."
-	return UnpausePreferences()
+def getRepositoryConstructor():
+	"Get the repository constructor."
+	return UnpauseRepository()
 
-def getSelectedPlugin( unpausePreferences ):
+def getSelectedPlugin( unpauseRepository ):
 	"Get the selected plugin."
-	for plugin in unpausePreferences.unpausePlugins:
+	for plugin in unpauseRepository.unpausePlugins:
 		if plugin.value:
 			return plugin
 	return None
@@ -101,23 +96,18 @@ def writeOutput( fileName = '' ):
 		consecution.writeChainTextWithNounMessage( fileName, 'unpause' )
 
 
-class UnpausePreferences:
+class UnpauseRepository:
 	"A class to handle the unpause preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
-		self.archive = []
-		self.activateUnpause = preferences.BooleanPreference().getFromValue( 'Activate Unpause', False )
-		self.archive.append( self.activateUnpause )
-		self.delay = preferences.FloatPreference().getFromValue( 'Delay (milliseconds):', 28.0 )
-		self.archive.append( self.delay )
-		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Unpaused', '' )
-		self.archive.append( self.fileNameInput )
-		self.maximumSpeed = preferences.FloatPreference().getFromValue( 'Maximum Speed (ratio):', 1.5 )
-		self.archive.append( self.maximumSpeed )
+		preferences.addListsToRepository( self )
+		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Unpaused', self, '' )
+		self.activateUnpause = preferences.BooleanPreference().getFromValue( 'Activate Unpause', self, False )
+		self.delay = preferences.FloatPreference().getFromValue( 'Delay (milliseconds):', self, 28.0 )
+		self.maximumSpeed = preferences.FloatPreference().getFromValue( 'Maximum Speed (ratio):', self, 1.5 )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Unpause'
-		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.unpause.html' )
 
 	def execute( self ):
@@ -137,12 +127,12 @@ class UnpauseSkein:
 		self.lines = None
 		self.oldLocation = None
 
-	def getCraftedGcode( self, unpausePreferences, gcodeText ):
+	def getCraftedGcode( self, unpauseRepository, gcodeText ):
 		"Parse gcode text and store the unpause gcode."
-		self.delaySecond = unpausePreferences.delay.value * 0.001
-		self.maximumSpeed = unpausePreferences.maximumSpeed.value
+		self.delaySecond = unpauseRepository.delay.value * 0.001
+		self.maximumSpeed = unpauseRepository.maximumSpeed.value
 		self.minimumSpeedUpReciprocal = 1.0 / self.maximumSpeed
-		self.unpausePreferences = unpausePreferences
+		self.unpauseRepository = unpauseRepository
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.parseInitialization()
 		for self.lineIndex in xrange( self.lineIndex, len( self.lines ) ):
@@ -151,7 +141,7 @@ class UnpauseSkein:
 		return self.distanceFeedRate.output.getvalue()
 
 	def getUnpausedFeedRateMinute( self, location, splitLine ):
-		"Get the feedRate which will compensate for the pause."
+		"Get the feed rate which will compensate for the pause."
 		self.feedRateMinute = gcodec.getFeedRateMinute( self.feedRateMinute, splitLine )
 		if self.oldLocation == None:
 			return self.feedRateMinute
@@ -234,7 +224,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
+		preferences.startMainLoopFromConstructor( getRepositoryConstructor() )
 
 if __name__ == "__main__":
 	main()

@@ -9,43 +9,36 @@
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="skeinforge_tools.html"><font color="#ffffff">skeinforge_tools</font></a>.<a href="skeinforge_tools.analyze_plugins.html"><font color="#ffffff">analyze_plugins</font></a>.vectorwrite</strong></big></big> ($Date: 2008/21/04 $)</font></td
 ><td align=right valign=bottom
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/analyze_plugins/vectorwrite.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/analyze_plugins/vectorwrite.py</a></font></td></tr></table>
-    <p><tt>Vectorwrite&nbsp;is&nbsp;a&nbsp;script&nbsp;to&nbsp;write&nbsp;Scalable&nbsp;Vector&nbsp;Graphics&nbsp;for&nbsp;a&nbsp;gcode&nbsp;file.<br>
-&nbsp;<br>
-The&nbsp;default&nbsp;'Activate&nbsp;Vectorwrite'&nbsp;checkbox&nbsp;is&nbsp;on.&nbsp;&nbsp;When&nbsp;it&nbsp;is&nbsp;on,&nbsp;the&nbsp;functions&nbsp;described&nbsp;below&nbsp;will&nbsp;work&nbsp;when&nbsp;called&nbsp;from&nbsp;the<br>
-skeinforge&nbsp;toolchain,&nbsp;when&nbsp;it&nbsp;is&nbsp;off,&nbsp;the&nbsp;functions&nbsp;will&nbsp;not&nbsp;be&nbsp;called&nbsp;from&nbsp;the&nbsp;toolchain.&nbsp;&nbsp;The&nbsp;functions&nbsp;will&nbsp;still&nbsp;be&nbsp;called,&nbsp;whether<br>
-or&nbsp;not&nbsp;the&nbsp;'Activate&nbsp;Vectorwrite'&nbsp;checkbox&nbsp;is&nbsp;on,&nbsp;when&nbsp;vectorwrite&nbsp;is&nbsp;run&nbsp;directly.<br>
-&nbsp;<br>
-The&nbsp;"Layer&nbsp;From"&nbsp;is&nbsp;the&nbsp;index&nbsp;of&nbsp;the&nbsp;bottom&nbsp;layer&nbsp;that&nbsp;will&nbsp;be&nbsp;displayed.&nbsp;&nbsp;If&nbsp;the&nbsp;layer&nbsp;from&nbsp;is&nbsp;the&nbsp;default&nbsp;zero,&nbsp;the&nbsp;display&nbsp;will<br>
-start&nbsp;from&nbsp;the&nbsp;lowest&nbsp;layer.&nbsp;&nbsp;If&nbsp;the&nbsp;the&nbsp;layer&nbsp;from&nbsp;index&nbsp;is&nbsp;negative,&nbsp;then&nbsp;the&nbsp;display&nbsp;will&nbsp;start&nbsp;from&nbsp;the&nbsp;layer&nbsp;from&nbsp;index&nbsp;below&nbsp;the<br>
-top&nbsp;layer.&nbsp;&nbsp;The&nbsp;"Layer&nbsp;To"&nbsp;is&nbsp;the&nbsp;index&nbsp;of&nbsp;the&nbsp;top&nbsp;layer&nbsp;that&nbsp;will&nbsp;be&nbsp;displayed.&nbsp;&nbsp;If&nbsp;the&nbsp;layer&nbsp;to&nbsp;index&nbsp;is&nbsp;a&nbsp;huge&nbsp;number&nbsp;like&nbsp;the<br>
-default&nbsp;999999999,&nbsp;the&nbsp;display&nbsp;will&nbsp;go&nbsp;to&nbsp;the&nbsp;top&nbsp;of&nbsp;the&nbsp;model,&nbsp;at&nbsp;least&nbsp;until&nbsp;we&nbsp;model&nbsp;habitats:)&nbsp;&nbsp;If&nbsp;the&nbsp;layer&nbsp;to&nbsp;index&nbsp;is&nbsp;negative,<br>
-then&nbsp;the&nbsp;display&nbsp;will&nbsp;go&nbsp;to&nbsp;the&nbsp;layer&nbsp;to&nbsp;index&nbsp;below&nbsp;the&nbsp;top&nbsp;layer.&nbsp;&nbsp;The&nbsp;layer&nbsp;from&nbsp;until&nbsp;layer&nbsp;to&nbsp;index&nbsp;is&nbsp;a&nbsp;python&nbsp;slice.<br>
-&nbsp;<br>
-To&nbsp;run&nbsp;vectorwrite,&nbsp;in&nbsp;a&nbsp;shell&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;vectorwrite&nbsp;is&nbsp;in&nbsp;type:<br>
-&gt;&nbsp;python&nbsp;vectorwrite.py<br>
-&nbsp;<br>
-The&nbsp;Scalable&nbsp;Vector&nbsp;Graphics&nbsp;file&nbsp;can&nbsp;be&nbsp;opened&nbsp;by&nbsp;an&nbsp;SVG&nbsp;viewer&nbsp;or&nbsp;an&nbsp;SVG&nbsp;capable&nbsp;browser&nbsp;like&nbsp;Mozilla:<br>
+    <p><tt>Vectorwrite is a script to write Scalable Vector Graphics for a gcode file.<br>
+ <br>
+The default 'Activate Vectorwrite' checkbox is on.  When it is on, the functions described below will work when called from the skeinforge toolchain, when it is off, the functions will not be called from the toolchain.  The functions will still be called, whether or not the 'Activate Vectorwrite' checkbox is on, when vectorwrite is run directly.<br>
+ <br>
+The "Layer From" is the index of the bottom layer that will be displayed.  If the layer from is the default zero, the display will start from the lowest layer.  If the the layer from index is negative, then the display will start from the layer from index below the top layer.  The "Layer To" is the index of the top layer that will be displayed.  If the layer to index is a huge number like the default 999999999, the display will go to the top of the model, at least until we model habitats:)  If the layer to index is negative, then the display will go to the layer to index below the top layer.  The layer from until layer to index is a python slice.<br>
+ <br>
+To run vectorwrite, in a shell in the folder which vectorwrite is in type:<br>
+&gt; python vectorwrite.py<br>
+ <br>
+The Scalable Vector Graphics file can be opened by an SVG viewer or an SVG capable browser like Mozilla:<br>
 <a href="http://www.mozilla.com/firefox/">http://www.mozilla.com/firefox/</a><br>
-&nbsp;<br>
-This&nbsp;example&nbsp;writes&nbsp;vector&nbsp;graphics&nbsp;for&nbsp;the&nbsp;gcode&nbsp;file&nbsp;Screw&nbsp;Holder.gcode.&nbsp;&nbsp;This&nbsp;example&nbsp;is&nbsp;run&nbsp;in&nbsp;a&nbsp;terminal&nbsp;in&nbsp;the&nbsp;folder&nbsp;which<br>
-contains&nbsp;Screw&nbsp;Holder.gcode&nbsp;and&nbsp;vectorwrite.py.<br>
-&nbsp;<br>
-&nbsp;<br>
-&gt;&nbsp;python&nbsp;vectorwrite.py<br>
-This&nbsp;brings&nbsp;up&nbsp;the&nbsp;vectorwrite&nbsp;dialog.<br>
-&nbsp;<br>
-&nbsp;<br>
-&gt;&nbsp;python&nbsp;vectorwrite.py&nbsp;Screw&nbsp;Holder.gcode<br>
-The&nbsp;vectorwrite&nbsp;file&nbsp;is&nbsp;saved&nbsp;as&nbsp;Screw_Holder_vectorwrite.svg<br>
-&nbsp;<br>
-&nbsp;<br>
-&gt;&nbsp;python<br>
-Python&nbsp;2.5.1&nbsp;(r251:54863,&nbsp;Sep&nbsp;22&nbsp;2007,&nbsp;01:43:31)<br>
-[GCC&nbsp;4.2.1&nbsp;(SUSE&nbsp;Linux)]&nbsp;on&nbsp;linux2<br>
-Type&nbsp;"help",&nbsp;"copyright",&nbsp;"credits"&nbsp;or&nbsp;"license"&nbsp;for&nbsp;more&nbsp;information.<br>
-&gt;&gt;&gt;&nbsp;import&nbsp;vectorwrite<br>
-&gt;&gt;&gt;&nbsp;vectorwrite.<a href="#-main">main</a>()<br>
-This&nbsp;brings&nbsp;up&nbsp;the&nbsp;vectorwrite&nbsp;dialog.</tt></p>
+ <br>
+This example writes vector graphics for the gcode file Screw Holder.gcode.  This example is run in a terminal in the folder which contains Screw Holder.gcode and vectorwrite.py.<br>
+ <br>
+ <br>
+&gt; python vectorwrite.py<br>
+This brings up the vectorwrite dialog.<br>
+ <br>
+ <br>
+&gt; python vectorwrite.py Screw Holder.gcode<br>
+The vectorwrite file is saved as Screw_Holder_vectorwrite.svg<br>
+ <br>
+ <br>
+&gt; python<br>
+Python 2.5.1 (r251:54863, Sep 22 2007, 01:43:31)<br>
+[GCC 4.2.1 (SUSE Linux)] on linux2<br>
+Type "help", "copyright", "credits" or "license" for more information.<br>
+&gt;&gt;&gt; import vectorwrite<br>
+&gt;&gt;&gt; vectorwrite.<a href="#-main">main</a>()<br>
+This brings up the vectorwrite dialog.</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
 <tr bgcolor="#aa55cc">
@@ -58,7 +51,7 @@ This&nbsp;brings&nbsp;up&nbsp;the&nbsp;vectorwrite&nbsp;dialog.</tt></p>
 <a href="skeinforge_tools.skeinforge_utilities.euclidean.html">skeinforge_tools.skeinforge_utilities.euclidean</a><br>
 </td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.gcodec.html">skeinforge_tools.skeinforge_utilities.gcodec</a><br>
 <a href="os.html">os</a><br>
-<a href="skeinforge_tools.polyfile.html">skeinforge_tools.polyfile</a><br>
+<a href="skeinforge_tools.meta_plugins.polyfile.html">skeinforge_tools.meta_plugins.polyfile</a><br>
 </td><td width="25%" valign=top><a href="skeinforge_tools.skeinforge_utilities.preferences.html">skeinforge_tools.skeinforge_utilities.preferences</a><br>
 <a href="skeinforge_tools.skeinforge_utilities.svg_codec.html">skeinforge_tools.skeinforge_utilities.svg_codec</a><br>
 <a href="sys.html">sys</a><br>
@@ -148,7 +141,7 @@ Methods inherited from <a href="skeinforge_tools.skeinforge_utilities.svg_codec.
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-getPreferencesConstructor"><strong>getPreferencesConstructor</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;preferences&nbsp;constructor.</tt></dd></dl>
+<td width="100%"><dl><dt><a name="-getRepositoryConstructor"><strong>getRepositoryConstructor</strong></a>()</dt><dd><tt>Get&nbsp;the&nbsp;repository&nbsp;constructor.</tt></dd></dl>
  <dl><dt><a name="-main"><strong>main</strong></a>()</dt><dd><tt>Display&nbsp;the&nbsp;vectorwrite&nbsp;dialog.</tt></dd></dl>
  <dl><dt><a name="-writeGivenPreferences"><strong>writeGivenPreferences</strong></a>(fileName, gcodeText, vectorwritePreferences)</dt><dd><tt>Write&nbsp;scalable&nbsp;vector&nbsp;graphics&nbsp;for&nbsp;a&nbsp;gcode&nbsp;file&nbsp;given&nbsp;the&nbsp;preferences.</tt></dd></dl>
  <dl><dt><a name="-writeOutput"><strong>writeOutput</strong></a>(fileName, gcodeText<font color="#909090">=''</font>)</dt><dd><tt>Write&nbsp;scalable&nbsp;vector&nbsp;graphics&nbsp;for&nbsp;a&nbsp;skeinforge&nbsp;gcode&nbsp;file,&nbsp;if&nbsp;activate&nbsp;vectorwrite&nbsp;is&nbsp;selected.</tt></dd></dl>

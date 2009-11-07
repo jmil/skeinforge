@@ -1,12 +1,9 @@
 """
 Statistic is a script to generate statistics a gcode file.
 
-The default 'Activate Statistic' checkbox is on.  When it is on, the functions described below will work when called from the
-skeinforge toolchain, when it is off, the functions will not be called from the toolchain.  The functions will still be called, whether
-or not the 'Activate Statistic' checkbox is on, when statistic is run directly.
+The default 'Activate Statistic' checkbox is on.  When it is on, the functions described below will work when called from the skeinforge toolchain, when it is off, the functions will not be called from the toolchain.  The functions will still be called, whether or not the 'Activate Statistic' checkbox is on, when statistic is run directly.
 
-When the 'Print Statistics' checkbox is on, the statistics will be printed to the console, the default is on.  When the 'Save
-Statistics' checkbox is on, the statistics will be save as a .txt file, the default is off.
+When the 'Print Statistics' checkbox is on, the statistics will be printed to the console, the default is on.  When the 'Save Statistics' checkbox is on, the statistics will be save as a .txt file, the default is off.
 
 To run statistic, in a shell in the folder which statistic is in type:
 > python statistic.py
@@ -20,8 +17,7 @@ http://reprap.org/bin/view/Main/MCodeReference
 A gode example is at:
 http://forums.reprap.org/file.php?12,file=565
 
-This example generates statistics the gcode file Screw Holder_comb.gcode.  This example is run in a terminal in the folder which contains
-Screw Holder_comb.gcode and statistic.py.
+This example generates statistics for the gcode file Screw Holder_comb.gcode.  This example is run in a terminal in the folder which contains Screw Holder_comb.gcode and statistic.py.
 
 
 > python
@@ -46,7 +42,7 @@ from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
-from skeinforge_tools import polyfile
+from skeinforge_tools.meta_plugins import polyfile
 import cStringIO
 import math
 import sys
@@ -57,8 +53,8 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def getPreferencesConstructor():
-	"Get the preferences constructor."
+def getRepositoryConstructor():
+	"Get the repository constructor."
 	return StatisticPreferences()
 
 def getStatisticGcode( gcodeText ):
@@ -76,13 +72,13 @@ def statisticFile( fileName = '' ):
 			return
 		fileName = unmodified[ 0 ]
 	statisticPreferences = StatisticPreferences()
-	preferences.getReadPreferences( statisticPreferences )
+	preferences.getReadRepository( statisticPreferences )
 	writeStatisticFileGivenText( fileName, gcodec.getFileText( fileName ), statisticPreferences )
 
 def writeOutput( fileName, gcodeText = '' ):
 	"Write statistics for a skeinforge gcode file, if 'Write Statistics File for Skeinforge Chain' is selected."
 	statisticPreferences = StatisticPreferences()
-	preferences.getReadPreferences( statisticPreferences )
+	preferences.getReadRepository( statisticPreferences )
 	if gcodeText == '':
 		gcodeText = gcodec.getFileText( fileName )
 	if statisticPreferences.activateStatistic.value:
@@ -105,15 +101,11 @@ class StatisticPreferences:
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
-		self.archive = []
-		self.activateStatistic = preferences.BooleanPreference().getFromValue( 'Activate Statistic', True )
-		self.archive.append( self.activateStatistic )
-		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Generate Statistics for', '' )
-		self.archive.append( self.fileNameInput )
-		self.printStatistics = preferences.BooleanPreference().getFromValue( 'Print Statistics', True )
-		self.archive.append( self.printStatistics )
-		self.saveStatistics = preferences.BooleanPreference().getFromValue( 'Save Statistics', False )
-		self.archive.append( self.saveStatistics )
+		preferences.addListsToRepository( self )
+		self.activateStatistic = preferences.BooleanPreference().getFromValue( 'Activate Statistic', self, True )
+		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Generate Statistics for', self, '' )
+		self.printStatistics = preferences.BooleanPreference().getFromValue( 'Print Statistics', self, True )
+		self.saveStatistics = preferences.BooleanPreference().getFromValue( 'Save Statistics', self, False )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Generate Statistics'
 		self.saveCloseTitle = 'Save and Close'
@@ -184,9 +176,9 @@ class StatisticSkein:
 			centerMinusMidpoint.normalize()
 			centerMinusMidpoint *= centerMidpointDistance
 			if isCounterclockwise:
-				center.setToVec3( halfLocationMinusOld + centerMinusMidpoint )
+				center.setToVector3( halfLocationMinusOld + centerMinusMidpoint )
 			else:
-				center.setToVec3( halfLocationMinusOld - centerMinusMidpoint )
+				center.setToVector3( halfLocationMinusOld - centerMinusMidpoint )
 		else:
 			center.x = gcodec.getDoubleForLetter( "I", splitLine )
 			center.y = gcodec.getDoubleForLetter( "J", splitLine )
@@ -317,7 +309,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
+		preferences.startMainLoopFromConstructor( getRepositoryConstructor() )
 
 if __name__ == "__main__":
 	main()

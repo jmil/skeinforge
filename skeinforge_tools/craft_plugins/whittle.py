@@ -3,16 +3,11 @@ Whittle is a script to turn each polygon of a gcode file into a helix.
 
 Whittle will convert each polygon of a gcode file into a helix which has a vertical step down on each rotation.
 
-The default 'Activate Whittle' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions
-will not be called.  If the cutting tool can cut the slab in one cut, the 'Activate Whittle' checkbox should be off, the default is off.
+The default 'Activate Whittle' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions will not be called.  If the cutting tool can cut the slab in one cut, the 'Activate Whittle' checkbox should be off, the default is off.
 
-The 'Maximum Vertical Step' is the maximum distance that the helix will step down on each rotation.  The number of steps in
-the helix will be the layer thickness divided by the 'Maximum Vertical Step', rounded up.  The amount the helix will step down is
-the layer thickness divided by the number of steps.  The default is 0.1 mm, the thinner the 'Maximum Vertical Step', the more
-times the cutting tool will circle around on its way to the bottom of the slab.
+The 'Maximum Vertical Step' is the maximum distance that the helix will step down on each rotation.  The number of steps in the helix will be the layer thickness divided by the 'Maximum Vertical Step', rounded up.  The amount the helix will step down is the layer thickness divided by the number of steps.  The default is 0.1 mm, the thinner the 'Maximum Vertical Step', the more times the cutting tool will circle around on its way to the bottom of the slab.
 
-The following examples whittle the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains
-Screw Holder Bottom.stl and whittle.py.
+The following examples whittle the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and whittle.py.
 
 
 > python whittle.py
@@ -59,7 +54,7 @@ from skeinforge_tools.skeinforge_utilities import consecution
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities import interpret
-from skeinforge_tools import polyfile
+from skeinforge_tools.meta_plugins import polyfile
 import math
 import sys
 
@@ -69,23 +64,23 @@ __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
 
-def getCraftedText( fileName, text = '', whittlePreferences = None ):
+def getCraftedText( fileName, text = '', whittleRepository = None ):
 	"Whittle the preface file or text."
-	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), whittlePreferences )
+	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), whittleRepository )
 
-def getCraftedTextFromText( gcodeText, whittlePreferences = None ):
+def getCraftedTextFromText( gcodeText, whittleRepository = None ):
 	"Whittle the preface gcode text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'whittle' ):
 		return gcodeText
-	if whittlePreferences == None:
-		whittlePreferences = preferences.getReadPreferences( WhittlePreferences() )
-	if not whittlePreferences.activateWhittle.value:
+	if whittleRepository == None:
+		whittleRepository = preferences.getReadRepository( WhittleRepository() )
+	if not whittleRepository.activateWhittle.value:
 		return gcodeText
-	return WhittleSkein().getCraftedGcode( whittlePreferences, gcodeText )
+	return WhittleSkein().getCraftedGcode( whittleRepository, gcodeText )
 
-def getPreferencesConstructor():
-	"Get the preferences constructor."
-	return WhittlePreferences()
+def getRepositoryConstructor():
+	"Get the repository constructor."
+	return WhittleRepository()
 
 def writeOutput( fileName = '' ):
 	"Whittle the carving of a gcode file.  If no fileName is specified, whittle the first unmodified gcode file in this folder."
@@ -95,22 +90,18 @@ def writeOutput( fileName = '' ):
 	consecution.writeChainTextWithNounMessage( fileName, 'whittle' )
 
 
-class WhittlePreferences:
+class WhittleRepository:
 	"A class to handle the whittle preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
-		self.archive = []
+		preferences.addListsToRepository( self )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
-		self.activateWhittle = preferences.BooleanPreference().getFromValue( 'Activate Whittle:', False )
-		self.archive.append( self.activateWhittle )
-		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Whittled', '' )
-		self.archive.append( self.fileNameInput )
-		self.maximumVerticalStep = preferences.FloatPreference().getFromValue( 'Maximum Vertical Step (mm):', 0.1 )
-		self.archive.append( self.maximumVerticalStep )
+		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Whittled', self, '' )
+		self.activateWhittle = preferences.BooleanPreference().getFromValue( 'Activate Whittle:', self, False )
+		self.maximumVerticalStep = preferences.FloatPreference().getFromValue( 'Maximum Vertical Step (mm):', self, 0.1 )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Whittle'
-		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.whittle.html' )
 
 	def execute( self ):
@@ -129,9 +120,9 @@ class WhittleSkein:
 		self.movementLines = []
 		self.oldLocation = None
 
-	def getCraftedGcode( self, whittlePreferences, gcodeText ):
+	def getCraftedGcode( self, whittleRepository, gcodeText ):
 		"Parse gcode text and store the whittle gcode."
-		self.whittlePreferences = whittlePreferences
+		self.whittleRepository = whittleRepository
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.parseInitialization()
 		for line in self.lines[ self.lineIndex : ]:
@@ -142,7 +133,7 @@ class WhittleSkein:
 		"Get the linear move."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		self.movementLines.append( line )
-		z = location.z + self.verticalDeltas[ 0 ]
+		z = location.z + self.layerDeltas[ 0 ]
 		self.oldLocation = location
 		return self.distanceFeedRate.getLineWithZ( line, splitLine, z )
 
@@ -158,6 +149,7 @@ class WhittleSkein:
 				return
 			elif firstWord == '(<layerThickness>':
 				self.setLayerThinknessVerticalDeltas( splitLine )
+				self.distanceFeedRate.addTagBracketedLine( 'layerStep', self.layerStep )
 			self.distanceFeedRate.addLine( line )
 
 	def parseLine( self, line ):
@@ -174,24 +166,24 @@ class WhittleSkein:
 
 	def repeatLines( self ):
 		"Repeat the lines at decreasing altitude."
-		for verticalDelta in self.verticalDeltas[ 1 : ]:
+		for layerDelta in self.layerDeltas[ 1 : ]:
 			for movementLine in self.movementLines:
 				splitLine = movementLine.split()
 				location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-				z = location.z + verticalDelta
+				z = location.z + layerDelta
 				self.distanceFeedRate.addLine( self.distanceFeedRate.getLineWithZ( movementLine, splitLine, z ) )
 		self.movementLines = []
 
 	def setLayerThinknessVerticalDeltas( self, splitLine ):
 		"Set the layer thickness and the vertical deltas."
 		self.layerThickness = float( splitLine[ 1 ] )
-		numberOfSteps = int( math.ceil( self.layerThickness / self.whittlePreferences.maximumVerticalStep.value ) )
-		self.verticalStep = self.layerThickness / float( numberOfSteps )
-		self.verticalDeltas = []
-		halfDeltaMinusHalfTop = 0.5 * self.verticalStep * ( 1.0 - numberOfSteps )
-		for verticalDeltaIndex in xrange( numberOfSteps - 1, - 1, - 1 ):
-			verticalDelta = verticalDeltaIndex * self.verticalStep + halfDeltaMinusHalfTop
-			self.verticalDeltas.append( verticalDelta )
+		numberOfSteps = int( math.ceil( self.layerThickness / self.whittleRepository.maximumVerticalStep.value ) )
+		self.layerStep = self.layerThickness / float( numberOfSteps )
+		self.layerDeltas = []
+		halfDeltaMinusHalfTop = 0.5 * self.layerStep * ( 1.0 - numberOfSteps )
+		for layerDeltaIndex in xrange( numberOfSteps - 1, - 1, - 1 ):
+			layerDelta = layerDeltaIndex * self.layerStep + halfDeltaMinusHalfTop
+			self.layerDeltas.append( layerDelta )
 
 
 def main():
@@ -199,7 +191,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
+		preferences.startMainLoopFromConstructor( getRepositoryConstructor() )
 
 if __name__ == "__main__":
 	main()

@@ -1,24 +1,15 @@
 """
 Lift is a script to change the altitude of a gcode file.
 
-Lift will change the altitude of the cutting tool when it is on so that it will cut through the slab at the correct altitude.  It will also
-lift the gcode when the tool is off so that the cutting tool will clear the top of the slab.
+Lift will change the altitude of the cutting tool when it is on so that it will cut through the slab at the correct altitude.  It will also lift the gcode when the tool is off so that the cutting tool will clear the top of the slab.
 
-The default 'Activate Lift' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions
-will not be called.
+The default 'Activate Lift' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions will not be called.
 
-The 'Cutting Lift over Layer Step' is the ratio of the amount the cutting tool will be lifted over the layer step.  If whittle is off the
-layer step will be the layer thickness, if it is on, it will be the layer step from the whittle gcode.  If the cutting tool is like an end
-mill, where the cutting happens until the end of the tool, then the 'Cutting Lift over Layer Step' should be minus 0.5, so that the
-end mill cuts to the bottom of the slab.  If the cutting tool is like a laser, where the cutting happens around the focal point. the
-'Cutting Lift over Layer Step' should be zero, so that the cutting action will be focused in the middle of the slab.  The default is
-minus 0.5, because the end mill is the more common tool.
+The 'Cutting Lift over Layer Step' is the ratio of the amount the cutting tool will be lifted over the layer step.  If whittle is off the layer step will be the layer thickness, if it is on, it will be the layer step from the whittle gcode.  If the cutting tool is like an end mill, where the cutting happens until the end of the tool, then the 'Cutting Lift over Layer Step' should be minus 0.5, so that the end mill cuts to the bottom of the slab.  If the cutting tool is like a laser, where the cutting happens around the focal point. the 'Cutting Lift over Layer Step' should be zero, so that the cutting action will be focused in the middle of the slab.  The default is minus 0.5, because the end mill is the more common tool.
 
-The 'Clearance above Top' is the distance above the top of the slab the cutting tool will be lifted when will tool is off so that the
-cutting tool will clear the top of the slab.  The default is 5 mm.
+The 'Clearance above Top' is the distance above the top of the slab the cutting tool will be lifted when will tool is off so that the cutting tool will clear the top of the slab.  The default is 5 mm.
 
-The following examples lift the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
-and lift.py.
+The following examples lift the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and lift.py.
 
 
 > python lift.py
@@ -64,7 +55,7 @@ from skeinforge_tools.skeinforge_utilities import consecution
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities import interpret
-from skeinforge_tools import polyfile
+from skeinforge_tools.meta_plugins import polyfile
 import sys
 
 
@@ -73,23 +64,23 @@ __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
 
-def getCraftedText( fileName, text = '', liftPreferences = None ):
+def getCraftedText( fileName, text = '', liftRepository = None ):
 	"Lift the preface file or text."
-	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), liftPreferences )
+	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), liftRepository )
 
-def getCraftedTextFromText( gcodeText, liftPreferences = None ):
+def getCraftedTextFromText( gcodeText, liftRepository = None ):
 	"Lift the preface gcode text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'lift' ):
 		return gcodeText
-	if liftPreferences == None:
-		liftPreferences = preferences.getReadPreferences( LiftPreferences() )
-	if not liftPreferences.activateLift.value:
+	if liftRepository == None:
+		liftRepository = preferences.getReadRepository( LiftRepository() )
+	if not liftRepository.activateLift.value:
 		return gcodeText
-	return LiftSkein().getCraftedGcode( liftPreferences, gcodeText )
+	return LiftSkein().getCraftedGcode( liftRepository, gcodeText )
 
-def getPreferencesConstructor():
-	"Get the preferences constructor."
-	return LiftPreferences()
+def getRepositoryConstructor():
+	"Get the repository constructor."
+	return LiftRepository()
 
 def writeOutput( fileName = '' ):
 	"Lift the carving of a gcode file."
@@ -98,24 +89,18 @@ def writeOutput( fileName = '' ):
 		consecution.writeChainTextWithNounMessage( fileName, 'lift' )
 
 
-class LiftPreferences:
+class LiftRepository:
 	"A class to handle the lift preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
-		self.archive = []
-		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
-		self.activateLift = preferences.BooleanPreference().getFromValue( 'Activate Lift:', True )
-		self.archive.append( self.activateLift )
-		self.cuttingLiftOverLayerStep = preferences.FloatPreference().getFromValue( 'Cutting Lift over Layer Step (ratio):', - 0.5 )
-		self.archive.append( self.cuttingLiftOverLayerStep )
-		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Lifted', '' )
-		self.archive.append( self.fileNameInput )
-		self.clearanceAboveTop = preferences.FloatPreference().getFromValue( 'Clearance above Top (mm):', 5.0 )
-		self.archive.append( self.clearanceAboveTop )
+		preferences.addListsToRepository( self )
+		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Lifted', self, '' )
+		self.activateLift = preferences.BooleanPreference().getFromValue( 'Activate Lift:', self, True )
+		self.cuttingLiftOverLayerStep = preferences.FloatPreference().getFromValue( 'Cutting Lift over Layer Step (ratio):', self, - 0.5 )
+		self.clearanceAboveTop = preferences.FloatPreference().getFromValue( 'Clearance above Top (mm):', self, 5.0 )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Lift'
-		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.lift.html' )
 
 	def execute( self ):
@@ -130,7 +115,7 @@ class LiftSkein:
 	def __init__( self ):
 		self.distanceFeedRate = gcodec.DistanceFeedRate()
 		self.extruderActive = False
-		self.layerStep = 0.0
+		self.layerStep = None
 		self.layerThickness = 0.3333333333
 		self.lineIndex = 0
 		self.maximumZ = - 912345678.0
@@ -144,18 +129,16 @@ class LiftSkein:
 			self.distanceFeedRate.addLine( self.previousInactiveMovementLine )
 			self.previousInactiveMovementLine = None
 
-	def getCraftedGcode( self, liftPreferences, gcodeText ):
+	def getCraftedGcode( self, liftRepository, gcodeText ):
 		"Parse gcode text and store the lift gcode."
-		self.liftPreferences = liftPreferences
+		self.liftRepository = liftRepository
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.parseInitialization()
-		for line in self.lines[ self.lineIndex : ]:
-			self.parseZ( line )
 		self.oldLocation = None
-		if self.layerStep <= 0.0:
+		if self.layerStep == None:
 			self.layerStep = self.layerThickness
-		self.cuttingLift = self.layerStep * liftPreferences.cuttingLiftOverLayerStep.value
-		self.travelZ = self.maximumZ + 0.5 * self.layerStep + liftPreferences.clearanceAboveTop.value
+		self.cuttingLift = self.layerStep * liftRepository.cuttingLiftOverLayerStep.value
+		self.travelZ = self.maximumZ + 0.5 * self.layerStep + liftRepository.clearanceAboveTop.value
 		for line in self.lines[ self.lineIndex : ]:
 			self.parseLine( line )
 		return self.distanceFeedRate.output.getvalue()
@@ -173,15 +156,6 @@ class LiftSkein:
 		self.previousInactiveMovementLine = line
 		return ''
 
-	def linearZ( self, splitLine ):
-		"Update the z."
-		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-		self.maximumZ = max( self.maximumZ, location.z )
-		if self.oldLocation != None:
-			deltaZ = abs( location.z - self.oldLocation.z )
-			self.layerStep = max( self.layerStep, deltaZ )
-		self.oldLocation = location
-
 	def parseInitialization( self ):
 		"Parse gcode initialization and store the parameters."
 		for self.lineIndex in xrange( len( self.lines ) ):
@@ -194,6 +168,8 @@ class LiftSkein:
 				return
 			elif firstWord == '(<layerThickness>':
 				self.layerThickness = float( splitLine[ 1 ] )
+			elif firstWord == '(<layerStep>':
+				self.layerStep = float( splitLine[ 1 ] )
 			self.distanceFeedRate.addLine( line )
 
 	def parseLine( self, line ):
@@ -214,21 +190,13 @@ class LiftSkein:
 			self.extruderActive = False
 		self.distanceFeedRate.addLine( line )
 
-	def parseZ( self, line ):
-		"Parse a gcode line and use the location to update the bounding corners."
-		splitLine = line.split()
-		if len( splitLine ) < 1:
-			return
-		if splitLine[ 0 ] == 'G1':
-			self.linearZ( splitLine )
-
 
 def main():
 	"Display the lift dialog."
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
+		preferences.startMainLoopFromConstructor( getRepositoryConstructor() )
 
 if __name__ == "__main__":
 	main()

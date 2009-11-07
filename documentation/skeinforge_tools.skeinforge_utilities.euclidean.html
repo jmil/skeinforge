@@ -9,26 +9,25 @@
 <font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong><a href="skeinforge_tools.html"><font color="#ffffff">skeinforge_tools</font></a>.<a href="skeinforge_tools.skeinforge_utilities.html"><font color="#ffffff">skeinforge_utilities</font></a>.euclidean</strong></big></big> ($Date: 2008/21/04 $)</font></td
 ><td align=right valign=bottom
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/skeinforge_utilities/euclidean.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/skeinforge_utilities/euclidean.py</a></font></td></tr></table>
-    <p><tt>Euclidean&nbsp;is&nbsp;a&nbsp;collection&nbsp;of&nbsp;python&nbsp;utilities&nbsp;for&nbsp;complex&nbsp;numbers,&nbsp;paths,&nbsp;polygons&nbsp;&amp;&nbsp;Vector3s.<br>
-&nbsp;<br>
-To&nbsp;use&nbsp;euclidean,&nbsp;install&nbsp;python&nbsp;2.x&nbsp;on&nbsp;your&nbsp;machine,&nbsp;which&nbsp;is&nbsp;avaliable&nbsp;from&nbsp;<a href="http://www.python.org/download/">http://www.python.org/download/</a><br>
-&nbsp;<br>
-Then&nbsp;in&nbsp;the&nbsp;folder&nbsp;which&nbsp;euclidean&nbsp;is&nbsp;in,&nbsp;type&nbsp;'python'&nbsp;in&nbsp;a&nbsp;shell&nbsp;to&nbsp;run&nbsp;the&nbsp;python&nbsp;interpreter.&nbsp;&nbsp;Finally&nbsp;type<br>
-'import&nbsp;euclidean'&nbsp;to&nbsp;import&nbsp;these&nbsp;utilities&nbsp;and&nbsp;'from&nbsp;vector3&nbsp;import&nbsp;Vector3'&nbsp;to&nbsp;import&nbsp;the&nbsp;Vector3&nbsp;class.<br>
-&nbsp;<br>
-&nbsp;<br>
-Below&nbsp;are&nbsp;examples&nbsp;of&nbsp;euclidean&nbsp;use.<br>
-&nbsp;<br>
-&gt;&gt;&gt;&nbsp;from&nbsp;euclidean&nbsp;import&nbsp;*<br>
-&gt;&gt;&gt;&nbsp;origin=complex()<br>
-&gt;&gt;&gt;&nbsp;right=complex(1.0,0.0)<br>
-&gt;&gt;&gt;&nbsp;back=complex(0.0,1.0)<br>
-&gt;&gt;&gt;&nbsp;<a href="#-getMaximum">getMaximum</a>(right,back)<br>
-1.0,&nbsp;1.0<br>
-&gt;&gt;&gt;&nbsp;polygon=[origin,&nbsp;right,&nbsp;back]<br>
-&gt;&gt;&gt;&nbsp;<a href="#-getPolygonLength">getPolygonLength</a>(polygon)<br>
+    <p><tt>Euclidean is a collection of python utilities for complex numbers, paths, polygons &amp; Vector3s.<br>
+ <br>
+To use euclidean, install python 2.x on your machine, which is avaliable from <a href="http://www.python.org/download/">http://www.python.org/download/</a><br>
+ <br>
+Then in the folder which euclidean is in, type 'python' in a shell to run the python interpreter.  Finally type 'import euclidean' to import these utilities and 'from vector3 import Vector3' to import the Vector3 class.<br>
+ <br>
+ <br>
+Below are examples of euclidean use.<br>
+ <br>
+&gt;&gt;&gt; from euclidean import *<br>
+&gt;&gt;&gt; origin=complex()<br>
+&gt;&gt;&gt; right=complex(1.0,0.0)<br>
+&gt;&gt;&gt; back=complex(0.0,1.0)<br>
+&gt;&gt;&gt; <a href="#-getMaximum">getMaximum</a>(right,back)<br>
+1.0, 1.0<br>
+&gt;&gt;&gt; polygon=[origin, right, back]<br>
+&gt;&gt;&gt; <a href="#-getPolygonLength">getPolygonLength</a>(polygon)<br>
 3.4142135623730949<br>
-&gt;&gt;&gt;&nbsp;<a href="#-getPolygonArea">getPolygonArea</a>(polygon)<br>
+&gt;&gt;&gt; <a href="#-getPolygonArea">getPolygonArea</a>(polygon)<br>
 0.5</tt></p>
 <p>
 <table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
@@ -190,8 +189,10 @@ Below&nbsp;are&nbsp;examples&nbsp;of&nbsp;euclidean&nbsp;use.<br>
 <font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
     
 <tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
-<td width="100%"><dl><dt><a name="-addCircleToPixelTable"><strong>addCircleToPixelTable</strong></a>(pixelTable, pointComplex)</dt><dd><tt>Add&nbsp;pixel&nbsp;to&nbsp;the&nbsp;pixel&nbsp;table.</tt></dd></dl>
+<td width="100%"><dl><dt><a name="-addCircleToPixelTable"><strong>addCircleToPixelTable</strong></a>(pixelTable, pointComplex)</dt><dd><tt>Add&nbsp;circle&nbsp;to&nbsp;the&nbsp;pixel&nbsp;table.</tt></dd></dl>
+ <dl><dt><a name="-addElementToListTable"><strong>addElementToListTable</strong></a>(element, key, listTable)</dt><dd><tt>Add&nbsp;an&nbsp;element&nbsp;to&nbsp;the&nbsp;list&nbsp;table.</tt></dd></dl>
  <dl><dt><a name="-addElementToPixelList"><strong>addElementToPixelList</strong></a>(element, pixelTable, x, y)</dt><dd><tt>Add&nbsp;an&nbsp;element&nbsp;to&nbsp;the&nbsp;pixel&nbsp;list.</tt></dd></dl>
+ <dl><dt><a name="-addElementToPixelListFromPoint"><strong>addElementToPixelListFromPoint</strong></a>(element, pixelTable, point)</dt><dd><tt>Add&nbsp;an&nbsp;element&nbsp;to&nbsp;the&nbsp;pixel&nbsp;list.</tt></dd></dl>
  <dl><dt><a name="-addLoopToPixelTable"><strong>addLoopToPixelTable</strong></a>(loop, pixelTable, width)</dt><dd><tt>Add&nbsp;loop&nbsp;to&nbsp;the&nbsp;pixel&nbsp;table.</tt></dd></dl>
  <dl><dt><a name="-addPathToPixelTable"><strong>addPathToPixelTable</strong></a>(path, pixelTable, width)</dt><dd><tt>Add&nbsp;path&nbsp;to&nbsp;the&nbsp;pixel&nbsp;table.</tt></dd></dl>
  <dl><dt><a name="-addPixelToPixelTable"><strong>addPixelToPixelTable</strong></a>(pixelTable, value, x, y)</dt><dd><tt>Add&nbsp;pixel&nbsp;to&nbsp;the&nbsp;pixel&nbsp;table.</tt></dd></dl>
@@ -201,17 +202,15 @@ Below&nbsp;are&nbsp;examples&nbsp;of&nbsp;euclidean&nbsp;use.<br>
  <dl><dt><a name="-addSurroundingLoopBeginning"><strong>addSurroundingLoopBeginning</strong></a>(loop, skein, z)</dt><dd><tt>Add&nbsp;surrounding&nbsp;loop&nbsp;beginning&nbsp;to&nbsp;gcode&nbsp;output.</tt></dd></dl>
  <dl><dt><a name="-addToThreadsFromLoop"><strong>addToThreadsFromLoop</strong></a>(extrusionHalfWidth, gcodeType, loop, oldOrderedLocation, skein)</dt><dd><tt>Add&nbsp;to&nbsp;threads&nbsp;from&nbsp;the&nbsp;last&nbsp;location&nbsp;from&nbsp;loop.</tt></dd></dl>
  <dl><dt><a name="-addToThreadsRemoveFromSurroundings"><strong>addToThreadsRemoveFromSurroundings</strong></a>(oldOrderedLocation, surroundingLoops, skein)</dt><dd><tt>Add&nbsp;to&nbsp;threads&nbsp;from&nbsp;the&nbsp;last&nbsp;location&nbsp;from&nbsp;surrounding&nbsp;loops.</tt></dd></dl>
- <dl><dt><a name="-addXIntersectionIndexes"><strong>addXIntersectionIndexes</strong></a>(loop, solidIndex, xIntersectionIndexList, y)</dt><dd><tt>Add&nbsp;the&nbsp;x&nbsp;intersection&nbsp;indexes&nbsp;for&nbsp;a&nbsp;loop.</tt></dd></dl>
- <dl><dt><a name="-addXIntersectionIndexesFromLoopLists"><strong>addXIntersectionIndexesFromLoopLists</strong></a>(loopLists, xIntersectionIndexList, y)</dt><dd><tt>Add&nbsp;the&nbsp;x&nbsp;intersection&nbsp;indexes&nbsp;for&nbsp;the&nbsp;loop&nbsp;lists.</tt></dd></dl>
- <dl><dt><a name="-addXIntersectionIndexesFromLoops"><strong>addXIntersectionIndexesFromLoops</strong></a>(loops, solidIndex, xIntersectionIndexList, y)</dt><dd><tt>Add&nbsp;the&nbsp;x&nbsp;intersection&nbsp;indexes&nbsp;for&nbsp;the&nbsp;loops.</tt></dd></dl>
+ <dl><dt><a name="-addXIntersectionIndexesFromLoop"><strong>addXIntersectionIndexesFromLoop</strong></a>(frontOverWidth, loop, solidIndex, xIntersectionIndexLists, width, yList)</dt><dd><tt>Add&nbsp;the&nbsp;x&nbsp;intersection&nbsp;indexes&nbsp;for&nbsp;a&nbsp;loop.</tt></dd></dl>
+ <dl><dt><a name="-addXIntersectionIndexesFromLoopListsY"><strong>addXIntersectionIndexesFromLoopListsY</strong></a>(loopLists, xIntersectionIndexList, y)</dt><dd><tt>Add&nbsp;the&nbsp;x&nbsp;intersection&nbsp;indexes&nbsp;for&nbsp;the&nbsp;loop&nbsp;lists.</tt></dd></dl>
+ <dl><dt><a name="-addXIntersectionIndexesFromLoopY"><strong>addXIntersectionIndexesFromLoopY</strong></a>(loop, solidIndex, xIntersectionIndexList, y)</dt><dd><tt>Add&nbsp;the&nbsp;x&nbsp;intersection&nbsp;indexes&nbsp;for&nbsp;a&nbsp;loop.</tt></dd></dl>
+ <dl><dt><a name="-addXIntersectionIndexesFromLoops"><strong>addXIntersectionIndexesFromLoops</strong></a>(frontOverWidth, loops, solidIndex, xIntersectionIndexLists, width, yList)</dt><dd><tt>Add&nbsp;the&nbsp;x&nbsp;intersection&nbsp;indexes&nbsp;for&nbsp;a&nbsp;loop.</tt></dd></dl>
+ <dl><dt><a name="-addXIntersectionIndexesFromLoopsY"><strong>addXIntersectionIndexesFromLoopsY</strong></a>(loops, solidIndex, xIntersectionIndexList, y)</dt><dd><tt>Add&nbsp;the&nbsp;x&nbsp;intersection&nbsp;indexes&nbsp;for&nbsp;the&nbsp;loops.</tt></dd></dl>
  <dl><dt><a name="-addXIntersections"><strong>addXIntersections</strong></a>(loop, xIntersections, y)</dt><dd><tt>Add&nbsp;the&nbsp;x&nbsp;intersections&nbsp;for&nbsp;a&nbsp;loop.</tt></dd></dl>
  <dl><dt><a name="-addXIntersectionsFromLoops"><strong>addXIntersectionsFromLoops</strong></a>(loops, xIntersections, y)</dt><dd><tt>Add&nbsp;the&nbsp;x&nbsp;intersections&nbsp;for&nbsp;the&nbsp;loops.</tt></dd></dl>
  <dl><dt><a name="-compareSegmentLength"><strong>compareSegmentLength</strong></a>(endpoint, otherEndpoint)</dt><dd><tt>Get&nbsp;comparison&nbsp;in&nbsp;order&nbsp;to&nbsp;sort&nbsp;endpoints&nbsp;in&nbsp;ascending&nbsp;order&nbsp;of&nbsp;segment&nbsp;length.</tt></dd></dl>
- <dl><dt><a name="-getAngleAroundZAxisDifference"><strong>getAngleAroundZAxisDifference</strong></a>(subtractFromVec3, subtractVec3)</dt><dd><tt>Get&nbsp;the&nbsp;angle&nbsp;around&nbsp;the&nbsp;Z&nbsp;axis&nbsp;difference&nbsp;between&nbsp;a&nbsp;pair&nbsp;of&nbsp;Vector3s.<br>
-&nbsp;<br>
-Keyword&nbsp;arguments:<br>
-subtractFromVec3&nbsp;--&nbsp;Vector3&nbsp;whose&nbsp;angle&nbsp;will&nbsp;be&nbsp;subtracted&nbsp;from<br>
-subtractVec3&nbsp;--&nbsp;Vector3&nbsp;whose&nbsp;angle&nbsp;will&nbsp;be&nbsp;subtracted</tt></dd></dl>
+ <dl><dt><a name="-getAngleAroundZAxisDifference"><strong>getAngleAroundZAxisDifference</strong></a>(subtractFromVec3, subtractVec3)</dt><dd><tt>Get&nbsp;the&nbsp;angle&nbsp;around&nbsp;the&nbsp;Z&nbsp;axis&nbsp;difference&nbsp;between&nbsp;a&nbsp;pair&nbsp;of&nbsp;Vector3s.</tt></dd></dl>
  <dl><dt><a name="-getAroundLoop"><strong>getAroundLoop</strong></a>(begin, end, loop)</dt><dd><tt>Get&nbsp;an&nbsp;arc&nbsp;around&nbsp;a&nbsp;loop.</tt></dd></dl>
  <dl><dt><a name="-getAwayPoints"><strong>getAwayPoints</strong></a>(pointComplexes, radius)</dt><dd><tt>Get&nbsp;a&nbsp;path&nbsp;with&nbsp;only&nbsp;the&nbsp;points&nbsp;that&nbsp;are&nbsp;far&nbsp;enough&nbsp;away&nbsp;from&nbsp;each&nbsp;other.</tt></dd></dl>
  <dl><dt><a name="-getBackOfLoops"><strong>getBackOfLoops</strong></a>(loops)</dt><dd><tt>Get&nbsp;the&nbsp;back&nbsp;of&nbsp;the&nbsp;loops.</tt></dd></dl>
@@ -225,12 +224,16 @@ subtractVec3&nbsp;--&nbsp;Vector3&nbsp;whose&nbsp;angle&nbsp;will&nbsp;be&nbsp;s
  <dl><dt><a name="-getFloatPart"><strong>getFloatPart</strong></a>(number)</dt><dd><tt>Get&nbsp;the&nbsp;float&nbsp;part&nbsp;of&nbsp;the&nbsp;number.</tt></dd></dl>
  <dl><dt><a name="-getFourSignificantFigures"><strong>getFourSignificantFigures</strong></a>(number)</dt><dd><tt>Get&nbsp;number&nbsp;rounded&nbsp;to&nbsp;four&nbsp;significant&nbsp;figures&nbsp;as&nbsp;a&nbsp;string.</tt></dd></dl>
  <dl><dt><a name="-getFrontOfLoops"><strong>getFrontOfLoops</strong></a>(loops)</dt><dd><tt>Get&nbsp;the&nbsp;front&nbsp;of&nbsp;the&nbsp;loops.</tt></dd></dl>
+ <dl><dt><a name="-getFrontOverWidthAddXListYList"><strong>getFrontOverWidthAddXListYList</strong></a>(front, loopLists, numberOfLines, xIntersectionIndexLists, width, yList)</dt><dd><tt>Get&nbsp;the&nbsp;front&nbsp;over&nbsp;width&nbsp;and&nbsp;add&nbsp;the&nbsp;x&nbsp;intersection&nbsp;index&nbsp;lists&nbsp;and&nbsp;ylist.</tt></dd></dl>
+ <dl><dt><a name="-getFrontOverWidthAddYList"><strong>getFrontOverWidthAddYList</strong></a>(front, numberOfLines, xIntersectionIndexLists, width, yList)</dt><dd><tt>Get&nbsp;the&nbsp;front&nbsp;over&nbsp;width&nbsp;and&nbsp;add&nbsp;the&nbsp;x&nbsp;intersection&nbsp;index&nbsp;lists&nbsp;and&nbsp;ylist.</tt></dd></dl>
  <dl><dt><a name="-getHalfSimplifiedLoop"><strong>getHalfSimplifiedLoop</strong></a>(loopComplex, radius, remainder)</dt><dd><tt>Get&nbsp;the&nbsp;loop&nbsp;with&nbsp;half&nbsp;of&nbsp;the&nbsp;points&nbsp;inside&nbsp;the&nbsp;channel&nbsp;removed.</tt></dd></dl>
  <dl><dt><a name="-getHalfSimplifiedPath"><strong>getHalfSimplifiedPath</strong></a>(path, radius, remainder)</dt><dd><tt>Get&nbsp;the&nbsp;path&nbsp;with&nbsp;half&nbsp;of&nbsp;the&nbsp;points&nbsp;inside&nbsp;the&nbsp;channel&nbsp;removed.</tt></dd></dl>
+ <dl><dt><a name="-getHorizontalSegmentListsFromLoopLists"><strong>getHorizontalSegmentListsFromLoopLists</strong></a>(alreadyFilledArounds, front, numberOfLines, rotatedFillLoops, width)</dt><dd><tt>Get&nbsp;horizontal&nbsp;segment&nbsp;lists&nbsp;inside&nbsp;loops.</tt></dd></dl>
  <dl><dt><a name="-getInsidesAddToOutsides"><strong>getInsidesAddToOutsides</strong></a>(loops, outsides)</dt><dd><tt>Add&nbsp;loops&nbsp;to&nbsp;either&nbsp;the&nbsp;insides&nbsp;or&nbsp;outsides.</tt></dd></dl>
  <dl><dt><a name="-getIntermediateLocation"><strong>getIntermediateLocation</strong></a>(alongWay, begin, end)</dt><dd><tt>Get&nbsp;the&nbsp;intermediate&nbsp;location&nbsp;between&nbsp;begin&nbsp;and&nbsp;end.</tt></dd></dl>
  <dl><dt><a name="-getLargestLoop"><strong>getLargestLoop</strong></a>(loops)</dt><dd><tt>Get&nbsp;largest&nbsp;loop&nbsp;from&nbsp;loops.</tt></dd></dl>
  <dl><dt><a name="-getLeftPoint"><strong>getLeftPoint</strong></a>(pointComplexes)</dt><dd><tt>Get&nbsp;the&nbsp;leftmost&nbsp;complex&nbsp;point&nbsp;in&nbsp;the&nbsp;points.</tt></dd></dl>
+ <dl><dt><a name="-getListTableElements"><strong>getListTableElements</strong></a>(listTable)</dt><dd><tt>Get&nbsp;all&nbsp;the&nbsp;element&nbsp;in&nbsp;a&nbsp;list&nbsp;table.</tt></dd></dl>
  <dl><dt><a name="-getLoopStartingNearest"><strong>getLoopStartingNearest</strong></a>(extrusionHalfWidth, location, loop)</dt><dd><tt>Add&nbsp;to&nbsp;threads&nbsp;from&nbsp;the&nbsp;last&nbsp;location&nbsp;from&nbsp;loop.</tt></dd></dl>
  <dl><dt><a name="-getMaximum"><strong>getMaximum</strong></a>(firstComplex, secondComplex)</dt><dd><tt>Get&nbsp;a&nbsp;complex&nbsp;with&nbsp;each&nbsp;component&nbsp;the&nbsp;maximum&nbsp;of&nbsp;the&nbsp;respective&nbsp;components&nbsp;of&nbsp;a&nbsp;pair&nbsp;of&nbsp;complexes.</tt></dd></dl>
  <dl><dt><a name="-getMaximumFromPoints"><strong>getMaximumFromPoints</strong></a>(pointComplexes)</dt><dd><tt>Get&nbsp;a&nbsp;complex&nbsp;with&nbsp;each&nbsp;component&nbsp;the&nbsp;maximum&nbsp;of&nbsp;the&nbsp;respective&nbsp;components&nbsp;of&nbsp;a&nbsp;list&nbsp;of&nbsp;complex&nbsp;points.</tt></dd></dl>
@@ -267,12 +270,13 @@ subtractVec3&nbsp;--&nbsp;Vector3&nbsp;whose&nbsp;angle&nbsp;will&nbsp;be&nbsp;s
  <dl><dt><a name="-getSimplifiedPath"><strong>getSimplifiedPath</strong></a>(path, radius)</dt><dd><tt>Get&nbsp;path&nbsp;with&nbsp;points&nbsp;inside&nbsp;the&nbsp;channel&nbsp;removed.</tt></dd></dl>
  <dl><dt><a name="-getSquareLoop"><strong>getSquareLoop</strong></a>(beginComplex, endComplex)</dt><dd><tt>Get&nbsp;a&nbsp;square&nbsp;loop&nbsp;from&nbsp;the&nbsp;beginning&nbsp;to&nbsp;the&nbsp;end&nbsp;and&nbsp;back.</tt></dd></dl>
  <dl><dt><a name="-getSquareValues"><strong>getSquareValues</strong></a>(pixelTable, x, y)</dt><dd><tt>Get&nbsp;a&nbsp;list&nbsp;of&nbsp;the&nbsp;values&nbsp;in&nbsp;a&nbsp;square&nbsp;around&nbsp;the&nbsp;x&nbsp;and&nbsp;y&nbsp;pixel&nbsp;coordinates.</tt></dd></dl>
+ <dl><dt><a name="-getSquareValuesFromPoint"><strong>getSquareValuesFromPoint</strong></a>(pixelTable, point)</dt><dd><tt>Get&nbsp;a&nbsp;list&nbsp;of&nbsp;the&nbsp;values&nbsp;in&nbsp;a&nbsp;square&nbsp;around&nbsp;the&nbsp;point.</tt></dd></dl>
  <dl><dt><a name="-getStepKey"><strong>getStepKey</strong></a>(x, y)</dt><dd><tt>Get&nbsp;step&nbsp;key&nbsp;for&nbsp;x&nbsp;and&nbsp;y.</tt></dd></dl>
+ <dl><dt><a name="-getStepKeyFromPoint"><strong>getStepKeyFromPoint</strong></a>(point)</dt><dd><tt>Get&nbsp;step&nbsp;key&nbsp;for&nbsp;the&nbsp;point.</tt></dd></dl>
  <dl><dt><a name="-getThreeSignificantFigures"><strong>getThreeSignificantFigures</strong></a>(number)</dt><dd><tt>Get&nbsp;number&nbsp;rounded&nbsp;to&nbsp;three&nbsp;significant&nbsp;figures&nbsp;as&nbsp;a&nbsp;string.</tt></dd></dl>
  <dl><dt><a name="-getTransferClosestSurroundingLoop"><strong>getTransferClosestSurroundingLoop</strong></a>(oldOrderedLocation, remainingSurroundingLoops, skein)</dt><dd><tt>Get&nbsp;and&nbsp;transfer&nbsp;the&nbsp;closest&nbsp;remaining&nbsp;surrounding&nbsp;loop.</tt></dd></dl>
  <dl><dt><a name="-getTransferredPaths"><strong>getTransferredPaths</strong></a>(insides, loop)</dt><dd><tt>Get&nbsp;transferred&nbsp;paths&nbsp;from&nbsp;inside&nbsp;paths.</tt></dd></dl>
  <dl><dt><a name="-getTransferredSurroundingLoops"><strong>getTransferredSurroundingLoops</strong></a>(insides, loop)</dt><dd><tt>Get&nbsp;transferred&nbsp;paths&nbsp;from&nbsp;inside&nbsp;surrounding&nbsp;loops.</tt></dd></dl>
- <dl><dt><a name="-getWiddershinsDotGiven"><strong>getWiddershinsDotGiven</strong></a>(complexFirst, complexSecond)</dt><dd><tt>Get&nbsp;the&nbsp;magintude&nbsp;of&nbsp;the&nbsp;positive&nbsp;dot&nbsp;product&nbsp;plus&nbsp;one&nbsp;of&nbsp;the&nbsp;x&nbsp;and&nbsp;y&nbsp;components&nbsp;of&nbsp;a&nbsp;pair&nbsp;of&nbsp;complexes,&nbsp;with&nbsp;the&nbsp;reversed&nbsp;sign&nbsp;of&nbsp;the&nbsp;cross&nbsp;product.</tt></dd></dl>
  <dl><dt><a name="-getXIntersection"><strong>getXIntersection</strong></a>(firstComplex, secondComplex, y)</dt><dd><tt>Get&nbsp;where&nbsp;the&nbsp;line&nbsp;crosses&nbsp;y.</tt></dd></dl>
  <dl><dt><a name="-getXIntersectionsFromIntersections"><strong>getXIntersectionsFromIntersections</strong></a>(xIntersectionIndexList)</dt><dd><tt>Get&nbsp;x&nbsp;intersections&nbsp;from&nbsp;the&nbsp;x&nbsp;intersection&nbsp;index&nbsp;list,&nbsp;in&nbsp;other&nbsp;words&nbsp;subtract&nbsp;non&nbsp;negative&nbsp;intersections&nbsp;from&nbsp;negatives.</tt></dd></dl>
  <dl><dt><a name="-getXYComplexFromVector3"><strong>getXYComplexFromVector3</strong></a>(vector3)</dt><dd><tt>Get&nbsp;an&nbsp;xy&nbsp;complex&nbsp;from&nbsp;a&nbsp;vector3&nbsp;if&nbsp;it&nbsp;exists,&nbsp;otherwise&nbsp;return&nbsp;None.</tt></dd></dl>
@@ -294,6 +298,8 @@ subtractVec3&nbsp;--&nbsp;Vector3&nbsp;whose&nbsp;angle&nbsp;will&nbsp;be&nbsp;s
  <dl><dt><a name="-isWiddershins"><strong>isWiddershins</strong></a>(polygonComplex)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;complex&nbsp;polygon&nbsp;goes&nbsp;round&nbsp;in&nbsp;the&nbsp;widdershins&nbsp;direction.</tt></dd></dl>
  <dl><dt><a name="-isWithinChannel"><strong>isWithinChannel</strong></a>(channelRadius, pointIndex, loopComplex)</dt><dd><tt>Determine&nbsp;if&nbsp;the&nbsp;the&nbsp;point&nbsp;is&nbsp;within&nbsp;the&nbsp;channel&nbsp;between&nbsp;two&nbsp;adjacent&nbsp;points.</tt></dd></dl>
  <dl><dt><a name="-isXSegmentIntersectingPaths"><strong>isXSegmentIntersectingPaths</strong></a>(paths, segmentFirstX, segmentSecondX, segmentYMirror, y)</dt><dd><tt>Determine&nbsp;if&nbsp;a&nbsp;path&nbsp;list&nbsp;is&nbsp;crossing&nbsp;inside&nbsp;the&nbsp;x&nbsp;segment.</tt></dd></dl>
+ <dl><dt><a name="-removeElementFromListTable"><strong>removeElementFromListTable</strong></a>(element, key, listTable)</dt><dd><tt>Remove&nbsp;an&nbsp;element&nbsp;from&nbsp;the&nbsp;list&nbsp;table.</tt></dd></dl>
+ <dl><dt><a name="-removeElementFromPixelListFromPoint"><strong>removeElementFromPixelListFromPoint</strong></a>(element, pixelTable, point)</dt><dd><tt>Remove&nbsp;an&nbsp;element&nbsp;from&nbsp;the&nbsp;pixel&nbsp;list.</tt></dd></dl>
  <dl><dt><a name="-removePixelTableFromPixelTable"><strong>removePixelTableFromPixelTable</strong></a>(pixelTableToBeRemoved, pixelTableToBeRemovedFrom)</dt><dd><tt>Remove&nbsp;pixel&nbsp;from&nbsp;the&nbsp;pixel&nbsp;table.</tt></dd></dl>
  <dl><dt><a name="-toggleHashtable"><strong>toggleHashtable</strong></a>(hashtable, key, value)</dt><dd><tt>Toggle&nbsp;a&nbsp;hashtable&nbsp;between&nbsp;having&nbsp;and&nbsp;not&nbsp;having&nbsp;a&nbsp;key.</tt></dd></dl>
  <dl><dt><a name="-transferClosestFillLoop"><strong>transferClosestFillLoop</strong></a>(extrusionHalfWidth, oldOrderedLocation, remainingFillLoops, skein)</dt><dd><tt>Transfer&nbsp;the&nbsp;closest&nbsp;remaining&nbsp;fill&nbsp;loop.</tt></dd></dl>

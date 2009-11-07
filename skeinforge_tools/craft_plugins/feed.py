@@ -1,18 +1,13 @@
 """
 Feed is a script to set the feed rate.
 
-The default 'Activate Feed' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions will not be called.
-The feed script sets the maximum feed rate, operating feed rate & travel feed rate.
+The default 'Activate Feed' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions will not be called.  The feed script sets the maximum feed rate, operating feed rate & travel feed rate.
 
-The feed rate for the shape will be set to the 'Feed Rate" preference.  The 'Travel Feed Rate' is the feed rate when the cutter is off.  The default is
-16 mm / s and it could be set as high as the cutter can be moved, it does not have to be limited by the maximum cutter rate.
+The feed rate for the shape will be set to the 'Feed Rate" preference.  The 'Travel Feed Rate' is the feed rate when the cutter is off.  The default is 16 mm / s and it could be set as high as the cutter can be moved, it does not have to be limited by the maximum cutter rate.
 
-The 'Maximum Z Feed Rate' is the maximum feed that the tool head will move in the z direction.  If your firmware limits the z feed rate, you do not
-need to set this preference.  The default of 8 millimeters per second is the maximum z feed of Nophead's direct drive z stage, the belt driven z
-stages have a lower maximum feed rate.
+The 'Maximum Z Feed Rate' is the maximum feed that the tool head will move in the z direction.  If your firmware limits the z feed rate, you do not need to set this preference.  The default of 8 millimeters per second is the maximum z feed of Nophead's direct drive z stage, the belt driven z stages have a lower maximum feed rate.
 
-The following examples feed the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
-and feed.py.
+The following examples feed the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and feed.py.
 
 
 > python feed.py
@@ -56,7 +51,7 @@ from skeinforge_tools.skeinforge_utilities import intercircle
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools import analyze
 from skeinforge_tools.skeinforge_utilities import interpret
-from skeinforge_tools import polyfile
+from skeinforge_tools.meta_plugins import polyfile
 import math
 import sys
 
@@ -66,23 +61,23 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def getCraftedText( fileName, text = '', feedPreferences = None ):
+def getCraftedText( fileName, text = '', feedRepository = None ):
 	"Feed the file or text."
-	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), feedPreferences )
+	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), feedRepository )
 
-def getCraftedTextFromText( gcodeText, feedPreferences = None ):
+def getCraftedTextFromText( gcodeText, feedRepository = None ):
 	"Feed a gcode linear move text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'feed' ):
 		return gcodeText
-	if feedPreferences == None:
-		feedPreferences = preferences.getReadPreferences( FeedPreferences() )
-	if not feedPreferences.activateFeed.value:
+	if feedRepository == None:
+		feedRepository = preferences.getReadRepository( FeedRepository() )
+	if not feedRepository.activateFeed.value:
 		return gcodeText
-	return FeedSkein().getCraftedGcode( gcodeText, feedPreferences )
+	return FeedSkein().getCraftedGcode( gcodeText, feedRepository )
 
-def getPreferencesConstructor():
-	"Get the preferences constructor."
-	return FeedPreferences()
+def getRepositoryConstructor():
+	"Get the repository constructor."
+	return FeedRepository()
 
 def writeOutput( fileName = '' ):
 	"Feed a gcode linear move file."
@@ -91,25 +86,19 @@ def writeOutput( fileName = '' ):
 		consecution.writeChainTextWithNounMessage( fileName, 'feed' )
 
 
-class FeedPreferences:
+class FeedRepository:
 	"A class to handle the feed preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
-		self.archive = []
-		self.activateFeed = preferences.BooleanPreference().getFromValue( 'Activate Feed:', True )
-		self.archive.append( self.activateFeed )
-		self.feedRatePerSecond = preferences.FloatPreference().getFromValue( 'Feed Rate (mm/s):', 16.0 )
-		self.archive.append( self.feedRatePerSecond )
-		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File for Feed', '' )
-		self.archive.append( self.fileNameInput )
-		self.maximumZFeedRatePerSecond = preferences.FloatPreference().getFromValue( 'Maximum Z Feed Rate (mm/s):', 8.0 )
-		self.archive.append( self.maximumZFeedRatePerSecond )
-		self.travelFeedRatePerSecond = preferences.FloatPreference().getFromValue( 'Travel Feed Rate (mm/s):', 16.0 )
-		self.archive.append( self.travelFeedRatePerSecond )
+		preferences.addListsToRepository( self )
+		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File for Feed', self, '' )
+		self.activateFeed = preferences.BooleanPreference().getFromValue( 'Activate Feed:', self, True )
+		self.feedRatePerSecond = preferences.FloatPreference().getFromValue( 'Feed Rate (mm/s):', self, 16.0 )
+		self.maximumZFeedRatePerSecond = preferences.FloatPreference().getFromValue( 'Maximum Z Feed Rate (mm/s):', self, 8.0 )
+		self.travelFeedRatePerSecond = preferences.FloatPreference().getFromValue( 'Travel Feed Rate (mm/s):', self, 16.0 )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Feed'
-		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.feed.html' )
 
 	def execute( self ):
@@ -130,12 +119,12 @@ class FeedSkein:
 		self.oldFlowrateString = None
 		self.oldLocation = None
 
-	def getCraftedGcode( self, gcodeText, feedPreferences ):
+	def getCraftedGcode( self, gcodeText, feedRepository ):
 		"Parse gcode text and store the feed gcode."
-		self.distanceFeedRate.maximumZFeedRatePerSecond = feedPreferences.maximumZFeedRatePerSecond.value
-		self.feedPreferences = feedPreferences
-		self.feedRatePerSecond = feedPreferences.feedRatePerSecond.value
-		self.travelFeedRatePerMinute = 60.0 * self.feedPreferences.travelFeedRatePerSecond.value
+		self.distanceFeedRate.maximumZFeedRatePerSecond = feedRepository.maximumZFeedRatePerSecond.value
+		self.feedRepository = feedRepository
+		self.feedRatePerSecond = feedRepository.feedRatePerSecond.value
+		self.travelFeedRatePerMinute = 60.0 * self.feedRepository.travelFeedRatePerSecond.value
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.parseInitialization()
 		for line in self.lines[ self.lineIndex : ]:
@@ -165,7 +154,7 @@ class FeedSkein:
 				self.absolutePerimeterWidth = abs( float( splitLine[ 1 ] ) )
 				self.distanceFeedRate.addLine( '(<maximumZFeedRatePerSecond> %s </maximumZFeedRatePerSecond>)' % self.distanceFeedRate.maximumZFeedRatePerSecond )
 				self.distanceFeedRate.addLine( '(<operatingFeedRatePerSecond> %s </operatingFeedRatePerSecond>)' % self.feedRatePerSecond )
-				self.distanceFeedRate.addLine( '(<travelFeedRatePerSecond> %s </travelFeedRatePerSecond>)' % self.feedPreferences.travelFeedRatePerSecond.value )
+				self.distanceFeedRate.addLine( '(<travelFeedRatePerSecond> %s </travelFeedRatePerSecond>)' % self.feedRepository.travelFeedRatePerSecond.value )
 			self.distanceFeedRate.addLine( line )
 
 	def parseLine( self, line ):
@@ -188,7 +177,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
+		preferences.startMainLoopFromConstructor( getRepositoryConstructor() )
 
 if __name__ == "__main__":
 	main()

@@ -1,22 +1,15 @@
 """
 Wipe is a script to wipe the nozzle.
 
-At the beginning of a layer, depending on the preferences, wipe will move the nozzle with the extruder off to the arrival point,
-then to the wipe point, then to the departure point, then back to the layer.
+At the beginning of a layer, depending on the preferences, wipe will move the nozzle with the extruder off to the arrival point, then to the wipe point, then to the departure point, then back to the layer.
 
-The default 'Activate Wipe' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions
-will not be called.
+The default 'Activate Wipe' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions will not be called.
 
-The "Location Arrival X" preference, is the x coordinate of the arrival location.  The "Location Arrival Y" and "Location Arrival Z"
-preferences are the y & z coordinates of the location.  The equivalent "Location Wipe.." and "Location Departure.." preferences
-are for the wipe and departure locations.
+The "Location Arrival X" preference, is the x coordinate of the arrival location.  The "Location Arrival Y" and "Location Arrival Z" preferences are the y & z coordinates of the location.  The equivalent "Location Wipe.." and "Location Departure.." preferences are for the wipe and departure locations.
 
-The "Wipe Period (layers)" preference is the number of layers between wipes.  Wipe will always wipe just before the first layer,
-afterwards it will wipe every "Wipe Period" layers.  With the default of three, wipe will wipe just before the zeroth layer, the
-third layer, sixth layer and so on.
+The "Wipe Period (layers)" preference is the number of layers between wipes.  Wipe will always wipe just before the first layer, afterwards it will wipe every "Wipe Period" layers.  With the default of three, wipe will wipe just before the zeroth layer, the third layer, sixth layer and so on.
 
-The following examples wipe the Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
-and wipe.py.
+The following examples wipe the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and wipe.py.
 
 
 > python wipe.py
@@ -53,7 +46,7 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools import polyfile
+from skeinforge_tools.meta_plugins import polyfile
 from skeinforge_tools.skeinforge_utilities import consecution
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
@@ -69,23 +62,23 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
-def getCraftedText( fileName, text, wipePreferences = None ):
+def getCraftedText( fileName, text, wipeRepository = None ):
 	"Wipe a gcode linear move text."
-	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), wipePreferences )
+	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), wipeRepository )
 
-def getCraftedTextFromText( gcodeText, wipePreferences = None ):
+def getCraftedTextFromText( gcodeText, wipeRepository = None ):
 	"Wipe a gcode linear move text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'wipe' ):
 		return gcodeText
-	if wipePreferences == None:
-		wipePreferences = preferences.getReadPreferences( WipePreferences() )
-	if not wipePreferences.activateWipe.value:
+	if wipeRepository == None:
+		wipeRepository = preferences.getReadRepository( WipeRepository() )
+	if not wipeRepository.activateWipe.value:
 		return gcodeText
-	return WipeSkein().getCraftedGcode( gcodeText, wipePreferences )
+	return WipeSkein().getCraftedGcode( gcodeText, wipeRepository )
 
-def getPreferencesConstructor():
-	"Get the preferences constructor."
-	return WipePreferences()
+def getRepositoryConstructor():
+	"Get the repository constructor."
+	return WipeRepository()
 
 def writeOutput( fileName = '' ):
 	"Wipe a gcode linear move file."
@@ -94,39 +87,26 @@ def writeOutput( fileName = '' ):
 		consecution.writeChainTextWithNounMessage( fileName, 'wipe' )
 
 
-class WipePreferences:
+class WipeRepository:
 	"A class to handle the wipe preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
-		self.archive = []
-		self.activateWipe = preferences.BooleanPreference().getFromValue( 'Activate Wipe', False )
-		self.archive.append( self.activateWipe )
-		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Wiped', '' )
-		self.archive.append( self.fileNameInput )
-		self.locationArrivalX = preferences.FloatPreference().getFromValue( 'Location Arrival X (mm):', - 70.0 )
-		self.archive.append( self.locationArrivalX )
-		self.locationArrivalY = preferences.FloatPreference().getFromValue( 'Location Arrival Y (mm):', - 50.0 )
-		self.archive.append( self.locationArrivalY )
-		self.locationArrivalZ = preferences.FloatPreference().getFromValue( 'Location Arrival Z (mm):', 50.0 )
-		self.archive.append( self.locationArrivalZ )
-		self.locationDepartureX = preferences.FloatPreference().getFromValue( 'Location Departure X (mm):', - 70.0 )
-		self.archive.append( self.locationDepartureX )
-		self.locationDepartureY = preferences.FloatPreference().getFromValue( 'Location Departure Y (mm):', - 40.0 )
-		self.archive.append( self.locationDepartureY )
-		self.locationDepartureZ = preferences.FloatPreference().getFromValue( 'Location Departure Z (mm):', 50.0 )
-		self.archive.append( self.locationDepartureZ )
-		self.locationWipeX = preferences.FloatPreference().getFromValue( 'Location Wipe X (mm):', - 70.0 )
-		self.archive.append( self.locationWipeX )
-		self.locationWipeY = preferences.FloatPreference().getFromValue( 'Location Wipe Y (mm):', - 70.0 )
-		self.archive.append( self.locationWipeY )
-		self.locationWipeZ = preferences.FloatPreference().getFromValue( 'Location Wipe Z (mm):', 50.0 )
-		self.archive.append( self.locationWipeZ )
-		self.wipePeriod = preferences.IntPreference().getFromValue( 'Wipe Period (layers):', 3 )
-		self.archive.append( self.wipePeriod )
+		preferences.addListsToRepository( self )
+		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Wiped', self, '' )
+		self.activateWipe = preferences.BooleanPreference().getFromValue( 'Activate Wipe', self, False )
+		self.locationArrivalX = preferences.FloatPreference().getFromValue( 'Location Arrival X (mm):', self, - 70.0 )
+		self.locationArrivalY = preferences.FloatPreference().getFromValue( 'Location Arrival Y (mm):', self, - 50.0 )
+		self.locationArrivalZ = preferences.FloatPreference().getFromValue( 'Location Arrival Z (mm):', self, 50.0 )
+		self.locationDepartureX = preferences.FloatPreference().getFromValue( 'Location Departure X (mm):', self, - 70.0 )
+		self.locationDepartureY = preferences.FloatPreference().getFromValue( 'Location Departure Y (mm):', self, - 40.0 )
+		self.locationDepartureZ = preferences.FloatPreference().getFromValue( 'Location Departure Z (mm):', self, 50.0 )
+		self.locationWipeX = preferences.FloatPreference().getFromValue( 'Location Wipe X (mm):', self, - 70.0 )
+		self.locationWipeY = preferences.FloatPreference().getFromValue( 'Location Wipe Y (mm):', self, - 70.0 )
+		self.locationWipeZ = preferences.FloatPreference().getFromValue( 'Location Wipe Z (mm):', self, 50.0 )
+		self.wipePeriod = preferences.IntPreference().getFromValue( 'Wipe Period (layers):', self, 3 )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Wipe'
-		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.wipe.html' )
 
 	def execute( self ):
@@ -180,14 +160,14 @@ class WipeSkein:
 		if self.extruderActive:
 			self.distanceFeedRate.addLine( 'M101' )
 
-	def getCraftedGcode( self, gcodeText, wipePreferences ):
+	def getCraftedGcode( self, gcodeText, wipeRepository ):
 		"Parse gcode text and store the wipe gcode."
 		self.lines = gcodec.getTextLines( gcodeText )
-		self.wipePeriod = wipePreferences.wipePeriod.value
-		self.parseInitialization( wipePreferences )
-		self.locationArrival = Vector3( wipePreferences.locationArrivalX.value, wipePreferences.locationArrivalY.value, wipePreferences.locationArrivalZ.value )
-		self.locationDeparture = Vector3( wipePreferences.locationDepartureX.value, wipePreferences.locationDepartureY.value, wipePreferences.locationDepartureZ.value )
-		self.locationWipe = Vector3( wipePreferences.locationWipeX.value, wipePreferences.locationWipeY.value, wipePreferences.locationWipeZ.value )
+		self.wipePeriod = wipeRepository.wipePeriod.value
+		self.parseInitialization( wipeRepository )
+		self.locationArrival = Vector3( wipeRepository.locationArrivalX.value, wipeRepository.locationArrivalY.value, wipeRepository.locationArrivalZ.value )
+		self.locationDeparture = Vector3( wipeRepository.locationDepartureX.value, wipeRepository.locationDepartureY.value, wipeRepository.locationDepartureZ.value )
+		self.locationWipe = Vector3( wipeRepository.locationWipeX.value, wipeRepository.locationWipeY.value, wipeRepository.locationWipeZ.value )
 		for self.lineIndex in xrange( self.lineIndex, len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			self.parseLine( line )
@@ -197,7 +177,7 @@ class WipeSkein:
 		"Get a linear move line with the feedRate."
 		return self.distanceFeedRate.getLinearGcodeMovementWithFeedRate( feedRate, location.dropAxis( 2 ), location.z )
 
-	def parseInitialization( self, wipePreferences ):
+	def parseInitialization( self, wipeRepository ):
 		"Parse gcode initialization and store the parameters."
 		for self.lineIndex in xrange( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
@@ -238,7 +218,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
+		preferences.startMainLoopFromConstructor( getRepositoryConstructor() )
 
 if __name__ == "__main__":
 	main()

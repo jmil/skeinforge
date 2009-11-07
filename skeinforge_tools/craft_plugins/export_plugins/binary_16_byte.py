@@ -1,15 +1,11 @@
 """
 Binary 16 byte is an export plugin to convert gcode into 16 byte binary segments.
 
-An export plugin is a script in the export_plugins folder which has the functions getOuput, and writeOutput.  It is meant to be
-run from the export tool.  To ensure that the plugin works on platforms which do not handle file capitalization properly, give the
-plugin a lower case name.
+An export plugin is a script in the export_plugins folder which has the functions getOuput, and writeOutput.  It is meant to be run from the export tool.  To ensure that the plugin works on platforms which do not handle file capitalization properly, give the plugin a lower case name.
 
-The getOutput function of this script takes a gcode text and returns that text converted into 16 byte segments.  The writeOutput
-function of this script takes a gcode text and writes that in a binary format converted into 16 byte segments.
+The getOutput function of this script takes a gcode text and returns that text converted into 16 byte segments.  The writeOutput function of this script takes a gcode text and writes that in a binary format converted into 16 byte segments.
 
-Many of the functions in this script are copied from gcodec in skeinforge_utilities.  They are copied rather than imported so
-developers making new plugins do not have to learn about gcodec, the code here is all they need to learn.
+Many of the functions in this script are copied from gcodec in skeinforge_utilities.  They are copied rather than imported so developers making new plugins do not have to learn about gcodec, the code here is all they need to learn.
 
 This plugin is just a starter to make a real binary converter.
 
@@ -50,11 +46,8 @@ BinArray(14) = bActiveFlags
 
 BinArray(15) = AscW("#")End of record filler
 
-Byte 14 is worth a few extra notes, this byte is used to define which of the axes are active, its used to get round the problem of say a
-line of code with no mention of z. This would be put into the file as z = 0 as the space for this data is reserved, if we did nothing, this
-would instruct the machine to go to z = 0. If we use the active flag to define the z axis as inactive the z = 0 is ignored and the value
-set to the last saved value of z, i.e it does not move.  If the z data is actually set to z = 0 then the axis would be set to active and
-the move takes place.
+Byte 14 is worth a few extra notes, this byte is used to define which of the axes are active, its used to get round the problem of say a line of code with no mention of z. This would be put into the file as z = 0 as the space for this data is reserved, if we did nothing, this would instruct the machine to go to z = 0. If we use the active flag to define the z axis as inactive the z = 0 is ignored and the value set to the last saved value of z, i.e it does not move.  If the z data is actually set to z = 0 then the axis would be set to active and the move takes place.
+
 """
 
 from __future__ import absolute_import
@@ -62,7 +55,7 @@ import __init__
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities import interpret
-from skeinforge_tools import polyfile
+from skeinforge_tools.meta_plugins import polyfile
 from struct import Struct
 import cStringIO
 import os
@@ -88,19 +81,19 @@ def getIntegerFlagFromCharacterSplitLine( character, splitLine ):
 		return 0
 	return 1
 
-def getOutput( gcodeText, binary16BytePreferences = None ):
+def getOutput( gcodeText, binary16ByteRepository = None ):
 	"""Get the exported version of a gcode file.  This function, and writeOutput are the only necessary functions in a skeinforge export plugin.
 	If this plugin writes an output than should not be printed, an empty string should be returned."""
 	if gcodeText == '':
 		return ''
-	if binary16BytePreferences == None:
-		binary16BytePreferences = Binary16BytePreferences()
-		preferences.getReadPreferences( binary16BytePreferences )
-	return Binary16ByteSkein().getCraftedGcode( gcodeText, binary16BytePreferences )
+	if binary16ByteRepository == None:
+		binary16ByteRepository = Binary16ByteRepository()
+		preferences.getReadRepository( binary16ByteRepository )
+	return Binary16ByteSkein().getCraftedGcode( gcodeText, binary16ByteRepository )
 
-def getPreferencesConstructor():
-	"Get the preferences constructor."
-	return Binary16BytePreferences()
+def getRepositoryConstructor():
+	"Get the repository constructor."
+	return Binary16ByteRepository()
 
 def getStringFromCharacterSplitLine( character, splitLine ):
 	"Get the string after the first occurence of the character in the split line."
@@ -143,42 +136,32 @@ def writeFileText( fileName, fileText ):
 
 def writeOutput( fileName, gcodeText = '' ):
 	"Write the exported version of a gcode file.  This function, and getOutput are the only necessary functions in a skeinforge export plugin."
-	binary16BytePreferences = Binary16BytePreferences()
-	preferences.getReadPreferences( binary16BytePreferences )
+	binary16ByteRepository = Binary16ByteRepository()
+	preferences.getReadRepository( binary16ByteRepository )
 	gcodeText = gcodec.getGcodeFileText( fileName, gcodeText )
-	skeinOutput = getOutput( gcodeText, binary16BytePreferences )
-	suffixFilename = fileName[ : fileName.rfind( '.' ) ] + '.' + binary16BytePreferences.fileExtension.value
+	skeinOutput = getOutput( gcodeText, binary16ByteRepository )
+	suffixFilename = fileName[ : fileName.rfind( '.' ) ] + '.' + binary16ByteRepository.fileExtension.value
 	writeFileText( suffixFilename, skeinOutput )
 	print( 'The converted file is saved as ' + getSummarizedFilename( suffixFilename ) )
 
 
-class Binary16BytePreferences:
+class Binary16ByteRepository:
 	"A class to handle the export preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
-		self.archive = []
-		self.fileExtension = preferences.StringPreference().getFromValue( 'File Extension:', 'bin' )
-		self.archive.append( self.fileExtension )
-		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Converted to Binary 16 Byte', '' )
-		self.archive.append( self.fileNameInput )
-		self.feedRateStepLength = preferences.FloatPreference().getFromValue( 'FeedRate Step Length (millimeters/second)', 0.1 )
-		self.archive.append( self.feedRateStepLength )
-		self.xStepLength = preferences.FloatPreference().getFromValue( 'X Step Length (millimeters)', 0.1 )
-		self.archive.append( self.xStepLength )
-		self.yStepLength = preferences.FloatPreference().getFromValue( 'Y Step Length (millimeters)', 0.1 )
-		self.archive.append( self.yStepLength )
-		self.zStepLength = preferences.FloatPreference().getFromValue( 'Z Step Length (millimeters)', 0.01 )
-		self.archive.append( self.zStepLength )
-		self.xOffset = preferences.FloatPreference().getFromValue( 'X Offset (millimeters)', 0.0 )
-		self.archive.append( self.xOffset )
-		self.yOffset = preferences.FloatPreference().getFromValue( 'Y Offset (millimeters)', 0.0 )
-		self.archive.append( self.yOffset )
-		self.zOffset = preferences.FloatPreference().getFromValue( 'Z Offset (millimeters)', 0.0 )
-		self.archive.append( self.zOffset )
+		preferences.addListsToRepository( self )
+		self.fileExtension = preferences.StringPreference().getFromValue( 'File Extension:', self, 'bin' )
+		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to be Converted to Binary 16 Byte', self, '' )
+		self.feedRateStepLength = preferences.FloatPreference().getFromValue( 'FeedRate Step Length (millimeters/second)', self, 0.1 )
+		self.xStepLength = preferences.FloatPreference().getFromValue( 'X Step Length (millimeters)', self, 0.1 )
+		self.yStepLength = preferences.FloatPreference().getFromValue( 'Y Step Length (millimeters)', self, 0.1 )
+		self.zStepLength = preferences.FloatPreference().getFromValue( 'Z Step Length (millimeters)', self, 0.01 )
+		self.xOffset = preferences.FloatPreference().getFromValue( 'X Offset (millimeters)', self, 0.0 )
+		self.yOffset = preferences.FloatPreference().getFromValue( 'Y Offset (millimeters)', self, 0.0 )
+		self.zOffset = preferences.FloatPreference().getFromValue( 'Z Offset (millimeters)', self, 0.0 )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Convert to Binary 16 Byte'
-		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.export_plugins.binary_16_byte.html' )
 
 	def execute( self ):
@@ -193,9 +176,9 @@ class Binary16ByteSkein:
 	def __init__( self ):
 		self.output = cStringIO.StringIO()
 
-	def getCraftedGcode( self, gcodeText, binary16BytePreferences ):
+	def getCraftedGcode( self, gcodeText, binary16ByteRepository ):
 		"Parse gcode text and store the gcode."
-		self.binary16BytePreferences = binary16BytePreferences
+		self.binary16ByteRepository = binary16ByteRepository
 		lines = getTextLines( gcodeText )
 		for line in lines:
 			self.parseLine( line )
@@ -203,7 +186,7 @@ class Binary16ByteSkein:
 
 	def parseLine( self, line ):
 		"Parse a gcode line."
-		binary16BytePreferences = self.binary16BytePreferences
+		binary16ByteRepository = self.binary16ByteRepository
 		splitLine = line.split()
 		if len( splitLine ) < 1:
 			return
@@ -213,12 +196,12 @@ class Binary16ByteSkein:
 		firstLetter = firstWord[ 0 ]
 		if firstLetter == '(':
 			return
-		feedRateInteger = getIntegerFromCharacterLengthLineOffset( 'F', 0.0, splitLine, binary16BytePreferences.feedRateStepLength.value )
-		iInteger = getIntegerFromCharacterLengthLineOffset( 'I', 0.0, splitLine, binary16BytePreferences.xStepLength.value )
-		jInteger = getIntegerFromCharacterLengthLineOffset( 'J', 0.0, splitLine, binary16BytePreferences.yStepLength.value )
-		xInteger = getIntegerFromCharacterLengthLineOffset( 'X', binary16BytePreferences.xOffset.value, splitLine, binary16BytePreferences.xStepLength.value )
-		yInteger = getIntegerFromCharacterLengthLineOffset( 'Y', binary16BytePreferences.yOffset.value, splitLine, binary16BytePreferences.yStepLength.value )
-		zInteger = getIntegerFromCharacterLengthLineOffset( 'Z', binary16BytePreferences.zOffset.value, splitLine, binary16BytePreferences.zStepLength.value )
+		feedRateInteger = getIntegerFromCharacterLengthLineOffset( 'F', 0.0, splitLine, binary16ByteRepository.feedRateStepLength.value )
+		iInteger = getIntegerFromCharacterLengthLineOffset( 'I', 0.0, splitLine, binary16ByteRepository.xStepLength.value )
+		jInteger = getIntegerFromCharacterLengthLineOffset( 'J', 0.0, splitLine, binary16ByteRepository.yStepLength.value )
+		xInteger = getIntegerFromCharacterLengthLineOffset( 'X', binary16ByteRepository.xOffset.value, splitLine, binary16ByteRepository.xStepLength.value )
+		yInteger = getIntegerFromCharacterLengthLineOffset( 'Y', binary16ByteRepository.yOffset.value, splitLine, binary16ByteRepository.yStepLength.value )
+		zInteger = getIntegerFromCharacterLengthLineOffset( 'Z', binary16ByteRepository.zOffset.value, splitLine, binary16ByteRepository.zStepLength.value )
 		sixteenByteStruct = Struct( 'cBhhhhhhBc' )
 #		print( 'xInteger' )
 #		print( xInteger )
@@ -237,7 +220,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
+		preferences.startMainLoopFromConstructor( getRepositoryConstructor() )
 
 if __name__ == "__main__":
 	main()

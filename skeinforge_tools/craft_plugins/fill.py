@@ -2,61 +2,27 @@
 """
 Fill is a script to fill the perimeters of a gcode file.
 
-Allan Ecker aka The Masked Retriever's has written the quicktip for fill which follows below.
-"Skeinforge Quicktip: Fill" at:
+Allan Ecker aka The Masked Retriever has written the "Skeinforge Quicktip: Fill" at:
 http://blog.thingiverse.com/2009/07/21/mysteries-of-skeinforge-fill/
 
-The diaphragm is a solid group of layers, at regular intervals.  It can be used with a sparse infill to give the object watertight, horizontal
-compartments and/or a higher shear strength.  The "Diaphragm Period" is the number of layers between diaphrams.  The "Diaphragm
-Thickness" is the number of layers the diaphram is composed of.  The default diaphragm is zero, because the diaphragm feature is rarely
-used.
+The diaphragm is a solid group of layers, at regular intervals.  It can be used with a sparse infill to give the object watertight, horizontal compartments and/or a higher shear strength.  The "Diaphragm Period" is the number of layers between diaphrams.  The "Diaphragm Thickness" is the number of layers the diaphram is composed of.  The default diaphragm is zero, because the diaphragm feature is rarely used.
 
-The "Extra Shells on Alternating Solid Layers" preference is the number of extra shells, which are interior perimeter loops, on the alternating
-solid layers.  The "Extra Shells on Base" preference is the number of extra shells on the bottom, base layer and every even solid layer after
-that.  Setting this to a different value than the "Extra Shells on Alternating Solid Layers" means the infill pattern will alternate, creating a
-strong interleaved bond even if the perimeter loop shrinks.  The "Extra Shells on Sparse Layer" preference is the number of extra shells on
-the sparse layers.  The solid layers are those at the top & bottom, and wherever the object has a plateau or overhang, the sparse layers are
-the layers in between.  Adding extra shells makes the object stronger & heavier.
+The "Extra Shells on Alternating Solid Layers" preference is the number of extra shells, which are interior perimeter loops, on the alternating solid layers.  The "Extra Shells on Base" preference is the number of extra shells on the bottom, base layer and every even solid layer after that.  Setting this to a different value than the "Extra Shells on Alternating Solid Layers" means the infill pattern will alternate, creating a strong interleaved bond even if the perimeter loop shrinks.  The "Extra Shells on Sparse Layer" preference is the number of extra shells on the sparse layers.  The solid layers are those at the top & bottom, and wherever the object has a plateau or overhang, the sparse layers are the layers in between.  Adding extra shells makes the object stronger & heavier.
 
-The "Infill Pattern" can be set to "Grid Hexagonal", "Grid Rectangular" or "Line".  The grid rectangular option makes a funky octogon square
-honeycomb like pattern which gives the object extra strength.  However, the  grid pattern means extra turns for the extruder and therefore
-extra wear & tear, also it takes longer to generate, so the default is line.  The grid has extra diagonal lines, so when choosing the grid
-option, set the infill solidity to 0.2 or less so that there is not too much plastic and the grid generation time, which increases with the fourth
-power of solidity, will be reasonable.  The grid hexagonal option makes a hexagonal grid, but because it is made with threads rather than
-with molding or milling, only a partial hexagon is possible, so the rectangular grid pattern is generally better.  The "Grid Extra Overlap"
-preference is the amount of extra overlap added when extruding the grid to compensate for the fact that when the first thread going through
-a grid point is extruded, since there is nothing there yet for it to connect to it will shrink extra.  The "Grid Junction Separation over Octogon
-Radius At End" preference is the ratio of the amount the grid square is increased in each direction over the extrusion width at the end, the
-default is zero.  With a value of one or so the grid pattern will have large squares to go with the octogons.  The "Grid Junction Separation
-over Octogon Radius At Middle" preference is the increase at the middle, the default is zero.  If this value is different than the value at the
-end, the grid would have an accordion pattern, which would give it a higher shear strength.  The "Grid Junction Separation Band Height" is
-the height of the bands of the accordion pattern.
+The "Infill Pattern" can be set to "Grid Hexagonal", "Grid Rectangular" or "Line".  The grid rectangular option makes a funky octogon square honeycomb like pattern which gives the object extra strength.  However, the  grid pattern means extra turns for the extruder and therefore extra wear & tear, also it takes longer to generate, so the default is line.  The grid has extra diagonal lines, so when choosing the grid option, set the infill solidity to 0.2 or less so that there is not too much plastic and the grid generation time, which increases with the fourth power of solidity, will be reasonable.  The grid hexagonal option makes a hexagonal grid, but because it is made with threads rather than with molding or milling, only a partial hexagon is possible, so the rectangular grid pattern is generally better.  The "Grid Extra Overlap" preference is the amount of extra overlap added when extruding the grid to compensate for the fact that when the first thread going through a grid point is extruded, since there is nothing there yet for it to connect to it will shrink extra.  The "Grid Junction Separation over Octogon Radius At End" preference is the ratio of the amount the grid square is increased in each direction over the extrusion width at the end, the default is zero.  With a value of one or so the grid pattern will have large squares to go with the octogons.  The "Grid Junction Separation over Octogon Radius At Middle" preference is the increase at the middle, the default is zero.  If this value is different than the value at the end, the grid would have an accordion pattern, which would give it a higher shear strength.  The "Grid Junction Separation Band Height" is the height of the bands of the accordion pattern.
 
-The "Infill Begin Rotation" preference is the amount the infill direction of the base and every second layer thereafter is rotated.  The default
-value of forty five degrees gives a diagonal infill.  The "Infill Odd Layer Extra Rotation" preference is the extra amount the infill direction of
-the odd layers is rotated compared to the base layer.  With the default value of ninety degrees the odd layer infill will be perpendicular to
-the base layer.  The "Infill Begin Rotation Repeat" preference is the number of layers that the infill begin rotation will repeat.  With the
-default of one, the object will have alternating cross hatching.  With a value higher than one, the infill will go in one direction more often,
-giving the object more strength in one direction and less in the other, this is useful for beams and cantilevers.
+The "Infill Begin Rotation" preference is the amount the infill direction of the base and every second layer thereafter is rotated.  The default value of forty five degrees gives a diagonal infill.  The "Infill Odd Layer Extra Rotation" preference is the extra amount the infill direction of the odd layers is rotated compared to the base layer.  With the default value of ninety degrees the odd layer infill will be perpendicular to the base layer.  The "Infill Begin Rotation Repeat" preference is the number of layers that the infill begin rotation will repeat.  With the default of one, the object will have alternating cross hatching.  With a value higher than one, the infill will go in one direction more often, giving the object more strength in one direction and less in the other, this is useful for beams and cantilevers.
 
-The most important preference in fill is the "Infill Solidity".  A value of one means the infill lines will be right beside each other, resulting in a
-solid, strong, heavy shape which takes a long time to extrude.  A low value means the infill will be sparse, the interior will be mosty empty
-space, the object will be weak, light and quick to build.  The default is 0.2.
+The 'Infill Perimeter Overlap' ratio is the amount the infill overlaps the perimeter over the average of the perimeter and infill width.  The higher the value the more the infill will overlap the perimeter, and the thicker join between the infill and the perimeter.  If the value is too high, the join will be so thick that the nozzle will run plow through the join below making a mess, also when it is above 0.7 fill may not be able to create infill correctly, the default is 0.15.  If you want to stretch the infill a lot, set 'Path Stretch over Perimeter Width' in stretch to a high value.
 
-The "Interior Infill Density over Exterior Density" preference is the ratio of the infill density of the interior over the infill density of the exterior
-surfaces, the default is 0.9.  The exterior should have a high infill density, so that the surface will be strong and watertight.  With the
-interior infill density a bit lower than the exterior, the plastic will not fill up higher than the extruder nozzle.  If the interior density is too high
-that could happen, as Nophead described in the Hydraraptor "Bearing Fruit" post at:
+The most important preference in fill is the "Infill Solidity".  A value of one means the infill lines will be right beside each other, resulting in a solid, strong, heavy shape which takes a long time to extrude.  A low value means the infill will be sparse, the interior will be mosty empty space, the object will be weak, light and quick to build.  The default is 0.2.
+
+The "Interior Infill Density over Exterior Density" preference is the ratio of the infill density of the interior over the infill density of the exterior surfaces, the default is 0.9.  The exterior should have a high infill density, so that the surface will be strong and watertight.  With the interior infill density a bit lower than the exterior, the plastic will not fill up higher than the extruder nozzle.  If the interior density is too high that could happen, as Nophead described in the Hydraraptor "Bearing Fruit" post at:
 http://hydraraptor.blogspot.com/2008/08/bearing-fruit.html
 
-The "Solid Surface Thickness" preference is the number of solid layers that are at the bottom, top, plateaus and overhang.  With a value of
-zero, the entire object will be composed of a sparse infill, and water could flow right through it.  With a value of one, water will leak slowly
-through the surface and with a value of three, the object could be watertight.  The higher the solid surface thickness, the stronger and
-heavier the object will be.  The default is three.
+The "Solid Surface Thickness" preference is the number of solid layers that are at the bottom, top, plateaus and overhang.  With a value of zero, the entire object will be composed of a sparse infill, and water could flow right through it.  With a value of one, water will leak slowly through the surface and with a value of three, the object could be watertight.  The higher the solid surface thickness, the stronger and heavier the object will be.  The default is three.
 
-The 'Thread Sequence Choice' is the sequence in which the threads will be extruded.  There are three kinds of thread, the perimeter
-threads on the outside of the object, the loop threads aka inner shell threads, and the interior infill threads.  This gives the following six
-sequence combinations:
+The 'Thread Sequence Choice' is the sequence in which the threads will be extruded.  There are three kinds of thread, the perimeter threads on the outside of the object, the loop threads aka inner shell threads, and the interior infill threads.  This gives the following six sequence combinations:
 'Infill > Loops > Perimeter'
 'Infill > Perimeter > Loops'
 'Loops > Infill > Perimeter'
@@ -64,13 +30,9 @@ sequence combinations:
 'Perimeter > Infill > Loops'
 'Perimeter > Loops > Infill'
 
-The default choice is 'Perimeter > Loops > Infill', which the default stretch parameters are based on.  If you change from the default
-sequence choice preference of perimeter, then loops, then infill, the optimal stretch thread parameters would also be different.  In general,
-if the infill is extruded first, the infill would have to be stretched more so that even after the filament shrinkage, it would still be long enough
-to connect to the loop or perimeter.
+The default choice is 'Perimeter > Loops > Infill', which the default stretch parameters are based on.  If you change from the default sequence choice preference of perimeter, then loops, then infill, the optimal stretch thread parameters would also be different.  In general, if the infill is extruded first, the infill would have to be stretched more so that even after the filament shrinkage, it would still be long enough to connect to the loop or perimeter.
 
-The following examples fill the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl
-and fill.py.
+The following examples fill the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and fill.py.
 
 
 > python fill.py
@@ -112,7 +74,7 @@ except:
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
-from skeinforge_tools import polyfile
+from skeinforge_tools.meta_plugins import polyfile
 from skeinforge_tools.skeinforge_utilities import consecution
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
@@ -128,59 +90,69 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-
-# replace getModule(, replace FolderName with directoryPath
-# display coordinates in skeinview
-# export png canvas.postscript % convert your_file_name.ps your_file_name.png
-# add file to Screw Holder Bottom.stl documentation
-#add Minimum Perimeter documentation in comb
-#compartmentalize addOrbit, maybe already done
-#prune carve
-#mill
-#fix multiply tower bug
-#fillet radius zero bug
-# raft margin & raft margin extra over length
+# infill width & bridge documentation
+# removalWidthOverPerimeterWidth documentation
+#
+# getPicture button for mouse tools, reset mouse tool if zooming, zoom, start on screen, set scroll bar around canvas on new screen
+# addSupportSegmentTable in raft global
 #set addedLocation in distanceFeedRate after arc move
-#cooling temperature lowering on small areas
-#fan off at each layer
-#carve aoi xml testing
-#check xml gcode
-#cross hatch support polishing???
-#straighten out the use of layer thickness
+# cool feed and flow rate slowdown option _extrusion
+#drilling, do not throw out small loops
+# documentation
+# check analyze plugins documentation
+# add self.maximumCool = preferences.FloatPreference().. ( 'Maximum Cool (Celcius):', 5.0 ) documentation
 #
-#lathe_winding and/or just winding
-# synonym for rotation or turning, loop angle
-#check exterior paths which should be combed when changing layers, sometimes in tower
-#comb path cut
+#milling
+# mouse select
+# raft to temperature, raft
+# check alterations folder first, if there is something copy it to the home directory, if not check the home directory
+# move alterations and profiles to top level
 #
-#drilling
-#implement acceleration & collinear removal in viewers
-#comb run jump
-#check clip and add spiral
-# rulers on skeinview
 #
-#pick and place
-#add Ddistance option in preface
-#add hook start in oozebane
-#after behold join modify models, gang or concatenate or join
-#make preference backups
-#preferences in gcode or saved versions
 #
-#laminate tool head
-#boundaries, center radius z bottom top, circular or rectangular, polygon
-#maybe add layer updates in behold, skeinview and maybe others
+# add spiral _extrusion
+# behold index simulation
+# cache edges on first carving and slice from array in svg_codec if bridgeThickness ratio is 1.0 _speed
+# layer color, for multilayer start _extrusion
+# make frame for first level plugins
 #email marius about bridge extrusion width http://reprap.org/bin/view/Main/ExtruderImprovementsAndAlternatives
 #xml & svg more forgiving, svg make defaults for layerThickness, maxZ, minZ, add layer z to svg_template, make the slider on the template track even when mouse is outside
+# maybe make rulers on behold
+# maybe make subrulings and ruling colors on skeinview
+# splodge
+#implement acceleration & collinear removal in viewers _extrusion
 #
-#single or double layer option?
-#handle equation
-#simulate
-#short continue in oozebane
+# winding
+# check pixels instead of lines in fill grid _speed
+# zoom, mouse buttons
+# add hook _extrusion
+# add move, select line from 7/8 of end
+# thin check when removing intersecting paths in inset
+# move skeinforge_utilities to fabmetheus_utilities
+# close, save keyboard shortcuts
+#
+#
+#
+# maybe raft follow outline _extrusion
+#boundaries, center radius z bottom top, circular or rectangular, polygon, put cool minimum radius orbits within boundaries
+#laminate tool head
+#maybe add layer updates in behold, skeinview and maybe others
+#lathe winding, extrusion and cutting; synonym for rotation or turning, loop angle
+#add Ddistance option in preface
+# maybe make preference backups
+# maybe preferences in gcode or saved versions
+# maybe behold axis rulings
+#
+#
+#
+# pick and place
+# single or double layer option?
+# handle equation _extrusion
+# integral thin width _extrusion
+# simulate
 #document gear script
-#mosaic
 #transform
 #searchable help
-#stack
 #extrude loops I guess make circles? and/or run along sparse infill
 #custom inclined plane, inclined plane from model, screw, fillet travel as well maybe
 #maybe much afterwards make congajure multistep view
@@ -193,6 +165,7 @@ __license__ = "GPL 3.0"
 #maybe make buttons on top of behold and skeinview
 #maybe add rarely used tool option
 #angle shape for overhang extrusions
+# maybe double height shells option _extrusion
 #maybe m111? countdown
 #maybe option of using G0 when extruder is off
 #maybe variable flowrate for base: http://dev.forums.reprap.org/read.php?12,27293,27293#msg-27293
@@ -204,9 +177,30 @@ __license__ = "GPL 3.0"
 #individual tool tip to place in text
 # maybe try to simplify raft layer start
 # maybe make temp directory
+# maybe display coordinates in skeinview
+# maybe carve aoi xml testing and check xml gcode
+# maybe cross hatch support polishing???
+# fix multiply tower bug if someone gives their preferences
+# maybe toggle fan at each layer
+# maybe print svg view from current layer or zero layer in single view
+# maybe different background color popup button menu for plugins
+# maybe check if tower is picking the nearest island
+# maybe isometric svg option
+# maybe combine skein classes in fillet
+# maybe look for behold cancel bug
+
+# concept, three perpendicular slices to get display spheres
+# concept, go from vertex to two orthogonal edges, then from edges to each other, if not to a common point, then simplify polygons by removing points which do not change the area much
+# concept, in file, store polygon mesh and centers
+# concept, display spheres or polygons would have original triangle for work plane
+# .. then again no point with slices
+# concept, filled slices, about 2 mm thick
+# concept, rgb color triangle switch to get inside color, color golden ratio on 5:11 slope with a modulo 3 face
+# concept, teslocracy
 
 #Manual
 #10,990
+#11,1776
 #devocracy?
 #make one piece electromagnet spool
 #stepper rotor with ceramic disk magnet in middle, electromagnet with long thin spool line?
@@ -287,9 +281,9 @@ def addAroundGridPoint( arounds, gridPoint, gridPointInsetX, gridPointInsetY, gr
 	yCloseToCenterPaths.sort( comparePointIndexDescending )
 	insertGridPointPairs( gridPoint, gridPointInsetX, gridPoints, yCloseToCenterPaths[ 0 ], yCloseToCenterPaths[ 1 ], isBothOrNone, isJunctionWide, paths, pixelTable, width )
 
-def addPath( extrusionWidth, infillPaths, path, rotationPlaneAngle ):
+def addPath( infillWidth, infillPaths, path, rotationPlaneAngle ):
 	"Add simplified path to fill."
-	simplifiedPath = euclidean.getSimplifiedPath( path, extrusionWidth )
+	simplifiedPath = euclidean.getSimplifiedPath( path, infillWidth )
 	if len( simplifiedPath ) < 2:
 		return
 	planeRotated = euclidean.getPointsRoundZAxis( rotationPlaneAngle, simplifiedPath )
@@ -325,17 +319,17 @@ def addShortenedLineSegment( lineSegment, shortenDistance, shortenedSegments ):
 	lineSegment[ 1 ].point = pointEnd - segmentShorten
 	shortenedSegments.append( lineSegment )
 
-def addSparseEndpoints( doubleExtrusionWidth, endpoints, fillLine, horizontalSegments, infillSolidity, removedEndpoints, solidSurfaceThickness, surroundingXIntersections ):
+def addSparseEndpoints( doubleExtrusionWidth, endpoints, fillLine, horizontalSegmentLists, infillSolidity, removedEndpoints, solidSurfaceThickness, surroundingXIntersections ):
 	"Add sparse endpoints."
-	horizontalEndpoints = horizontalSegments[ fillLine ]
+	horizontalEndpoints = horizontalSegmentLists[ fillLine ]
 	for segment in horizontalEndpoints:
-		addSparseEndpointsFromSegment( doubleExtrusionWidth, endpoints, fillLine, horizontalSegments, infillSolidity, removedEndpoints, segment, solidSurfaceThickness, surroundingXIntersections )
+		addSparseEndpointsFromSegment( doubleExtrusionWidth, endpoints, fillLine, horizontalSegmentLists, infillSolidity, removedEndpoints, segment, solidSurfaceThickness, surroundingXIntersections )
 
-def addSparseEndpointsFromSegment( doubleExtrusionWidth, endpoints, fillLine, horizontalSegments, infillSolidity, removedEndpoints, segment, solidSurfaceThickness, surroundingXIntersections ):
+def addSparseEndpointsFromSegment( doubleExtrusionWidth, endpoints, fillLine, horizontalSegmentLists, infillSolidity, removedEndpoints, segment, solidSurfaceThickness, surroundingXIntersections ):
 	"Add sparse endpoints from a segment."
 	endpointFirstPoint = segment[ 0 ].point
 	endpointSecondPoint = segment[ 1 ].point
-	if fillLine < 1 or fillLine >= len( horizontalSegments ) - 1 or surroundingXIntersections == None:
+	if fillLine < 1 or fillLine >= len( horizontalSegmentLists ) - 1 or surroundingXIntersections == None:
 		endpoints += segment
 		return
 	if infillSolidity > 0.0:
@@ -345,10 +339,10 @@ def addSparseEndpointsFromSegment( doubleExtrusionWidth, endpoints, fillLine, ho
 	if abs( endpointFirstPoint - endpointSecondPoint ) < doubleExtrusionWidth:
 		endpoints += segment
 		return
-	if not isSegmentAround( horizontalSegments[ fillLine - 1 ], segment ):
+	if not isSegmentAround( horizontalSegmentLists[ fillLine - 1 ], segment ):
 		endpoints += segment
 		return
-	if not isSegmentAround( horizontalSegments[ fillLine + 1 ], segment ):
+	if not isSegmentAround( horizontalSegmentLists[ fillLine + 1 ], segment ):
 		endpoints += segment
 		return
 	if solidSurfaceThickness == 0:
@@ -358,12 +352,6 @@ def addSparseEndpointsFromSegment( doubleExtrusionWidth, endpoints, fillLine, ho
 		removedEndpoints += segment
 		return
 	endpoints += segment
-
-def addSurroundingXIntersectionIndexes( surroundingCarves, xIntersectionIndexList, y ):
-	"Add x intersection indexes from surrounding layers."
-	for surroundingIndex in xrange( len( surroundingCarves ) ):
-		surroundingCarve = surroundingCarves[ surroundingIndex ]
-		euclidean.addXIntersectionIndexesFromLoops( surroundingCarve, surroundingIndex, xIntersectionIndexList, y )
 
 def addYIntersectionPathToList( pathIndex, pointIndex, y, yIntersection, yIntersectionPaths ):
 	"Add the y intersection path to the y intersection paths."
@@ -401,8 +389,7 @@ def createExtraFillLoops( radius, surroundingLoop ):
 	for outside in outsides:
 		transferredLoops = euclidean.getTransferredPaths( insides, outside )
 		allFillLoops += getExtraFillLoops( transferredLoops, outside, radius )
-	if len( allFillLoops ) > 0:
-		surroundingLoop.lastFillLoops = allFillLoops
+	surroundingLoop.lastFillLoops = allFillLoops
 	surroundingLoop.extraLoops += allFillLoops
 
 def createFillForSurroundings( radius, surroundingLoops ):
@@ -418,19 +405,19 @@ def getAdditionalLength( path, point, pointIndex ):
 		return abs( point - path[ - 1 ] )
 	return abs( point - path[ pointIndex - 1 ] ) + abs( point - path[ pointIndex ] ) - abs( path[ pointIndex ] - path[ pointIndex - 1 ] )
 
-def getCraftedText( fileName, text = '', fillPreferences = None ):
+def getCraftedText( fileName, text = '', fillRepository = None ):
 	"Fill the inset file or text."
-	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), fillPreferences )
+	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), fillRepository )
 
-def getCraftedTextFromText( gcodeText, fillPreferences = None ):
+def getCraftedTextFromText( gcodeText, fillRepository = None ):
 	"Fill the inset text.self."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'fill' ):
 		return gcodeText
-	if fillPreferences == None:
-		fillPreferences = preferences.getReadPreferences( FillPreferences() )
-	if not fillPreferences.activateFill.value:
+	if fillRepository == None:
+		fillRepository = preferences.getReadRepository( FillRepository() )
+	if not fillRepository.activateFill.value:
 		return gcodeText
-	return FillSkein().getCraftedGcode( fillPreferences, gcodeText )
+	return FillSkein().getCraftedGcode( fillRepository, gcodeText )
 
 def getClosestOppositeIntersectionPaths( yIntersectionPaths ):
 	"Get the close to center paths, starting with the first and an additional opposite if it exists."
@@ -464,13 +451,6 @@ def getExtraFillLoops( insideLoops, outsideLoop, radius ):
 						inset.reverse()
 						extraFillLoops.append( inset )
 	return extraFillLoops
-
-def getHorizontalSegmentsFromLoopLists( fillLoops, alreadyFilledArounds, y ):
-	"Get horizontal segments inside loops."
-	xIntersectionIndexList = []
-	euclidean.addXIntersectionIndexesFromLoops( fillLoops, - 1, xIntersectionIndexList, y )
-	euclidean.addXIntersectionIndexesFromLoopLists( alreadyFilledArounds, xIntersectionIndexList, y )
-	return euclidean.getSegmentsFromXIntersectionIndexes( xIntersectionIndexList, y )
 
 def getIntersectionOfXIntersectionIndexes( totalSolidSurfaceThickness, xIntersectionIndexList ):
 	"Get x intersections from surrounding layers."
@@ -512,17 +492,9 @@ def getPlusMinusSign( number ):
 		return 1.0
 	return - 1.0
 
-def getPreferencesConstructor():
-	"Get the preferences constructor."
-	return FillPreferences()
-
-def getSurroundingXIntersections( doubleSolidSurfaceThickness, surroundingCarves, y ):
-	"Get x intersections from surrounding layers."
-	xIntersectionIndexList = []
-	addSurroundingXIntersectionIndexes( surroundingCarves, xIntersectionIndexList, y )
-	if len( surroundingCarves ) < doubleSolidSurfaceThickness:
-		return None
-	return getIntersectionOfXIntersectionIndexes( doubleSolidSurfaceThickness, xIntersectionIndexList )
+def getRepositoryConstructor():
+	"Get the repository constructor."
+	return FillRepository()
 
 def getWithLeastLength( path, point ):
 	"Insert a point into a path, at the index at which the path would be shortest."
@@ -830,72 +802,45 @@ def writeOutput( fileName = '' ):
 		consecution.writeChainTextWithNounMessage( fileName, 'fill' )
 
 
-class FillPreferences:
+class FillRepository:
 	"A class to handle the fill preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
-		self.archive = []
-		self.activateFill = preferences.BooleanPreference().getFromValue( 'Activate Fill:', True )
-		self.archive.append( self.activateFill )
-		self.diaphragmPeriod = preferences.IntPreference().getFromValue( 'Diaphragm Period (layers):', 999999 )
-		self.archive.append( self.diaphragmPeriod )
-		self.diaphragmThickness = preferences.IntPreference().getFromValue( 'Diaphragm Thickness (layers):', 0 )
-		self.archive.append( self.diaphragmThickness )
-		self.extraShellsAlternatingSolidLayer = preferences.IntPreference().getFromValue( 'Extra Shells on Alternating Solid Layer (layers):', 1 )
-		self.archive.append( self.extraShellsAlternatingSolidLayer )
-		self.extraShellsBase = preferences.IntPreference().getFromValue( 'Extra Shells on Base (layers):', 0 )
-		self.archive.append( self.extraShellsBase )
-		self.extraShellsSparseLayer = preferences.IntPreference().getFromValue( 'Extra Shells on Sparse Layer (layers):', 1 )
-		self.archive.append( self.extraShellsSparseLayer )
-		self.gridExtraOverlap = preferences.FloatPreference().getFromValue( 'Grid Extra Overlap (ratio):', 0.1 )
-		self.archive.append( self.gridExtraOverlap )
-		self.gridJunctionSeparationBandHeight = preferences.IntPreference().getFromValue( 'Grid Junction Separation Band Height (layers):', 10 )
-		self.archive.append( self.gridJunctionSeparationBandHeight )
-		self.gridJunctionSeparationOverOctogonRadiusAtEnd = preferences.FloatPreference().getFromValue( 'Grid Junction Separation over Octogon Radius At End (ratio):', 0.0 )
-		self.archive.append( self.gridJunctionSeparationOverOctogonRadiusAtEnd )
-		self.gridJunctionSeparationOverOctogonRadiusAtMiddle = preferences.FloatPreference().getFromValue( 'Grid Junction Separation over Octogon Radius At Middle (ratio):', 0.0 )
-		self.archive.append( self.gridJunctionSeparationOverOctogonRadiusAtMiddle )
-		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Filled', '' )
-		self.archive.append( self.fileNameInput )
-		self.infillBeginRotation = preferences.FloatPreference().getFromValue( 'Infill Begin Rotation (degrees):', 45.0 )
-		self.archive.append( self.infillBeginRotation )
-		self.infillBeginRotationRepeat = preferences.IntPreference().getFromValue( 'Infill Begin Rotation Repeat (layers):', 1 )
-		self.archive.append( self.infillBeginRotationRepeat )
-		self.infillSolidity = preferences.FloatPreference().getFromValue( 'Infill Solidity (ratio):', 0.2 )
-		self.archive.append( self.infillSolidity )
-		self.infillOddLayerExtraRotation = preferences.FloatPreference().getFromValue( 'Infill Odd Layer Extra Rotation (degrees):', 90.0 )
-		self.archive.append( self.infillOddLayerExtraRotation )
-		self.infillPatternLabel = preferences.LabelDisplay().getFromName( 'Infill Pattern:' )
-		self.archive.append( self.infillPatternLabel )
+		preferences.addListsToRepository( self )
+		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Filled', self, '' )
+		self.activateFill = preferences.BooleanPreference().getFromValue( 'Activate Fill:', self, True )
+		self.diaphragmPeriod = preferences.IntPreference().getFromValue( 'Diaphragm Period (layers):', self, 999999 )
+		self.diaphragmThickness = preferences.IntPreference().getFromValue( 'Diaphragm Thickness (layers):', self, 0 )
+		self.extraShellsAlternatingSolidLayer = preferences.IntPreference().getFromValue( 'Extra Shells on Alternating Solid Layer (layers):', self, 1 )
+		self.extraShellsBase = preferences.IntPreference().getFromValue( 'Extra Shells on Base (layers):', self, 0 )
+		self.extraShellsSparseLayer = preferences.IntPreference().getFromValue( 'Extra Shells on Sparse Layer (layers):', self, 1 )
+		self.gridExtraOverlap = preferences.FloatPreference().getFromValue( 'Grid Extra Overlap (ratio):', self, 0.1 )
+		self.gridJunctionSeparationBandHeight = preferences.IntPreference().getFromValue( 'Grid Junction Separation Band Height (layers):', self, 10 )
+		self.gridJunctionSeparationOverOctogonRadiusAtEnd = preferences.FloatPreference().getFromValue( 'Grid Junction Separation over Octogon Radius At End (ratio):', self, 0.0 )
+		self.gridJunctionSeparationOverOctogonRadiusAtMiddle = preferences.FloatPreference().getFromValue( 'Grid Junction Separation over Octogon Radius At Middle (ratio):', self, 0.0 )
+		self.infillBeginRotation = preferences.FloatPreference().getFromValue( 'Infill Begin Rotation (degrees):', self, 45.0 )
+		self.infillBeginRotationRepeat = preferences.IntPreference().getFromValue( 'Infill Begin Rotation Repeat (layers):', self, 1 )
+		self.infillInteriorDensityOverExteriorDensity = preferences.FloatPreference().getFromValue( 'Infill Interior Density over Exterior Density (ratio):', self, 0.9 )
+		self.infillOddLayerExtraRotation = preferences.FloatPreference().getFromValue( 'Infill Odd Layer Extra Rotation (degrees):', self, 90.0 )
+		self.infillPatternLabel = preferences.LabelDisplay().getFromName( 'Infill Pattern:', self )
 		infillPatternRadio = []
-		self.infillPatternGridHexagonal = preferences.Radio().getFromRadio( 'Grid Hexagonal', infillPatternRadio, False )
-		self.archive.append( self.infillPatternGridHexagonal )
-		self.infillPatternGridRectangular = preferences.Radio().getFromRadio( 'Grid Rectangular', infillPatternRadio, False )
-		self.archive.append( self.infillPatternGridRectangular )
-		self.infillPatternLine = preferences.Radio().getFromRadio( 'Line', infillPatternRadio, True )
-		self.archive.append( self.infillPatternLine )
-		self.interiorInfillDensityOverExteriorDensity = preferences.FloatPreference().getFromValue( 'Interior Infill Density over Exterior Density (ratio):', 0.9 )
-		self.archive.append( self.interiorInfillDensityOverExteriorDensity )
-		self.solidSurfaceThickness = preferences.IntPreference().getFromValue( 'Solid Surface Thickness (layers):', 3 )
-		self.archive.append( self.solidSurfaceThickness )
-		self.threadSequenceChoice = preferences.MenuButtonDisplay().getFromName( 'Thread Sequence Choice:' )
-		self.archive.append( self.threadSequenceChoice )
-		self.threadSequenceInfillLoops = preferences.MenuRadio().getFromMenuButtonDisplay( self.threadSequenceChoice, 'Infill > Loops > Perimeter', False )
-		self.archive.append( self.threadSequenceInfillLoops )
-		self.threadSequenceInfillPerimeter = preferences.MenuRadio().getFromMenuButtonDisplay( self.threadSequenceChoice, 'Infill > Perimeter > Loops', False )
-		self.archive.append( self.threadSequenceInfillPerimeter )
-		self.threadSequenceLoopsInfill = preferences.MenuRadio().getFromMenuButtonDisplay( self.threadSequenceChoice, 'Loops > Infill > Perimeter', False )
-		self.archive.append( self.threadSequenceLoopsInfill )
-		self.threadSequenceLoopsPerimeter = preferences.MenuRadio().getFromMenuButtonDisplay( self.threadSequenceChoice, 'Loops > Perimeter > Infill', False )
-		self.archive.append( self.threadSequenceLoopsPerimeter )
-		self.threadSequencePerimeterInfill = preferences.MenuRadio().getFromMenuButtonDisplay( self.threadSequenceChoice, 'Perimeter > Infill > Loops', False )
-		self.archive.append( self.threadSequencePerimeterInfill )
-		self.threadSequencePerimeterLoops = preferences.MenuRadio().getFromMenuButtonDisplay( self.threadSequenceChoice, 'Perimeter > Loops > Infill', True )
-		self.archive.append( self.threadSequencePerimeterLoops )
+		self.infillPatternGridHexagonal = preferences.Radio().getFromRadio( 'Grid Hexagonal', infillPatternRadio, self, False )
+		self.infillPatternGridRectangular = preferences.Radio().getFromRadio( 'Grid Rectangular', infillPatternRadio, self, False )
+		self.infillPatternLine = preferences.Radio().getFromRadio( 'Line', infillPatternRadio, self, True )
+		self.infillPerimeterOverlap = preferences.FloatPreference().getFromValue( 'Infill Perimeter Overlap (ratio):', self, 0.15 )
+		self.infillSolidity = preferences.FloatPreference().getFromValue( 'Infill Solidity (ratio):', self, 0.2 )
+		self.infillWidthOverThickness = preferences.FloatPreference().getFromValue( 'Infill Width over Thickness (ratio):', self, 1.5 )
+		self.solidSurfaceThickness = preferences.IntPreference().getFromValue( 'Solid Surface Thickness (layers):', self, 3 )
+		self.threadSequenceChoice = preferences.MenuButtonDisplay().getFromName( 'Thread Sequence Choice:', self )
+		self.threadSequenceInfillLoops = preferences.MenuRadio().getFromMenuButtonDisplay( self.threadSequenceChoice, 'Infill > Loops > Perimeter', self, False )
+		self.threadSequenceInfillPerimeter = preferences.MenuRadio().getFromMenuButtonDisplay( self.threadSequenceChoice, 'Infill > Perimeter > Loops', self, False )
+		self.threadSequenceLoopsInfill = preferences.MenuRadio().getFromMenuButtonDisplay( self.threadSequenceChoice, 'Loops > Infill > Perimeter', self, False )
+		self.threadSequenceLoopsPerimeter = preferences.MenuRadio().getFromMenuButtonDisplay( self.threadSequenceChoice, 'Loops > Perimeter > Infill', self, False )
+		self.threadSequencePerimeterInfill = preferences.MenuRadio().getFromMenuButtonDisplay( self.threadSequenceChoice, 'Perimeter > Infill > Loops', self, False )
+		self.threadSequencePerimeterLoops = preferences.MenuRadio().getFromMenuButtonDisplay( self.threadSequenceChoice, 'Perimeter > Loops > Infill', self, True )
 		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Fill'
-		self.saveCloseTitle = 'Save and Close'
 		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.fill.html' )
 
 	def execute( self ):
@@ -908,10 +853,10 @@ class FillPreferences:
 class FillSkein:
 	"A class to fill a skein of extrusions."
 	def __init__( self ):
+		self.bridgeWidthMultiplier = 1.0
 		self.distanceFeedRate = gcodec.DistanceFeedRate()
 		self.extruderActive = False
 		self.fillInset = 0.18
-		self.infillBridgeWidthOverExtrusionWidth = 1.0
 		self.isPerimeter = False
 		self.lastExtraShells = - 1
 		self.lineIndex = 0
@@ -928,27 +873,27 @@ class FillSkein:
 		alreadyFilledArounds = []
 		arounds = []
 		halfWidth = 0.5 * self.perimeterWidth
-		layerExtrusionWidth = self.extrusionWidth
+		self.layerExtrusionWidth = self.infillWidth
 		layerFillInset = self.fillInset
 		rotatedLayer = self.rotatedLayers[ layerIndex ]
 		self.distanceFeedRate.addLine( '(<layer> %s )' % rotatedLayer.z ) # Indicate that a new layer is starting.
 #		print( 'layer index: %s  z: %s' % ( layerIndex, rotatedLayer.z ) )
 		if rotatedLayer.rotation != None:
-			halfWidth *= self.infillBridgeWidthOverExtrusionWidth
-			layerExtrusionWidth = self.extrusionWidth * self.infillBridgeWidthOverExtrusionWidth
-			layerFillInset = self.fillInset * self.infillBridgeWidthOverExtrusionWidth
+			halfWidth *= self.bridgeWidthMultiplier
+			self.layerExtrusionWidth = self.infillWidth * self.bridgeWidthMultiplier
+			layerFillInset = self.fillInset * self.bridgeWidthMultiplier
 			self.distanceFeedRate.addLine( '(<bridgeRotation> %s )' % rotatedLayer.rotation ) # Indicate that this is a bridge layer.
 		gridPointInsetX = 0.5 * layerFillInset
-		doubleExtrusionWidth = 2.0 * layerExtrusionWidth
+		doubleExtrusionWidth = 2.0 * self.layerExtrusionWidth
 		endpoints = []
 		infillPaths = []
-		aroundInset = 0.4 * layerExtrusionWidth
+		aroundInset = 0.4 * self.layerExtrusionWidth
 		aroundWidth = 0.3 * aroundInset
 		layerInfillSolidity = self.infillSolidity
 		self.isDoubleJunction = True
 		self.isJunctionWide = True
 		layerRotationAroundZAngle = self.getLayerRoundZ( layerIndex )
-		if self.fillPreferences.infillPatternGridHexagonal.value:
+		if self.fillRepository.infillPatternGridHexagonal.value:
 			if abs( euclidean.getDotProduct( layerRotationAroundZAngle, euclidean.getPolar( self.infillBeginRotation, 1.0 ) ) ) < math.sqrt( 0.5 ):
 				layerInfillSolidity *= 0.5
 				self.isDoubleJunction = False
@@ -956,26 +901,26 @@ class FillSkein:
 				self.isJunctionWide = False
 		reverseZRotationAngle = complex( layerRotationAroundZAngle.real, - layerRotationAroundZAngle.imag )
 		rotatedExtruderLoops = []
-		stretch = 0.5 * layerExtrusionWidth
+		stretch = 0.5 * self.layerExtrusionWidth
 		surroundingCarves = []
-		layerRemainder = layerIndex % int( round( self.fillPreferences.diaphragmPeriod.value ) )
-		if layerRemainder >= int( round( self.fillPreferences.diaphragmThickness.value ) ):
+		layerRemainder = layerIndex % int( round( self.fillRepository.diaphragmPeriod.value ) )
+		if layerRemainder >= int( round( self.fillRepository.diaphragmThickness.value ) ):
 			for surroundingIndex in xrange( 1, self.solidSurfaceThickness + 1 ):
 				self.addRotatedCarve( layerIndex - surroundingIndex, reverseZRotationAngle, surroundingCarves )
 				self.addRotatedCarve( layerIndex + surroundingIndex, reverseZRotationAngle, surroundingCarves )
-		extraShells = self.fillPreferences.extraShellsSparseLayer.value
+		extraShells = self.fillRepository.extraShellsSparseLayer.value
 		if len( surroundingCarves ) < self.doubleSolidSurfaceThickness:
-			extraShells = self.fillPreferences.extraShellsAlternatingSolidLayer.value
-			if self.lastExtraShells != self.fillPreferences.extraShellsBase.value:
-				extraShells = self.fillPreferences.extraShellsBase.value
+			extraShells = self.fillRepository.extraShellsAlternatingSolidLayer.value
+			if self.lastExtraShells != self.fillRepository.extraShellsBase.value:
+				extraShells = self.fillRepository.extraShellsBase.value
 			self.lastExtraShells = extraShells
 		else:
 			self.lastExtraShells = - 1
-		surroundingLoops = euclidean.getOrderedSurroundingLoops( layerExtrusionWidth, rotatedLayer.surroundingLoops )
+		surroundingLoops = euclidean.getOrderedSurroundingLoops( self.layerExtrusionWidth, rotatedLayer.surroundingLoops )
 		if isPerimeterPathInSurroundLoops( surroundingLoops ):
 			extraShells = 0
 		for extraShellIndex in xrange( extraShells ):
-			radius = layerExtrusionWidth
+			radius = self.layerExtrusionWidth
 			if extraShellIndex == 0:
 				radius += halfWidth
 			createFillForSurroundings( radius, surroundingLoops )
@@ -1011,35 +956,40 @@ class FillSkein:
 				areaChange = min( areaChange, self.getAreaChange( area, layerIndex - surroundingIndex ) )
 				areaChange = min( areaChange, self.getAreaChange( area, layerIndex + surroundingIndex ) )
 			if areaChange > 0.5 or self.solidSurfaceThickness == 0:
-				if self.fillPreferences.interiorInfillDensityOverExteriorDensity.value <= 0.0:
+				if self.fillRepository.infillInteriorDensityOverExteriorDensity.value <= 0.0:
 					self.addThreadsBridgeLayer( rotatedLayer, surroundingLoops )
-				layerExtrusionWidth /= self.fillPreferences.interiorInfillDensityOverExteriorDensity.value
-		front = math.ceil( front / layerExtrusionWidth ) * layerExtrusionWidth
+				self.layerExtrusionWidth /= self.fillRepository.infillInteriorDensityOverExteriorDensity.value
+		front = math.ceil( front / self.layerExtrusionWidth ) * self.layerExtrusionWidth
 		fillWidth = back - front
-		numberOfLines = int( math.ceil( fillWidth / layerExtrusionWidth ) )
-		horizontalSegments = []
-		for fillLine in xrange( numberOfLines ):
-			y = front + float( fillLine ) * layerExtrusionWidth
-			lineSegments = getHorizontalSegmentsFromLoopLists( rotatedExtruderLoops, alreadyFilledArounds, y )
-			horizontalSegments.append( lineSegments )
+		numberOfLines = int( math.ceil( fillWidth / self.layerExtrusionWidth ) )
+		self.frontOverWidth = 0.0
+		self.horizontalSegmentLists = euclidean.getHorizontalSegmentListsFromLoopLists( alreadyFilledArounds, front, numberOfLines, rotatedExtruderLoops, self.layerExtrusionWidth )
+		self.surroundingXIntersectionLists = []
+		self.yList = []
 		removedEndpoints = []
-		for fillLine in xrange( len( horizontalSegments ) ):
-			y = front + float( fillLine ) * layerExtrusionWidth
-			horizontalEndpoints = horizontalSegments[ fillLine ]
-			surroundingXIntersections = getSurroundingXIntersections( self.doubleSolidSurfaceThickness, surroundingCarves, y )
-			addSparseEndpoints( doubleExtrusionWidth, endpoints, fillLine, horizontalSegments, layerInfillSolidity, removedEndpoints, self.solidSurfaceThickness, surroundingXIntersections )
+		if len( surroundingCarves ) >= self.doubleSolidSurfaceThickness:
+			xIntersectionIndexLists = []
+			self.frontOverWidth = euclidean.getFrontOverWidthAddXListYList( front, surroundingCarves, numberOfLines, xIntersectionIndexLists, self.layerExtrusionWidth, self.yList )
+			for fillLine in xrange( len( self.horizontalSegmentLists ) ):
+				xIntersectionIndexList = xIntersectionIndexLists[ fillLine ]
+				surroundingXIntersections = getIntersectionOfXIntersectionIndexes( self.doubleSolidSurfaceThickness, xIntersectionIndexList )
+				self.surroundingXIntersectionLists.append( surroundingXIntersections )
+				addSparseEndpoints( doubleExtrusionWidth, endpoints, fillLine, self.horizontalSegmentLists, layerInfillSolidity, removedEndpoints, self.solidSurfaceThickness, surroundingXIntersections )
+		else:
+			for fillLine in xrange( len( self.horizontalSegmentLists ) ):
+				addSparseEndpoints( doubleExtrusionWidth, endpoints, fillLine, self.horizontalSegmentLists, layerInfillSolidity, removedEndpoints, self.solidSurfaceThickness, None )
 		if len( endpoints ) < 1:
 			self.addThreadsBridgeLayer( rotatedLayer, surroundingLoops )
 			return
-		paths = euclidean.getPathsFromEndpoints( endpoints, layerExtrusionWidth, aroundPixelTable, aroundWidth )
+		paths = euclidean.getPathsFromEndpoints( endpoints, self.layerExtrusionWidth, aroundPixelTable, aroundWidth )
 		if self.isGridToBeExtruded():
-			self.addGrid( alreadyFilledArounds, arounds, fillLoops, gridPointInsetX, layerIndex, paths, aroundPixelTable, aroundWidth, reverseZRotationAngle, rotatedExtruderLoops, surroundingCarves )
+			self.addGrid( arounds, fillLoops, gridPointInsetX, layerIndex, paths, aroundPixelTable, aroundWidth, reverseZRotationAngle, surroundingCarves )
 		oldRemovedEndpointLength = len( removedEndpoints ) + 1
 		while oldRemovedEndpointLength - len( removedEndpoints ) > 0:
 			oldRemovedEndpointLength = len( removedEndpoints )
-			removeEndpoints( aroundPixelTable, layerExtrusionWidth, paths, removedEndpoints, aroundWidth )
+			removeEndpoints( aroundPixelTable, self.layerExtrusionWidth, paths, removedEndpoints, aroundWidth )
 		for path in paths:
-			addPath( layerExtrusionWidth, infillPaths, path, layerRotationAroundZAngle )
+			addPath( self.layerExtrusionWidth, infillPaths, path, layerRotationAroundZAngle )
 		euclidean.transferPathsToSurroundingLoops( infillPaths, surroundingLoops )
 		self.addThreadsBridgeLayer( rotatedLayer, surroundingLoops )
 
@@ -1047,12 +997,14 @@ class FillSkein:
 		"Add a gcode thread to the output."
 		self.distanceFeedRate.addGcodeFromThreadZ( thread, z )
 
-	def addGrid( self, alreadyFilledArounds, arounds, fillLoops, gridPointInsetX, layerIndex, paths, pixelTable, width, reverseZRotationAngle, rotatedExtruderLoops, surroundingCarves ):
+	def addGrid( self, arounds, fillLoops, gridPointInsetX, layerIndex, paths, pixelTable, width, reverseZRotationAngle, surroundingCarves ):
 		"Add the grid to the infill layer."
-		gridPoints = self.getGridPoints( alreadyFilledArounds, fillLoops, reverseZRotationAngle, rotatedExtruderLoops, surroundingCarves )
-		gridPointInsetY = gridPointInsetX * ( 1.0 - self.fillPreferences.gridExtraOverlap.value )
-		if self.fillPreferences.infillPatternGridRectangular.value:
-			gridBandHeight = self.fillPreferences.gridJunctionSeparationBandHeight.value
+		if len( surroundingCarves ) < self.doubleSolidSurfaceThickness:
+			return
+		gridPoints = self.getGridPoints( fillLoops, reverseZRotationAngle )
+		gridPointInsetY = gridPointInsetX * ( 1.0 - self.fillRepository.gridExtraOverlap.value )
+		if self.fillRepository.infillPatternGridRectangular.value:
+			gridBandHeight = self.fillRepository.gridJunctionSeparationBandHeight.value
 			gridLayerRemainder = ( layerIndex - self.solidSurfaceThickness ) % gridBandHeight
 			halfBandHeight = 0.5 * float( gridBandHeight )
 			halfBandHeightFloor = math.floor( halfBandHeight )
@@ -1071,7 +1023,7 @@ class FillSkein:
 			oldGridPointLength = len( gridPoints )
 			self.addRemainingGridPoints( arounds, gridPointInsetX, gridPointInsetY, gridPoints, False, paths, pixelTable, width )
 
-	def addGridLinePoints( self, alreadyFilledArounds, begin, end, gridPoints, gridRotationAngle, offset, rotatedExtruderLoops, surroundingCarves, y ):
+	def addGridLinePoints( self, begin, end, gridPoints, gridRotationAngle, offset, y ):
 		"Add the segments of one line of a grid to the infill."
 		if self.gridRadius == 0.0:
 			return
@@ -1083,9 +1035,8 @@ class FillSkein:
 			gridXOffset = offset + gridWidth * float( gridXStep )
 		while gridXOffset < end:
 			gridPointComplex = complex( gridXOffset, y ) * gridRotationAngle
-			gridPoint = complex( gridPointComplex.real, gridPointComplex.imag )
-			if self.isPointInsideLineSegments( alreadyFilledArounds, gridPoint, rotatedExtruderLoops, surroundingCarves ):
-				gridPoints.append( gridPoint )
+			if self.isPointInsideLineSegments( gridPointComplex ):
+				gridPoints.append( gridPointComplex )
 			gridXStep = self.getNextGripXStep( gridXStep )
 			gridXOffset = offset + gridWidth * float( gridXStep )
 
@@ -1130,30 +1081,35 @@ class FillSkein:
 		layerArea = self.getCarveArea( layerIndex )
 		return min( area, layerArea ) / max( area, layerArea )
 
-	def getCraftedGcode( self, fillPreferences, gcodeText ):
+	def getCraftedGcode( self, fillRepository, gcodeText ):
 		"Parse gcode text and store the bevel gcode."
-		self.fillPreferences = fillPreferences
+		self.fillRepository = fillRepository
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.threadSequence = None
-		if fillPreferences.threadSequenceInfillLoops.value:
+		if fillRepository.threadSequenceInfillLoops.value:
 			self.threadSequence = [ 'infill', 'loops', 'perimeter' ]
-		if fillPreferences.threadSequenceInfillPerimeter.value:
+		if fillRepository.threadSequenceInfillPerimeter.value:
 			self.threadSequence = [ 'infill', 'perimeter', 'loops' ]
-		if fillPreferences.threadSequenceLoopsInfill.value:
+		if fillRepository.threadSequenceLoopsInfill.value:
 			self.threadSequence = [ 'loops', 'infill', 'perimeter' ]
-		if fillPreferences.threadSequenceLoopsPerimeter.value:
+		if fillRepository.threadSequenceLoopsPerimeter.value:
 			self.threadSequence = [ 'loops', 'perimeter', 'infill' ]
-		if fillPreferences.threadSequencePerimeterInfill.value:
+		if fillRepository.threadSequencePerimeterInfill.value:
 			self.threadSequence = [ 'perimeter', 'infill', 'loops' ]
-		if fillPreferences.threadSequencePerimeterLoops.value:
+		if fillRepository.threadSequencePerimeterLoops.value:
 			self.threadSequence = [ 'perimeter', 'loops', 'infill' ]
 		self.parseInitialization()
-		self.infillSolidity = fillPreferences.infillSolidity.value
+		self.infillWidth = fillRepository.infillWidthOverThickness.value * self.layerThickness
+		self.interiorExtrusionWidth = self.infillWidth
+		self.fillInset = self.perimeterWidth + 0.5 * self.infillWidth - self.infillWidth * self.fillRepository.infillPerimeterOverlap.value
+		if self.fillRepository.infillInteriorDensityOverExteriorDensity.value > 0:
+			self.interiorExtrusionWidth /= self.fillRepository.infillInteriorDensityOverExteriorDensity.value
+		self.infillSolidity = fillRepository.infillSolidity.value
 		if self.isGridToBeExtruded():
-			self.setGridVariables( fillPreferences )
-		self.infillBeginRotation = math.radians( fillPreferences.infillBeginRotation.value )
-		self.infillOddLayerExtraRotation = math.radians( fillPreferences.infillOddLayerExtraRotation.value )
-		self.solidSurfaceThickness = int( round( self.fillPreferences.solidSurfaceThickness.value ) )
+			self.setGridVariables( fillRepository )
+		self.infillBeginRotation = math.radians( fillRepository.infillBeginRotation.value )
+		self.infillOddLayerExtraRotation = math.radians( fillRepository.infillOddLayerExtraRotation.value )
+		self.solidSurfaceThickness = int( round( self.fillRepository.solidSurfaceThickness.value ) )
 		self.doubleSolidSurfaceThickness = self.solidSurfaceThickness + self.solidSurfaceThickness
 		for lineIndex in xrange( self.lineIndex, len( self.lines ) ):
 			self.parseLine( lineIndex )
@@ -1162,17 +1118,14 @@ class FillSkein:
 		self.distanceFeedRate.addLines( self.lines[ self.shutdownLineIndex : ] )
 		return self.distanceFeedRate.output.getvalue()
 
-	def getGridPoints( self, alreadyFilledArounds, fillLoops, reverseZRotationAngle, rotatedExtruderLoops, surroundingCarves ):
-		"Add a grid to the infill."
+	def getGridPoints( self, fillLoops, reverseZRotationAngle ):
+		"Get the grid pointsl."
 		if self.infillSolidity > 0.8:
 			return []
 		gridPoints = []
 		rotationBaseAngle = euclidean.getPolar( self.infillBeginRotation, 1.0 )
 		reverseRotationBaseAngle = complex( rotationBaseAngle.real, - rotationBaseAngle.imag )
 		gridRotationAngle = reverseZRotationAngle * rotationBaseAngle
-		surroundingCarvesLength = len( surroundingCarves )
-		if surroundingCarvesLength < self.doubleSolidSurfaceThickness:
-			return []
 		gridAlreadyFilledArounds = []
 		gridRotatedExtruderLoops = []
 		back = - 999999999.0
@@ -1198,23 +1151,23 @@ class FillSkein:
 		front = ( 0.01 + math.ceil( front / self.gridRadius ) ) * self.gridRadius
 		fillWidth = back - front
 		numberOfLines = int( math.ceil( fillWidth / self.gridRadius ) )
-		horizontalSegments = []
+		gridSegmentLists = euclidean.getHorizontalSegmentListsFromLoopLists( gridAlreadyFilledArounds, front, numberOfLines, gridRotatedExtruderLoops, self.gridRadius )
+		shortenedSegmentLists = []
 		for fillLine in xrange( numberOfLines ):
-			y = front + float( fillLine ) * self.gridRadius
-			lineSegments = getHorizontalSegmentsFromLoopLists( gridRotatedExtruderLoops, gridAlreadyFilledArounds, y )
+			lineSegments = gridSegmentLists[ fillLine ]
 			shortenedSegments = []
 			for lineSegment in lineSegments:
 				addShortenedLineSegment( lineSegment, self.interiorExtrusionWidth, shortenedSegments )
-			horizontalSegments.append( shortenedSegments )
-		for horizontalSegment in horizontalSegments:
-			for lineSegment in horizontalSegment:
-				endpointFirst = lineSegment[ 0 ]
-				endpointSecond = lineSegment[ 1 ]
+			shortenedSegmentLists.append( shortenedSegments )
+		for shortenedSegmentList in shortenedSegmentLists:
+			for shortenedSegment in shortenedSegmentList:
+				endpointFirst = shortenedSegment[ 0 ]
+				endpointSecond = shortenedSegment[ 1 ]
 				begin = min( endpointFirst.point.real, endpointSecond.point.real )
 				end = max( endpointFirst.point.real, endpointSecond.point.real )
 				y = endpointFirst.point.imag
 				offset = self.offsetMultiplier * self.gridRadius * ( round( y / self.gridRadius ) % 2 )
-				self.addGridLinePoints( alreadyFilledArounds, begin, end, gridPoints, gridRotationAngle, offset, rotatedExtruderLoops, surroundingCarves, y )
+				self.addGridLinePoints( begin, end, gridPoints, gridRotationAngle, offset, y )
 		return gridPoints
 
 	def getLayerRoundZ( self, layerIndex ):
@@ -1222,14 +1175,14 @@ class FillSkein:
 		rotation = self.rotatedLayers[ layerIndex ].rotation
 		if rotation != None:
 			return rotation
-		infillBeginRotationRepeat = self.fillPreferences.infillBeginRotationRepeat.value
+		infillBeginRotationRepeat = self.fillRepository.infillBeginRotationRepeat.value
 		infillOddLayerRotationMultiplier = float( layerIndex % ( infillBeginRotationRepeat + 1 ) == infillBeginRotationRepeat )
 		return euclidean.getPolar( self.infillBeginRotation + infillOddLayerRotationMultiplier * self.infillOddLayerExtraRotation, 1.0 )
 
 	def getNextGripXStep( self, gridXStep ):
 		"Get the next grid x step, increment by an extra one every three if hexagonal grid is chosen."
 		gridXStep += 1
-		if self.fillPreferences.infillPatternGridHexagonal.value:
+		if self.fillRepository.infillPatternGridHexagonal.value:
 			if gridXStep % 3 == 0:
 				gridXStep += 1
 		return gridXStep
@@ -1246,14 +1199,17 @@ class FillSkein:
 
 	def isGridToBeExtruded( self ):
 		"Determine if the grid is to be extruded."
-		return ( not self.fillPreferences.infillPatternLine.value ) and self.fillPreferences.interiorInfillDensityOverExteriorDensity.value > 0
+		return ( not self.fillRepository.infillPatternLine.value ) and self.fillRepository.infillInteriorDensityOverExteriorDensity.value > 0
 
-	def isPointInsideLineSegments( self, alreadyFilledArounds, gridPoint, rotatedExtruderLoops, surroundingCarves ):
+	def isPointInsideLineSegments( self, gridPoint ):
 		"Is the point inside the line segments of the loops."
 		if self.solidSurfaceThickness <= 0:
 			return True
-		lineSegments = getHorizontalSegmentsFromLoopLists( rotatedExtruderLoops, alreadyFilledArounds, gridPoint.imag )
-		surroundingXIntersections = getSurroundingXIntersections( self.doubleSolidSurfaceThickness, surroundingCarves, gridPoint.imag )
+		fillLine = int( round( gridPoint.imag / self.layerExtrusionWidth - self.frontOverWidth ) )
+		if fillLine >= len( self.horizontalSegmentLists ) or fillLine < 0:
+			return False
+		lineSegments = self.horizontalSegmentLists[ fillLine ]
+		surroundingXIntersections = self.surroundingXIntersectionLists[ fillLine ]
 		for lineSegment in lineSegments:
 			if isSegmentCompletelyInAnIntersection( lineSegment, surroundingXIntersections ):
 				xFirst = lineSegment[ 0 ].point.real
@@ -1283,17 +1239,14 @@ class FillSkein:
 			elif firstWord == '(<extrusion>)':
 				self.distanceFeedRate.addLine( line )
 				return
-			elif firstWord == '(<extrusionWidth>':
-				self.extrusionWidth = float( splitLine[ 1 ] )
-				self.interiorExtrusionWidth = self.extrusionWidth
-				if self.fillPreferences.interiorInfillDensityOverExteriorDensity.value > 0:
-					self.interiorExtrusionWidth /= self.fillPreferences.interiorInfillDensityOverExteriorDensity.value
 			elif firstWord == '(</extruderInitialization>)':
 				self.distanceFeedRate.addLine( '(<procedureDone> fill </procedureDone>)' )
 			elif firstWord == '(<fillInset>':
 				self.fillInset = float( splitLine[ 1 ] )
-			elif firstWord == '(<infillBridgeWidthOverExtrusionWidth>':
-				self.infillBridgeWidthOverExtrusionWidth = float( splitLine[ 1 ] )
+			elif firstWord == '(<bridgeWidthMultiplier>':
+				self.bridgeWidthMultiplier = float( splitLine[ 1 ] )
+			elif firstWord == '(<layerThickness>':
+				self.layerThickness = float( splitLine[ 1 ] )
 			self.distanceFeedRate.addLine( line )
  
 	def parseLine( self, lineIndex ):
@@ -1331,18 +1284,18 @@ class FillSkein:
 		elif firstWord == '(</surroundingLoop>)':
 			self.surroundingLoop = None
 
-	def setGridVariables( self, fillPreferences ):
+	def setGridVariables( self, fillRepository ):
 		"Set the grid variables."
 		self.gridRadius = self.interiorExtrusionWidth / self.infillSolidity
 		self.gridWidthMultiplier = 2.0
 		self.offsetMultiplier = 1.0
-		if self.fillPreferences.infillPatternGridHexagonal.value:
+		if self.fillRepository.infillPatternGridHexagonal.value:
 			self.gridWidthMultiplier = 2.0 / math.sqrt( 3.0 )
 			self.offsetMultiplier = 2.0 / math.sqrt( 3.0 ) * 1.5
-		if self.fillPreferences.infillPatternGridRectangular.value:
+		if self.fillRepository.infillPatternGridRectangular.value:
 			halfGridRadiusMinusInteriorExtrusionWidth = 0.5 * ( self.gridRadius - self.interiorExtrusionWidth )
-			self.gridJunctionSeparationAtEnd = halfGridRadiusMinusInteriorExtrusionWidth * fillPreferences.gridJunctionSeparationOverOctogonRadiusAtEnd.value
-			self.gridJunctionSeparationAtMiddle = halfGridRadiusMinusInteriorExtrusionWidth * fillPreferences.gridJunctionSeparationOverOctogonRadiusAtMiddle.value
+			self.gridJunctionSeparationAtEnd = halfGridRadiusMinusInteriorExtrusionWidth * fillRepository.gridJunctionSeparationOverOctogonRadiusAtEnd.value
+			self.gridJunctionSeparationAtMiddle = halfGridRadiusMinusInteriorExtrusionWidth * fillRepository.gridJunctionSeparationOverOctogonRadiusAtMiddle.value
 
 
 class RotatedLayer:
@@ -1383,7 +1336,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getPreferencesConstructor() )
+		preferences.startMainLoopFromConstructor( getRepositoryConstructor() )
 
 if __name__ == "__main__":
 	main()
