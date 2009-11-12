@@ -3,7 +3,7 @@ Chamber is a script to set the chamber and bed temperature.
 
 The default 'Activate Chamber' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions will not be called.
 
-The 'Temperature of Bed' preference sets the temperature of the bed by sending an M109 command, the default is 60.0.  The 'Temperature of Chamber' preference sets the temperature of the chamber by sending an M109 command, the default is 30.0.
+The 'Temperature of Bed' preference sets the temperature of the bed by sending an M109 command, the default is 60.0.  The 'Temperature of Chamber' preference sets the temperature of the chamber by sending an M110 command, the default is 30.0.
 
 Kulitorum has made a heated bed.  It is a 5mm Alu sheet with a pattern laid out in kapton tape.  The wire is a 0.6mm2 Konstantin wire and it's held in place by small pieces of kapton tape.  The description and picture is at:
 http://gallery.kulitorum.com/main.php?g2_itemId=283

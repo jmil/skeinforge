@@ -72,8 +72,8 @@ import __init__
 
 from skeinforge_tools.analyze_plugins.analyze_utilities import display_line
 from skeinforge_tools.analyze_plugins.analyze_utilities import tableau
-from skeinforge_tools.analyze_plugins.analyze_utilities import viewpoint_move
-from skeinforge_tools.analyze_plugins.analyze_utilities import viewpoint_rotate
+from skeinforge_tools.analyze_plugins.analyze_utilities import view_move
+from skeinforge_tools.analyze_plugins.analyze_utilities import view_rotate
 from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
@@ -96,15 +96,13 @@ def beholdFile( fileName = '' ):
 
 def compareLayerSequence( first, second ):
 	"Get comparison in order to sort skein panes in ascending order of layer zone index then sequence index."
-	if first.layerZoneIndex > second.layerZoneIndex:
-		return 1
 	if first.layerZoneIndex < second.layerZoneIndex:
 		return - 1
-	if first.sequenceIndex > second.sequenceIndex:
+	if first.layerZoneIndex > second.layerZoneIndex:
 		return 1
 	if first.sequenceIndex < second.sequenceIndex:
 		return - 1
-	return 0
+	return int( first.sequenceIndex > second.sequenceIndex )
 
 def displayFileGivenText( fileName, gcodeText, beholdPreferences = None ):
 	"Display a beholded gcode file for a gcode file."
@@ -152,8 +150,7 @@ class BeholdPreferences( tableau.TableauRepository ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		preferences.addListsToRepository( self )
-		self.phoenixUpdateFunction = None
-		self.updateFunction = None
+		self.initializeUpdateFunctionsToNone()
 		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Behold', self, '' )
 		self.activateBehold = preferences.BooleanPreference().getFromValue( 'Activate Behold', self, True )
 		self.bandHeight = preferences.IntPreference().getFromValue( 'Band Height (layers):', self, 5 )
@@ -177,18 +174,17 @@ class BeholdPreferences( tableau.TableauRepository ):
 		self.goAroundExtruderOffTravel.setUpdateFunction( self.setToDisplaySavePhoenixUpdate )
 		self.layersFrom = preferences.IntPreference().getFromValue( 'Layers From (index):', self, 0 )
 		self.layersFrom.setUpdateFunction( self.setToDisplaySaveUpdate )
+		self.layerIndex = preferences.IntPreference().getFromValue( 'Layer Index (integer):', self, 1 )
+		self.layerIndex.setUpdateFunction( self.setToDisplaySaveUpdate )
 		self.layersTo = preferences.IntPreference().getFromValue( 'Layers To (index):', self, 999999999 )
 		self.layersTo.setUpdateFunction( self.setToDisplaySaveUpdate )
 		self.mouseMode = preferences.MenuButtonDisplay().getFromName( 'Mouse Mode:', self )
 		self.displayLine = preferences.MenuRadio().getFromMenuButtonDisplay( self.mouseMode, 'Display Line', self, True )
-		self.displayLine.constructorFunction = display_line.getNewMouseTool
-		self.displayLine.setUpdateFunction( self.setToDisplaySavePhoenixUpdate )
-		self.viewpointMove = preferences.MenuRadio().getFromMenuButtonDisplay( self.mouseMode, 'Viewpoint Move', self, False )
-		self.viewpointMove.constructorFunction = viewpoint_move.getNewMouseTool
-		self.viewpointMove.setUpdateFunction( self.setToDisplaySavePhoenixUpdate )
-		self.viewpointRotate = preferences.MenuRadio().getFromMenuButtonDisplay( self.mouseMode, 'Viewpoint Rotate', self, False )
-		self.viewpointRotate.constructorFunction = viewpoint_rotate.getNewMouseTool
-		self.viewpointRotate.setUpdateFunction( self.setToDisplaySavePhoenixUpdate )
+		self.setNewMouseToolUpdate( display_line.getNewMouseTool, self.displayLine )
+		self.viewMove = preferences.MenuRadio().getFromMenuButtonDisplay( self.mouseMode, 'View Move', self, False )
+		self.setNewMouseToolUpdate( view_move.getNewMouseTool, self.viewMove )
+		self.viewRotate = preferences.MenuRadio().getFromMenuButtonDisplay( self.mouseMode, 'View Rotate', self, False )
+		self.setNewMouseToolUpdate( view_rotate.getNewMouseTool, self.viewRotate )
 		self.numberOfFillBottomLayers = preferences.IntPreference().getFromValue( 'Number of Fill Bottom Layers (integer):', self, 1 )
 		self.numberOfFillBottomLayers.setUpdateFunction( self.setToDisplaySavePhoenixUpdate )
 		self.numberOfFillTopLayers = preferences.IntPreference().getFromValue( 'Number of Fill Top Layers (integer):', self, 1 )
@@ -199,6 +195,8 @@ class BeholdPreferences( tableau.TableauRepository ):
 		self.screenHorizontalInset.setUpdateFunction( self.setToDisplaySavePhoenixUpdate )
 		self.screenVerticalInset = preferences.IntPreference().getFromValue( 'Screen Vertical Inset (pixels):', self, 200 )
 		self.screenVerticalInset.setUpdateFunction( self.setToDisplaySavePhoenixUpdate )
+		self.slideShowRate = preferences.FloatPreference().getFromValue( 'Slide Show Rate (layers/second):', self, 1.0 )
+		self.slideShowRate.setUpdateFunction( self.setToDisplaySaveUpdate )
 		self.viewpointLatitude = preferences.FloatPreference().getFromValue( 'Viewpoint Latitude (degrees):', self, 15.0 )
 		self.viewpointLatitude.setUpdateFunction( self.setToDisplaySaveUpdate )
 		self.viewpointLongitude = preferences.FloatPreference().getFromValue( 'Viewpoint Longitude (degrees):', self, 210.0 )
@@ -400,7 +398,6 @@ class BeholdSkein:
 		for self.lineIndex in xrange( len( self.lines ) ):
 			line = self.lines[ self.lineIndex ]
 			self.parseLine( line )
-		self.skeinPanes.sort( compareLayerSequence )
 
 	def parseLine( self, line ):
 		"Parse a gcode line and add it to the vector output."
@@ -499,8 +496,6 @@ class SkeinWindow( tableau.TableauWindow ):
 		self.yScrollbar = preferences.Tkinter.Scrollbar( self.root )
 		self.canvasHeight = min( int( self.screenSize.imag ), self.root.winfo_screenheight() - repository.screenVerticalInset.value )
 		self.canvasWidth = min( int( self.screenSize.real ), self.root.winfo_screenwidth() - repository.screenHorizontalInset.value )
-		self.oneMinusCanvasHeightOverScreenHeight = 1.0 - float( self.canvasHeight ) / float( self.screenSize.imag )
-		self.oneMinusCanvasWidthOverScreenWidth = 1.0 - float( self.canvasWidth ) / float( self.screenSize.real )
 		self.canvas = preferences.Tkinter.Canvas( self.root, width = self.canvasWidth, height = self.canvasHeight, scrollregion = ( 0, 0, int( self.screenSize.real ), int( self.screenSize.imag ) ) )
 		self.canvas.grid( row = 0, rowspan = 98, column = 0, columnspan = 99, sticky = preferences.Tkinter.W )
 		self.xScrollbar.grid( row = 98, column = 0, columnspan = 99, sticky = preferences.Tkinter.E + preferences.Tkinter.W )
@@ -589,6 +584,10 @@ class SkeinWindow( tableau.TableauWindow ):
 		smallestHalfSize = 0.5 * min( float( self.canvasHeight ), float( self.canvasWidth ) )
 		return relativeToCenter / smallestHalfSize
 
+	def getCopy( self ):
+		"Get a copy of this window."
+		return getWindowGivenTextPreferences( self.skein.fileName, self.skein.gcodeText, self.repository )
+
 	def getScreenComplex( self, pointComplex ):
 		"Get the point in screen perspective."
 		return complex( pointComplex.real, - pointComplex.imag ) + self.center
@@ -599,12 +598,6 @@ class SkeinWindow( tableau.TableauWindow ):
 		screenComplexY = point.dot( viewVectors.viewYVector3 )
 		return self.getScreenComplex( complex( screenComplexX, screenComplexY ) )
 
-	def phoenixUpdate( self ):
-		"Update, and deiconify a new window and destroy the old."
-		skeinWindow = getWindowGivenTextPreferences( self.skein.fileName, self.skein.gcodeText, self.repository )
-		skeinWindow.updateDeiconify( self.getScrollPaneCenter() )
-		self.root.destroy()
-
 	def printHexadecimalColorName( self, name ):
 		"Print the color name in hexadecimal."
 		colorTuple = self.canvas.winfo_rgb( name )
@@ -614,14 +607,14 @@ class SkeinWindow( tableau.TableauWindow ):
 		"Update the screen."
 		if len( self.skeinPanes ) < 1:
 			return
-		self.arrowType = None
-		if self.repository.drawArrows.value:
-			self.arrowType = 'last'
-		self.canvas.delete( preferences.Tkinter.ALL )
-		self.repository.viewpointLatitude.value = viewpoint_rotate.getBoundedLatitude( self.repository.viewpointLatitude.value )
+		self.limitIndexSetArrowMouseDeleteCanvas()
+		self.repository.viewpointLatitude.value = view_rotate.getBoundedLatitude( self.repository.viewpointLatitude.value )
 		self.repository.viewpointLongitude.value = round( self.repository.viewpointLongitude.value, 1 )
-		viewVectors = viewpoint_rotate.ViewVectors( self.repository.viewpointLatitude.value, self.repository.viewpointLongitude.value )
-		skeinPanesCopy = self.skeinPanes[ self.repository.layersFrom.value : self.repository.layersTo.value ]
+		viewVectors = view_rotate.ViewVectors( self.repository.viewpointLatitude.value, self.repository.viewpointLongitude.value )
+		indexBegin = min( self.repository.layerIndex.value, self.repository.layersFrom.value )
+		indexEnd = max( self.repository.layerIndex.value + 1, self.repository.layersTo.value )
+		skeinPanesCopy = self.skeinPanes[ indexBegin : indexEnd ]
+		skeinPanesCopy.sort( compareLayerSequence )
 		if viewVectors.viewpointLatitudeRatio.real > 0.0:
 			self.drawXYAxisLines( viewVectors )
 		else:
@@ -633,6 +626,7 @@ class SkeinWindow( tableau.TableauWindow ):
 			self.drawZAxisLine( viewVectors )
 		else:
 			self.drawXYAxisLines( viewVectors )
+		self.setDisplayLayerIndex()
 
 
 def main():

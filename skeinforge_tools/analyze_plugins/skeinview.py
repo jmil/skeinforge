@@ -15,7 +15,7 @@ http://www.imagemagick.org/script/index.php
 
 On the skeinview display window, the Up button increases the 'Layer Index' by one, and the Down button decreases the layer index by one.  When the index displayed in the index field is changed then <return> is hit, the layer index shown will be set to the index field, to a mimimum of zero and to a maximum of the highest index layer.  The layer index can also be changed from the Preferences menu or the skeinview dialog.  The Soar button increases the layer index at the 'Slide Show Rate', and the Dive button decreases the layer index at the slide show rate.
 
-The mouse tool can be changed from the 'Mouse Mode' menu button or item.  The 'Display Line' tool will display the line index of the line clicked, counting from one, and the line itself.  The 'Viewpoint Move' tool will move the viewpoint in the xy plane when the mouse is clicked and dragged on the canvas.
+The mouse tool can be changed from the 'Mouse Mode' menu button or item.  The 'Display Line' tool will display the line index of the line clicked, counting from one, and the line itself.  The 'View Move' tool will move the viewpoint in the xy plane when the mouse is clicked and dragged on the canvas.
 
 An explanation of the gcodes is at:
 http://reprap.org/bin/view/Main/Arduino_GCode_Interpreter
@@ -57,7 +57,7 @@ import __init__
 
 from skeinforge_tools.analyze_plugins.analyze_utilities import display_line
 from skeinforge_tools.analyze_plugins.analyze_utilities import tableau
-from skeinforge_tools.analyze_plugins.analyze_utilities import viewpoint_move
+from skeinforge_tools.analyze_plugins.analyze_utilities import view_move
 from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
@@ -145,8 +145,7 @@ class SkeinviewPreferences( tableau.TableauRepository ):
 		"Set the default preferences, execute title & preferences fileName."
 		#Set the default preferences.
 		preferences.addListsToRepository( self )
-		self.phoenixUpdateFunction = None
-		self.updateFunction = None
+		self.initializeUpdateFunctionsToNone()
 		self.fileNameInput = preferences.Filename().getFromFilename( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Skeinview', self, '' )
 		self.activateSkeinview = preferences.BooleanPreference().getFromValue( 'Activate Skeinview', self, True )
 		self.drawArrows = preferences.BooleanPreference().getFromValue( 'Draw Arrows', self, True )
@@ -161,11 +160,9 @@ class SkeinviewPreferences( tableau.TableauRepository ):
 		self.goAroundExtruderOffTravel.setUpdateFunction( self.setToDisplaySavePhoenixUpdate )
 		self.mouseMode = preferences.MenuButtonDisplay().getFromName( 'Mouse Mode:', self )
 		self.displayLine = preferences.MenuRadio().getFromMenuButtonDisplay( self.mouseMode, 'Display Line', self, True )
-		self.displayLine.constructorFunction = display_line.getNewMouseTool
-		self.displayLine.setUpdateFunction( self.setToDisplaySavePhoenixUpdate )
-		self.viewpointMove = preferences.MenuRadio().getFromMenuButtonDisplay( self.mouseMode, 'Viewpoint Move', self, False )
-		self.viewpointMove.constructorFunction = viewpoint_move.getNewMouseTool
-		self.viewpointMove.setUpdateFunction( self.setToDisplaySavePhoenixUpdate )
+		self.setNewMouseToolUpdate( display_line.getNewMouseTool, self.displayLine )
+		self.viewMove = preferences.MenuRadio().getFromMenuButtonDisplay( self.mouseMode, 'View Move', self, False )
+		self.setNewMouseToolUpdate( view_move.getNewMouseTool, self.viewMove )
 		self.scale = preferences.FloatPreference().getFromValue( 'Scale (pixels per millimeter):', self, 10.0 )
 		self.scale.setUpdateFunction( self.setToDisplaySavePhoenixUpdate )
 		self.screenHorizontalInset = preferences.IntPreference().getFromValue( 'Screen Horizontal Inset (pixels):', self, 50 )
@@ -313,22 +310,13 @@ class SkeinWindow( tableau.TableauWindow ):
 		self.rulingTargetSeparation = 150.0
 		self.screenSize = skein.screenSize
 		self.setMenuPanesPreferencesRootSkein( repository, skein, '_skeinview.ps' )
-		self.column = 0
-		self.imagesDirectoryPath = os.path.join( preferences.getSkeinforgeDirectoryPath(), 'images' )
-		self.photoImages = {}
-		self.row = 99
 		self.root.title( title )
-		repository.slideShowRate.value = max( repository.slideShowRate.value, 0.01 )
-		repository.slideShowRate.value = min( repository.slideShowRate.value, 85.0 )
-		self.timerID = None
 		self.fileHelpMenuBar.completeMenu( self.close, repository, self )
 		frame = preferences.Tkinter.Frame( self.root )
 		self.xScrollbar = preferences.Tkinter.Scrollbar( self.root, orient = preferences.Tkinter.HORIZONTAL )
 		self.yScrollbar = preferences.Tkinter.Scrollbar( self.root )
 		self.canvasHeight = min( int( skein.screenSize.imag ), self.root.winfo_screenheight() - repository.screenVerticalInset.value )
 		self.canvasWidth = min( int( skein.screenSize.real ), self.root.winfo_screenwidth() - repository.screenHorizontalInset.value )
-		self.oneMinusCanvasHeightOverScreenHeight = 1.0 - float( self.canvasHeight ) / float( self.screenSize.imag )
-		self.oneMinusCanvasWidthOverScreenWidth = 1.0 - float( self.canvasWidth ) / float( self.screenSize.real )
 		scrollRegionBoundingBox = ( 0, 0, int( skein.screenSize.real ), int( skein.screenSize.imag ) )
 		self.xScrollbar.grid( row = 98, column = 1, columnspan = 97, sticky = preferences.Tkinter.E + preferences.Tkinter.W )
 		self.xScrollbar.config( command = self.relayXview )
@@ -343,19 +331,6 @@ class SkeinWindow( tableau.TableauWindow ):
 		self.horizontalRulerCanvas = preferences.Tkinter.Canvas( self.root, width = self.canvasWidth, height = self.rulingExtent, scrollregion = horizontalRulerBoundingBox )
 		self.horizontalRulerCanvas.grid( row = 0, column = 1, columnspan = 97, sticky = preferences.Tkinter.E + preferences.Tkinter.W )
 		self.horizontalRulerCanvas[ 'xscrollcommand' ] = self.xScrollbar.set
-		self.photoImages[ 'stop' ] = preferences.Tkinter.PhotoImage( file = os.path.join( self.imagesDirectoryPath, 'stop.ppm' ), master = self.root )
-		self.diveButton = self.getPhotoButtonGridIncrement( self.dive, 'dive.ppm' )
-		self.downButton = self.getPhotoButtonGridIncrement( self.down, 'down.ppm' )
-		self.indexEntry = preferences.Tkinter.Entry( self.root )
-		self.indexEntry.bind( '<Return>', self.indexEntryReturnPressed )
-		self.indexEntry.grid( row = self.row, column = self.column, sticky = preferences.Tkinter.W )
-		self.column += 1
-		self.upButton = self.getPhotoButtonGridIncrement( self.up, 'up.ppm' )
-		self.soarButton = self.getPhotoButtonGridIncrement( self.soar, 'soar.ppm' )
-#		self.zoomInImage = preferences.Tkinter.PhotoImage( master = self.root, file = os.path.join( imagesDirectoryPath, 'zoom_in.ppm' ) )
-#		self.zoomInButton = preferences.Tkinter.Button( self.root, activebackground = 'black', command = self.zoomIn, image = self.zoomInImage )
-#		self.zoomInButton.grid( row = 99, column = 17, sticky = preferences.Tkinter.W )
-		self.resetPeriodicButtonsText()
 		verticalRulerBoundingBox = ( 0, 0, self.rulingExtent, int( skein.screenSize.imag ) )
 		self.verticalRulerCanvas = preferences.Tkinter.Canvas( self.root, width = self.rulingExtent, height = self.canvasHeight, scrollregion = verticalRulerBoundingBox )
 		self.verticalRulerCanvas.grid( row = 1, rowspan = 97, column = 0, sticky = preferences.Tkinter.N + preferences.Tkinter.S )
@@ -388,17 +363,6 @@ class SkeinWindow( tableau.TableauWindow ):
 			self.verticalRulerCanvas.create_text( 0, yPixel, anchor = preferences.Tkinter.NW, text = character )
 			yPixel += fontHeight
 
-	def cancelTimer( self ):
-		"Cancel the timer and set it to none."
-		if self.timerID != None:
-			self.canvas.after_cancel ( self.timerID )
-			self.timerID = None
-
-	def cancelTimerResetButtons( self ):
-		"Cancel the timer and set it to none."
-		self.cancelTimer()
-		self.resetPeriodicButtonsText()
-
 	def createRulers( self ):
 		"Create the rulers.."
 		rankZeroSeperation = self.getRulingSeparationWidthPixels( 0 )
@@ -426,41 +390,9 @@ class SkeinWindow( tableau.TableauWindow ):
 		for yRankIndex in xrange( yRankIndexLow - 2, yRankIndexHigh + 2 ): # 1 is enough, 2 is to be on the safe side
 			self.addVerticalRulerRuling( yRankIndex * self.rulingSeparationWidthMillimeters )
 
-	def dive( self ):
-		"Dive, go up periodically."
-		oldDiveButtonText = self.diveButton[ 'text' ]
-		self.cancelTimerResetButtons()
-		if oldDiveButtonText == 'stop':
-			return
-		self.diveCycle()
-
-	def diveCycle( self ):
-		"Start the dive cycle."
-		self.cancelTimer()
-		self.repository.layerIndex.value -= 1
-		self.saveUpdate()
-		if self.repository.layerIndex.value < 1:
-			self.resetPeriodicButtonsText()
-			return
-		self.diveButton[ 'image' ] = self.photoImages[ 'stop' ]
-		self.diveButton[ 'text' ] = 'stop'
-		self.timerID = self.canvas.after( self.getSlideShowDelay(), self.diveCycle )
-
-	def down( self ):
-		"Go down a layer."
-		self.cancelTimerResetButtons()
-		self.repository.layerIndex.value -= 1
-		self.saveUpdate()
-
-	def getPhotoButtonGridIncrement( self, commandFunction, fileName ):
-		"Get a PhotoImage button, grid the button and increment the grid position."
-		photoImage = preferences.Tkinter.PhotoImage( file = os.path.join( self.imagesDirectoryPath, fileName ), master = self.root )
-		untilDotFileName = gcodec.getUntilDot( fileName )
-		self.photoImages[ untilDotFileName ] = photoImage
-		photoButton = preferences.Tkinter.Button( self.root, activebackground = 'black', command = commandFunction, image = photoImage, text = untilDotFileName )
-		photoButton.grid( row = self.row, column = self.column, sticky = preferences.Tkinter.W )
-		self.column += 1
-		return photoButton
+	def getCopy( self ):
+		"Get a copy of this window."
+		return getWindowGivenTextPreferences( self.skein.fileName, self.skein.gcodeText, self.repository )
 
 	def getRoundedRulingText( self, number ):
 		"Get the rounded ruling text."
@@ -475,30 +407,6 @@ class SkeinWindow( tableau.TableauWindow ):
 		"Get the separation width in pixels."
 		return getRulingSeparationWidthMillimeters( rank ) * self.skein.scale
 
-	def getSlideShowDelay( self ):
-		"Get the slide show delay in milliseconds."
-		slideShowDelay = int( round( 1000.0 / self.repository.slideShowRate.value ) )
-		return max( slideShowDelay, 1 )
-
-	def indexEntryReturnPressed( self, event ):
-		"The index entry return was pressed."
-		self.cancelTimerResetButtons()
-		self.repository.layerIndex.value = int( self.indexEntry.get() )
-		self.limitIndex()
-		self.saveUpdate()
-
-	def limitIndex( self ):
-		"Limit the index so it is not below zero or above the top."
-		self.repository.layerIndex.value = max( 0, self.repository.layerIndex.value )
-		self.repository.layerIndex.value = min( len( self.skeinPanes ) - 1, self.repository.layerIndex.value )
-
-	def phoenixUpdate( self ):
-		"Update, and deiconify a new window and destroy the old."
-		skeinWindow = getWindowGivenTextPreferences( self.skein.fileName, self.skein.gcodeText, self.repository )
-		skeinWindow.index = self.repository.layerIndex.value
-		skeinWindow.updateDeiconify( self.getScrollPaneCenter() )
-		self.root.destroy()
-
 	def relayXview( self, *args ):
 		"Relay xview changes."
 		self.canvas.xview( *args )
@@ -509,54 +417,12 @@ class SkeinWindow( tableau.TableauWindow ):
 		self.canvas.yview( *args )
 		self.verticalRulerCanvas.yview( *args )
 
-	def resetPeriodicButtonsText( self ):
-		"Reset the text of the periodic buttons."
-		self.diveButton[ 'image' ] = self.photoImages[ 'dive' ]
-		self.diveButton[ 'text' ] = 'dive'
-		self.soarButton[ 'image' ] = self.photoImages[ 'soar' ]
-		self.soarButton[ 'text' ] = 'soar'
-
-	def soar( self ):
-		"Soar, go up periodically."
-		oldSoarButtonText = self.soarButton[ 'text' ]
-		self.cancelTimerResetButtons()
-		if oldSoarButtonText == 'stop':
-			return
-		self.soarCycle()
-
-	def soarCycle( self ):
-		"Start the soar cycle."
-		self.cancelTimer()
-		self.repository.layerIndex.value += 1
-		self.saveUpdate()
-		if self.repository.layerIndex.value > len( self.skeinPanes ) - 2:
-			self.resetPeriodicButtonsText()
-			return
-		self.soarButton[ 'image' ] = self.photoImages[ 'stop' ]
-		self.soarButton[ 'text' ] = 'stop'
-		self.timerID = self.canvas.after( self.getSlideShowDelay(), self.soarCycle )
-
-	def up( self ):
-		"Go up a layer."
-		self.cancelTimerResetButtons()
-		self.repository.layerIndex.value += 1
-		self.saveUpdate()
-
-	def zoomIn( self ):
-		"Zoom in."
-		print('zzz')
-		self.zoomInButton[ 'relief' ] = preferences.Tkinter.SUNKEN
-
 	def update( self ):
 		"Update the window."
 		if len( self.skeinPanes ) < 1:
 			return
-		self.limitIndex()
-		self.arrowType = None
-		if self.repository.drawArrows.value:
-			self.arrowType = 'last'
+		self.limitIndexSetArrowMouseDeleteCanvas()
 		skeinPane = self.skeinPanes[ self.repository.layerIndex.value ]
-		self.canvas.delete( preferences.Tkinter.ALL )
 		for coloredIndexLine in skeinPane:
 			complexBegin = coloredIndexLine.complexBegin
 			complexEnd = coloredIndexLine.complexEnd
@@ -569,20 +435,7 @@ class SkeinWindow( tableau.TableauWindow ):
 				arrow = self.arrowType,
 				tags = '%s %s' % ( coloredIndexLine.lineIndex + 1, coloredIndexLine.line ),
 				width = coloredIndexLine.width )
-		if self.repository.layerIndex.value < len( self.skeinPanes ) - 1:
-			self.soarButton.config( state = preferences.Tkinter.NORMAL )
-			self.upButton.config( state = preferences.Tkinter.NORMAL )
-		else:
-			self.soarButton.config( state = preferences.Tkinter.DISABLED )
-			self.upButton.config( state = preferences.Tkinter.DISABLED )
-		if self.repository.layerIndex.value > 0:
-			self.downButton.config( state = preferences.Tkinter.NORMAL )
-			self.diveButton.config( state = preferences.Tkinter.NORMAL )
-		else:
-			self.downButton.config( state = preferences.Tkinter.DISABLED )
-			self.diveButton.config( state = preferences.Tkinter.DISABLED )
-		self.indexEntry.delete( 0, preferences.Tkinter.END )
-		self.indexEntry.insert( 0, str( self.repository.layerIndex.value ) )
+		self.setDisplayLayerIndex()
 
 
 def main():

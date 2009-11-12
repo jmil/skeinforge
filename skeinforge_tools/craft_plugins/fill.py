@@ -20,6 +20,8 @@ The most important preference in fill is the "Infill Solidity".  A value of one 
 The "Interior Infill Density over Exterior Density" preference is the ratio of the infill density of the interior over the infill density of the exterior surfaces, the default is 0.9.  The exterior should have a high infill density, so that the surface will be strong and watertight.  With the interior infill density a bit lower than the exterior, the plastic will not fill up higher than the extruder nozzle.  If the interior density is too high that could happen, as Nophead described in the Hydraraptor "Bearing Fruit" post at:
 http://hydraraptor.blogspot.com/2008/08/bearing-fruit.html
 
+The 'Infill Width over Thickness' is the ratio of the infill width over the layer thickness.  The higher the value the wider apart the infill will be, the default is 1.5.
+
 The "Solid Surface Thickness" preference is the number of solid layers that are at the bottom, top, plateaus and overhang.  With a value of zero, the entire object will be composed of a sparse infill, and water could flow right through it.  With a value of one, water will leak slowly through the surface and with a value of three, the object could be watertight.  The higher the solid surface thickness, the stronger and heavier the object will be.  The default is three.
 
 The 'Thread Sequence Choice' is the sequence in which the threads will be extruded.  There are three kinds of thread, the perimeter threads on the outside of the object, the loop threads aka inner shell threads, and the interior infill threads.  This gives the following six sequence combinations:
@@ -90,28 +92,26 @@ __author__ = "Enrique Perez (perez_enrique@yahoo.com)"
 __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
-# infill width & bridge documentation
-# removalWidthOverPerimeterWidth documentation
-#
-# getPicture button for mouse tools, reset mouse tool if zooming, zoom, start on screen, set scroll bar around canvas on new screen
 # addSupportSegmentTable in raft global
 #set addedLocation in distanceFeedRate after arc move
+# splodge splodge feed rate, initial splodge length, operating splodge length _extrusion
 # cool feed and flow rate slowdown option _extrusion
 #drilling, do not throw out small loops
 # documentation
 # check analyze plugins documentation
 # add self.maximumCool = preferences.FloatPreference().. ( 'Maximum Cool (Celcius):', 5.0 ) documentation
+# zoom documentation
 #
 #milling
 # mouse select
 # raft to temperature, raft
 # check alterations folder first, if there is something copy it to the home directory, if not check the home directory
+# rename constructor function to getNewRepository, rename preferences to settings, maybe rename vector3 to vec3?
 # move alterations and profiles to top level
 #
 #
 #
 # add spiral _extrusion
-# behold index simulation
 # cache edges on first carving and slice from array in svg_codec if bridgeThickness ratio is 1.0 _speed
 # layer color, for multilayer start _extrusion
 # make frame for first level plugins
@@ -119,7 +119,6 @@ __license__ = "GPL 3.0"
 #xml & svg more forgiving, svg make defaults for layerThickness, maxZ, minZ, add layer z to svg_template, make the slider on the template track even when mouse is outside
 # maybe make rulers on behold
 # maybe make subrulings and ruling colors on skeinview
-# splodge
 #implement acceleration & collinear removal in viewers _extrusion
 #
 # winding
@@ -135,6 +134,7 @@ __license__ = "GPL 3.0"
 #
 # maybe raft follow outline _extrusion
 #boundaries, center radius z bottom top, circular or rectangular, polygon, put cool minimum radius orbits within boundaries
+# move model
 #laminate tool head
 #maybe add layer updates in behold, skeinview and maybe others
 #lathe winding, extrusion and cutting; synonym for rotation or turning, loop angle
@@ -187,7 +187,6 @@ __license__ = "GPL 3.0"
 # maybe check if tower is picking the nearest island
 # maybe isometric svg option
 # maybe combine skein classes in fillet
-# maybe look for behold cancel bug
 
 # concept, three perpendicular slices to get display spheres
 # concept, go from vertex to two orthogonal edges, then from edges to each other, if not to a common point, then simplify polygons by removing points which do not change the area much
@@ -196,7 +195,8 @@ __license__ = "GPL 3.0"
 # .. then again no point with slices
 # concept, filled slices, about 2 mm thick
 # concept, rgb color triangle switch to get inside color, color golden ratio on 5:11 slope with a modulo 3 face
-# concept, teslocracy
+# concept, interlaced bricks at corners ( length proportional to corner angle )
+# concept, teslocracy; donation, postponement, rotate ad network, probably not gutenpedia
 
 #Manual
 #10,990

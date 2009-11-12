@@ -418,6 +418,13 @@ def setCraftProfileArchive( craftSequence, defaultProfile, repository, fileNameH
 	makeDirectory( directoryName )
 	repository.windowPositionPreferences.value = '0+400'
 
+def setEntryText( entry, value ):
+	"Set the entry text."
+	if entry == None:
+		return
+	entry.delete( 0, Tkinter.END )
+	entry.insert( 0, str( value ) )
+
 def setHelpPreferencesFileNameTitleWindowPosition( repository, fileNameHelp ):
 	"Set the help & repository file path, the title and the window position archiver."
 	baseName = getLowerNameSetHelpTitleWindowPosition( repository, fileNameHelp )
@@ -498,6 +505,7 @@ class StringPreference:
 	"A class to display, read & write a string."
 	def __init__( self ):
 		"Set the update function to none."
+		self.entry = None
 		self.updateFunction = None
 
 	def addToDialog( self, repositoryDialog ):
@@ -536,11 +544,7 @@ class StringPreference:
 
 	def setStateToValue( self ):
 		"Set the entry to the value."
-		try:
-			self.entry.delete( 0, Tkinter.END )
-			self.entry.insert( 0, self.value )
-		except:
-			pass
+		setEntryText( self.entry, self.value )
 
 	def setToDisplay( self ):
 		"Set the string to the entry field."
@@ -791,6 +795,7 @@ class Filename( StringPreference ):
 
 	def execute( self ):
 		"Open the file picker."
+		self.wasCancelled = False
 		try:
 			import tkFileDialog
 			summarized = gcodec.getSummarizedFilename( self.value )
@@ -809,15 +814,6 @@ class Filename( StringPreference ):
 			self.setCancelledValue( fileName )
 		except:
 			print( 'Error in execute in Filename in preferences, ' + self.name )
-
-	def getFromFilename( self, fileTypes, name, repository, value ):
-		"Initialize."
-		self.getFromValueOnly( name, value )
-		self.fileTypes = fileTypes
-		repository.archive.append( self )
-		repository.displayEntities.append( self )
-		self.wasCancelled = False
-		return self
 
 	def getFilenameFirstTypes( self ):
 		"Get the file types with the file type of the fileName moved to the front of the list."
@@ -842,6 +838,14 @@ class Filename( StringPreference ):
 		except:
 			return [ ( 'All', '*.*' ) ]
 
+	def getFromFilename( self, fileTypes, name, repository, value ):
+		"Initialize."
+		self.getFromValueOnly( name, value )
+		self.fileTypes = fileTypes
+		repository.archive.append( self )
+		repository.displayEntities.append( self )
+		return self
+
 	def setCancelledValue( self, fileName ):
 		"Set the value to the file name and wasCancelled true if a file was not picked."
 		if ( str( fileName ) == '()' or str( fileName ) == '' ):
@@ -856,14 +860,6 @@ class Filename( StringPreference ):
 
 class FloatPreference( StringPreference ):
 	"A class to display, read & write a float."
-	def setStateToValue( self ):
-		"Set the entry to the value."
-		try:
-			self.entry.delete( 0, Tkinter.END )
-			self.entry.insert( 0, str( self.value ) )
-		except:
-			pass
-
 	def setValueToString( self, valueString ):
 		"Set the float to the string."
 		try:
@@ -1053,7 +1049,7 @@ class MenuRadio( BooleanPreference ):
 		self.menuLength = menu.index( Tkinter.END )
 		if self.value:
 			self.menuButtonDisplay.radioVar.set( self.name )
-			self.menuButtonDisplay.menu.invoke( self.menuLength )
+			self.invoke()
 		self.activate = True
 
 	def clickRadio( self ):
@@ -1073,6 +1069,10 @@ class MenuRadio( BooleanPreference ):
 		repository.displayEntities.append( self )
 		repository.menuEntities.append( self )
 		return self
+
+	def invoke( self ):
+		"Workaround for Tkinter bug, invoke to set the value when changed."
+		self.menuButtonDisplay.menu.invoke( self.menuLength )
 
 	def setToDisplay( self ):
 		"Set the boolean to the checkbutton."
