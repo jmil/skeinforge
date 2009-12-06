@@ -33,7 +33,7 @@ Type "help", "copyright", "credits" or "license" for more information.
 This brings up the inset dialog.
 
 
->>> inset.writeOutput()
+>>> inset.writeOutput( 'Screw Holder Bottom.stl' )
 The inset tool is parsing the file:
 Screw Holder Bottom.stl
 ..
@@ -75,8 +75,7 @@ def addAlreadyFilledArounds( alreadyFilledArounds, loop, radius ):
 	alreadyFilledLoop = []
 	slightlyGreaterThanRadius = 1.01 * radius
 	muchGreaterThanRadius = 2.5 * radius
-	circleNodes = intercircle.getCircleNodesFromLoop( loop, slightlyGreaterThanRadius )
-	centers = intercircle.getCentersFromCircleNodes( circleNodes )
+	centers = intercircle.getCentersFromLoop( loop, slightlyGreaterThanRadius )
 	for center in centers:
 		alreadyFilledInset = intercircle.getSimplifiedInsetFromClockwiseLoop( center, radius )
 		if intercircle.isLarge( alreadyFilledInset, muchGreaterThanRadius ) or euclidean.isWiddershins( alreadyFilledInset ):
@@ -148,7 +147,7 @@ def getCraftedTextFromText( gcodeText, insetRepository = None ):
 		insetRepository = preferences.getReadRepository( InsetRepository() )
 	return InsetSkein().getCraftedGcode( insetRepository, gcodeText )
 
-def getRepositoryConstructor():
+def getNewRepository():
 	"Get the repository constructor."
 	return InsetRepository()
 
@@ -237,21 +236,17 @@ class InsetRepository:
 	"A class to handle the inset preferences."
 	def __init__( self ):
 		"Set the default preferences, execute title & preferences fileName."
-		#Set the default preferences.
-		preferences.addListsToRepository( self )
-		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
-		self.fileNameInput = preferences.Filename().getFromFilename( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File for Inset', self, '' )
+		preferences.addListsToCraftTypeRepository( 'skeinforge_tools.craft_plugins.inset.html', self )
+		self.fileNameInput = preferences.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File for Inset', self, '' )
 		self.addCustomCodeForTemperatureReading = preferences.BooleanPreference().getFromValue( 'Add Custom Code for Temperature Reading', self, True )
-		self.bridgeWidthMultiplier = preferences.FloatPreference().getFromValue( 'Bridge Width Multiplier (ratio):', self, 1.0 )
-		self.overlapRemovalWidthOverPerimeterWidth = preferences.FloatPreference().getFromValue( 'Overlap Removal Width over Perimeter Width (ratio):', self, 0.6 )
+		self.bridgeWidthMultiplier = preferences.FloatSpin().getFromValue( 0.8, 'Bridge Width Multiplier (ratio):', self, 1.2, 1.0 )
+		self.overlapRemovalWidthOverPerimeterWidth = preferences.FloatSpin().getFromValue( 0.3, 'Overlap Removal Width over Perimeter Width (ratio):', self, 0.9, 0.6 )
 		self.turnExtruderHeaterOffAtShutDown = preferences.BooleanPreference().getFromValue( 'Turn Extruder Heater Off at Shut Down', self, True )
-		#Create the archive, title of the execute button, title of the dialog & preferences fileName.
 		self.executeTitle = 'Inset'
-		preferences.setHelpPreferencesFileNameTitleWindowPosition( self, 'skeinforge_tools.craft_plugins.inset.html' )
 
 	def execute( self ):
 		"Inset button has been clicked."
-		fileNames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.fileNameInput.value, interpret.getImportPluginFilenames(), self.fileNameInput.wasCancelled )
+		fileNames = polyfile.getFileOrDirectoryTypesUnmodifiedGcode( self.fileNameInput.value, interpret.getImportPluginFileNames(), self.fileNameInput.wasCancelled )
 		for fileName in fileNames:
 			writeOutput( fileName )
 
@@ -311,6 +306,7 @@ class InsetSkein:
 		boundary = intercircle.getLargestInsetLoopFromLoopNoMatterWhat( loop, - radius )
 		euclidean.addSurroundingLoopBeginning( boundary, self, z )
 		self.addGcodePerimeterBlockFromRemainingLoop( loop, loopLists, radius, z )
+		self.distanceFeedRate.addLine( '(</boundaryPerimeter>)' )
 		self.distanceFeedRate.addLine( '(</surroundingLoop>)' )
 
 	def addGcodePerimeterBlockFromRemainingLoop( self, loop, loopLists, radius, z ):
@@ -361,8 +357,8 @@ class InsetSkein:
 		self.insetRepository = insetRepository
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.parseInitialization()
-		for lineIndex in xrange( self.lineIndex, len( self.lines ) ):
-			self.parseLine( lineIndex )
+		for line in self.lines[ self.lineIndex : ]:
+			self.parseLine( line )
 		for rotatedBoundaryLayer in self.rotatedBoundaryLayers:
 			self.addInset( rotatedBoundaryLayer )
 		self.addShutdownToOutput()
@@ -371,8 +367,8 @@ class InsetSkein:
 	def parseInitialization( self ):
 		"Parse gcode initialization and store the parameters."
 		for self.lineIndex in xrange( len( self.lines ) ):
-			line = self.lines[ self.lineIndex ].lstrip()
-			splitLine = line.split()
+			line = self.lines[ self.lineIndex ]
+			splitLine = gcodec.getSplitLineBeforeBracketSemicolon( line )
 			firstWord = gcodec.getFirstWord( splitLine )
 			self.distanceFeedRate.parseSplitLine( firstWord, splitLine )
 			if firstWord == '(<decimalPlacesCarried>':
@@ -380,19 +376,18 @@ class InsetSkein:
 				self.distanceFeedRate.addTagBracketedLine( 'bridgeWidthMultiplier', self.distanceFeedRate.getRounded( self.insetRepository.bridgeWidthMultiplier.value ) )
 			elif firstWord == '(</extruderInitialization>)':
 				self.distanceFeedRate.addTagBracketedLine( 'procedureDone', 'inset' )
+			elif firstWord == '(<extrusion>)':
+				self.distanceFeedRate.addLine( line )
+				return
 			elif firstWord == '(<perimeterWidth>':
 				self.perimeterWidth = float( splitLine[ 1 ] )
 				self.halfPerimeterWidth = 0.5 * self.perimeterWidth
 				self.overlapRemovalWidth = self.perimeterWidth * self.insetRepository.overlapRemovalWidthOverPerimeterWidth.value
-			elif firstWord == '(<layer>':
-				self.lineIndex -= 1
-				return
 			self.distanceFeedRate.addLine( line )
 
-	def parseLine( self, lineIndex ):
+	def parseLine( self, line ):
 		"Parse a gcode line and add it to the inset skein."
-		line = self.lines[ lineIndex ].lstrip()
-		splitLine = line.split()
+		splitLine = gcodec.getSplitLineBeforeBracketSemicolon( line )
 		if len( splitLine ) < 1:
 			return
 		firstWord = splitLine[ 0 ]
@@ -418,7 +413,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getRepositoryConstructor() )
+		preferences.startMainLoopFromConstructor( getNewRepository() )
 
 if __name__ == "__main__":
 	main()

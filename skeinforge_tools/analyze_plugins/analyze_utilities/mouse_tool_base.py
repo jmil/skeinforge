@@ -31,6 +31,11 @@ class MouseToolBase:
 		"Destroy items."
 		self.destroyItems()
 
+	def destroyEverythingGetFocus( self ):
+		"Destroy items and get the focus for the canvas."
+		self.destroyEverything()
+		self.canvas.focus_set()
+
 	def destroyItems( self ):
 		"Destroy items."
 		for item in self.items:
@@ -39,7 +44,8 @@ class MouseToolBase:
 
 	def getReset( self, window ):
 		"Reset the mouse tool to default."
-		self.setCanvasItems( window.canvas )
+		self.setWindowItems( window )
+		self.destroyEverything()
 		return self
 
 	def getTagsGivenXY( self, x, y ):
@@ -50,10 +56,40 @@ class MouseToolBase:
 			return tags[ : - len( currentEnd ) ]
 		return tags
 
-	def motion( self, event ):
+	def isSelectionTool( self ):
+		"Return if this mouse tool is a selection tool."
+		return False
+
+	def keyPressDown( self, event ):
+		"The down arrow was pressed."
+		pass
+
+	def keyPressLeft( self, event ):
+		"The left arrow was pressed."
+		pass
+
+	def keyPressReturn( self, event ):
+		"The return key was pressed."
+		pass
+
+	def keyPressRight( self, event ):
+		"The right arrow was pressed."
+		pass
+
+	def keyPressUp( self, event ):
+		"The up arrow was pressed."
+		pass
+
+	def motion( self, event, shift = False ):
 		"The mouse moved, <Motion> function."
 		pass
 
-	def setCanvasItems( self, canvas ):
+	def setWindowItems( self, window ):
 		"Set the canvas and items."
-		self.canvas = canvas
+		self.canvas = window.canvas
+		self.repository = window.repository
+		self.window = window
+
+	def update( self ):
+		"Update the mouse tool."
+		pass

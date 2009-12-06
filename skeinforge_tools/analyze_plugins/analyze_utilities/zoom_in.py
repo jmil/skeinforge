@@ -1,5 +1,5 @@
 """
-Display line is a mouse tool to display the line index of the line clicked, counting from one, and the line itself.
+Zoom in is a mouse tool to zoom in the display at the point where the mouse was clicked, increasing the scale by a factor of two.
 
 """
 
@@ -27,7 +27,7 @@ class ZoomIn( MouseToolBase ):
 		"Print line text and connection line."
 		scaleSetting = self.window.repository.scale
 		scaleSetting.value *= self.getMultiplier()
-		delta = complex( float( event.x ) / float( self.window.screenSize.real ), float( event.y ) / float( self.window.screenSize.imag ) ) - self.window.canvasScreenCenterComplex
+		delta = complex( float( event.x ) / float( self.window.screenSize.real ), float( event.y ) / float( self.window.screenSize.imag ) ) - self.window.canvasScreenCenter
 		delta *= 1.0 - 1.0 / self.getMultiplier()
 		scrollPaneCenter = self.window.getScrollPaneCenter() + delta
 		self.window.updateNewDestroyOld( scrollPaneCenter )
@@ -40,9 +40,8 @@ class ZoomIn( MouseToolBase ):
 
 	def getReset( self, window ):
 		"Reset the mouse tool to default."
-		self.setCanvasItems( window.canvas )
+		self.setWindowItems( window )
 		self.mouseButton = None
-		self.window = window
 		return self
 
 	def getMultiplier( self ):

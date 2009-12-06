@@ -1,5 +1,5 @@
 """
-Display line is a mouse tool to display the line index of the line clicked, counting from one, and the line itself.
+Zoom out is a mouse tool to zoom out the display at the point where the mouse was clicked, decreasing the scale by a factor of two.
 
 """
 
