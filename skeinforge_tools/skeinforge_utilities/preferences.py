@@ -52,14 +52,22 @@ def addElementToListTableIfNotThere( element, key, listTable ):
 	else:
 		listTable[ key ] = [ element ]
 
-def addListsSetCraftProfileArchive( defaultProfile, repository, fileNameHelp ):
+def addListsSetCraftProfileArchive( craftSequence, defaultProfile, repository, fileNameHelp ):
 	"Set the craft profile archive."
 	addListsToRepository( fileNameHelp, '', repository )
+	repository.craftSequenceLabel = LabelDisplay().getFromName( 'Craft Sequence: ', repository )
+	craftToolStrings = []
+	for craftTool in craftSequence[ : - 1 ]:
+		craftToolStrings.append( getEachWordCapitalized( craftTool ) + '->' )
+	craftToolStrings.append( getEachWordCapitalized( craftSequence[ - 1 ] ) )
+	for craftToolStringIndex in xrange( 0, len( craftToolStrings ), 5 ):
+		craftLine = ' '.join( craftToolStrings[ craftToolStringIndex : craftToolStringIndex + 5 ] )
+		LabelDisplay().getFromName( craftLine, repository )
+	LabelDisplay().getFromName( '', repository )
 	repository.profileList = ProfileList().getFromName( 'Profile List:', repository )
 	repository.profileListbox = ProfileListboxPreference().getFromListPreference( repository.profileList, 'Profile Selection:', repository, defaultProfile )
 	repository.addListboxSelection = AddProfile().getFromProfileListboxPreferenceRepository( repository.profileListbox, repository )
 	repository.deleteListboxSelection = DeleteProfile().getFromProfileListboxPreferenceRepository( repository.profileListbox, repository )
-	#Create the archive, title of the dialog & repository fileName.
 	directoryName = getProfilesDirectoryPath()
 	makeDirectory( directoryName )
 	repository.windowPositionPreferences.value = '0+400'
@@ -392,7 +400,7 @@ def makeDirectory( directory ):
 
 def openWebPage( webPagePath ):
 	"Open a web page in a browser."
-	webPagePath = '"' + os.path.normpath( webPagePath ) + '"' # " to get around space in url bug
+	webPagePath = '"%s"' % webPagePath # " to get around space in url bug
 	try:
 		os.startfile( webPagePath )#this is available on some python environments, but not all
 		return
@@ -449,6 +457,8 @@ def setSpinColor( setting ):
 	"Set the spin box color to the value, yellow if it is lower than the default and blue if it is higher."
 	if setting.backgroundColor == None:
 		setting.backgroundColor = setting.entry[ 'background' ]
+		if setting.backgroundColor[ 0 ] != '#':
+			setting.backgroundColor = '#ffffff'
 		setting.colorWidth = len( setting.backgroundColor ) / 3
 		setting.grey = int( setting.backgroundColor[ 1 : 1 + setting.colorWidth ], 16 )
 		setting.white = int( 'f' * setting.colorWidth, 16 )
@@ -838,6 +848,7 @@ class FileNameInput( StringPreference ):
 	def execute( self ):
 		"Open the file picker."
 		self.wasCancelled = False
+		parent = self.repository.repositoryDialog.root
 		try:
 			import tkFileDialog
 			summarized = gcodec.getSummarizedFileName( self.value )
@@ -846,13 +857,13 @@ class FileNameInput( StringPreference ):
 				initialDirectory += os.sep
 			else:
 				initialDirectory = "."
-			fileName = tkFileDialog.askopenfilename( filetypes = self.getFileNameFirstTypes(), initialdir = initialDirectory, initialfile = os.path.basename( summarized ), title = self.name )
+			fileName = tkFileDialog.askopenfilename( filetypes = self.getFileNameFirstTypes(), initialdir = initialDirectory, initialfile = os.path.basename( summarized ), parent = parent, title = self.name )
 			self.setCancelledValue( fileName )
 			return
 		except:
 			print( 'Could not get the old directory in preferences, so the file picker will be opened in the default directory.' )
 		try:
-			fileName = tkFileDialog.askopenfilename( filetypes = self.getFileNameFirstTypes(), initialdir = '.', initialfile = '', title = self.name )
+			fileName = tkFileDialog.askopenfilename( filetypes = self.getFileNameFirstTypes(), initialdir = '.', initialfile = '', parent = parent, title = self.name )
 			self.setCancelledValue( fileName )
 		except:
 			print( 'Error in execute in FileName in preferences, ' + self.name )
@@ -946,6 +957,15 @@ class FloatSpin( FloatPreference ):
 		"Set the color to the value, yellow if it is lower than the default and blue if it is higher."
 		self.setToDisplay()
 		self.setColor()
+
+
+class FloatSpinNotOnMenu( FloatSpin ):
+	"A class to display, read & write an float in a spin box, which is not to be added to a menu."
+	def getFromValueOnlyAddToRepository( self, name, repository, value ):
+		"Initialize."
+		repository.archive.append( self )
+		repository.displayEntities.append( self )
+		return self.getFromValueOnly( name, repository, value )
 
 
 class FloatSpinUpdate( FloatSpin ):
@@ -1116,6 +1136,15 @@ class IntSpin( IntPreference ):
 		"Set the color to the value, yellow if it is lower than the default and blue if it is higher."
 		self.setToDisplay()
 		self.setColor()
+
+
+class IntSpinNotOnMenu( IntSpin ):
+	"A class to display, read & write an integer in a spin box, which is not to be added to a menu."
+	def getFromValueOnlyAddToRepository( self, name, repository, value ):
+		"Initialize."
+		repository.archive.append( self )
+		repository.displayEntities.append( self )
+		return self.getFromValueOnly( name, repository, value )
 
 
 class IntSpinUpdate( IntSpin ):
@@ -1511,9 +1540,9 @@ class RadioCapitalizedButton( RadioCapitalized ):
 	"A class to display, read & write a boolean with associated radio button."
 	def addRadioCapitalizedButtonToDialog( self, repositoryDialog ):
 		"Add this to the dialog."
+		self.addRadioCapitalizedToDialog( repositoryDialog )
 		self.displayButton = Tkinter.Button( repositoryDialog.root, activebackground = 'black', activeforeground = 'white', text = getEachWordCapitalized( self.name ), command = self.displayDialog )
 		self.displayButton.grid( row = repositoryDialog.gridPosition.row, column = 3, columnspan = 2 )
-		self.addRadioCapitalizedToDialog( repositoryDialog )
 
 	def addToDialog( self, repositoryDialog ):
 		"Add this to the dialog."

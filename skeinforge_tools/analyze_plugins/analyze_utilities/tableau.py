@@ -89,8 +89,7 @@ class TableauRepository:
 
 	def addScaleScreenSlide( self ):
 		"Add the scale, screen and slide show settings."
-		self.scale = preferences.FloatSpin().getFromValue( 10.0, 'Scale (pixels per millimeter):', self, 50.0, 15.0 )
-		self.scale.setUpdateFunction( self.setToDisplaySavePhoenixUpdate )
+		self.scale = preferences.FloatSpinNotOnMenu().getFromValue( 10.0, 'Scale (pixels per millimeter):', self, 50.0, 15.0 )
 		self.screenHorizontalInset = preferences.IntSpin().getFromValue( 80, 'Screen Horizontal Inset (pixels):', self, 1000, 100 )
 		self.screenHorizontalInset.setUpdateFunction( self.setToDisplaySaveResizeUpdate )
 		self.screenVerticalInset = preferences.IntSpin().getFromValue( 120, 'Screen Vertical Inset (pixels):', self, 1000, 200 )
@@ -146,7 +145,6 @@ class TableauWindow:
 		self.photoImages = {}
 		self.movementTextID = None
 		self.mouseInstantButtons = []
-		self.oldLineValue = repository.line.value
 		self.repository = repository
 		self.root = preferences.Tkinter.Tk()
 		self.root.title( os.path.basename( skein.fileName ) + ' - ' + title )
@@ -224,8 +222,8 @@ class TableauWindow:
 			menuRadio.mouseTool = menuRadio.getNewMouseToolFunction().getReset( self )
 			self.mouseTool = menuRadio.mouseTool
 		self.createMouseModeTool()
-		self.addMouseInstantTool( 'zoom_in.ppm', zoom_in.getNewMouseTool() )
 		self.addMouseInstantTool( 'zoom_out.ppm', zoom_out.getNewMouseTool() )
+		self.addMouseInstantTool( 'zoom_in.ppm', zoom_in.getNewMouseTool() )
 		self.canvas.bind( '<Button-1>', self.button1 )
 		self.canvas.bind( '<ButtonRelease-1>', self.buttonRelease1 )
 		self.canvas.bind( '<KeyPress-Down>', self.keyPressDown )
@@ -305,6 +303,7 @@ class TableauWindow:
 
 	def destroyAllDialogWindows( self ):
 		"Destroy all the dialog windows."
+		preferences.writePreferences( self.repository )
 		for menuEntity in self.repository.menuEntities:
 			lowerName = menuEntity.name.lower()
 			if lowerName in preferences.globalRepositoryDialogListTable:
@@ -332,7 +331,7 @@ class TableauWindow:
 		"Start the dive cycle."
 		self.cancelTimer()
 		self.repository.layer.value -= 1
-		self.saveUpdate()
+		self.update()
 		if self.repository.layer.value < 1:
 			self.resetPeriodicButtonsText()
 			return
@@ -458,7 +457,7 @@ class TableauWindow:
 			return
 		self.cancelTimerResetButtons()
 		self.updateMouseToolIfSelection()
-		self.setLineButtonsStateSave()
+		self.setLineButtonsState()
 
 	def lineDive( self ):
 		"Line dive, go down periodically."
@@ -476,12 +475,12 @@ class TableauWindow:
 			self.repository.line.value = 0
 			if self.repository.layer.value == 0:
 				self.resetPeriodicButtonsText()
-				self.setLineButtonsStateSave()
+				self.setLineButtonsState()
 				return
 			self.setLayerIndex( self.repository.layer.value - 1 )
 		else:
 			self.updateMouseToolIfSelection()
-		self.setLineButtonsStateSave()
+		self.setLineButtonsState()
 		self.setButtonImageText( self.lineDiveButton, 'stop' )
 		coloredLine = self.getColoredLines()[ self.repository.line.value ]
 		self.timerID = self.canvas.after( self.getAnimationLineDelay( coloredLine ), self.lineDiveCycle )
@@ -498,18 +497,17 @@ class TableauWindow:
 		"Start the line soar cycle."
 		self.cancelTimer()
 		self.repository.line.value += 1
-		self.save()
 		coloredLinesLength = len( self.getColoredLines() )
 		if self.repository.line.value >= coloredLinesLength:
 			self.repository.line.value = coloredLinesLength - 1
 			if self.repository.layer.value > len( self.skeinPanes ) - 2:
 				self.resetPeriodicButtonsText()
-				self.setLineButtonsStateSave()
+				self.setLineButtonsState()
 				return
 			self.setLayerIndex( self.repository.layer.value + 1 )
 		else:
 			self.updateMouseToolIfSelection()
-		self.setLineButtonsStateSave()
+		self.setLineButtonsState()
 		self.setButtonImageText( self.lineSoarButton, 'stop' )
 		coloredLine = self.getColoredLines()[ self.repository.line.value ]
 		self.timerID = self.canvas.after( self.getAnimationLineDelay( coloredLine ), self.lineSoarCycle )
@@ -539,7 +537,6 @@ class TableauWindow:
 
 	def resizeUpdate( self ):
 		"Deiconify a new window and destroy the old."
-		self.save()
 		self.getCopy().updateDeiconify( self.getScrollPaneCenter() )
 		self.root.destroy()
 
@@ -548,29 +545,12 @@ class TableauWindow:
 		for menuEntity in self.repository.menuEntities:
 			if menuEntity in self.repository.archive:
 				menuEntity.setToDisplay()
-		xScrollbarCanvasPortion = getScrollbarCanvasPortion( self.xScrollbar )
-#		if xScrollbarCanvasPortion < .99:
-		width = int( round( ( xScrollbarCanvasPortion ) * float( int( self.skein.screenSize.real ) ) ) )
-		newScreenHorizontalInset = self.root.winfo_screenwidth() - width
-		if abs( newScreenHorizontalInset - self.repository.screenHorizontalInset.value ) > 1:
-			self.repository.screenHorizontalInset.value = newScreenHorizontalInset
-		yScrollbarCanvasPortion = getScrollbarCanvasPortion( self.yScrollbar )
-#		if yScrollbarCanvasPortion < .99:
-		height = int( round( ( yScrollbarCanvasPortion ) * float( int( self.skein.screenSize.imag ) ) ) )
-		newScreenVerticalInset = self.root.winfo_screenheight() - height
-		if abs( newScreenVerticalInset - self.repository.screenVerticalInset.value ) > 1:
-			self.repository.screenVerticalInset.value = newScreenVerticalInset
+		self.setInsetToDisplay()
 		preferences.writePreferences( self.repository )
-
-	def saveUpdate( self ):
-		"Save and update."
-		self.save()
-		self.update()
 
 	def scaleEntryReturnPressed( self, event ):
 		"The scale entry return was pressed."
 		self.repository.scale.value = float( self.scaleEntry.get() )
-		self.save()
 		self.phoenixUpdate()
 
 	def setButtonImageText( self, button, text ):
@@ -592,6 +572,24 @@ class TableauWindow:
 		preferences.setEntryText( self.lineEntry, self.repository.line.value )
 		preferences.setEntryText( self.scaleEntry, self.repository.scale.value )
 		self.mouseTool.update()
+		self.setInsetToDisplay()
+
+	def setInsetToDisplay( self ):
+		"Set the archive to the display."
+		if self.root.state() != 'normal':
+			return
+		xScrollbarCanvasPortion = getScrollbarCanvasPortion( self.xScrollbar )
+#		if xScrollbarCanvasPortion < .99:
+		width = int( round( ( xScrollbarCanvasPortion ) * float( int( self.skein.screenSize.real ) ) ) )
+		newScreenHorizontalInset = self.root.winfo_screenwidth() - width
+		if abs( newScreenHorizontalInset - self.repository.screenHorizontalInset.value ) > 1:
+			self.repository.screenHorizontalInset.value = min( self.repository.screenHorizontalInset.value, newScreenHorizontalInset )
+		yScrollbarCanvasPortion = getScrollbarCanvasPortion( self.yScrollbar )
+#		if yScrollbarCanvasPortion < .99:
+		height = int( round( ( yScrollbarCanvasPortion ) * float( int( self.skein.screenSize.imag ) ) ) )
+		newScreenVerticalInset = self.root.winfo_screenheight() - height
+		if abs( newScreenVerticalInset - self.repository.screenVerticalInset.value ) > 1:
+			self.repository.screenVerticalInset.value = min( self.repository.screenVerticalInset.value, newScreenVerticalInset )
 
 	def setLayerIndex( self, layerIndex ):
 		"Set the layer index."
@@ -606,7 +604,7 @@ class TableauWindow:
 		if self.repository.layer.value > oldLayerIndex:
 			self.repository.line.value = 0
 			self.lineEntry[ 'to' ] = len( coloredLines ) - 1
-		self.saveUpdate()
+		self.update()
 
 	def setLineButtonsState( self ):
 		"Set the state of the line buttons."
@@ -615,13 +613,6 @@ class TableauWindow:
 		isBelowCeiling = self.repository.layer.value < len( self.skeinPanes ) - 1
 		setStateNormalDisabled( isAboveFloor or self.repository.line.value > 0, self.lineDiveButton )
 		setStateNormalDisabled( isBelowCeiling or self.repository.line.value < len( coloredLines ) - 1, self.lineSoarButton )
-
-	def setLineButtonsStateSave( self ):
-		"Set the state of the line buttons."
-		if self.oldLineValue != self.repository.line.value:
-			self.save()
-			self.oldLineValue = self.repository.line.value
-		self.setLineButtonsState()
 
 	def shiftButtonRelease1( self, event ):
 		"The button was released while the shift key was pressed."
@@ -643,7 +634,7 @@ class TableauWindow:
 		"Start the soar cycle."
 		self.cancelTimer()
 		self.repository.layer.value += 1
-		self.saveUpdate()
+		self.update()
 		if self.repository.layer.value > len( self.skeinPanes ) - 2:
 			self.resetPeriodicButtonsText()
 			return
@@ -665,6 +656,5 @@ class TableauWindow:
 
 	def updateNewDestroyOld( self, scrollPaneCenter ):
 		"Update and deiconify a window and destroy the old."
-		self.save()
 		self.getCopyWithNewSkein().updateDeiconify( scrollPaneCenter )
 		self.root.destroy()

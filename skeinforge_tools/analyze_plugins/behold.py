@@ -1,4 +1,5 @@
 """
+This page is in the table of contents.
 Behold is an analysis script to display a gcode file in an isometric view.
 
 The default 'Activate Behold' checkbox is on.  When it is on, the functions described below will work when called from the skeinforge toolchain, when it is off, the functions will not be called from the toolchain.  The functions will still be called, whether or not the 'Activate Behold' checkbox is on, when behold is run directly.  Behold can not separate the layers when it reads gcode without comments.
@@ -165,14 +166,12 @@ class BeholdRepository( tableau.TableauRepository ):
 		self.drawArrows.setUpdateFunction( self.setToDisplaySaveUpdate )
 		self.goAroundExtruderOffTravel = preferences.BooleanPreference().getFromValue( 'Go Around Extruder Off Travel', self, False )
 		self.goAroundExtruderOffTravel.setUpdateFunction( self.setToDisplaySavePhoenixUpdate )
-		self.layer = preferences.IntSpinUpdate().getSingleIncrementFromValue( 0, 'Layer (index):', self, 912345678, 0 )
-		self.layer.setUpdateFunction( self.setToDisplaySaveUpdate )
+		self.layer = preferences.IntSpinNotOnMenu().getSingleIncrementFromValue( 0, 'Layer (index):', self, 912345678, 0 )
 		self.layersFrom = preferences.IntSpinUpdate().getSingleIncrementFromValue( 0, 'Layers From (index):', self, 912345678, 0 )
 		self.layersFrom.setUpdateFunction( self.setToDisplaySaveUpdate )
 		self.layersTo = preferences.IntSpinUpdate().getSingleIncrementFromValue( 0, 'Layers To (index):', self, 912345678, 0 )
 		self.layersTo.setUpdateFunction( self.setToDisplaySaveUpdate )
-		self.line = preferences.IntSpinUpdate().getSingleIncrementFromValue( 0, 'Line (index):', self, 912345678, 0 )
-		self.line.setUpdateFunction( self.setToDisplaySaveUpdate )
+		self.line = preferences.IntSpinNotOnMenu().getSingleIncrementFromValue( 0, 'Line (index):', self, 912345678, 0 )
 		self.mouseMode = preferences.MenuButtonDisplay().getFromName( 'Mouse Mode:', self )
 		self.displayLine = preferences.MenuRadio().getFromMenuButtonDisplay( self.mouseMode, 'Display Line', self, True )
 		self.setNewMouseToolUpdate( display_line.getNewMouseTool, self.displayLine )
@@ -505,14 +504,14 @@ class SkeinWindow( tableau.TableauWindow ):
 	def drawXYAxisLines( self, viewVectors ):
 		"Draw the x and y axis lines."
 		if self.repository.widthOfXAxis.value > 0:
-			self.getDrawnColoredLine( 'last', self.xAxisLine, viewVectors, self.repository.widthOfXAxis.value )
+			self.getDrawnColoredLine( 'last', self.xAxisLine, self.xAxisLine.tagString, viewVectors, self.repository.widthOfXAxis.value )
 		if self.repository.widthOfYAxis.value > 0:
-			self.getDrawnColoredLine( 'last', self.yAxisLine, viewVectors, self.repository.widthOfYAxis.value )
+			self.getDrawnColoredLine( 'last', self.yAxisLine, self.yAxisLine.tagString, viewVectors, self.repository.widthOfYAxis.value )
 
 	def drawZAxisLine( self, viewVectors ):
 		"Draw the z axis line."
 		if self.repository.widthOfZAxis.value > 0:
-			self.getDrawnColoredLine( 'last', self.zAxisLine, viewVectors, self.repository.widthOfZAxis.value )
+			self.getDrawnColoredLine( 'last', self.zAxisLine, self.zAxisLine.tagString, viewVectors, self.repository.widthOfZAxis.value )
 
 	def getCentered( self, coordinate ):
 		"Get the centered coordinate."
@@ -541,7 +540,7 @@ class SkeinWindow( tableau.TableauWindow ):
 		"Get a copy of this window with a new skein."
 		return getWindowGivenTextRepository( self.skein.fileName, self.skein.gcodeText, self.repository )
 
-	def getDrawnColoredLine( self, arrowType, coloredLine, viewVectors, width ):
+	def getDrawnColoredLine( self, arrowType, coloredLine, tags, viewVectors, width ):
 		"Draw colored line."
 		viewBegin = self.getViewComplex( coloredLine.begin, viewVectors )
 		viewEnd = self.getViewComplex( coloredLine.end, viewVectors )
@@ -552,7 +551,7 @@ class SkeinWindow( tableau.TableauWindow ):
 			viewEnd.imag,
 			fill = coloredLine.colorName,
 			arrow = arrowType,
-			tags = coloredLine.tagString,
+			tags = tags,
 			width = width )
 
 	def getDrawnColoredLineMotion( self, coloredLine, viewVectors, width ):
@@ -568,7 +567,7 @@ class SkeinWindow( tableau.TableauWindow ):
 			arrow = 'last',
 			arrowshape = self.arrowshape,
 			stipple = self.motionStippleName,
-			tags = 'view_rotate_item',
+			tags = 'mouse_item',
 			width = width + 4 )
 
 	def getDrawnColoredLines( self, coloredLines, viewVectors, width ):
@@ -577,8 +576,13 @@ class SkeinWindow( tableau.TableauWindow ):
 			return
 		drawnColoredLines = []
 		for coloredLine in coloredLines:
-			drawnColoredLines.append( self.getDrawnColoredLine( self.arrowType, coloredLine, viewVectors, width ) )
+			drawnColoredLines.append( self.getDrawnColoredLine( self.arrowType, coloredLine, coloredLine.tagString, viewVectors, width ) )
 		return drawnColoredLines
+
+	def getDrawnSelectedColoredLine( self, coloredLine ):
+		"Get the drawn selected colored line."
+		viewVectors = view_rotate.ViewVectors( self.repository.viewpointLatitude.value, self.repository.viewpointLongitude.value )
+		return self.getDrawnColoredLine( self.arrowType, coloredLine, 'mouse_item', viewVectors, self.repository.widthOfSelectionThread.value )
 
 	def getLayersAround( self, layers ):
 		"Get the layers wrappers around the number of skein panes."
@@ -589,11 +593,6 @@ class SkeinWindow( tableau.TableauWindow ):
 	def getScreenComplex( self, pointComplex ):
 		"Get the point in screen perspective."
 		return complex( pointComplex.real, - pointComplex.imag ) + self.center
-
-	def getSelectedDrawnColoredLines( self, coloredLines ):
-		"Get the selected drawn colored lines."
-		viewVectors = view_rotate.ViewVectors( self.repository.viewpointLatitude.value, self.repository.viewpointLongitude.value )
-		return self.getDrawnColoredLines( coloredLines, viewVectors, self.repository.widthOfSelectionThread.value )
 
 	def getViewComplex( self, point, viewVectors ):
 		"Get the point in view perspective."

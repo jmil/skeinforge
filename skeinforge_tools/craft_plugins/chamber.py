@@ -1,4 +1,5 @@
 """
+This page is in the table of contents.
 Some filaments warp too much and to prevent this you have to print the object in a temperature regulated chamber or on a temperature regulated bed. The chamber tool allows you to control the bed and chamber temperature.
 
 The chamber manual page is at:
@@ -133,7 +134,7 @@ class ChamberRepository:
 		"Set the default preferences, execute title & preferences fileName."
 		preferences.addListsToCraftTypeRepository( 'skeinforge_tools.craft_plugins.chamber.html', self )
 		self.fileNameInput = preferences.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File for Chamber', self, '' )
-		self.openWikiManualHelpPage = preferences.HelpPage().getOpenFromAfterWWW( 'bitsfrombytes.com/wiki/index.php?title=Skeinforge_Chamber' )
+		self.openWikiManualHelpPage = preferences.HelpPage().getOpenFromAbsolute( 'http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Chamber' )
 		self.activateChamber = preferences.BooleanPreference().getFromValue( 'Activate Chamber:', self, True )
 		self.bedTemperature = preferences.FloatSpin().getFromValue( 20.0, 'Bed Temperature (Celcius):', self, 90.0, 60.0 )
 		self.chamberTemperature = preferences.FloatSpin().getFromValue( 20.0, 'Chamber Temperature (Celcius):', self, 90.0, 30.0 )

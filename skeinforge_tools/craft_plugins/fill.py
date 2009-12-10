@@ -1,5 +1,6 @@
 #! /usr/bin/env python
 """
+This page is in the table of contents.
 Fill is a script to fill the perimeters of a gcode file.
 
 Allan Ecker aka The Masked Retriever has written the "Skeinforge Quicktip: Fill" at:
@@ -93,22 +94,11 @@ __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
 
-# documentation
-# add request for manual pages in contributions thread and update
-#
-#
-#
-# a function to set openManual to bitsfrombytes
-# no menu for static viewer settings
-# maybe change mouse items to descriptive tag
-# maybe add save on destroy and get rid of some saves
-# add export verbose option
-# add craft sequence
+# wikifier, previous/next/index, headings, subheadings, examples contents
 # stretch single
-# replace functions in gcode step with gcodec and update documentation
-# remove getPolar from euclidean
 # check to see that it is only subtracting a single line, raftLayerEnd, raft support global intersections; addSupportSegmentTable in raft global, raftLayerEnd
 # add spiral _extrusion
+# split or something + tab separated equation + outputComplex = None & outputComplexes = None
 # colors, boundary on vectorwrite, use line instead of lineIndex in parseLine
 # only save & cancel buttons
 #
@@ -125,6 +115,8 @@ __license__ = "GPL 3.0"
 #implement acceleration & collinear removal in viewers _extrusion
 # documentation
 # check analyze plugins documentation
+# penultimate export documentation
+# in each profile craft sequence documentation
 #
 #
 #
@@ -134,6 +126,8 @@ __license__ = "GPL 3.0"
 # add move, select line from 7/8 of end
 # thin check when removing intersecting paths in inset?
 # layer color, for multilayer start _extrusion
+# maybe horizontal bridging and/or check to see if the ends are standing on anything
+# maybe update viewer dialog on window save
 # cache edges on first carving and slice from array in svg_codec if bridgeThickness ratio is 1.0 _speed
 # maybe add cached zones on first carving
 # check alterations folder first, if there is something copy it to the home directory, if not check the home directory
@@ -951,7 +945,7 @@ class FillSkein:
 		self.isDoubleJunction = True
 		self.isJunctionWide = True
 		if self.fillRepository.infillPatternGridHexagonal.value:
-			if abs( euclidean.getDotProduct( layerRotationAroundZAngle, euclidean.getPolar( self.infillBeginRotation, 1.0 ) ) ) < math.sqrt( 0.5 ):
+			if abs( euclidean.getDotProduct( layerRotationAroundZAngle, euclidean.getUnitPolar( self.infillBeginRotation ) ) ) < math.sqrt( 0.5 ):
 				layerInfillSolidity *= 0.5
 				self.isDoubleJunction = False
 			else:
@@ -1165,7 +1159,7 @@ class FillSkein:
 		if self.infillSolidity > 0.8:
 			return []
 		gridPoints = []
-		rotationBaseAngle = euclidean.getPolar( self.infillBeginRotation, 1.0 )
+		rotationBaseAngle = euclidean.getUnitPolar( self.infillBeginRotation )
 		reverseRotationBaseAngle = complex( rotationBaseAngle.real, - rotationBaseAngle.imag )
 		gridRotationAngle = reverseZRotationAngle * rotationBaseAngle
 		gridAlreadyFilledArounds = []
@@ -1218,7 +1212,7 @@ class FillSkein:
 			return rotation
 		infillBeginRotationRepeat = self.fillRepository.infillBeginRotationRepeat.value
 		infillOddLayerRotationMultiplier = float( layerIndex % ( infillBeginRotationRepeat + 1 ) == infillBeginRotationRepeat )
-		return euclidean.getPolar( self.infillBeginRotation + infillOddLayerRotationMultiplier * self.infillOddLayerExtraRotation, 1.0 )
+		return euclidean.getUnitPolar( self.infillBeginRotation + infillOddLayerRotationMultiplier * self.infillOddLayerExtraRotation )
 
 	def getNextGripXStep( self, gridXStep ):
 		"Get the next grid x step, increment by an extra one every three if hexagonal grid is chosen."
