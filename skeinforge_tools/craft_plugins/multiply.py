@@ -2,14 +2,40 @@
 This page is in the table of contents.
 Multiply is a script to multiply the shape into an array of copies arranged in a table.
 
-The default 'Activate Multiply' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions will not be called.
-
-The center of the shape will be moved to the "Center X" and "Center Y" coordinates.
-
-The "Number of Columns" preference is the number of columns in the array table.  The "Number of Rows" is the number of rows in the table.  The "Separation over Extrusion Width" is the ratio of separation between the shape copies over the extrusion width.
+The multiply manual page is at:
+http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Multiply
 
 Besides using the multiply tool, another way of printing many copies of the model is to duplicate the model in Art of Illusion, however many times you want, with the appropriate offsets.  Then you can either use the Join Objects script in the scripts submenu to create a combined shape or you can export the whole scene as an xml file, which skeinforge can then slice.
 
+==Operation==
+The default 'Activate Multiply' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions will not be called.
+
+==Settings==
+===Center===
+Default is the origin.
+
+The center of the shape will be moved to the "Center X" and "Center Y" coordinates.
+
+====Center X====
+====Center Y====
+
+===Number of Cells===
+====Number of Columns====
+Default is one.
+
+Defines the number of columns in the array table.
+
+====Number of Rows====
+Default is one.
+
+Defines the number of rows in the table.
+
+===Separation over Perimeter Width===
+Default is fifteen.
+
+Defines the ratio of separation between the shape copies over the extrusion width.
+
+==Examples==
 The following examples multiply the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and multiply.py.
 
 
@@ -48,14 +74,15 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
+from skeinforge_tools import profile
+from skeinforge_tools.meta_plugins import polyfile
 from skeinforge_tools.skeinforge_utilities import consecution
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import intercircle
-from skeinforge_tools.skeinforge_utilities import preferences
-from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 from skeinforge_tools.skeinforge_utilities import interpret
-from skeinforge_tools.meta_plugins import polyfile
+from skeinforge_tools.skeinforge_utilities import settings
+from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 import math
 import sys
 
@@ -74,7 +101,7 @@ def getCraftedTextFromText( gcodeText, multiplyRepository = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'multiply' ):
 		return gcodeText
 	if multiplyRepository == None:
-		multiplyRepository = preferences.getReadRepository( MultiplyRepository() )
+		multiplyRepository = settings.getReadRepository( MultiplyRepository() )
 	if not multiplyRepository.activateMultiply.value:
 		return gcodeText
 	return MultiplySkein().getCraftedGcode( gcodeText, multiplyRepository )
@@ -91,17 +118,20 @@ def writeOutput( fileName = '' ):
 
 
 class MultiplyRepository:
-	"A class to handle the multiply preferences."
+	"A class to handle the multiply settings."
 	def __init__( self ):
-		"Set the default preferences, execute title & preferences fileName."
-		preferences.addListsToCraftTypeRepository( 'skeinforge_tools.craft_plugins.multiply.html', self )
-		self.fileNameInput = preferences.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File for Multiply', self, '' )
-		self.activateMultiply = preferences.BooleanPreference().getFromValue( 'Activate Multiply:', self, False )
-		self.centerX = preferences.FloatSpin().getFromValue( - 100.0, 'Center X (mm):', self, 100.0, 0.0 )
-		self.centerY = preferences.FloatSpin().getFromValue( -100.0, 'Center Y (mm):', self, 100.0, 0.0 )
-		self.numberOfColumns = preferences.IntSpin().getFromValue( 1, 'Number of Columns (integer):', self, 10, 1 )
-		self.numberOfRows = preferences.IntSpin().getFromValue( 1, 'Number of Rows (integer):', self, 10, 1 )
-		self.separationOverExtrusionWidth = preferences.FloatSpin().getFromValue( 5.0, 'Separation over Extrusion Width (ratio):', self, 25.0, 15.0 )
+		"Set the default settings, execute title & settings fileName."
+		profile.addListsToCraftTypeRepository( 'skeinforge_tools.craft_plugins.multiply.html', self )
+		self.fileNameInput = settings.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File for Multiply', self, '' )
+		self.openWikiManualHelpPage = settings.HelpPage().getOpenFromAbsolute( 'http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Multiply' )
+		self.activateMultiply = settings.BooleanSetting().getFromValue( 'Activate Multiply:', self, False )
+		settings.LabelDisplay().getFromName( '- Center -', self )
+		self.centerX = settings.FloatSpin().getFromValue( - 100.0, 'Center X (mm):', self, 100.0, 0.0 )
+		self.centerY = settings.FloatSpin().getFromValue( -100.0, 'Center Y (mm):', self, 100.0, 0.0 )
+		settings.LabelDisplay().getFromName( '- Number of Cells -', self )
+		self.numberOfColumns = settings.IntSpin().getFromValue( 1, 'Number of Columns (integer):', self, 10, 1 )
+		self.numberOfRows = settings.IntSpin().getFromValue( 1, 'Number of Rows (integer):', self, 10, 1 )
+		self.separationOverPerimeterWidth = settings.FloatSpin().getFromValue( 5.0, 'Separation over Perimeter Width (ratio):', self, 25.0, 15.0 )
 		self.executeTitle = 'Multiply'
 
 	def execute( self ):
@@ -232,7 +262,7 @@ class MultiplySkein:
 		cornerLowComplex = euclidean.getMinimumFromPoints( locationComplexes )
 		self.extent = cornerHighComplex - cornerLowComplex
 		self.shapeCenter = 0.5 * ( cornerHighComplex + cornerLowComplex )
-		self.separation = self.multiplyRepository.separationOverExtrusionWidth.value * self.absolutePerimeterWidth
+		self.separation = self.multiplyRepository.separationOverPerimeterWidth.value * self.absolutePerimeterWidth
 		self.extentPlusSeparation = self.extent + complex( self.separation, self.separation )
 		columnsMinusOne = self.numberOfColumns - 1
 		rowsMinusOne = self.numberOfRows - 1
@@ -245,7 +275,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getNewRepository() )
+		settings.startMainLoopFromConstructor( getNewRepository() )
 
 if __name__ == "__main__":
 	main()

@@ -5,20 +5,50 @@ Some filaments warp too much and to prevent this you have to print the object in
 The chamber manual page is at:
 http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Chamber
 
+==Operation==
 The default 'Activate Chamber' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions will not be called.
 
-The 'Bed Temperature' preference sets the temperature of the bed by sending an M110 command, the default is 60.0.  The 'Chamber Temperature' preference sets the temperature of the chamber by sending an M111 command, the default is 30.0.
+==Settings==
+===Bed Temperature===
+Default is 60C.
 
-Kulitorum has made a heated bed.  It is a 5mm Alu sheet with a pattern laid out in kapton tape.  The wire is a 0.6mm2 Konstantin wire and it's held in place by small pieces of kapton tape.  The description and picture is at:
-http://gallery.kulitorum.com/main.php?g2_itemId=283
+Defines the print_bed temperature in Celcius by adding an M110 command.
 
-Other heated bed descriptions follow below.
+===Chamber Temperature===
+Default is 30C.
 
-A heated base by the Metalab folks:
-http://reprap.soup.io
+Defines the chamber temperature in Celcius by adding an M111 command.
 
-with information at:
-http://reprap.soup.io/?search=heated%20base
+==Heated Beds==
+
+===Bothacker===
+
+A resistor heated aluminum plate by Bothacker:
+http://bothacker.com
+
+with an article at:
+http://bothacker.com/2009/12/18/heated-build-platform/
+
+===Domingo===
+
+A heated copper build plate by Domingo:
+http://casainho-emcrepstrap.blogspot.com/
+
+with articles at:
+http://casainho-emcrepstrap.blogspot.com/2010/01/problems-with-heated-build-platform-and.html
+http://casainho-emcrepstrap.blogspot.com/2010/01/perfect-build-platform.html
+http://casainho-emcrepstrap.blogspot.com/2009/12/almost-no-warp.html
+http://casainho-emcrepstrap.blogspot.com/2009/12/heated-base-plate.html
+
+===James Villeneuve===
+
+A PCB copper heater by James Villeneuve
+http://www.thingiverse.com/jamesvilleneuve
+
+with an article at:
+http://www.thingiverse.com/thing:1433
+
+===Jmil===
 
 A heated build stage by jmil, over at:
 http://www.hive76.org
@@ -27,18 +57,30 @@ with articles at:
 http://www.hive76.org/handling-hot-build-surfaces
 http://www.hive76.org/heated-build-stage-success
 
-A resistor heated aluminum plate by Pumpernickel2:
-http://dev.forums.reprap.org/profile.php?14,844
+===Kulitorum===
 
-with a picture at:
-http://dev.forums.reprap.org/file.php?14,file=1228,filename=heatedplate.jpg
+Kulitorum has made a heated bed.  It is a 5mm Alu sheet with a pattern laid out in kapton tape.  The wire is a 0.6mm2 Konstantin wire and it's held in place by small pieces of kapton tape.  The description and picture is at:
+http://gallery.kulitorum.com/main.php?g2_itemId=283
 
-A resistor heated aluminum plate by Zaggo at Pleasant Software:
-http://pleasantsoftware.com/developer/3d/
+===Metalab===
+
+A heated base by the Metalab folks:
+http://reprap.soup.io
+
+with information at:
+http://reprap.soup.io/?search=heated%20base
+
+===Nophead===
+
+A resistor heated aluminum bed by Nophead:
+http://hydraraptor.blogspot.com
 
 with articles at:
-http://pleasantsoftware.com/developer/3d/2009/12/05/raftless/
-http://pleasantsoftware.com/developer/3d/2009/11/12/canned-heat/
+http://hydraraptor.blogspot.com/2010/01/hot-metal-and-serendipity.html
+http://hydraraptor.blogspot.com/2010/01/new-year-new-plastic.html
+http://hydraraptor.blogspot.com/2010/01/hot-bed.html
+
+===Prusajr===
 
 A resistive wire heated plexiglass plate by prusajr:
 http://prusadjs.cz/
@@ -46,9 +88,25 @@ http://prusadjs.cz/
 with an article at:
 http://prusadjs.cz/2009/11/look-ma-no-warping-heated-reprap-print-bed/
 
-jmil; http://www.hive76.org/heated-build-stage-success http://www.hive76.org/handling-hot-build-surfaces
+===Pumpernickel2===
 
+A resistor heated aluminum plate by Pumpernickel2:
+http://dev.forums.reprap.org/profile.php?14,844
 
+with a picture at:
+http://dev.forums.reprap.org/file.php?14,file=1228,filename=heatedplate.jpg
+
+===Zaggo===
+
+A resistor heated aluminum plate by Zaggo at Pleasant Software:
+http://pleasantsoftware.com/developer/3d/
+
+with articles at:
+http://pleasantsoftware.com/developer/3d/2009/12/05/raftless/
+http://pleasantsoftware.com/developer/3d/2009/11/15/living-in-times-of-warp-free-printing/
+http://pleasantsoftware.com/developer/3d/2009/11/12/canned-heat/
+
+==Examples==
 The following examples chamber the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and chamber.py.
 
 
@@ -88,12 +146,13 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
+from skeinforge_tools import profile
 from skeinforge_tools.meta_plugins import polyfile
 from skeinforge_tools.skeinforge_utilities import consecution
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import interpret
-from skeinforge_tools.skeinforge_utilities import preferences
+from skeinforge_tools.skeinforge_utilities import settings
 import sys
 
 
@@ -111,7 +170,7 @@ def getCraftedTextFromText( gcodeText, chamberRepository = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'chamber' ):
 		return gcodeText
 	if chamberRepository == None:
-		chamberRepository = preferences.getReadRepository( ChamberRepository() )
+		chamberRepository = settings.getReadRepository( ChamberRepository() )
 	if not chamberRepository.activateChamber.value:
 		return gcodeText
 	return ChamberSkein().getCraftedGcode( gcodeText, chamberRepository )
@@ -129,15 +188,15 @@ def writeOutput( fileName = '' ):
 
 
 class ChamberRepository:
-	"A class to handle the chamber preferences."
+	"A class to handle the chamber settings."
 	def __init__( self ):
-		"Set the default preferences, execute title & preferences fileName."
-		preferences.addListsToCraftTypeRepository( 'skeinforge_tools.craft_plugins.chamber.html', self )
-		self.fileNameInput = preferences.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File for Chamber', self, '' )
-		self.openWikiManualHelpPage = preferences.HelpPage().getOpenFromAbsolute( 'http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Chamber' )
-		self.activateChamber = preferences.BooleanPreference().getFromValue( 'Activate Chamber:', self, True )
-		self.bedTemperature = preferences.FloatSpin().getFromValue( 20.0, 'Bed Temperature (Celcius):', self, 90.0, 60.0 )
-		self.chamberTemperature = preferences.FloatSpin().getFromValue( 20.0, 'Chamber Temperature (Celcius):', self, 90.0, 30.0 )
+		"Set the default settings, execute title & settings fileName."
+		profile.addListsToCraftTypeRepository( 'skeinforge_tools.craft_plugins.chamber.html', self )
+		self.fileNameInput = settings.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File for Chamber', self, '' )
+		self.openWikiManualHelpPage = settings.HelpPage().getOpenFromAbsolute( 'http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Chamber' )
+		self.activateChamber = settings.BooleanSetting().getFromValue( 'Activate Chamber:', self, True )
+		self.bedTemperature = settings.FloatSpin().getFromValue( 20.0, 'Bed Temperature (Celcius):', self, 90.0, 60.0 )
+		self.chamberTemperature = settings.FloatSpin().getFromValue( 20.0, 'Chamber Temperature (Celcius):', self, 90.0, 30.0 )
 		self.executeTitle = 'Chamber'
 
 	def execute( self ):
@@ -199,7 +258,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getNewRepository() )
+		settings.startMainLoopFromConstructor( getNewRepository() )
 
 if __name__ == "__main__":
 	main()

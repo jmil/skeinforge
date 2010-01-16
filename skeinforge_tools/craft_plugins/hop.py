@@ -2,10 +2,21 @@
 This page is in the table of contents.
 Hop is a script to raise the extruder when it is not extruding.
 
+==Operation==
 The default 'Activate Hop' checkbox is off.  It is off because Vik and Nophead found better results without hopping.  When it is on, the functions described below will work, when it is off, the functions will not be called.
 
-The important value for the hop preferences is "Hop Over Layer Thickness (ratio)" which is the ratio of the hop height over the layer thickness, the default is 1.0.  The 'Minimum Hop Angle (degrees)' is the minimum angle that the path of the extruder will be raised.  An angle of ninety means that the extruder will go straight up as soon as it is not extruding and a low angle means the extruder path will gradually rise to the hop height, the default is 20 degrees.
+==Settings==
+===Hop Over Layer Thickness===
+Default is one.
 
+Defines the ratio of the hop height over the layer thickness, this is the most important hop setting.
+
+===Minimum Hop Angle===
+Default is 20 degrees.
+
+Defines the minimum angle that the path of the extruder will be raised.  An angle of ninety means that the extruder will go straight up as soon as it is not extruding and a low angle means the extruder path will gradually rise to the hop height.
+
+==Examples==
 The following examples hop the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and hop.py.
 
 
@@ -43,12 +54,13 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
+from skeinforge_tools import profile
 from skeinforge_tools.meta_plugins import polyfile
 from skeinforge_tools.skeinforge_utilities import consecution
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
-from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities import interpret
+from skeinforge_tools.skeinforge_utilities import settings
 import math
 import sys
 
@@ -67,7 +79,7 @@ def getCraftedTextFromText( gcodeText, hopRepository = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'hop' ):
 		return gcodeText
 	if hopRepository == None:
-		hopRepository = preferences.getReadRepository( HopRepository() )
+		hopRepository = settings.getReadRepository( HopRepository() )
 	if not hopRepository.activateHop.value:
 		return gcodeText
 	return HopSkein().getCraftedGcode( gcodeText, hopRepository )
@@ -84,14 +96,14 @@ def writeOutput( fileName = '' ):
 
 
 class HopRepository:
-	"A class to handle the hop preferences."
+	"A class to handle the hop settings."
 	def __init__( self ):
-		"Set the default preferences, execute title & preferences fileName."
-		preferences.addListsToCraftTypeRepository( 'skeinforge_tools.craft_plugins.hop.html', self )
-		self.fileNameInput = preferences.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Hopped', self, '' )
-		self.activateHop = preferences.BooleanPreference().getFromValue( 'Activate Hop', self, False )
-		self.hopOverLayerThickness = preferences.FloatSpin().getFromValue( 0.5, 'Hop Over Layer Thickness (ratio):', self, 1.5, 1.0 )
-		self.minimumHopAngle = preferences.FloatSpin().getFromValue( 20.0, 'Minimum Hop Angle (degrees):', self, 60.0, 30.0 )
+		"Set the default settings, execute title & settings fileName."
+		profile.addListsToCraftTypeRepository( 'skeinforge_tools.craft_plugins.hop.html', self )
+		self.fileNameInput = settings.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Hopped', self, '' )
+		self.activateHop = settings.BooleanSetting().getFromValue( 'Activate Hop', self, False )
+		self.hopOverLayerThickness = settings.FloatSpin().getFromValue( 0.5, 'Hop Over Layer Thickness (ratio):', self, 1.5, 1.0 )
+		self.minimumHopAngle = settings.FloatSpin().getFromValue( 20.0, 'Minimum Hop Angle (degrees):', self, 60.0, 30.0 )
 		self.executeTitle = 'Hop'
 
 	def execute( self ):
@@ -209,7 +221,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getNewRepository() )
+		settings.startMainLoopFromConstructor( getNewRepository() )
 
 if __name__ == "__main__":
 	main()

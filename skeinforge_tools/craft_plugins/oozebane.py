@@ -2,20 +2,53 @@
 This page is in the table of contents.
 Oozebane is a script to turn off the extruder before the end of a thread and turn it on before the beginning.
 
+After oozebane turns the extruder on, it slows the feed rate down where the thread starts.  Then it speeds it up in steps so in theory the thread will remain at roughly the same thickness from the beginning.
+
+==Operation==
 The default 'Activate Oozebane' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions will not be called.
 
-The important value for the oozebane preferences is "Early Shutdown Distance" which is the distance before the end of the thread that the extruder will be turned off, the default is 1.2.  A higher distance means the extruder will turn off sooner and the end of the line will be thinner.
-
-When oozebane turns the extruder off, it slows the feed rate down in steps so in theory the thread will remain at roughly the same thickness until the end.  The "Turn Off Steps" preference is the number of steps, the more steps the smaller the size of the step that the feed rate will be decreased and the larger the size of the resulting gcode file, the default is three.
-
-Oozebane also turns the extruder on just before the start of a thread.  The "Early Startup Maximum Distance" preference is the maximum distance before the thread starts that the extruder will be turned off, the default is 1.2.  The longer the extruder has been off, the earlier the extruder will turn back on, the ratio is one minus one over e to the power of the distance the extruder has been off over the "Early Startup Distance Constant".  The 'First Early Startup Distance' preference is the distance before the first thread starts that the extruder will be turned off.  This value should be high because, according to Marius, the extruder takes a second or two to extrude when starting for the first time, the default is twenty five.
+==Settings==
+===After Startup Distance===
+Default is 1.2.
 
 When oozebane reaches the point where the extruder would of turned on, it slows down so that the thread will be thick at that point.  Afterwards it speeds the extruder back up to operating speed.  The speed up distance is the "After Startup Distance".
 
-The "Minimum Distance for Early Startup" is the minimum distance that the extruder has to be off before the thread begins for the early start up feature to activate.  The "Minimum Distance for Early Shutdown" is the minimum distance that the extruder has to be off after the thread end for the early shutdown feature to activate.
+===Early Shutdown Distance===
+Default is 1.2.
 
-After oozebane turns the extruder on, it slows the feedRate down where the thread starts.  Then it speeds it up in steps so in theory the thread will remain at roughly the same thickness from the beginning.
+Defines the distance before the end of the thread that the extruder will be turned off.  It is the most important oozebane setting.  A higher distance means the extruder will turn off sooner and the end of the line will be thinner.
 
+===Early Startup Maximum Distance===
+Default is 1.2.
+
+Defines the maximum distance before the thread starts that the extruder will be turned on
+
+===Early Startup Distance Constant===
+Default is twenty.
+
+The longer the extruder has been off, the earlier the extruder will turn back on, the ratio is one minus one over e to the power of the distance the extruder has been off over the "Early Startup Distance Constant".
+
+===First Early Startup Distance===
+Default is twenty five.
+
+Defines the distance before the first thread starts that the extruder will be turned off.  This value should be high because, according to Marius, the extruder takes a second or two to extrude when starting for the first time.
+
+===Minimum Distance for Early Shutdown===
+Default is zero.
+
+Defines the minimum distance that the extruder has to be off after the thread end for the early shutdown feature to activate.
+
+===Minimum Distance for Early Startup===
+Default is zero.
+
+Defines the minimum distance that the extruder has to be off before the thread begins for the early start up feature to activate.
+
+===Slowdown Startup Steps===
+Default is three.
+
+When oozebane turns the extruder off, it slows the feed rate down in steps so in theory the thread will remain at roughly the same thickness until the end.  The "Slowdown Startup Steps" setting is the number of steps, the more steps the smaller the size of the step that the feed rate will be decreased and the larger the size of the resulting gcode file.
+
+==Examples==
 The following examples oozebane the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and oozebane.py.
 
 
@@ -53,12 +86,13 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
+from skeinforge_tools import profile
 from skeinforge_tools.meta_plugins import polyfile
 from skeinforge_tools.skeinforge_utilities import consecution
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
-from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities import interpret
+from skeinforge_tools.skeinforge_utilities import settings
 import math
 import sys
 
@@ -77,7 +111,7 @@ def getCraftedTextFromText( gcodeText, oozebaneRepository = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'oozebane' ):
 		return gcodeText
 	if oozebaneRepository == None:
-		oozebaneRepository = preferences.getReadRepository( OozebaneRepository() )
+		oozebaneRepository = settings.getReadRepository( OozebaneRepository() )
 	if not oozebaneRepository.activateOozebane.value:
 		return gcodeText
 	return OozebaneSkein().getCraftedGcode( gcodeText, oozebaneRepository )
@@ -94,20 +128,20 @@ def writeOutput( fileName = '' ):
 
 
 class OozebaneRepository:
-	"A class to handle the oozebane preferences."
+	"A class to handle the oozebane settings."
 	def __init__( self ):
-		"Set the default preferences, execute title & preferences fileName."
-		preferences.addListsToCraftTypeRepository( 'skeinforge_tools.craft_plugins.oozebane.html', self )
-		self.fileNameInput = preferences.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Oozebaned', self, '' )
-		self.activateOozebane = preferences.BooleanPreference().getFromValue( 'Activate Oozebane', self, False )
-		self.afterStartupDistance = preferences.FloatSpin().getFromValue( 0.7, 'After Startup Distance (millimeters):', self, 1.7, 1.2 )
-		self.earlyShutdownDistance = preferences.FloatSpin().getFromValue( 0.7, 'Early Shutdown Distance (millimeters):', self, 1.7, 1.2 )
-		self.earlyStartupDistanceConstant = preferences.FloatSpin().getFromValue( 10.0, 'Early Startup Distance Constant (millimeters):', self, 30.0, 20.0 )
-		self.earlyStartupMaximumDistance = preferences.FloatSpin().getFromValue( 0.7, 'Early Startup Maximum Distance (millimeters):', self, 1.7, 1.2 )
-		self.firstEarlyStartupDistance = preferences.FloatSpin().getFromValue( 5.0, 'First Early Startup Distance (millimeters):', self, 45.0, 25.0 )
-		self.minimumDistanceForEarlyStartup = preferences.FloatSpin().getFromValue( 0.0, 'Minimum Distance for Early Startup (millimeters):', self, 10.0, 0.0 )
-		self.minimumDistanceForEarlyShutdown = preferences.FloatSpin().getFromValue( 0.0, 'Minimum Distance for Early Shutdown (millimeters):', self, 10.0, 0.0 )
-		self.slowdownStartupSteps = preferences.IntSpin().getFromValue( 2, 'Slowdown Startup Steps (positive integer):', self, 5, 3 )
+		"Set the default settings, execute title & settings fileName."
+		profile.addListsToCraftTypeRepository( 'skeinforge_tools.craft_plugins.oozebane.html', self )
+		self.fileNameInput = settings.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File for Oozebane', self, '' )
+		self.activateOozebane = settings.BooleanSetting().getFromValue( 'Activate Oozebane', self, False )
+		self.afterStartupDistance = settings.FloatSpin().getFromValue( 0.7, 'After Startup Distance (millimeters):', self, 1.7, 1.2 )
+		self.earlyShutdownDistance = settings.FloatSpin().getFromValue( 0.7, 'Early Shutdown Distance (millimeters):', self, 1.7, 1.2 )
+		self.earlyStartupDistanceConstant = settings.FloatSpin().getFromValue( 10.0, 'Early Startup Distance Constant (millimeters):', self, 30.0, 20.0 )
+		self.earlyStartupMaximumDistance = settings.FloatSpin().getFromValue( 0.7, 'Early Startup Maximum Distance (millimeters):', self, 1.7, 1.2 )
+		self.firstEarlyStartupDistance = settings.FloatSpin().getFromValue( 5.0, 'First Early Startup Distance (millimeters):', self, 45.0, 25.0 )
+		self.minimumDistanceForEarlyStartup = settings.FloatSpin().getFromValue( 0.0, 'Minimum Distance for Early Startup (millimeters):', self, 10.0, 0.0 )
+		self.minimumDistanceForEarlyShutdown = settings.FloatSpin().getFromValue( 0.0, 'Minimum Distance for Early Shutdown (millimeters):', self, 10.0, 0.0 )
+		self.slowdownStartupSteps = settings.IntSpin().getFromValue( 2, 'Slowdown Startup Steps (positive integer):', self, 5, 3 )
 		self.executeTitle = 'Oozebane'
 
 	def execute( self ):
@@ -156,7 +190,7 @@ class OozebaneSkein:
 		self.isShutdownEarly = True
 
 	def getActiveFeedRateRatio( self ):
-		"Get the feedRate of the first active move over the operating feedRate."
+		"Get the feed rate of the first active move over the operating feed rate."
 		isSearchExtruderActive = self.isExtruderActive
 		for afterIndex in xrange( self.lineIndex, len( self.lines ) ):
 			line = self.lines[ afterIndex ]
@@ -167,7 +201,7 @@ class OozebaneSkein:
 					return gcodec.getFeedRateMinute( self.feedRateMinute, splitLine ) / self.operatingFeedRateMinute
 			elif firstWord == 'M101':
 				isSearchExtruderActive = True
-		print( 'active feedRate ratio was not found in oozebane.' )
+		print( 'active feed rate ratio was not found in oozebane.' )
 		return 1.0
 
 	def getAddAfterStartupLines( self, line ):
@@ -355,11 +389,11 @@ class OozebaneSkein:
 		return self.getDistanceToExtruderOffCommand( self.earlyShutdownDistances[ self.shutdownStepIndex ] )
 
 	def getLinearMoveWithFeedRate( self, feedRate, location ):
-		"Get a linear move line with the feedRate."
+		"Get a linear move line with the feed rate."
 		return self.distanceFeedRate.getLinearGcodeMovementWithFeedRate( feedRate, location.dropAxis( 2 ), location.z )
 
 	def getLinearMoveWithFeedRateSplitLine( self, feedRate, splitLine ):
-		"Get a linear move line with the feedRate and split line."
+		"Get a linear move line with the feed rate and split line."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
 		return self.getLinearMoveWithFeedRate( feedRate, location )
 
@@ -556,7 +590,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getNewRepository() )
+		settings.startMainLoopFromConstructor( getNewRepository() )
 
 if __name__ == "__main__":
 	main()

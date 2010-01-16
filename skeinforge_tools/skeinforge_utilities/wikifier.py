@@ -8,7 +8,7 @@ from __future__ import absolute_import
 import __init__
 
 from skeinforge_tools.skeinforge_utilities import gcodec
-from skeinforge_tools.skeinforge_utilities import preferences
+from skeinforge_tools.skeinforge_utilities import settings
 import cStringIO
 import os
 
@@ -18,17 +18,67 @@ __date__ = "$Date: 2008/21/04 $"
 __license__ = "GPL 3.0"
 
 
+class Heading:
+	"A class to hold the heading and subheadings."
+	def __init__( self, depth = 0 ):
+		"Initialize."
+		self.depth = depth
+
+	def addToOutput( self, output ):
+		"Add to the output."
+		line = '&nbsp;&nbsp;' * self.depth + '<a href="#%s">%s</a><br />\n' % ( self.name, self.name )
+		output.write( line )
+
+	def getFromLine( self, headingLineTable, line ):
+		"Get the heading from a line."
+		headingTag = 'h' + str( self.depth + 2 )
+		nextLine = '\n<hr>\n'
+		if self.depth > 0:
+			nextLine = '\n'
+		self.name = line.replace( '=', '' ).replace( '<br>', '' )
+		headingLineTable[ line ] = '<a name="%s" id="%s"></a><%s>%s</%s>%s' % ( self.name, self.name, headingTag, self.name, headingTag, nextLine )
+		return self
+
+
+def addToHeadings( headingLineTable, headings, line ):
+	"Add the line to the headings."
+	for depth in xrange( 4, - 1, - 1 ):
+		equalSymbolLength = depth + 2
+		if line[ : equalSymbolLength ] == '=' * equalSymbolLength:
+			headings.append( Heading( depth ).getFromLine( headingLineTable, line ) )
+			return
+
 def getNavigationHypertext( fileText, transferredFileNameIndex, transferredFileNames ):
 	"Get the hypertext help with navigation lines."
 	helpTextEnd = fileText.find( '</p>' )
 	helpTextStart = fileText.find( '<p>' )
 	helpText = fileText[ helpTextStart : helpTextEnd ]
+	lines = gcodec.getTextLines( helpText )
+	headings = []
+	headingLineTable = {}
+	for line in lines:
+		addToHeadings( headingLineTable, headings, line )
+	headingsToBeenAdded = True
+	output = cStringIO.StringIO()
+	for line in lines:
+		if line[ : 2 ] == '==':
+			if headingsToBeenAdded:
+				output.write( '<br />\n' )
+				for heading in headings:
+					heading.addToOutput( output )
+				output.write( '<br />\n' )
+				headingsToBeenAdded = False
+			if line in headingLineTable:
+				line = headingLineTable[ line ]
+		output.write( line + '\n' )
+	helpText = output.getvalue()
 	previousFileName = 'contents.html'
 	previousIndex = transferredFileNameIndex - 1
 	if previousIndex >= 0:
 		previousFileName = transferredFileNames[ previousIndex ]
 	previousLinkText = '<a href="%s">Previous</a>' % previousFileName
-	helpText = getNavigationLine( '<a href="contents.html">Contents</a>', previousLinkText, getNextLinkText( transferredFileNames, transferredFileNameIndex + 1 ) ) + helpText
+	navigationLine = getNavigationLine( '<a href="contents.html">Contents</a>', previousLinkText, getNextLinkText( transferredFileNames, transferredFileNameIndex + 1 ) )
+	helpText = navigationLine + helpText + '<br />\n<br />\n' + navigationLine + '<hr>\n'
 	return fileText[ : helpTextStart ] + helpText + fileText[ helpTextEnd : ]
 
 def getNavigationLine( contentsLinkText, previousLinkText, nextLinkText ):
@@ -87,9 +137,11 @@ def writeContentsFile( documentDirectoryPath, hypertextFiles ):
 	"Write the contents file."
 	output = cStringIO.StringIO()
 	output.write( '<html>\n  <head>\n    <title>Contents</title>\n  </head>\n  <body>\n' )
-	output.write( getNavigationLine( 'Contents', 'Previous', getNextLinkText( hypertextFiles, 0 ) ) )
+	navigationLine = getNavigationLine( 'Contents', 'Previous', getNextLinkText( hypertextFiles, 0 ) )
+	output.write( navigationLine )
 	for hypertextFile in hypertextFiles:
 		writeContentsLine( hypertextFile, output )
+	output.write( navigationLine )
 	output.write( '  </body>\n</html>\n' )
 	filePath = os.path.join( documentDirectoryPath, 'contents.html' )
 	gcodec.writeFileText( filePath, output.getvalue() )
@@ -101,7 +153,7 @@ def writeContentsLine( hypertextFile, output ):
 	prefixSpaces = '&nbsp;&nbsp;' * numberOfDots
 	if numberOfDots > 0:
 		summarizedFileName = summarizedFileName[ summarizedFileName.rfind( '.' ) + 1 : ]
-	capitalizedSummarizedFileName = preferences.getEachWordCapitalized( summarizedFileName )
+	capitalizedSummarizedFileName = settings.getEachWordCapitalized( summarizedFileName )
 	output.write( '%s<a href="%s">%s</a><br>\n' % ( prefixSpaces, hypertextFile, capitalizedSummarizedFileName ) )
 
 def writeHypertext():

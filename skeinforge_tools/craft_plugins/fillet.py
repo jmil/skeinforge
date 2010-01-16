@@ -1,13 +1,50 @@
 """
 This page is in the table of contents.
-Fillet is a script to fillet or bevel the corners on a gcode file.
+Fillet rounds the corners slightly in a variety of ways.  This is to reduce corner blobbing and sudden extruder acceleration.
 
-The default 'Activate Fillet' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions will not be called.
+The fillet manual page is at:
+http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Fillet
 
-Fillet rounds the corners slightly in a variety of ways.  This is to reduce corner blobbing and sudden extruder acceleration.  The 'Arc Point' method fillets the corners with an arc using the gcode point form.  The 'Arc Radius' method fillets with an arc using the gcode radius form.  The 'Arc Segment' method fillets corners with an arc composed of several segments.  The 'Bevel' method bevels each corner.  The default radio button choice is 'Bevel'.
+==Operation==
+The default 'Activate Fillet' checkbox is off.  When it is on, the functions described below will work, when it is off, the functions will not be called.
 
-The 'Corner FeedRate over Operating FeedRate' is the ratio of the feedRate in corners over the operating feedRate.  With a high value the extruder will move quickly in corners, accelerating quickly and leaving a thin extrusion.  With a low value, the extruder will move slowly in corners, accelerating gently and leaving a thick extrusion.  The default value is 1.0.  The 'Fillet Radius over Perimeter Width' ratio determines how much wide the fillet will be, the default is 0.35.  The 'Reversal Slowdown over Perimeter Width' ratio determines how far before a path reversal the extruder will slow down.  Some tools, like nozzle wipe, double back the path of the extruder and this option will add a slowdown point in that path so there won't be a sudden jerk at the end of the path.  The default value is 0.5 and if the value is less than 0.1 a slowdown will not be added.  If 'Use Intermediate FeedRate in Corners' is chosen, the feedRate entering the corner will be the average of the old feedRate and the new feedRate, the default is true.
+==Settings==
+===Fillet Procedure Choice===
+Default is 'Bevel''.
 
+====Arc Point====
+When selected, the corners will be filleted with an arc using the gcode point form.
+
+====Arc Radius====
+When selected, the corners will be filleted with an arc using the gcode radius form.
+
+====Arc Segment====
+When selected, the corners will be filleted with an arc composed of several segments.
+
+====Bevel====
+When selected, the corners will be beveled.
+
+===Corner Feed Rate over Operating Feed Rate===
+Default is one.
+
+Defines the ratio of the feed rate in corners over the operating feed rate.  With a high value the extruder will move quickly in corners, accelerating quickly and leaving a thin extrusion.  With a low value, the extruder will move slowly in corners, accelerating gently and leaving a thick extrusion.
+
+===Fillet Radius over Perimeter Width===
+Default is 0.35.
+
+Defines the width of the fillet.
+
+===Reversal Slowdown over Perimeter Width===
+Default is 0.5.
+
+Defines how far before a path reversal the extruder will slow down.  Some tools, like nozzle wipe, double back the path of the extruder and this option will add a slowdown point in that path so there won't be a sudden jerk at the end of the path.  If the value is less than 0.1 a slowdown will not be added.
+
+===Use Intermediate Feed Rate in Corners===
+Default is on.
+
+When selected, the feed rate entering the corner will be the average of the old feed rate and the new feed rate.
+
+==Examples==
 The following examples fillet the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and fillet.py.
 
 
@@ -45,12 +82,13 @@ from __future__ import absolute_import
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
+from skeinforge_tools import profile
 from skeinforge_tools.meta_plugins import polyfile
 from skeinforge_tools.skeinforge_utilities import consecution
 from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import interpret
-from skeinforge_tools.skeinforge_utilities import preferences
+from skeinforge_tools.skeinforge_utilities import settings
 from skeinforge_tools.skeinforge_utilities.vector3 import Vector3
 import math
 import sys
@@ -70,7 +108,7 @@ def getCraftedTextFromText( gcodeText, filletRepository = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'fillet' ):
 		return gcodeText
 	if filletRepository == None:
-		filletRepository = preferences.getReadRepository( FilletRepository() )
+		filletRepository = settings.getReadRepository( FilletRepository() )
 	if not filletRepository.activateFillet.value:
 		return gcodeText
 	if filletRepository.arcPoint.value:
@@ -88,7 +126,7 @@ def getNewRepository():
 	return FilletRepository()
 
 def writeOutput( fileName = '' ):
-	"Fillet a gcode linear move file. Depending on the preferences, either arcPoint, arcRadius, arcSegment, bevel or do nothing."
+	"Fillet a gcode linear move file. Depending on the settings, either arcPoint, arcRadius, arcSegment, bevel or do nothing."
 	fileName = interpret.getFirstTranslatorFileNameUnmodified( fileName )
 	if fileName != '':
 		consecution.writeChainTextWithNounMessage( fileName, 'fillet' )
@@ -112,7 +150,7 @@ class BevelSkein:
 		self.distanceFeedRate.addLine( self.distanceFeedRate.getLinearGcodeMovementWithFeedRate( feedRateMinute, point.dropAxis( 2 ), point.z ) )
 
 	def getCornerFeedRate( self ):
-		"Get the corner feedRate, which may be based on the intermediate feedRate."
+		"Get the corner feed rate, which may be based on the intermediate feed rate."
 		feedRateMinute = self.feedRateMinute
 		if self.filletRepository.useIntermediateFeedRateInCorners.value:
 			if self.oldFeedRateMinute != None:
@@ -333,22 +371,23 @@ class ArcRadiusSkein( ArcPointSkein ):
 
 
 class FilletRepository:
-	"A class to handle the fillet preferences."
+	"A class to handle the fillet settings."
 	def __init__( self ):
-		"Set the default preferences, execute title & preferences fileName."
-		preferences.addListsToRepository( 'skeinforge_tools.craft_plugins.fillet.html', '', self )
-		self.fileNameInput = preferences.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Filleted', self, '' )
-		self.activateFillet = preferences.BooleanPreference().getFromValue( 'Activate Fillet', self, True )
-		self.filletProcedureChoiceLabel = preferences.LabelDisplay().getFromName( 'Fillet Procedure Choice: ', self )
-		filletRadio = []
-		self.arcPoint = preferences.Radio().getFromRadio( 'Arc Point', filletRadio, self, False )
-		self.arcRadius = preferences.Radio().getFromRadio( 'Arc Radius', filletRadio, self, False )
-		self.arcSegment = preferences.Radio().getFromRadio( 'Arc Segment', filletRadio, self, False )
-		self.bevel = preferences.Radio().getFromRadio( 'Bevel', filletRadio, self, True )
-		self.cornerFeedRateOverOperatingFeedRate = preferences.FloatSpin().getFromValue( 0.8, 'Corner FeedRate over Operating Feed Rate (ratio):', self, 1.2, 1.0 )
-		self.filletRadiusOverPerimeterWidth = preferences.FloatSpin().getFromValue( 0.25, 'Fillet Radius over Perimeter Width (ratio):', self, 0.65, 0.35 )
-		self.reversalSlowdownDistanceOverPerimeterWidth = preferences.FloatSpin().getFromValue( 0.3, 'Reversal Slowdown Distance over Perimeter Width (ratio):', self, 0.7, 0.5 )
-		self.useIntermediateFeedRateInCorners = preferences.BooleanPreference().getFromValue( 'Use Intermediate FeedRate in Corners', self, True )
+		"Set the default settings, execute title & settings fileName."
+		settings.addListsToRepository( 'skeinforge_tools.craft_plugins.fillet.html', '', self )
+		self.fileNameInput = settings.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Filleted', self, '' )
+		self.openWikiManualHelpPage = settings.HelpPage().getOpenFromAbsolute( 'http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Fillet' )
+		self.activateFillet = settings.BooleanSetting().getFromValue( 'Activate Fillet', self, False )
+		self.filletProcedureChoiceLabel = settings.LabelDisplay().getFromName( 'Fillet Procedure Choice: ', self )
+		filletLatentStringVar = settings.LatentStringVar()
+		self.arcPoint = settings.Radio().getFromRadio( filletLatentStringVar, 'Arc Point', self, False )
+		self.arcRadius = settings.Radio().getFromRadio( filletLatentStringVar, 'Arc Radius', self, False )
+		self.arcSegment = settings.Radio().getFromRadio( filletLatentStringVar, 'Arc Segment', self, False )
+		self.bevel = settings.Radio().getFromRadio( filletLatentStringVar, 'Bevel', self, True )
+		self.cornerFeedRateOverOperatingFeedRate = settings.FloatSpin().getFromValue( 0.8, 'Corner Feed Rate over Operating Feed Rate (ratio):', self, 1.2, 1.0 )
+		self.filletRadiusOverPerimeterWidth = settings.FloatSpin().getFromValue( 0.25, 'Fillet Radius over Perimeter Width (ratio):', self, 0.65, 0.35 )
+		self.reversalSlowdownDistanceOverPerimeterWidth = settings.FloatSpin().getFromValue( 0.3, 'Reversal Slowdown Distance over Perimeter Width (ratio):', self, 0.7, 0.5 )
+		self.useIntermediateFeedRateInCorners = settings.BooleanSetting().getFromValue( 'Use Intermediate Feed Rate in Corners', self, True )
 		self.executeTitle = 'Fillet'
 
 	def execute( self ):
@@ -363,7 +402,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getNewRepository() )
+		settings.startMainLoopFromConstructor( getNewRepository() )
 
 if __name__ == "__main__":
 	main()

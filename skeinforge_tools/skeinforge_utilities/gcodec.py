@@ -457,6 +457,13 @@ class DistanceFeedRate:
 			self.addGcodeMovementZWithFeedRate( feedRateMinute, point, z )
 		self.addLine( "M103" ) # Turn extruder off.
 
+	def addGcodeFromLoop( self, loop, z ):
+		"Add the gcode loop."
+		euclidean.addSurroundingLoopBeginning( self, loop, z )
+		self.addPerimeterBlock( loop, z )
+		self.addLine( '(</boundaryPerimeter>)' )
+		self.addLine( '(</surroundingLoop>)' )
+
 	def addGcodeFromThreadZ( self, thread, z ):
 		"Add a thread to the output."
 		if len( thread ) > 0:
@@ -528,7 +535,10 @@ class DistanceFeedRate:
 		"Add the perimeter gcode block for the loop."
 		if len( loop ) < 2:
 			return
-		self.addLine( '(<perimeter>)' ) # Indicate that a perimeter is beginning.
+		if euclidean.isWiddershins( loop ): # Indicate that a perimeter is beginning.
+			self.addLine( '(<perimeter> outer )' )
+		else:
+			self.addLine( '(<perimeter> inner )' )
 		self.addGcodeFromThreadZ( loop + [ loop[ 0 ] ], z )
 		self.addLine( '(</perimeter>)' ) # Indicate that a perimeter is beginning.
 

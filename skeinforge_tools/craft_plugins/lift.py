@@ -1,15 +1,22 @@
 """
 This page is in the table of contents.
-Lift is a script to change the altitude of a gcode file.
-
 Lift will change the altitude of the cutting tool when it is on so that it will cut through the slab at the correct altitude.  It will also lift the gcode when the tool is off so that the cutting tool will clear the top of the slab.
 
+==Operation==
 The default 'Activate Lift' checkbox is on.  When it is on, the functions described below will work, when it is off, the functions will not be called.
 
-The 'Cutting Lift over Layer Step' is the ratio of the amount the cutting tool will be lifted over the layer step.  If whittle is off the layer step will be the layer thickness, if it is on, it will be the layer step from the whittle gcode.  If the cutting tool is like an end mill, where the cutting happens until the end of the tool, then the 'Cutting Lift over Layer Step' should be minus 0.5, so that the end mill cuts to the bottom of the slab.  If the cutting tool is like a laser, where the cutting happens around the focal point. the 'Cutting Lift over Layer Step' should be zero, so that the cutting action will be focused in the middle of the slab.  The default is minus 0.5, because the end mill is the more common tool.
+==Settings==
+===Cutting Lift over Layer Step===
+Default is minus 0.5, because the end mill is the more common tool.
 
-The 'Clearance above Top' is the distance above the top of the slab the cutting tool will be lifted when will tool is off so that the cutting tool will clear the top of the slab.  The default is 5 mm.
+Defines the ratio of the amount the cutting tool will be lifted over the layer step.  If whittle is off the layer step will be the layer thickness, if it is on, it will be the layer step from the whittle gcode.  If the cutting tool is like an end mill, where the cutting happens until the end of the tool, then the 'Cutting Lift over Layer Step' should be minus 0.5, so that the end mill cuts to the bottom of the slab.  If the cutting tool is like a laser, where the cutting happens around the focal point. the 'Cutting Lift over Layer Step' should be zero, so that the cutting action will be focused in the middle of the slab.
 
+===Clearance above Top===
+Default is 5 millimeters.
+
+Defines the distance above the top of the slab the cutting tool will be lifted when will tool is off so that the cutting tool will clear the top of the slab.
+
+==Examples==
 The following examples lift the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and lift.py.
 
 
@@ -52,11 +59,12 @@ except:
 #Init has to be imported first because it has code to workaround the python bug where relative imports don't work if the module is imported as a main module.
 import __init__
 
+from skeinforge_tools import profile
+from skeinforge_tools.meta_plugins import polyfile
 from skeinforge_tools.skeinforge_utilities import consecution
 from skeinforge_tools.skeinforge_utilities import gcodec
-from skeinforge_tools.skeinforge_utilities import preferences
 from skeinforge_tools.skeinforge_utilities import interpret
-from skeinforge_tools.meta_plugins import polyfile
+from skeinforge_tools.skeinforge_utilities import settings
 import sys
 
 
@@ -74,7 +82,7 @@ def getCraftedTextFromText( gcodeText, liftRepository = None ):
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'lift' ):
 		return gcodeText
 	if liftRepository == None:
-		liftRepository = preferences.getReadRepository( LiftRepository() )
+		liftRepository = settings.getReadRepository( LiftRepository() )
 	if not liftRepository.activateLift.value:
 		return gcodeText
 	return LiftSkein().getCraftedGcode( liftRepository, gcodeText )
@@ -91,14 +99,14 @@ def writeOutput( fileName = '' ):
 
 
 class LiftRepository:
-	"A class to handle the lift preferences."
+	"A class to handle the lift settings."
 	def __init__( self ):
-		"Set the default preferences, execute title & preferences fileName."
-		preferences.addListsToCraftTypeRepository( 'skeinforge_tools.craft_plugins.lift.html', self )
-		self.fileNameInput = preferences.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Lifted', self, '' )
-		self.activateLift = preferences.BooleanPreference().getFromValue( 'Activate Lift:', self, True )
-		self.cuttingLiftOverLayerStep = preferences.FloatSpin().getFromValue( - 1.0, 'Cutting Lift over Layer Step (ratio):', self, 1.0, - 0.5 )
-		self.clearanceAboveTop = preferences.FloatSpin().getFromValue( 0.0, 'Clearance above Top (mm):', self, 10.0, 5.0 )
+		"Set the default settings, execute title & settings fileName."
+		profile.addListsToCraftTypeRepository( 'skeinforge_tools.craft_plugins.lift.html', self )
+		self.fileNameInput = settings.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Lifted', self, '' )
+		self.activateLift = settings.BooleanSetting().getFromValue( 'Activate Lift:', self, True )
+		self.cuttingLiftOverLayerStep = settings.FloatSpin().getFromValue( - 1.0, 'Cutting Lift over Layer Step (ratio):', self, 1.0, - 0.5 )
+		self.clearanceAboveTop = settings.FloatSpin().getFromValue( 0.0, 'Clearance above Top (mm):', self, 10.0, 5.0 )
 		self.executeTitle = 'Lift'
 
 	def execute( self ):
@@ -194,7 +202,7 @@ def main():
 	if len( sys.argv ) > 1:
 		writeOutput( ' '.join( sys.argv[ 1 : ] ) )
 	else:
-		preferences.startMainLoopFromConstructor( getNewRepository() )
+		settings.startMainLoopFromConstructor( getNewRepository() )
 
 if __name__ == "__main__":
 	main()
