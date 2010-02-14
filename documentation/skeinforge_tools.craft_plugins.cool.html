@@ -10,7 +10,7 @@
 ><td align=right valign=bottom
 ><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/craft_plugins/cool.py">/home/enrique/Desktop/backup/babbleold/script/reprap/pyRepRap/skeinforge_tools/craft_plugins/cool.py</a></font></td></tr></table>
     <p>
-<a href="skeinforge_tools.craft_plugins.comb.html">Previous</a> / <a href="skeinforge_tools.craft_plugins.drill.html">Next</a> / <a href="contents.html">Contents</a>
+<a href="skeinforge_tools.craft_plugins.comb.html">Previous</a> / <a href="skeinforge_tools.craft_plugins.dimension.html">Next</a> / <a href="contents.html">Contents</a>
 </p>
 <p><tt><br>
 Cool is a script to cool the shape.<br>
@@ -47,7 +47,7 @@ The default 'Activate Cool' checkbox is on.  When it is on, the functions descri
 
 <a name="Cool Type" id="Cool Type"></a><h3>Cool Type</h3>
 
-Default is 'Slow Down'.<br>
+Default is 'Orbit', because many extruders do not operate properly at very slow flow rates.<br>
  <br>
 <a name="Orbit" id="Orbit"></a><h4>Orbit</h4>
 
@@ -137,7 +137,7 @@ The cool tool has created the file:<br>
 <br />
 <br />
 <p>
-<a href="skeinforge_tools.craft_plugins.comb.html">Previous</a> / <a href="skeinforge_tools.craft_plugins.drill.html">Next</a> / <a href="contents.html">Contents</a>
+<a href="skeinforge_tools.craft_plugins.comb.html">Previous</a> / <a href="skeinforge_tools.craft_plugins.dimension.html">Next</a> / <a href="contents.html">Contents</a>
 </p>
 <hr>
 </p>
@@ -200,7 +200,7 @@ The cool tool has created the file:<br>
 
 <dl><dt><a name="CoolSkein-addCoolTemperature"><strong>addCoolTemperature</strong></a>(self, remainingOrbitTime)</dt><dd><tt>Parse&nbsp;a&nbsp;gcode&nbsp;line&nbsp;and&nbsp;add&nbsp;it&nbsp;to&nbsp;the&nbsp;cool&nbsp;skein.</tt></dd></dl>
 
-<dl><dt><a name="CoolSkein-addFlowRateLineIfNecessary"><strong>addFlowRateLineIfNecessary</strong></a>(self, flowRateString)</dt><dd><tt>Add&nbsp;a&nbsp;line&nbsp;of&nbsp;flow&nbsp;rate&nbsp;if&nbsp;different.</tt></dd></dl>
+<dl><dt><a name="CoolSkein-addFlowRateLineIfNecessary"><strong>addFlowRateLineIfNecessary</strong></a>(self, flowRate)</dt><dd><tt>Add&nbsp;a&nbsp;line&nbsp;of&nbsp;flow&nbsp;rate&nbsp;if&nbsp;different.</tt></dd></dl>
 
 <dl><dt><a name="CoolSkein-addGcodeFromFeedRateMovementZ"><strong>addGcodeFromFeedRateMovementZ</strong></a>(self, feedRateMinute, point, z)</dt><dd><tt>Add&nbsp;a&nbsp;movement&nbsp;to&nbsp;the&nbsp;output.</tt></dd></dl>
 

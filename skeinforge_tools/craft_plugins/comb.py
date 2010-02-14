@@ -107,7 +107,7 @@ class CombRepository:
 	def __init__( self ):
 		"Set the default settings, execute title & settings fileName."
 		profile.addListsToCraftTypeRepository( 'skeinforge_tools.craft_plugins.comb.html', self )
-		self.fileNameInput = settings.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Combed', self, '' )
+		self.fileNameInput = settings.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File for Comb', self, '' )
 		self.openWikiManualHelpPage = settings.HelpPage().getOpenFromAbsolute( 'http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Comb' )
 		self.activateComb = settings.BooleanSetting().getFromValue( 'Activate Comb', self, True )
 		self.minimumDepartureDistanceOverPerimeterWidth = settings.FloatSpin().getFromValue( 0.0, 'Minimum Departure Distance over Perimeter Width (ratio):', self, 50.0, 0.0 )

@@ -23,6 +23,7 @@ The chamber manual page is at:<br>
 <a href="#Settings">Settings</a><br />
 &nbsp;&nbsp;<a href="#Bed Temperature">Bed Temperature</a><br />
 &nbsp;&nbsp;<a href="#Chamber Temperature">Chamber Temperature</a><br />
+&nbsp;&nbsp;<a href="#Holding Force">Holding Force</a><br />
 <a href="#Heated Beds">Heated Beds</a><br />
 &nbsp;&nbsp;<a href="#Bothacker">Bothacker</a><br />
 &nbsp;&nbsp;<a href="#Domingo">Domingo</a><br />
@@ -48,13 +49,19 @@ The default 'Activate Chamber' checkbox is on.  When it is on, the functions des
 
 Default is 60C.<br>
  <br>
-Defines the print_bed temperature in Celcius by adding an M110 command.<br>
+Defines the print_bed temperature in Celcius by adding an M115 command.<br>
  <br>
 <a name="Chamber Temperature" id="Chamber Temperature"></a><h3>Chamber Temperature</h3>
 
 Default is 30C.<br>
  <br>
-Defines the chamber temperature in Celcius by adding an M111 command.<br>
+Defines the chamber temperature in Celcius by adding an M116 command.<br>
+ <br>
+<a name="Holding Force" id="Holding Force"></a><h3>Holding Force</h3>
+
+Default is zero.<br>
+ <br>
+Defines the holding force of a mechanism, like a vacuum table or electromagnet, to hold the bed surface or object, by adding an M117 command.<br>
  <br>
 <a name="Heated Beds" id="Heated Beds"></a><h2>Heated Beds</h2>
 <hr>
@@ -76,6 +83,10 @@ A heated copper build plate by Domingo:<br>
 <a href="http://casainho-emcrepstrap.blogspot.com/">http://casainho-emcrepstrap.blogspot.com/</a><br>
  <br>
 with articles at:<br>
+<a href="http://casainho-emcrepstrap.blogspot.com/2010/01/first-time-with-pla-testing-it-also-on.html">http://casainho-emcrepstrap.blogspot.com/2010/01/first-time-with-pla-testing-it-also-on.html</a><br>
+<a href="http://casainho-emcrepstrap.blogspot.com/2010/01/call-for-helpideas-to-develop-heated.html">http://casainho-emcrepstrap.blogspot.com/2010/01/call-for-helpideas-to-develop-heated.html</a><br>
+<a href="http://casainho-emcrepstrap.blogspot.com/2010/01/new-heated-build-platform.html">http://casainho-emcrepstrap.blogspot.com/2010/01/new-heated-build-platform.html</a><br>
+<a href="http://casainho-emcrepstrap.blogspot.com/2010/01/no-acrylic-and-instead-kapton-tape-on.html">http://casainho-emcrepstrap.blogspot.com/2010/01/no-acrylic-and-instead-kapton-tape-on.html</a><br>
 <a href="http://casainho-emcrepstrap.blogspot.com/2010/01/problems-with-heated-build-platform-and.html">http://casainho-emcrepstrap.blogspot.com/2010/01/problems-with-heated-build-platform-and.html</a><br>
 <a href="http://casainho-emcrepstrap.blogspot.com/2010/01/perfect-build-platform.html">http://casainho-emcrepstrap.blogspot.com/2010/01/perfect-build-platform.html</a><br>
 <a href="http://casainho-emcrepstrap.blogspot.com/2009/12/almost-no-warp.html">http://casainho-emcrepstrap.blogspot.com/2009/12/almost-no-warp.html</a><br>
@@ -122,6 +133,7 @@ A resistor heated aluminum bed by Nophead:<br>
 <a href="http://hydraraptor.blogspot.com">http://hydraraptor.blogspot.com</a><br>
  <br>
 with articles at:<br>
+<a href="http://hydraraptor.blogspot.com/2010/01/will-it-stick.html">http://hydraraptor.blogspot.com/2010/01/will-it-stick.html</a><br>
 <a href="http://hydraraptor.blogspot.com/2010/01/hot-metal-and-serendipity.html">http://hydraraptor.blogspot.com/2010/01/hot-metal-and-serendipity.html</a><br>
 <a href="http://hydraraptor.blogspot.com/2010/01/new-year-new-plastic.html">http://hydraraptor.blogspot.com/2010/01/new-year-new-plastic.html</a><br>
 <a href="http://hydraraptor.blogspot.com/2010/01/hot-bed.html">http://hydraraptor.blogspot.com/2010/01/hot-bed.html</a><br>
@@ -132,7 +144,8 @@ with articles at:<br>
 A resistive wire heated plexiglass plate by prusajr:<br>
 <a href="http://prusadjs.cz/">http://prusadjs.cz/</a><br>
  <br>
-with an article at:<br>
+with articles at:<br>
+<a href="http://prusadjs.cz/2010/01/heated-reprap-print-bed-mk2/">http://prusadjs.cz/2010/01/heated-reprap-print-bed-mk2/</a><br>
 <a href="http://prusadjs.cz/2009/11/look-ma-no-warping-heated-reprap-print-bed/">http://prusadjs.cz/2009/11/look-ma-no-warping-heated-reprap-print-bed/</a><br>
  <br>
 <a name="Pumpernickel2" id="Pumpernickel2"></a><h3>Pumpernickel2</h3>

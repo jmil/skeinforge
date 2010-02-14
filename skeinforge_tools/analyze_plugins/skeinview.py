@@ -11,9 +11,7 @@ Skeinview is derived from Nophead's preview script.  The extruded lines are in t
 The default 'Activate Skeinview' checkbox is on.  When it is on, the functions described below will work when called from the skeinforge toolchain, when it is off, the functions will not be called from the toolchain.  The functions will still be called, whether or not the 'Activate Skeinview' checkbox is on, when skeinview is run directly.  Skeinview has trouble separating the layers when it reads gcode without comments.
 
 ==Settings==
-
 ===Animation===
-
 ====Animation Line Quickening====
 Default is one.
 
@@ -38,10 +36,16 @@ Default is off.
 
 When selected, the display will include the travel when the extruder is off, which means it will include the nozzle wipe path if any.
 
-===Layer===
+===Layers===
+====Layer====
 Default is zero.
 
 On the display window, the Up button increases the 'Layer' by one, and the Down button decreases the layer by one.  When the layer displayed in the layer spin box is changed then <Return> is hit, the layer shown will be set to the spin box, to a mimimum of zero and to a maximum of the highest index layer.The Soar button increases the layer at the 'Animation Slide Show Rate', and the Dive (double left arrow button beside the layer field) button decreases the layer at the slide show rate.
+
+====Layer Extra Span====
+Default is zero.
+
+The viewer will draw the layers in the range including the 'Layer' index and the 'Layer' index plus the 'Layer Extra Span'.  If the 'Layer Extra Span' is negative, the layers viewed will start at the 'Layer' index, plus the 'Layer Extra Span', and go up to and include the 'Layer' index.  If the 'Layer Extra Span' is zero, only the 'Layer' index layer will be displayed.  If the 'Layer Extra Span' is positive, the layers viewed will start at the 'Layer' index, and go up to and include the 'Layer' index plus the 'Layer Extra Span'.
 
 ===Line===
 Default is zero.
@@ -59,6 +63,11 @@ The 'Display Line' tool will display the highlight the selected line, and displa
 ====Viewpoint Move====
 The 'Viewpoint Move' tool will move the viewpoint in the xy plane when the mouse is clicked and dragged on the canvas.
 
+===Numeric Pointer===
+Default is on.
+
+When selected, the distance along the ruler of the arrow pointers will be drawn next to the pointers.
+
 ===Scale===
 Default is ten.
 
@@ -67,7 +76,6 @@ The scale setting is the scale of the image in pixels per millimeter, the higher
 The zoom in mouse tool will zoom in the display at the point where the mouse was clicked, increasing the scale by a factor of two.  The zoom out tool will zoom out the display at the point where the mouse was clicked, decreasing the scale by a factor of two.
 
 ===Screen Inset===
-
 ====Screen Horizontal Inset====
 Default is one hundred.
 
@@ -76,7 +84,7 @@ The "Screen Horizontal Inset" determines how much the canvas will be inset in th
 ====Screen Vertical Inset====
 Default is two hundred.
 
-The "Screen Vertical Inset" determines how much the canvas will be inset in the vertical direction from the edge of screen.
+The "Screen Vertical Inset" determines how much the canvas will be inset in the vertical direction from the edge of screen, the higher the number the more it will be inset and the smaller it will be.
 
 ===Width===
 The width of each type of thread and of each axis can be changed.  If the width is set to zero, the thread will not be visible.
@@ -97,12 +105,10 @@ Default is one.
 The "Width of Travel Thread" sets the width of the grey extruder off travel threads.
 
 ==Icons==
-
 The dive, soar and zoom icons are from Mark James' soarSilk icon set 1.3 at:
 http://www.famfamfam.com/lab/icons/silk/
 
 ==Gcodes==
-
 An explanation of the gcodes is at:
 http://reprap.org/bin/view/Main/Arduino_GCode_Interpreter
 
@@ -113,7 +119,6 @@ A gode example is at:
 http://forums.reprap.org/file.php?12,file=565
 
 ==Examples==
-
 Below are examples of skeinview being used.  These examples are run in a terminal in the folder which contains Screw Holder_penultimate.gcode and skeinview.py.
 
 
@@ -151,7 +156,6 @@ from skeinforge_tools.skeinforge_utilities import euclidean
 from skeinforge_tools.skeinforge_utilities import gcodec
 from skeinforge_tools.skeinforge_utilities import settings
 from skeinforge_tools.meta_plugins import polyfile
-import math
 import os
 import sys
 
@@ -173,10 +177,6 @@ def analyzeFileGivenText( fileName, gcodeText, repository = None ):
 		repository = settings.getReadRepository( SkeinviewRepository() )
 	skeinWindow = getWindowGivenTextRepository( fileName, gcodeText, repository )
 	skeinWindow.updateDeiconify()
-
-def getGeometricDifference( first, second ):
-	"Get the geometric difference of the two numbers."
-	return max( first, second ) / min( first, second )
 
 def getNewRepository():
 	"Get the repository constructor."
@@ -206,16 +206,18 @@ class SkeinviewRepository( tableau.TableauRepository ):
 		"Set the default settings, execute title & settings fileName."
 		settings.addListsToRepository( 'skeinforge_tools.analyze_plugins.skeinview.html', '', self )
 		self.fileNameInput = settings.FileNameInput().getFromFileName( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Skeinview', self, '' )
-		self.openWikiManualHelpPage = settings.HelpPage().getOpenFromAbsolute( 'http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Skeinview' )
+#		self.openWikiManualHelpPage = settings.HelpPage().getOpenFromAbsolute( 'http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Skeinview' )
 		self.activateSkeinview = settings.BooleanSetting().getFromValue( 'Activate Skeinview', self, True )
 		self.addAnimation()
 		self.drawArrows = settings.BooleanSetting().getFromValue( 'Draw Arrows', self, True )
 		self.goAroundExtruderOffTravel = settings.BooleanSetting().getFromValue( 'Go Around Extruder Off Travel', self, False )
 		self.layer = settings.IntSpinNotOnMenu().getSingleIncrementFromValue( 0, 'Layer (index):', self, 912345678, 0 )
+		self.layerExtraSpan = settings.IntSpinUpdate().getSingleIncrementFromValue( - 3, 'Layer Extra Span (integer):', self, 3, 0 )
 		self.line = settings.IntSpinNotOnMenu().getSingleIncrementFromValue( 0, 'Line (index):', self, 912345678, 0 )
 		self.mouseMode = settings.MenuButtonDisplay().getFromName( 'Mouse Mode:', self )
 		self.displayLine = settings.MenuRadio().getFromMenuButtonDisplay( self.mouseMode, 'Display Line', self, True )
 		self.viewMove = settings.MenuRadio().getFromMenuButtonDisplay( self.mouseMode, 'View Move', self, False )
+		self.numericPointer = settings.BooleanSetting().getFromValue( 'Numeric Pointer', self, True )
 		self.addScaleScreenSlide()
 		self.widthOfExtrusionThread = settings.IntSpinUpdate().getSingleIncrementFromValue( 0, 'Width of Extrusion Thread (pixels):', self, 5, 2 )
 		self.widthOfSelectionThread = settings.IntSpinUpdate().getSingleIncrementFromValue( 0, 'Width of Selection Thread (pixels):', self, 10, 6 )
@@ -256,8 +258,13 @@ class SkeinviewSkein:
 		coloredLine.isExtrusionThread = self.extruderActive
 		self.skeinPane.append( coloredLine )
 
+	def getModelCoordinates( self, screenCoordinates ):
+		"Get the model coordinates."
+		modelCoordinates = ( screenCoordinates + self.marginCornerLow ) / self.scale
+		return complex( modelCoordinates.real, self.cornerImaginaryTotal - modelCoordinates.imag )
+
 	def getScreenCoordinates( self, pointComplex ):
-		"Get the screen coordinates.self.cornerImaginaryTotal - self.marginCornerLow"
+		"Get the screen coordinates."
 		pointComplex = complex( pointComplex.real, self.cornerImaginaryTotal - pointComplex.imag )
 		return self.scale * pointComplex - self.marginCornerLow
 
@@ -281,7 +288,7 @@ class SkeinviewSkein:
 	def linearCorner( self, splitLine ):
 		"Update the bounding corners."
 		location = gcodec.getLocationFromSplitLine( self.oldLocation, splitLine )
-		if self.extruderActive or self.goAroundExtruderOffTravel:
+		if self.extruderActive or self.repository.goAroundExtruderOffTravel.value:
 			self.cornerHigh = euclidean.getPointMaximum( self.cornerHigh, location )
 			self.cornerLow = euclidean.getPointMinimum( self.cornerLow, location )
 		self.oldLocation = location
@@ -308,10 +315,10 @@ class SkeinviewSkein:
 		"Parse gcode text and store the vector output."
 		self.fileName = fileName
 		self.gcodeText = gcodeText
+		self.repository = repository
 		self.initializeActiveLocation()
 		self.cornerHigh = Vector3( - 999999999.0, - 999999999.0, - 999999999.0 )
 		self.cornerLow = Vector3( 999999999.0, 999999999.0, 999999999.0 )
-		self.goAroundExtruderOffTravel = repository.goAroundExtruderOffTravel.value
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.isThereALayerStartWord = gcodec.isThereAFirstWord( '(<layer>', self.lines, 1 )
 		self.parseInitialization()
@@ -343,6 +350,7 @@ class SkeinviewSkein:
 				return
 			elif firstWord == '(<operatingFeedRatePerSecond>':
 				self.feedRateMinute = 60.0 * float( splitLine[ 1 ] )
+		self.lineIndex = 0
 
 	def parseLine( self, line ):
 		"Parse a gcode line and add it to the vector output."
@@ -374,12 +382,6 @@ class SkeinviewSkein:
 class SkeinWindow( tableau.TableauWindow ):
 	def __init__( self, repository, skein ):
 		"Initialize the skein window.setWindowNewMouseTool"
-		self.rulingExtent = 24
-		self.rulingExtentShort = 0.382 * self.rulingExtent
-		self.rulingExtentTiny = 0.764 * self.rulingExtent
-		self.rulingExtentPointer = 0.5 * ( self.rulingExtentShort + self.rulingExtentTiny )
-		self.rulingPointerRadius = self.rulingExtent - self.rulingExtentPointer
-		self.rulingTargetSeparation = 150.0
 		self.addCanvasMenuRootScrollSkein( repository, skein, '_skeinview', 'Skeinview Viewer from Hydraraptor' )
 		horizontalRulerBoundingBox = ( 0, 0, int( skein.screenSize.real ), self.rulingExtent )
 		self.horizontalRulerCanvas = settings.Tkinter.Canvas( self.root, width = self.canvasWidth, height = self.rulingExtent, scrollregion = horizontalRulerBoundingBox )
@@ -389,13 +391,10 @@ class SkeinWindow( tableau.TableauWindow ):
 		self.verticalRulerCanvas = settings.Tkinter.Canvas( self.root, width = self.rulingExtent, height = self.canvasHeight, scrollregion = verticalRulerBoundingBox )
 		self.verticalRulerCanvas.grid( row = 1, rowspan = 97, column = 1, sticky = settings.Tkinter.N + settings.Tkinter.S )
 		self.verticalRulerCanvas[ 'yscrollcommand' ] = self.yScrollbar.set
-		self.repository.drawArrows.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
-		self.repository.goAroundExtruderOffTravel.setUpdateFunction( self.setWindowToDisplaySavePhoenixUpdate )
 		self.setWindowNewMouseTool( display_line.getNewMouseTool, self.repository.displayLine )
 		self.setWindowNewMouseTool( view_move.getNewMouseTool, self.repository.viewMove )
+		self.repository.numericPointer.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
 		self.repository.widthOfExtrusionThread.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
-		self.repository.widthOfSelectionThread.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
-		self.repository.widthOfTravelThread.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
 		self.addMouseToolsBind()
 		self.createRulers()
 
@@ -403,7 +402,7 @@ class SkeinWindow( tableau.TableauWindow ):
 		"Add a ruling to the horizontal ruler."
 		xPixel = self.skein.getScreenCoordinates( complex( xMillimeters, 0.0 ) ).real
 		self.createVerticalLine( 0.0, xPixel )
-		self.horizontalRulerCanvas.create_text( xPixel + 2, 0, anchor = settings.Tkinter.NW, text = self.getRoundedRulingText( xMillimeters ) )
+		self.horizontalRulerCanvas.create_text( xPixel + 2, 0, anchor = settings.Tkinter.NW, text = self.getRoundedRulingText( 1, xMillimeters ) )
 		cumulativeDistance = xMillimeters
 		self.createVerticalLine( self.rulingExtentTiny, self.skein.getScreenCoordinates( complex( xMillimeters + self.separationWidthMillimetersTenth, 0.0 ) ).real )
 		for subRulingIndex in xrange( 4 ):
@@ -417,7 +416,7 @@ class SkeinWindow( tableau.TableauWindow ):
 		yPixel = self.skein.getScreenCoordinates( complex( 0.0, yMillimeters ) ).imag
 		self.createHorizontalLine( 0.0, yPixel )
 		yPixel += 2
-		roundedRulingText = self.getRoundedRulingText( yMillimeters )
+		roundedRulingText = self.getRoundedRulingText( 1, yMillimeters )
 		effectiveRulingTextLength = len( roundedRulingText )
 		if roundedRulingText.find( '.' ) != - 1:
 			effectiveRulingTextLength -= 1
@@ -442,20 +441,15 @@ class SkeinWindow( tableau.TableauWindow ):
 
 	def createRulers( self ):
 		"Create the rulers.."
-		rankZeroSeperation = self.getRulingSeparationWidthPixels( 0 )
-		zoom = self.rulingTargetSeparation / rankZeroSeperation
-		rank = euclidean.getRank( zoom )
-		rankTop = rank + 1
-		seperationBottom = self.getRulingSeparationWidthPixels( rank )
-		seperationTop = self.getRulingSeparationWidthPixels( rankTop )
-		bottomDifference = getGeometricDifference( self.rulingTargetSeparation, seperationBottom )
-		topDifference = getGeometricDifference( self.rulingTargetSeparation, seperationTop )
-		if topDifference < bottomDifference:
-			rank = rankTop
-		self.rulingSeparationWidthMillimeters = euclidean.getIncrementFromRank( rank )
+		self.rulingExtentShort = 0.382 * self.rulingExtent
+		self.rulingExtentTiny = 0.764 * self.rulingExtent
+		self.rulingExtentPointer = 0.5 * ( self.rulingExtentShort + self.rulingExtentTiny )
+		self.rulingPointerRadius = self.rulingExtent - self.rulingExtentPointer
+		self.textBoxHeight = int( 0.8 * self.rulingExtent )
+		self.textBoxWidth = int( 2.5 * self.rulingExtent )
 		self.separationWidthMillimetersFifth = 0.2 * self.rulingSeparationWidthMillimeters
 		self.separationWidthMillimetersTenth = 0.1 * self.rulingSeparationWidthMillimeters
-		rulingSeparationWidthPixels = self.getRulingSeparationWidthPixels( rank )
+		rulingSeparationWidthPixels = self.getRulingSeparationWidthPixels( self.rank )
 		marginOverScale = self.skein.margin / self.skein.scale
 		cornerHighMargin = self.skein.cornerHighComplex + marginOverScale
 		cornerLowMargin = self.skein.cornerLowComplex - marginOverScale
@@ -505,28 +499,28 @@ class SkeinWindow( tableau.TableauWindow ):
 		"Get the drawn selected colored line."
 		return self.getDrawnColoredLine( coloredLine, 'mouse_item', self.repository.widthOfSelectionThread.value )
 
-	def getRoundedRulingText( self, number ):
-		"Get the rounded ruling text."
-		rulingText = euclidean.getRoundedToDecimalPlacesString( 1 - math.floor( math.log10( self.rulingSeparationWidthMillimeters ) ), number )
-		if self.rulingSeparationWidthMillimeters < .99:
-			return rulingText
-		if rulingText[ - len( '.0' ) : ] == '.0':
-			return rulingText[ : - len( '.0' ) ]
-		return rulingText
-
-	def getRulingSeparationWidthPixels( self, rank ):
-		"Get the separation width in pixels."
-		return euclidean.getIncrementFromRank( rank ) * self.skein.scale
-
 	def motion( self, event ):
 		"The mouse moved."
 		self.mouseTool.motion( event )
 		x = self.canvas.canvasx( event.x )
-		y = self.canvas.canvasx( event.y )
+		y = self.canvas.canvasy( event.y )
 		self.horizontalRulerCanvas.delete( 'pointer' )
 		self.horizontalRulerCanvas.create_polygon( x - self.rulingPointerRadius, self.rulingExtentPointer, x + self.rulingPointerRadius, self.rulingExtentPointer, x, self.rulingExtent, tag = 'pointer' )
 		self.verticalRulerCanvas.delete( 'pointer' )
 		self.verticalRulerCanvas.create_polygon( self.rulingExtentPointer, y - self.rulingPointerRadius, self.rulingExtentPointer, y + self.rulingPointerRadius, self.rulingExtent, y, tag = 'pointer' )
+		self.canvas.delete( 'pointer' )
+		if not self.repository.numericPointer.value:
+			return
+		motionCoordinate = complex( x, y )
+		modelCoordinates = self.skein.getModelCoordinates( motionCoordinate )
+		roundedXText = self.getRoundedRulingText( 3, modelCoordinates.real )
+		yStart = self.canvas.canvasy( 0 )
+		self.canvas.create_rectangle( x - 2, yStart, x + self.textBoxWidth, yStart + self.textBoxHeight + 5, fill = self.canvas[ 'background' ], tag = 'pointer' )
+		self.canvas.create_text( x, yStart + 5, anchor = settings.Tkinter.NW, tag = 'pointer', text = roundedXText )
+		roundedYText = self.getRoundedRulingText( 3, modelCoordinates.imag )
+		xStart = self.canvas.canvasx( 0 )
+		self.canvas.create_rectangle( xStart, y - 2, xStart + self.textBoxWidth + 5, y + self.textBoxHeight, fill = self.canvas[ 'background' ], tag = 'pointer' )
+		self.canvas.create_text( xStart + 5, y, anchor = settings.Tkinter.NW, tag = 'pointer', text = roundedYText )
 
 	def relayXview( self, *args ):
 		"Relay xview changes."
@@ -543,12 +537,12 @@ class SkeinWindow( tableau.TableauWindow ):
 		if len( self.skeinPanes ) < 1:
 			return
 		self.limitIndexSetArrowMouseDeleteCanvas()
-		skeinPane = self.skeinPanes[ self.repository.layer.value ]
-		for coloredLine in skeinPane:
-			if coloredLine.isExtrusionThread:
-				self.getDrawnColoredLineIfThick( coloredLine, self.repository.widthOfExtrusionThread.value )
-			else:
-				self.getDrawnColoredLineIfThick( coloredLine, self.repository.widthOfTravelThread.value )
+		for coloredLines in self.getUpdateSkeinPanes():
+			for coloredLine in coloredLines:
+				if coloredLine.isExtrusionThread:
+					self.getDrawnColoredLineIfThick( coloredLine, self.repository.widthOfExtrusionThread.value )
+				else:
+					self.getDrawnColoredLineIfThick( coloredLine, self.repository.widthOfTravelThread.value )
 		self.setDisplayLayerIndex()
 
 

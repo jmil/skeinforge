@@ -1,39 +1,17 @@
 #! /usr/bin/env python
 """
 This page is in the table of contents.
-Widen will widen the outside outlines by half the perimeter width, and outset the inside outlines by the same amount.
+Widen will widen the outside perimeters away from the inside perimeters, so that the outsides will be at least two perimeter widths away from the insides and therefore the outside filaments will not overlap the inside filaments.
 
-==Settings==
-===Add Custom Code for Temperature Reading===
-Default is on.
+For example, if a mug has a very thin wall, widen would widen the outside of the mug so that the wall of the mug would be two perimeter widths wide, and the outside wall filament would not overlap the inside filament.
 
-When selected, the M105 custom code for temperature reading will be added at the beginning of the file.
+For another example, if the outside of the object runs right next to a hole, widen would widen the wall around the hole so that the wall would bulge out around the hole, and the outside filament would not overlap the hole filament.
 
-===Bridge Width Multiplier===
-Default is one.
+The widen manual page is at:
+http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Widen
 
-Defines the ratio of the extrusion width of a bridge layer over the extrusion width of the typical non bridge layers.
-
-===Loop Order Choice===
-When overlap is to be removed, for each loop, the overlap is checked against the list of loops already extruded.  If the latest loop overlaps an already extruded loop, the overlap is removed from the latest loop.  The loops are ordered according to their areas.
-
-The default loop order choice is 'Ascending Area'.
-
-====Ascending Area====
-When selected, the loops will be ordered in ascending area.  With thin walled parts, if overlap is being removed the outside of the container will not be extruded.  Holes will be the correct size.
-
-====Descending Area====
-When selected, the loops will be ordered in descending area.  With thin walled parts, if overlap is being removed the inside of the container will not be extruded.  Holes will be missing the interior wall so they will be slightly wider than model size.
-
-===Overlap Removal Width over Perimeter Width===
-Default is 0.6.
-
-Defines the ratio of the overlap removal width over the perimeter width.  Any part of the extrusion that comes within the overlap removal width of another is removed.  This is to prevent the extruder from depositing two extrusions right beside each other.  If the 'Overlap Removal Width over Perimeter Width' is less than 0.2, the overlap will not be removed.
-
-===Turn Extruder Heater Off at Shut Down===
-Default is on.
-
-When selected, the M104 S0 gcode line will be added to the end of the file to turn the extruder heater off by setting the extruder heater temperature to 0.
+==Operation==
+The default 'Activate Widen' checkbox is off.  When it is on, widen will work, when it is off, widen will not be called.
 
 ==Examples==
 The following examples widen the file Screw Holder Bottom.stl.  The examples are run in a terminal in the folder which contains Screw Holder Bottom.stl and widen.py.
@@ -135,19 +113,19 @@ def getCraftedTextFromText( gcodeText, repository = None ):
 		return gcodeText
 	return WidenSkein().getCraftedGcode( gcodeText, repository )
 
-def getIntersectingWithinLoops( loop, loopList ):
+def getIntersectingWithinLoops( loop, loopList, outsetLoop ):
 	"Get the loops which are intersecting or which it is within."
 	intersectingWithinLoops = []
 	for otherLoop in loopList:
-		if getIsIntersectingWithinLoop( loop, otherLoop ):
+		if getIsIntersectingWithinLoop( loop, otherLoop, outsetLoop ):
 			intersectingWithinLoops.append( otherLoop )
 	return intersectingWithinLoops
 
-def getIsIntersectingWithinLoop( loop, otherLoop ):
+def getIsIntersectingWithinLoop( loop, otherLoop, outsetLoop ):
 	"Determine if the loop is intersecting or is within the other loop."
 	if euclidean.isLoopIntersectingLoop( loop, otherLoop ):
 		return True
-	return euclidean.isPathInsideLoop( otherLoop, loop )
+	return euclidean.isPathInsideLoop( otherLoop, loop ) != euclidean.isPathInsideLoop( otherLoop, outsetLoop )
 
 def getNewRepository():
 	"Get the repository constructor."
@@ -175,9 +153,9 @@ def getSegmentsFromPoints( loops, pointBegin, pointEnd ):
 			endpoint.point *= normalizedSegment
 	return segments
 
-def getWidenedLoop( loop, loopList, radius, tinyRadius ):
+def getWidenedLoop( loop, loopList, outsetLoop, radius, tinyRadius ):
 	"Get the widened loop."
-	intersectingWithinLoops = getIntersectingWithinLoops( loop, loopList )
+	intersectingWithinLoops = getIntersectingWithinLoops( loop, loopList, outsetLoop )
 	if len( intersectingWithinLoops ) < 1:
 		return loop
 	widdershinsLoops = [ loop ]
@@ -217,7 +195,8 @@ class WidenRepository:
 		"Set the default settings, execute title & settings fileName."
 		profile.addListsToCraftTypeRepository( 'skeinforge_tools.craft_plugins.widen.html', self )
 		self.fileNameInput = settings.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File for Widen', self, '' )
-		self.activateWiden = settings.BooleanSetting().getFromValue( 'Activate Widen:', self, False )
+		self.openWikiManualHelpPage = settings.HelpPage().getOpenFromAbsolute( 'http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Widen' )
+		self.activateWiden = settings.BooleanSetting().getFromValue( 'Activate Widen:', self, True )
 		self.executeTitle = 'Widen'
 
 	def execute( self ):
@@ -240,17 +219,25 @@ class WidenSkein:
 		loops = triangle_mesh.getLoopsInOrderOfArea( triangle_mesh.compareAreaAscending, rotatedBoundaryLayer.loops )
 		widdershinsLoops = []
 		clockwiseInsetLoops = []
-		for loop in loops:
+		for loopIndex in xrange( len( loops ) ):
+			loop = loops[ loopIndex ]
 			if euclidean.isWiddershins( loop ):
-				widdershinsLoops.append( loop )
+				otherLoops = loops[ : loopIndex ] + loops[ loopIndex + 1 : ]
+				leftPoint = euclidean.getLeftPoint( loop )
+				if euclidean.isPointInsideLoops( otherLoops, leftPoint ):
+					self.distanceFeedRate.addGcodeFromLoop( loop, rotatedBoundaryLayer.z )
+				else:
+					widdershinsLoops.append( loop )
 			else:
 				clockwiseInsetLoops += intercircle.getInsetLoopsFromLoop( self.doublePerimeterWidth, loop )
 				self.distanceFeedRate.addGcodeFromLoop( loop, rotatedBoundaryLayer.z )
 		for widdershinsLoop in widdershinsLoops:
-			self.distanceFeedRate.addGcodeFromLoop( getWidenedLoop( widdershinsLoop, clockwiseInsetLoops, self.perimeterWidth, self.tinyRadius ), rotatedBoundaryLayer.z )
+			outsetLoop = intercircle.getLargestInsetLoopFromLoop( widdershinsLoop, - self.doublePerimeterWidth )
+			widenedLoop = getWidenedLoop( widdershinsLoop, clockwiseInsetLoops, outsetLoop, self.perimeterWidth, self.tinyRadius )
+			self.distanceFeedRate.addGcodeFromLoop( widenedLoop, rotatedBoundaryLayer.z )
 
 	def getCraftedGcode( self, gcodeText, repository ):
-		"Parse gcode text and store the bevel gcode."
+		"Parse gcode text and store the widen gcode."
 		self.repository = repository
 		self.lines = gcodec.getTextLines( gcodeText )
 		self.parseInitialization()

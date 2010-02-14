@@ -11,9 +11,7 @@ The default 'Activate Behold' checkbox is on.  When it is on, the functions desc
 The viewer is simple, the viewpoint can only be moved in a sphere around the center of the model by changing the viewpoint latitude and longitude.  Different regions of the model can be hidden by setting the width of the thread to zero.  The alternating bands act as contour bands and their brightness and width can be changed.  The layers will be displayed starting at the "Layers From" index up until the "Layers To" index.  All of the settings can be set in the initial "Behold Settings" window and some can be changed after the viewer is running in the "Behold Dynamic Settings" window.  In the viewer, dragging the mouse will change the viewpoint.
 
 ==Settings==
-
 ===Animation===
-
 ====Animation Line Quickening====
 Default is one.
 
@@ -24,8 +22,12 @@ Default is two layers per second.
 
 The rate, in layers per second, at which the layer changes when the soar or dive button is pressed..
 
-===Banding===
+===Axis Rulings===
+Default is on.
 
+When selected, rulings will be drawn on the axis lines.
+
+===Banding===
 ====Band Height====
 Default is five layers.
 
@@ -69,21 +71,15 @@ Default is off.
 When selected, the display will include the travel when the extruder is off, which means it will include the nozzle wipe path if any.
 
 ===Layers===
-
 ====Layer====
-Default is a huge number, which will be limited to the highest index layer.
+Default is zero.
 
 On the display window, the Up button increases the 'Layer' by one, and the Down button decreases the layer by one.  When the layer displayed in the layer spin box is changed then <Return> is hit, the layer shown will be set to the spin box, to a mimimum of zero and to a maximum of the highest index layer.The Soar button increases the layer at the 'Animation Slide Show Rate', and the Dive (double left arrow button beside the layer field) button decreases the layer at the slide show rate.
 
-====Layers From====
-Default is zero.
+====Layer Extra Span====
+Default is a huge number.
 
-The layers displayed will start from the minimum of the "Layers From" setting and the layer.
-
-====Layers To====
-Default is zero.
-
-The layers displayed will go until the maximum of the 'Layers To' setting and the layer.  If the layer to setting is a huge number like the 912345678, the display will go to the top of the model.
+The viewer will draw the layers in the range including the 'Layer' index and the 'Layer' index plus the 'Layer Extra Span'.  If the 'Layer Extra Span' is negative, the layers viewed will start at the 'Layer' index, plus the 'Layer Extra Span', and go up to and include the 'Layer' index.  If the 'Layer Extra Span' is zero, only the 'Layer' index layer will be displayed.  If the 'Layer Extra Span' is positive, the layers viewed will start at the 'Layer' index, and go up to and include the 'Layer' index plus the 'Layer Extra Span'.
 
 ===Line===
 Default is zero.
@@ -122,7 +118,6 @@ The scale setting is the scale of the image in pixels per millimeter, the higher
 The zoom in mouse tool will zoom in the display at the point where the mouse was clicked, increasing the scale by a factor of two.  The zoom out tool will zoom out the display at the point where the mouse was clicked, decreasing the scale by a factor of two.
 
 ===Screen Inset===
-
 ====Screen Horizontal Inset====
 Default is one hundred.
 
@@ -131,7 +126,7 @@ The "Screen Horizontal Inset" determines how much the canvas will be inset in th
 ====Screen Vertical Inset====
 Default is two hundred.
 
-The "Screen Vertical Inset" determines how much the canvas will be inset in the vertical direction from the edge of screen.
+The "Screen Vertical Inset" determines how much the canvas will be inset in the vertical direction from the edge of screen, the higher the number the more it will be inset and the smaller it will be..
 
 ===Viewpoint Latitude===
 Default is fifteen degrees.
@@ -145,6 +140,16 @@ The "Viewpoint Longitude" is the longitude of the viewpoint.
 
 ===Width===
 The width of each type of thread and of each axis can be changed.  If the width is set to zero, the thread will not be visible.
+
+====Width of Axis Negative Side====
+Default is two.
+
+Defines the width of the negative side of the axis.
+
+====Width of Axis Positive Side====
+Default is six.
+
+Defines the width of the positive side of the axis.
 
 ====Width of Infill Thread====
 Default is one.
@@ -191,28 +196,11 @@ Default is zero.
 
 The "Width of Travel Thread" sets the width of the grey extruder off travel threads.
 
-====Width of X Axis====
-Default is five.
-
-The "Width of X Axis" setting sets the width of the dark orange X Axis.
-
-====Width of Y Axis====
-Default is five.
-
-The "Width of Y Axis" sets the width of the gold Y Axis.
-
-====Width of Z Axis====
-Default is five.
-
-The "Width of Z Axis" sets the width of the sky blue Z Axis.
-
 ==Icons==
-
 The dive, soar and zoom icons are from Mark James' soarSilk icon set 1.3 at:
 http://www.famfamfam.com/lab/icons/silk/
 
 ==Gcodes==
-
 An explanation of the gcodes is at:
 http://reprap.org/bin/view/Main/Arduino_GCode_Interpreter
 
@@ -223,7 +211,6 @@ A gode example is at:
 http://forums.reprap.org/file.php?12,file=565
 
 ==Examples==
-
 Below are examples of behold being used.  These examples are run in a terminal in the folder which contains Screw Holder_penultimate.gcode and behold.py.
 
 
@@ -319,9 +306,10 @@ class BeholdRepository( tableau.TableauRepository ):
 		"Set the default settings, execute title & settings fileName."
 		settings.addListsToRepository( 'skeinforge_tools.analyze_plugins.behold.html', '', self )
 		self.fileNameInput = settings.FileNameInput().getFromFileName( [ ( 'Gcode text files', '*.gcode' ) ], 'Open File to Behold', self, '' )
-		self.openWikiManualHelpPage = settings.HelpPage().getOpenFromAbsolute( 'http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Behold' )
+#		self.openWikiManualHelpPage = settings.HelpPage().getOpenFromAbsolute( 'http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Behold' )
 		self.activateBehold = settings.BooleanSetting().getFromValue( 'Activate Behold', self, True )
 		self.addAnimation()
+		self.axisRulings = settings.BooleanSetting().getFromValue( 'Axis Rulings', self, True )
 		self.bandHeight = settings.IntSpinUpdate().getFromValue( 0, 'Band Height (layers):', self, 10, 5 )
 		self.bottomBandBrightness = settings.FloatSpinUpdate().getFromValue( 0.0, 'Bottom Band Brightness (ratio):', self, 1.0, 0.7 )
 		self.bottomLayerBrightness = settings.FloatSpinUpdate().getFromValue( 0.0, 'Bottom Layer Brightness (ratio):', self, 1.0, 1.0 )
@@ -330,9 +318,8 @@ class BeholdRepository( tableau.TableauRepository ):
 		self.fromTheTop = settings.MenuRadio().getFromMenuButtonDisplay( self.brightBandStart, 'From the Top', self, True )
 		self.drawArrows = settings.BooleanSetting().getFromValue( 'Draw Arrows', self, False )
 		self.goAroundExtruderOffTravel = settings.BooleanSetting().getFromValue( 'Go Around Extruder Off Travel', self, False )
-		self.layer = settings.IntSpinNotOnMenu().getSingleIncrementFromValue( 0, 'Layer (index):', self, 912345678, 912345678 )
-		self.layersFrom = settings.IntSpinUpdate().getSingleIncrementFromValue( 0, 'Layers From (index):', self, 912345678, 0 )
-		self.layersTo = settings.IntSpinUpdate().getSingleIncrementFromValue( 0, 'Layers To (index):', self, 912345678, 0 )
+		self.layer = settings.IntSpinNotOnMenu().getSingleIncrementFromValue( 0, 'Layer (index):', self, 912345678, 0 )
+		self.layerExtraSpan = settings.IntSpinUpdate().getSingleIncrementFromValue( - 912345678, 'Layer Extra Span (integer):', self, 912345678, 912345678 )
 		self.line = settings.IntSpinNotOnMenu().getSingleIncrementFromValue( 0, 'Line (index):', self, 912345678, 0 )
 		self.mouseMode = settings.MenuButtonDisplay().getFromName( 'Mouse Mode:', self )
 		self.displayLine = settings.MenuRadio().getFromMenuButtonDisplay( self.mouseMode, 'Display Line', self, True )
@@ -343,6 +330,8 @@ class BeholdRepository( tableau.TableauRepository ):
 		self.addScaleScreenSlide()
 		self.viewpointLatitude = settings.FloatSpin().getFromValue( 0.0, 'Viewpoint Latitude (degrees):', self, 180.0, 15.0 )
 		self.viewpointLongitude = settings.FloatSpin().getFromValue( 0.0, 'Viewpoint Longitude (degrees):', self, 360.0, 210.0 )
+		self.widthOfAxisNegativeSide = settings.IntSpinUpdate().getFromValue( 0, 'Width of Axis Negative Side (pixels):', self, 10, 2 )
+		self.widthOfAxisPositiveSide = settings.IntSpinUpdate().getFromValue( 0, 'Width of Axis Positive Side (pixels):', self, 10, 6 )
 		self.widthOfFillBottomThread = settings.IntSpinUpdate().getFromValue( 0, 'Width of Fill Bottom Thread (pixels):', self, 10, 2 )
 		self.widthOfFillTopThread = settings.IntSpinUpdate().getFromValue( 0, 'Width of Fill Top Thread (pixels):', self, 10, 2 )
 		self.widthOfInfillThread = settings.IntSpinUpdate().getFromValue( 0, 'Width of Infill Thread (pixels):', self, 10, 1 )
@@ -352,9 +341,6 @@ class BeholdRepository( tableau.TableauRepository ):
 		self.widthOfRaftThread = settings.IntSpinUpdate().getFromValue( 0, 'Width of Raft Thread (pixels):', self, 10, 1 )
 		self.widthOfSelectionThread = settings.IntSpinUpdate().getFromValue( 0, 'Width of Selection Thread (pixels):', self, 10, 6 )
 		self.widthOfTravelThread = settings.IntSpinUpdate().getFromValue( 0, 'Width of Travel Thread (pixels):', self, 10, 0 )
-		self.widthOfXAxis = settings.IntSpinUpdate().getFromValue( 0, 'Width of X Axis (pixels):', self, 10, 5 )
-		self.widthOfYAxis = settings.IntSpinUpdate().getFromValue( 0, 'Width of Y Axis (pixels):', self, 10, 5 )
-		self.widthOfZAxis = settings.IntSpinUpdate().getFromValue( 0, 'Width of Z Axis (pixels):', self, 10, 5 )
 		self.executeTitle = 'Behold'
 
 	def execute( self ):
@@ -626,6 +612,13 @@ class SkeinPane:
 		self.travelLines = []
 
 
+class Ruling:
+	def __init__( self, modelDistance, roundedRulingText ):
+		"Initialize the ruling."
+		self.modelDistance = modelDistance
+		self.roundedRulingText = roundedRulingText
+
+
 class SkeinWindow( tableau.TableauWindow ):
 	def __init__( self, repository, skein ):
 		"Initialize the skein window."
@@ -634,19 +627,23 @@ class SkeinWindow( tableau.TableauWindow ):
 		self.center = 0.5 * self.screenSize
 		self.motionStippleName = 'gray75'
 		halfCenter = 0.5 * self.center.real
-		roundedHalfCenter = euclidean.getThreeSignificantFigures( halfCenter / skein.scale )
-		self.xAxisLine = tableau.ColoredLine( Vector3(), 'darkorange', None, Vector3( halfCenter ), 'X Axis: Origin -> %s,0,0' % roundedHalfCenter )
-		self.yAxisLine = tableau.ColoredLine( Vector3(), 'gold', None, Vector3( 0.0, halfCenter ), 'Y Axis: Origin -> 0,%s,0' % roundedHalfCenter )
-		self.zAxisLine = tableau.ColoredLine( Vector3(), 'skyblue', None, Vector3( 0.0, 0.0, halfCenter ), 'Z Axis: Origin -> 0,0,%s' % roundedHalfCenter )
+		negativeHalfCenter = - halfCenter
+		self.halfCenterModel = halfCenter / skein.scale
+		negativeHalfCenterModel = - self.halfCenterModel
+		roundedHalfCenter = euclidean.getThreeSignificantFigures( self.halfCenterModel )
+		roundedNegativeHalfCenter = euclidean.getThreeSignificantFigures( negativeHalfCenterModel )
+		self.negativeAxisLineX = tableau.ColoredLine( Vector3(), 'darkorange', None, Vector3( negativeHalfCenter ), 'X Negative Axis: Origin -> %s,0,0' % roundedNegativeHalfCenter )
+		self.negativeAxisLineY = tableau.ColoredLine( Vector3(), 'gold', None, Vector3( 0.0, negativeHalfCenter ), 'Y Negative Axis: Origin -> 0,%s,0' % roundedNegativeHalfCenter )
+		self.negativeAxisLineZ = tableau.ColoredLine( Vector3(), 'skyblue', None, Vector3( 0.0, 0.0, negativeHalfCenter ), 'Z Negative Axis: Origin -> 0,0,%s' % roundedNegativeHalfCenter )
+		self.positiveAxisLineX = tableau.ColoredLine( Vector3(), 'darkorange', None, Vector3( halfCenter ), 'X Positive Axis: Origin -> %s,0,0' % roundedHalfCenter )
+		self.positiveAxisLineY = tableau.ColoredLine( Vector3(), 'gold', None, Vector3( 0.0, halfCenter ), 'Y Positive Axis: Origin -> 0,%s,0' % roundedHalfCenter )
+		self.positiveAxisLineZ = tableau.ColoredLine( Vector3(), 'skyblue', None, Vector3( 0.0, 0.0, halfCenter ), 'Z Positive Axis: Origin -> 0,0,%s' % roundedHalfCenter )
+		self.repository.axisRulings.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
 		self.repository.bandHeight.setUpdateFunction( self.setWindowToDisplaySavePhoenixUpdate )
 		self.repository.bottomBandBrightness.setUpdateFunction( self.setWindowToDisplaySavePhoenixUpdate )
 		self.repository.bottomLayerBrightness.setUpdateFunction( self.setWindowToDisplaySavePhoenixUpdate )
-		self.repository.drawArrows.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
 		self.repository.fromTheBottom.setUpdateFunction( self.setWindowToDisplaySavePhoenixUpdate )
 		self.repository.fromTheTop.setUpdateFunction( self.setWindowToDisplaySavePhoenixUpdate )
-		self.repository.goAroundExtruderOffTravel.setUpdateFunction( self.setWindowToDisplaySavePhoenixUpdate )
-		self.repository.layersFrom.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
-		self.repository.layersTo.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
 		self.setWindowNewMouseTool( display_line.getNewMouseTool, self.repository.displayLine )
 		self.setWindowNewMouseTool( view_move.getNewMouseTool, self.repository.viewMove )
 		self.setWindowNewMouseTool( view_rotate.getNewMouseTool, self.repository.viewRotate )
@@ -654,6 +651,8 @@ class SkeinWindow( tableau.TableauWindow ):
 		self.repository.numberOfFillTopLayers.setUpdateFunction( self.setWindowToDisplaySavePhoenixUpdate )
 		self.repository.viewpointLatitude.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
 		self.repository.viewpointLongitude.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
+		self.repository.widthOfAxisNegativeSide.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
+		self.repository.widthOfAxisPositiveSide.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
 		self.repository.widthOfFillBottomThread.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
 		self.repository.widthOfFillTopThread.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
 		self.repository.widthOfInfillThread.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
@@ -661,12 +660,47 @@ class SkeinWindow( tableau.TableauWindow ):
 		self.repository.widthOfPerimeterInsideThread.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
 		self.repository.widthOfPerimeterOutsideThread.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
 		self.repository.widthOfRaftThread.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
-		self.repository.widthOfSelectionThread.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
-		self.repository.widthOfTravelThread.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
-		self.repository.widthOfXAxis.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
-		self.repository.widthOfYAxis.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
-		self.repository.widthOfZAxis.setUpdateFunction( self.setWindowToDisplaySaveUpdate )
 		self.addMouseToolsBind()
+		self.negativeRulings = []
+		self.positiveRulings = []
+		for rulingIndex in xrange( 1, int( math.ceil( self.halfCenterModel / self.rulingSeparationWidthMillimeters ) ) ):
+			modelDistance = rulingIndex * self.rulingSeparationWidthMillimeters
+			self.negativeRulings.append( Ruling( modelDistance, self.getRoundedRulingText( 1, - modelDistance ) ) )
+			self.positiveRulings.append( Ruling( modelDistance, self.getRoundedRulingText( 1, modelDistance ) ) )
+		self.rulingExtentHalf = 0.5 * self.rulingExtent
+
+	def drawRuling( self, relativeRulingEnd, ruling, tags, viewBegin, viewEnd, viewVectors ):
+		"Draw ruling."
+		alongWay = ruling.modelDistance / self.halfCenterModel
+		oneMinusAlongWay = 1.0 - alongWay
+		alongScreen = alongWay * viewEnd + oneMinusAlongWay * viewBegin
+		alongScreenEnd = alongScreen + relativeRulingEnd
+		self.canvas.create_line(
+			alongScreen.real,
+			alongScreen.imag,
+			alongScreenEnd.real,
+			alongScreenEnd.imag,
+			fill = 'black',
+			tags = tags,
+			width = 2 )
+		self.canvas.create_text( int( alongScreenEnd.real ) + 3, alongScreenEnd.imag, anchor = settings.Tkinter.W, text = ruling.roundedRulingText )
+
+	def drawRulings( self, axisLine, rulings, viewVectors ):
+		"Draw rulings for the axis line."
+		if not self.repository.axisRulings.value:
+			return
+		viewBegin = self.getViewComplex( axisLine.begin, viewVectors )
+		viewEnd = self.getViewComplex( axisLine.end, viewVectors )
+		viewSegment = viewEnd - viewBegin
+		viewSegmentLength = abs( viewSegment )
+		if viewSegmentLength < self.rulingExtent:
+			return
+		normalizedViewSegment = viewSegment / viewSegmentLength
+		relativeRulingEnd = complex( - normalizedViewSegment.imag, normalizedViewSegment.real )
+		if normalizedViewSegment.imag > 0.0:
+			relativeRulingEnd = complex( normalizedViewSegment.imag, - normalizedViewSegment.real )
+		for ruling in rulings:
+			self.drawRuling( relativeRulingEnd * self.rulingExtentHalf, ruling, axisLine.tagString, viewBegin, viewEnd, viewVectors )
 
 	def drawSkeinPane( self, skeinPane, viewVectors ):
 		"Draw colored lines."
@@ -681,15 +715,19 @@ class SkeinWindow( tableau.TableauWindow ):
 
 	def drawXYAxisLines( self, viewVectors ):
 		"Draw the x and y axis lines."
-		if self.repository.widthOfXAxis.value > 0:
-			self.getDrawnColoredLine( 'last', self.xAxisLine, self.xAxisLine.tagString, viewVectors, self.repository.widthOfXAxis.value )
-		if self.repository.widthOfYAxis.value > 0:
-			self.getDrawnColoredLine( 'last', self.yAxisLine, self.yAxisLine.tagString, viewVectors, self.repository.widthOfYAxis.value )
+		if self.repository.widthOfAxisNegativeSide.value > 0:
+			self.getDrawnColoredLineWithoutArrow( self.negativeAxisLineX, self.negativeAxisLineX.tagString, viewVectors, self.repository.widthOfAxisNegativeSide.value )
+			self.getDrawnColoredLineWithoutArrow( self.negativeAxisLineY, self.negativeAxisLineY.tagString, viewVectors, self.repository.widthOfAxisNegativeSide.value )
+		if self.repository.widthOfAxisPositiveSide.value > 0:
+			self.getDrawnColoredLine( 'last', self.positiveAxisLineX, self.positiveAxisLineX.tagString, viewVectors, self.repository.widthOfAxisPositiveSide.value )
+			self.getDrawnColoredLine( 'last', self.positiveAxisLineY, self.positiveAxisLineY.tagString, viewVectors, self.repository.widthOfAxisPositiveSide.value )
 
 	def drawZAxisLine( self, viewVectors ):
 		"Draw the z axis line."
-		if self.repository.widthOfZAxis.value > 0:
-			self.getDrawnColoredLine( 'last', self.zAxisLine, self.zAxisLine.tagString, viewVectors, self.repository.widthOfZAxis.value )
+		if self.repository.widthOfAxisNegativeSide.value > 0:
+			self.getDrawnColoredLineWithoutArrow( self.negativeAxisLineZ, self.negativeAxisLineZ.tagString, viewVectors, self.repository.widthOfAxisNegativeSide.value )
+		if self.repository.widthOfAxisPositiveSide.value > 0:
+			self.getDrawnColoredLine( 'last', self.positiveAxisLineZ, self.positiveAxisLineZ.tagString, viewVectors, self.repository.widthOfAxisPositiveSide.value )
 
 	def getCentered( self, coordinate ):
 		"Get the centered coordinate."
@@ -757,16 +795,23 @@ class SkeinWindow( tableau.TableauWindow ):
 			drawnColoredLines.append( self.getDrawnColoredLine( self.arrowType, coloredLine, coloredLine.tagString, viewVectors, width ) )
 		return drawnColoredLines
 
+	def getDrawnColoredLineWithoutArrow( self, coloredLine, tags, viewVectors, width ):
+		"Draw colored line without an arrow."
+		viewBegin = self.getViewComplex( coloredLine.begin, viewVectors )
+		viewEnd = self.getViewComplex( coloredLine.end, viewVectors )
+		return self.canvas.create_line(
+			viewBegin.real,
+			viewBegin.imag,
+			viewEnd.real,
+			viewEnd.imag,
+			fill = coloredLine.colorName,
+			tags = tags,
+			width = width )
+
 	def getDrawnSelectedColoredLine( self, coloredLine ):
 		"Get the drawn selected colored line."
 		viewVectors = view_rotate.ViewVectors( self.repository.viewpointLatitude.value, self.repository.viewpointLongitude.value )
 		return self.getDrawnColoredLine( self.arrowType, coloredLine, 'mouse_item', viewVectors, self.repository.widthOfSelectionThread.value )
-
-	def getLayersAround( self, layers ):
-		"Get the layers wrappers around the number of skein panes."
-		if layers < 0:
-			return max( 0, len( self.skeinPanes ) + layers )
-		return min( layers, len( self.skeinPanes ) - 1 )
 
 	def getScreenComplex( self, pointComplex ):
 		"Get the point in screen perspective."
@@ -791,9 +836,7 @@ class SkeinWindow( tableau.TableauWindow ):
 		self.repository.viewpointLatitude.value = view_rotate.getBoundedLatitude( self.repository.viewpointLatitude.value )
 		self.repository.viewpointLongitude.value = round( self.repository.viewpointLongitude.value, 1 )
 		viewVectors = view_rotate.ViewVectors( self.repository.viewpointLatitude.value, self.repository.viewpointLongitude.value )
-		indexBegin = min( self.repository.layer.value, self.getLayersAround( self.repository.layersFrom.value ) )
-		indexEnd = max( self.repository.layer.value + 1, self.getLayersAround( self.repository.layersTo.value ) + 1 )
-		skeinPanesCopy = self.skeinPanes[ indexBegin : indexEnd ]
+		skeinPanesCopy = self.getUpdateSkeinPanes()[ : ]
 		skeinPanesCopy.sort( compareLayerSequence )
 		if viewVectors.viewpointLatitudeRatio.real > 0.0:
 			self.drawXYAxisLines( viewVectors )
@@ -806,6 +849,14 @@ class SkeinWindow( tableau.TableauWindow ):
 			self.drawZAxisLine( viewVectors )
 		else:
 			self.drawXYAxisLines( viewVectors )
+		if self.repository.widthOfAxisNegativeSide.value > 0:
+			self.drawRulings( self.negativeAxisLineX, self.negativeRulings, viewVectors )
+			self.drawRulings( self.negativeAxisLineY, self.negativeRulings, viewVectors )
+			self.drawRulings( self.negativeAxisLineZ, self.negativeRulings, viewVectors )
+		if self.repository.widthOfAxisPositiveSide.value > 0:
+			self.drawRulings( self.positiveAxisLineX, self.positiveRulings, viewVectors )
+			self.drawRulings( self.positiveAxisLineY, self.positiveRulings, viewVectors )
+			self.drawRulings( self.positiveAxisLineZ, self.positiveRulings, viewVectors )
 		self.setDisplayLayerIndex()
 
 

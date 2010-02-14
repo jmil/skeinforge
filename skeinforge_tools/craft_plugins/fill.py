@@ -192,56 +192,50 @@ __date__ = "$Date: 2008/28/04 $"
 __license__ = "GPL 3.0"
 
 
-# cache edges on first carving and slice from array in svg_codec if bridgeThickness ratio is 1.0 _speed
-# maybe add option of number to ruler triangles
-# maybe make rulers on behold, maybe behold axis rulings
-# replace boolean.xml with demispool.xml
-# add polish, has perimeter, has cut first layer (False)
-# stretch single isLoop
-#
 # documentation
-# wikifier for outset+, documentation
-# chop add extra layers documentation
-# coil documentation
-# winding documentation
-# stretch cross documentation
-# clip 'Connect Loops' documentation
-# coil, cleave documentation
-# inset loop order documentation
-# widen documentation
-# raft infill overhang.. values should be halved announce
+# write/send announce, raft infill overhang.. values should be halved, raft in general has been changed, chamber announce, stretch cross, clip connect & extrusion to perimeter, dimension announce
 # update wiki how to page
-# move alterations and profiles to top level, announce along with spiral changing clip and stretch changing
 #
 #
 #
 #
-# split or hollow or something + tab separated equation + outputComplex = None & outputComplexes = None
-# veer in splodge
+# search page, search items, search links, choice entry field
+# add label separators
+# in dimension check for flow rate
+# remove comments from clip
+# remove cool set at end of layer
+# save bug when switching from profile to profile
+# check for last existing then remove unneeded fill code from euclidean
+# save just before printing
+# remove pointer from skeinview when getting a selected line
+# create skeinforge_profile, skeinforge_help, etc..
 # make frame for plugin groups, add plugin help menu, add craft below menu
-# maybe add connecting line in display line
-# maybe set addedLocation in distanceFeedRate after arc move
+# maybe measuring rod
+# comb simplify path, option of only combing around inside loops
+# veer
+# add hook _extrusion
+ # implement acceleration & collinear removal in viewers _extrusion
+# add polish, has perimeter, has cut first layer (False)
+# probably not set addedLocation in distanceFeedRate after arc move
 # maybe horizontal bridging and/or check to see if the ends are standing on anything
 # maybe add cached zones on first carving
 # thin self? check when removing intersecting paths in inset
-# add hook _extrusion
 # maybe later remove isPerimeterPathInSurroundLoops, once there are no weird fill bugs, also change getHorizontalSegmentListsFromLoopLists
- # implement acceleration & collinear removal in viewers _extrusion
 # save all analyze viewers of the same name except itself, update help menu self.wikiManualPrimary.setUpdateFunction
 # check alterations folder first, if there is something copy it to the home directory, if not check the home directory
-# raft to temperature, raft
+# move alterations and profiles to top level
 #
 #
 #
-# maybe raft follow outline _extrusion
-# handle equation _extrusion
 # help primary menu item refresh
 # integral thin width _extrusion
 # xml & svg more forgiving, svg make defaults for layerThickness, maxZ, minZ, add layer z to svg_template, make the slider on the template track even when mouse is outside
-# layer color, for multilayer start _extrusion
+# layer color, for multilayer start http://reprap.org/pub/Main/MultipleMaterialsFiles/legend.xml _extrusion
 # option of surrounding lines in display
-# add support on empty layers only option
+# maybe add connecting line in display line
+# maybe check inset loops to see if they have are smaller, but this would be slow
 # maybe status bar
+# maybe measurement ruler mouse tool
 # search rss from blogs, add search links for common materials, combine created on or progress bar with searchable help
 #boundaries, center radius z bottom top, circular or rectangular, polygon, put cool minimum radius orbits within boundaries
 # move & rotate model
@@ -251,7 +245,6 @@ __license__ = "GPL 3.0"
 #maybe use 5x5 radius search in circle node
 #maybe add layer updates in behold, skeinview and maybe others
 #lathe winding, extrusion and cutting; synonym for rotation or turning, loop angle
-#add Ddistance option in preface
 # maybe split into source code and documentation sections
 # transform plugins, start with sarrus http://www.thingiverse.com/thing:1425
 # maybe make setting backups
@@ -266,6 +259,7 @@ __license__ = "GPL 3.0"
 #transform
 #extrude loops I guess make circles? and/or run along sparse infill
 #custom inclined plane, inclined plane from model, screw, fillet travel as well maybe
+# probably not stretch single isLoop
 #maybe much afterwards make congajure multistep view
 #maybe stripe although model colors alone can handle it
 #stretch fiber around shape, maybe modify winding for asymmetric shapes
@@ -275,11 +269,7 @@ __license__ = "GPL 3.0"
 #angle shape for overhang extrusions
 # maybe double height shells option _extrusion
 #maybe m111? countdown
-#maybe option of using G0 when extruder is off
-#maybe variable flowrate for base: http://dev.forums.reprap.org/read.php?12,27293,27293#msg-27293
 #make stl instead of essentially gts the default format
-#maybe split preface into preface and extrusion distance
-#def getGNUTranslatorGcodeFileTypeTuples() to include .bfb means making different extensions for unfold and rapman, lower priority since now rapman can handle gcodes
 #common tool
 #first time tool tip
 #individual tool tip to place in text
@@ -289,14 +279,16 @@ __license__ = "GPL 3.0"
 # maybe cross hatch support polishing???
 # maybe print svg view from current layer or zero layer in single view
 # maybe check if tower is picking the nearest island
-# maybe isometric svg option
 # maybe combine skein classes in fillet
+# maybe isometric svg option
 
 #Manual
 #10,990
 #11,1776
 #12,3304
-#1,4960, 85 jan7, 86jan11, 87 jan13,
+#1,4960
+#2, 7077
+#85 jan7, 86jan11, 87 jan13, 88 jan15, 91 jan21, 92 jan23, 95 jan30, 98 feb6
 #make one piece electromagnet spool
 #stepper rotor with ceramic disk magnet in middle, electromagnet with long thin spool line?
 #stepper motor
@@ -323,8 +315,8 @@ __license__ = "GPL 3.0"
 # third, a routine to detect the largest face and orient the part accordingly. Mat http://reprap.kumy.net/
 # concept, three perpendicular slices to get display spheres
 # extend lines around short segment after cross hatched boolean
-# concept, teslocracy; donation, postponement, rotate ad network, probably not gutenpedia
-# concept, go from vertex to two orthogonal edges, then from edges to each other, if not to a common point, then simplify polygons by removing points which do not change the area much
+# concept, teslocracy; donation, postponement, rotate ad network, probably not gutenpedia, cached search options
+# concept, join cross slices, go from vertex to two orthogonal edges, then from edges to each other, if not to a common point, then simplify polygons by removing points which do not change the area much
 # concept, each node is fourfold, use sorted intersectionindexes to find close, connect each double sided edge
 # concept, in file, store polygon mesh and centers
 # concept, display spheres or polygons would have original triangle for work plane
@@ -335,6 +327,7 @@ __license__ = "GPL 3.0"
 # concept, new links to archi, import links to archi and adds skeinforge tool menu item, back on skeinforge named execute tool is added
 # concept, trnsnt
 # concept, inscribed key silencer
+# concept, spreadsheet to python and/or javascript
 # concept, blog, frequent updates, mix associated news
 
 def addAroundGridPoint( arounds, gridPoint, gridPointInsetX, gridPointInsetY, gridPoints, gridSearchRadius, isBothOrNone, isDoubleJunction, isJunctionWide, paths, pixelTable, width ):
@@ -509,10 +502,10 @@ def comparePointIndexDescending( self, other ):
 		return 1
 	return 0
 
-def createExtraFillLoops( radius, surroundingLoop ):
+def createExtraFillLoops( radius, shouldExtraLoopsBeAdded, surroundingLoop ):
 	"Create extra fill loops."
 	for innerSurrounding in surroundingLoop.innerSurroundings:
-		createFillForSurroundings( radius, innerSurrounding.innerSurroundings )
+		createFillForSurroundings( radius, shouldExtraLoopsBeAdded, innerSurrounding.innerSurroundings )
 	outsides = []
 	insides = euclidean.getInsidesAddToOutsides( surroundingLoop.getFillLoops(), outsides )
 	allFillLoops = []
@@ -520,12 +513,15 @@ def createExtraFillLoops( radius, surroundingLoop ):
 		transferredLoops = euclidean.getTransferredPaths( insides, outside )
 		allFillLoops += getExtraFillLoops( transferredLoops, outside, radius )
 	surroundingLoop.lastFillLoops = allFillLoops
-	surroundingLoop.extraLoops += allFillLoops
+	if shouldExtraLoopsBeAdded:
+		surroundingLoop.extraLoops += allFillLoops
+	if len( allFillLoops ) > 0:
+		surroundingLoop.lastExistingFillLoops = allFillLoops
 
-def createFillForSurroundings( radius, surroundingLoops ):
+def createFillForSurroundings( radius, shouldExtraLoopsBeAdded, surroundingLoops ):
 	"Create extra fill loops for surrounding loops."
 	for surroundingLoop in surroundingLoops:
-		createExtraFillLoops( radius, surroundingLoop )
+		createExtraFillLoops( radius, shouldExtraLoopsBeAdded, surroundingLoop )
 
 def getAdditionalLength( path, point, pointIndex ):
 	"Get the additional length added by inserting a point into a path."
@@ -535,12 +531,12 @@ def getAdditionalLength( path, point, pointIndex ):
 		return abs( point - path[ - 1 ] )
 	return abs( point - path[ pointIndex - 1 ] ) + abs( point - path[ pointIndex ] ) - abs( path[ pointIndex ] - path[ pointIndex - 1 ] )
 
-def getCraftedText( fileName, text = '', fillRepository = None ):
-	"Fill the inset file or text."
-	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, text ), fillRepository )
+def getCraftedText( fileName, gcodeText = '', fillRepository = None ):
+	"Fill the inset file or gcode text."
+	return getCraftedTextFromText( gcodec.getTextIfEmpty( fileName, gcodeText ), fillRepository )
 
 def getCraftedTextFromText( gcodeText, fillRepository = None ):
-	"Fill the inset text.self."
+	"Fill the inset gcode text."
 	if gcodec.isProcedureDoneOrFileIsEmpty( gcodeText, 'fill' ):
 		return gcodeText
 	if fillRepository == None:
@@ -563,7 +559,7 @@ def getClosestOppositeIntersectionPaths( yIntersectionPaths ):
 
 def getExtraFillLoops( insideLoops, outsideLoop, radius ):
 	"Get extra loops between inside and outside loops."
-	greaterThanRadius = 1.4 * radius
+	greaterThanRadius = 1.4 * radius # later 1.01 * radius
 	extraFillLoops = []
 	points = intercircle.getPointsFromLoops( insideLoops + [ outsideLoop ], greaterThanRadius )
 	centers = intercircle.getCentersFromPoints( points, greaterThanRadius )
@@ -577,20 +573,6 @@ def getExtraFillLoops( insideLoops, outsideLoop, radius ):
 						inset.reverse()
 						extraFillLoops.append( inset )
 	return extraFillLoops
-
-def getIntersectionOfXIntersectionIndexes( totalSolidSurfaceThickness, xIntersectionIndexList ):
-	"Get x intersections from surrounding layers."
-	xIntersectionList = []
-	solidTable = {}
-	solid = False
-	xIntersectionIndexList.sort()
-	for xIntersectionIndex in xIntersectionIndexList:
-		euclidean.toggleHashtable( solidTable, xIntersectionIndex.index, "" )
-		oldSolid = solid
-		solid = len( solidTable ) >= totalSolidSurfaceThickness
-		if oldSolid != solid:
-			xIntersectionList.append( xIntersectionIndex.x )
-	return xIntersectionList
 
 def getKeyIsInPixelTableAddValue( key, pathIndexTable, pixelTable ):
 	"Determine if the key is in the pixel table, and if it is and if the value is not None add it to the path index table."
@@ -808,12 +790,12 @@ def isPathAlwaysOutsideLoops( loops, path ):
 				return False
 	return True
 
-def isPerimeterPathInSurroundLoops( surroundingLoops ):
-	"Determine if there is a perimeter path in the surrounding loops."
-	for surroundingLoop in surroundingLoops:
-		if len( surroundingLoop.perimeterPaths ) > 0:
-			return True
-	return False
+#def isPerimeterPathInSurroundLoops( surroundingLoops ):
+#	"Determine if there is a perimeter path in the surrounding loops."
+#	for surroundingLoop in surroundingLoops:
+#		if len( surroundingLoop.perimeterPaths ) > 0:
+#			return True
+#	return False
 
 def isPointAddedAroundClosest( aroundPixelTable, layerExtrusionWidth, paths, removedEndpointPoint, width ):
 	"Add the closest removed endpoint to the path, with minimal twisting."
@@ -1028,7 +1010,7 @@ class FillSkein:
 		alreadyFilledArounds = []
 		aroundPixelTable = {}
 		arounds = []
-		halfWidth = self.halfPerimeterWidth
+		betweenWidth = self.betweenWidth
 		self.layerExtrusionWidth = self.infillWidth
 		layerFillInset = self.fillInset
 		rotatedLayer = self.rotatedLayers[ layerIndex ]
@@ -1051,7 +1033,7 @@ class FillSkein:
 				extraShells = self.fillRepository.extraShellsBase.value
 		if rotatedLayer.rotation != None:
 			extraShells = 0
-			halfWidth *= self.bridgeWidthMultiplier
+			betweenWidth *= self.bridgeWidthMultiplier
 			self.layerExtrusionWidth = self.infillWidth * self.bridgeWidthMultiplier
 			layerFillInset = self.fillInset * self.bridgeWidthMultiplier
 			self.distanceFeedRate.addLine( '(<bridgeRotation> %s )' % rotatedLayer.rotation )
@@ -1072,17 +1054,16 @@ class FillSkein:
 			else:
 				self.isJunctionWide = False
 		rotatedExtruderLoops = []
+#		for surroundingLoop in rotatedLayer.surroundingLoops:
+#			surroundingLoop.fillBoundaries = intercircle.getInsetLoopsFromLoop( betweenWidth, surroundingLoop.boundary )
+#			surroundingLoop.lastExistingFillLoops = surroundingLoop.fillBoundaries
 		surroundingLoops = euclidean.getOrderedSurroundingLoops( self.layerExtrusionWidth, rotatedLayer.surroundingLoops )
-		if isPerimeterPathInSurroundLoops( surroundingLoops ):
-			extraShells = 0
+#		if isPerimeterPathInSurroundLoops( surroundingLoops ):
+#			extraShells = 0
+		createFillForSurroundings( betweenWidth, False, surroundingLoops )
 		for extraShellIndex in xrange( extraShells ):
-			radius = self.layerExtrusionWidth
-			if extraShellIndex == 0:
-				radius += halfWidth
-			createFillForSurroundings( radius, surroundingLoops )
+			createFillForSurroundings( self.layerExtrusionWidth, True, surroundingLoops )
 		fillLoops = euclidean.getFillOfSurroundings( surroundingLoops )
-		if extraShells == 0:
-			fillLoops = intercircle.getInsetSeparateLoopsFromLoops( halfWidth, fillLoops )
 		slightlyGreaterThanFill = 1.01 * layerFillInset
 		for loop in fillLoops:
 			alreadyFilledLoop = []
@@ -1111,7 +1092,7 @@ class FillSkein:
 			for surroundingIndex in xrange( 1, self.solidSurfaceThickness + 1 ):
 				areaChange = max( areaChange, self.getAreaChange( area, layerIndex - surroundingIndex ) )
 				areaChange = max( areaChange, self.getAreaChange( area, layerIndex + surroundingIndex ) )
-			if areaChange < 2.0 or self.solidSurfaceThickness == 0:
+			if areaChange < 0.5 or self.solidSurfaceThickness == 0:
 				if self.fillRepository.infillInteriorDensityOverExteriorDensity.value <= 0.0:
 					self.addThreadsBridgeLayer( rotatedLayer, surroundingLoops )
 				self.layerExtrusionWidth /= self.fillRepository.infillInteriorDensityOverExteriorDensity.value
@@ -1128,7 +1109,7 @@ class FillSkein:
 			self.frontOverWidth = euclidean.getFrontOverWidthAddXListYList( front, surroundingCarves, numberOfLines, xIntersectionIndexLists, self.layerExtrusionWidth, self.yList )
 			for fillLine in xrange( len( self.horizontalSegmentLists ) ):
 				xIntersectionIndexList = xIntersectionIndexLists[ fillLine ]
-				surroundingXIntersections = getIntersectionOfXIntersectionIndexes( self.doubleSolidSurfaceThickness, xIntersectionIndexList )
+				surroundingXIntersections = euclidean.getIntersectionOfXIntersectionIndexes( self.doubleSolidSurfaceThickness, xIntersectionIndexList )
 				self.surroundingXIntersectionLists.append( surroundingXIntersections )
 				addSparseEndpoints( doubleExtrusionWidth, endpoints, fillLine, self.horizontalSegmentLists, layerInfillSolidity, removedEndpoints, self.solidSurfaceThickness, surroundingXIntersections )
 		else:
@@ -1256,7 +1237,7 @@ class FillSkein:
 	def getAreaChange( self, area, layerIndex ):
 		"Get the difference between the area of the carve at the layer index and the given area."
 		layerArea = self.getCarveArea( layerIndex )
-		return max( area, layerArea ) / min( area, layerArea ) - 1.0
+		return 1.0 - min( area, layerArea ) / max( area, layerArea )
 
 	def getCraftedGcode( self, fillRepository, gcodeText ):
 		"Parse gcode text and store the bevel gcode."
@@ -1275,8 +1256,15 @@ class FillSkein:
 			self.threadSequence = [ 'perimeter', 'infill', 'loops' ]
 		if fillRepository.threadSequencePerimeterLoops.value:
 			self.threadSequence = [ 'perimeter', 'loops', 'infill' ]
+		if self.fillRepository.infillPerimeterOverlap.value > 0.7:
+			print( '' )
+			print( '!!! WARNING !!!' )
+			print( '"Infill Perimeter Overlap" is greater than 0.7, which may create problems with the infill, like threads going through empty space.' )
+			print( 'If you want to stretch the infill a lot, set "Path Stretch over Perimeter Width" in stretch to a high value instead of setting "Infill Perimeter Overlap" to a high value.' )
+			print( '' )
 		self.parseInitialization()
-		self.fillInset = self.halfPerimeterWidth + 0.5 * self.infillWidth - self.infillWidth * self.fillRepository.infillPerimeterOverlap.value
+		self.betweenWidth = self.perimeterWidth - 0.5 * self.infillWidth
+		self.fillInset = self.infillWidth - self.infillWidth * self.fillRepository.infillPerimeterOverlap.value
 		if self.fillRepository.infillInteriorDensityOverExteriorDensity.value > 0:
 			self.interiorExtrusionWidth /= self.fillRepository.infillInteriorDensityOverExteriorDensity.value
 		self.infillSolidity = fillRepository.infillSolidity.value
@@ -1407,7 +1395,6 @@ class FillSkein:
 			self.distanceFeedRate.parseSplitLine( firstWord, splitLine )
 			if firstWord == '(<perimeterWidth>':
 				self.perimeterWidth = float( splitLine[ 1 ] )
-				self.halfPerimeterWidth = 0.5 * self.perimeterWidth
 				threadSequenceString = ' '.join( self.threadSequence )
 				self.distanceFeedRate.addTagBracketedLine( 'threadSequenceString', threadSequenceString )
 			elif firstWord == '(</extruderInitialization>)':

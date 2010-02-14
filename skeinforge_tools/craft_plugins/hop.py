@@ -2,6 +2,9 @@
 This page is in the table of contents.
 Hop is a script to raise the extruder when it is not extruding.
 
+The hop manual page is at:
+http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Hop
+
 ==Operation==
 The default 'Activate Hop' checkbox is off.  It is off because Vik and Nophead found better results without hopping.  When it is on, the functions described below will work, when it is off, the functions will not be called.
 
@@ -100,7 +103,8 @@ class HopRepository:
 	def __init__( self ):
 		"Set the default settings, execute title & settings fileName."
 		profile.addListsToCraftTypeRepository( 'skeinforge_tools.craft_plugins.hop.html', self )
-		self.fileNameInput = settings.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File to be Hopped', self, '' )
+		self.fileNameInput = settings.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File for Hop', self, '' )
+		self.openWikiManualHelpPage = settings.HelpPage().getOpenFromAbsolute( 'http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Hop' )
 		self.activateHop = settings.BooleanSetting().getFromValue( 'Activate Hop', self, False )
 		self.hopOverLayerThickness = settings.FloatSpin().getFromValue( 0.5, 'Hop Over Layer Thickness (ratio):', self, 1.5, 1.0 )
 		self.minimumHopAngle = settings.FloatSpin().getFromValue( 20.0, 'Minimum Hop Angle (degrees):', self, 60.0, 30.0 )

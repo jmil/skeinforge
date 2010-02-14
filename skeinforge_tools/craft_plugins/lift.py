@@ -144,6 +144,7 @@ class LiftSkein:
 		if self.layerStep == None:
 			self.layerStep = self.layerThickness
 		self.cuttingLift = self.layerStep * liftRepository.cuttingLiftOverLayerStep.value
+		self.setMaximumZ()
 		self.travelZ = self.maximumZ + 0.5 * self.layerStep + liftRepository.clearanceAboveTop.value
 		for line in self.lines[ self.lineIndex : ]:
 			self.parseLine( line )
@@ -195,6 +196,17 @@ class LiftSkein:
 		elif firstWord == 'M103':
 			self.extruderActive = False
 		self.distanceFeedRate.addLine( line )
+
+	def setMaximumZ( self ):
+		"Set maximum  z."
+		localOldLocation = None
+		for line in self.lines[ self.lineIndex : ]:
+			splitLine = gcodec.getSplitLineBeforeBracketSemicolon( line )
+			firstWord = gcodec.getFirstWord( splitLine )
+			if firstWord == 'G1':
+				location = gcodec.getLocationFromSplitLine( localOldLocation, splitLine )
+				self.maximumZ = max( self.maximumZ, location.z )
+				localOldLocation = location
 
 
 def main():

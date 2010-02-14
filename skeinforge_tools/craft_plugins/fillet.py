@@ -345,6 +345,8 @@ class ArcPointSkein( ArcSegmentSkein ):
 	"A class to arc point a skein of extrusions."
 	def addArc( self, afterCenterDifferenceAngle, afterPoint, beforeCenterSegment, beforePoint, center ):
 		"Add an arc point to the filleted skein."
+		if afterCenterDifferenceAngle == 0.0:
+			return
 		afterPointMinusBefore = afterPoint - beforePoint
 		centerMinusBefore = center - beforePoint
 		firstWord = 'G3'
@@ -353,9 +355,17 @@ class ArcPointSkein( ArcSegmentSkein ):
 		centerMinusBeforeComplex = centerMinusBefore.dropAxis( 2 )
 		if abs( centerMinusBeforeComplex ) <= 0.0:
 			return
-		self.distanceFeedRate.output.write( self.distanceFeedRate.getFirstWordMovement( firstWord, afterPointMinusBefore ) )
-		self.distanceFeedRate.output.write( self.getRelativeCenter( centerMinusBeforeComplex ) )
-		self.distanceFeedRate.addLine( self.distanceFeedRate.getArcFeedRateString( afterCenterDifferenceAngle, afterPointMinusBefore, centerMinusBefore, self.getCornerFeedRate() ) )
+		deltaZ = abs( afterPointMinusBefore.z )
+		radius = abs( centerMinusBefore )
+		arcDistanceZ = complex( abs( afterCenterDifferenceAngle ) * radius, afterPointMinusBefore.z )
+		distance = abs( arcDistanceZ )
+		if distance <= 0.0:
+			return
+		line = self.distanceFeedRate.getFirstWordMovement( firstWord, afterPointMinusBefore ) + self.getRelativeCenter( centerMinusBeforeComplex )
+		cornerFeedRate = self.getCornerFeedRate()
+		if cornerFeedRate != None:
+			line += ' F' + self.distanceFeedRate.getRounded( self.distanceFeedRate.getZLimitedFeedRate( deltaZ, distance, cornerFeedRate ) )
+		self.distanceFeedRate.addLine( line )
 
 	def getRelativeCenter( self, centerMinusBeforeComplex ):
 		"Get the relative center."

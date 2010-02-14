@@ -2,6 +2,9 @@
 This page is in the table of contents.
 Oozebane is a script to turn off the extruder before the end of a thread and turn it on before the beginning.
 
+The oozebane manual page is at:
+http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Oozebane
+
 After oozebane turns the extruder on, it slows the feed rate down where the thread starts.  Then it speeds it up in steps so in theory the thread will remain at roughly the same thickness from the beginning.
 
 ==Operation==
@@ -133,6 +136,7 @@ class OozebaneRepository:
 		"Set the default settings, execute title & settings fileName."
 		profile.addListsToCraftTypeRepository( 'skeinforge_tools.craft_plugins.oozebane.html', self )
 		self.fileNameInput = settings.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File for Oozebane', self, '' )
+		self.openWikiManualHelpPage = settings.HelpPage().getOpenFromAbsolute( 'http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Oozebane' )
 		self.activateOozebane = settings.BooleanSetting().getFromValue( 'Activate Oozebane', self, False )
 		self.afterStartupDistance = settings.FloatSpin().getFromValue( 0.7, 'After Startup Distance (millimeters):', self, 1.7, 1.2 )
 		self.earlyShutdownDistance = settings.FloatSpin().getFromValue( 0.7, 'Early Shutdown Distance (millimeters):', self, 1.7, 1.2 )

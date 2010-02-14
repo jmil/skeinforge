@@ -7,24 +7,6 @@ The preface manual page is at:
 http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Preface
 
 ==Settings==
-===Extrusion Distance Format Choice===
-Preface also gives the option of using Adrian's extruder distance E value in the gcode lines, as described at:
-http://blog.reprap.org/2009/05/4d-printing.html
-
-and in Erik de Bruijn's conversion script page at:
-http://objects.reprap.org/wiki/3D-to-5D-Gcode.php
-
-Default choice is 'Do Not Add Extrusion Distance'.
-
-====Do Not Add Extrusion Distance====
-When selected, no E value will be added.
-
-====Extrusion Distance Absolute====
-When selected, the extrusion distance output will be the total extrusion distance to that gcode line.
-
-====Extrusion Distance Relative====
-When selected, the extrusion distance output will be the extrusion distance from the last gcode line.
-
 ===Meta===
 Default is empty.
 
@@ -161,11 +143,6 @@ class PrefaceRepository:
 		profile.addListsToCraftTypeRepository( 'skeinforge_tools.craft_plugins.preface.html', self )
 		self.fileNameInput = settings.FileNameInput().getFromFileName( interpret.getGNUTranslatorGcodeFileTypeTuples(), 'Open File for Preface', self, '' )
 		self.openWikiManualHelpPage = settings.HelpPage().getOpenFromAbsolute( 'http://www.bitsfrombytes.com/wiki/index.php?title=Skeinforge_Preface' )
-		extrusionDistanceFormatLatentStringVar = settings.LatentStringVar()
-		self.extrusionDistanceFormatChoiceLabel = settings.LabelDisplay().getFromName( 'Extrusion Distance Format Choice: ', self )
-		self.extrusionDistanceDoNotAddSetting = settings.Radio().getFromRadio( extrusionDistanceFormatLatentStringVar, 'Do Not Add Extrusion Distance', self, True )
-		self.extrusionDistanceAbsoluteSetting = settings.Radio().getFromRadio( extrusionDistanceFormatLatentStringVar, 'Extrusion Distance Absolute', self, False )
-		self.extrusionDistanceRelativeSetting = settings.Radio().getFromRadio( extrusionDistanceFormatLatentStringVar, 'Extrusion Distance Relative', self, False )
 		self.meta = settings.StringSetting().getFromValue( 'Meta:', self, '' )
 		settings.LabelDisplay().getFromName( '- Name of Alteration Files -', self )
 		self.nameOfEndFile = settings.StringSetting().getFromValue( 'Name of End File:', self, 'end.gcode' )
@@ -221,12 +198,6 @@ class PrefaceSkein:
 		craftTypeName = profile.getCraftTypeName()
 		self.distanceFeedRate.addTagBracketedLine( 'craftTypeName', craftTypeName )
 		self.distanceFeedRate.addTagBracketedLine( 'decimalPlacesCarried', self.distanceFeedRate.decimalPlacesCarried )
-		if self.prefaceRepository.extrusionDistanceAbsoluteSetting.value:
-			self.distanceFeedRate.extrusionDistanceFormat = 'absolute'
-		if self.prefaceRepository.extrusionDistanceRelativeSetting.value:
-			self.distanceFeedRate.extrusionDistanceFormat = 'relative'
-		if self.distanceFeedRate.extrusionDistanceFormat != '':
-			self.distanceFeedRate.addTagBracketedLine( 'extrusionDistanceFormat', self.distanceFeedRate.extrusionDistanceFormat )
 		self.distanceFeedRate.addTagBracketedLine( 'layerThickness', self.distanceFeedRate.getRounded( self.layerThickness ) )
 		if self.prefaceRepository.meta.value:
 			self.distanceFeedRate.addTagBracketedLine( 'meta', self.prefaceRepository.meta.value )

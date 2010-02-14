@@ -112,16 +112,6 @@ def getCraftedTextFromText( gcodeText, repository = None ):
 		return gcodeText
 	return MillSkein().getCraftedGcode( gcodeText, repository )
 
-def getDiagonalFlippedLoops( loops ):
-	"Get loops flipped over the dialogonal, in other words with the x and y swapped."
-	diagonalFlippedLoops = []
-	for loop in loops:
-		diagonalFlippedLoop = []
-		diagonalFlippedLoops.append( diagonalFlippedLoop )
-		for point in loop:
-			diagonalFlippedLoop.append( complex( point.imag, point.real ) )
-	return diagonalFlippedLoops
-
 def getNewRepository():
 	"Get the repository constructor."
 	return MillRepository()
@@ -338,8 +328,8 @@ class MillSkein:
 			boundaryLayer.outerOutsetLoops = intercircle.getInsetSeparateLoopsFromLoops( - self.loopOuterOutset, boundaryLayer.loops )
 			boundaryLayer.innerHorizontalTable = self.getHorizontalXIntersectionsTable( boundaryLayer.innerOutsetLoops )
 			boundaryLayer.outerHorizontalTable = self.getHorizontalXIntersectionsTable( boundaryLayer.outerOutsetLoops )
-			boundaryLayer.innerVerticalTable = self.getHorizontalXIntersectionsTable( getDiagonalFlippedLoops( boundaryLayer.innerOutsetLoops ) )
-			boundaryLayer.outerVerticalTable = self.getHorizontalXIntersectionsTable( getDiagonalFlippedLoops( boundaryLayer.outerOutsetLoops ) )
+			boundaryLayer.innerVerticalTable = self.getHorizontalXIntersectionsTable( euclidean.getDiagonalFlippedLoops( boundaryLayer.innerOutsetLoops ) )
+			boundaryLayer.outerVerticalTable = self.getHorizontalXIntersectionsTable( euclidean.getDiagonalFlippedLoops( boundaryLayer.outerOutsetLoops ) )
 		for boundaryLayerIndex in xrange( len( self.boundaryLayers ) - 2, - 1, - 1 ):
 			boundaryLayer = self.boundaryLayers[ boundaryLayerIndex ]
 			boundaryLayerBelow = self.boundaryLayers[ boundaryLayerIndex + 1 ]

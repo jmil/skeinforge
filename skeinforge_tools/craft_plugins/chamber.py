@@ -12,12 +12,17 @@ The default 'Activate Chamber' checkbox is on.  When it is on, the functions des
 ===Bed Temperature===
 Default is 60C.
 
-Defines the print_bed temperature in Celcius by adding an M110 command.
+Defines the print_bed temperature in Celcius by adding an M115 command.
 
 ===Chamber Temperature===
 Default is 30C.
 
-Defines the chamber temperature in Celcius by adding an M111 command.
+Defines the chamber temperature in Celcius by adding an M116 command.
+
+===Holding Force===
+Default is zero.
+
+Defines the holding force of a mechanism, like a vacuum table or electromagnet, to hold the bed surface or object, by adding an M117 command.
 
 ==Heated Beds==
 
@@ -35,6 +40,10 @@ A heated copper build plate by Domingo:
 http://casainho-emcrepstrap.blogspot.com/
 
 with articles at:
+http://casainho-emcrepstrap.blogspot.com/2010/01/first-time-with-pla-testing-it-also-on.html
+http://casainho-emcrepstrap.blogspot.com/2010/01/call-for-helpideas-to-develop-heated.html
+http://casainho-emcrepstrap.blogspot.com/2010/01/new-heated-build-platform.html
+http://casainho-emcrepstrap.blogspot.com/2010/01/no-acrylic-and-instead-kapton-tape-on.html
 http://casainho-emcrepstrap.blogspot.com/2010/01/problems-with-heated-build-platform-and.html
 http://casainho-emcrepstrap.blogspot.com/2010/01/perfect-build-platform.html
 http://casainho-emcrepstrap.blogspot.com/2009/12/almost-no-warp.html
@@ -76,6 +85,7 @@ A resistor heated aluminum bed by Nophead:
 http://hydraraptor.blogspot.com
 
 with articles at:
+http://hydraraptor.blogspot.com/2010/01/will-it-stick.html
 http://hydraraptor.blogspot.com/2010/01/hot-metal-and-serendipity.html
 http://hydraraptor.blogspot.com/2010/01/new-year-new-plastic.html
 http://hydraraptor.blogspot.com/2010/01/hot-bed.html
@@ -85,7 +95,8 @@ http://hydraraptor.blogspot.com/2010/01/hot-bed.html
 A resistive wire heated plexiglass plate by prusajr:
 http://prusadjs.cz/
 
-with an article at:
+with articles at:
+http://prusadjs.cz/2010/01/heated-reprap-print-bed-mk2/
 http://prusadjs.cz/2009/11/look-ma-no-warping-heated-reprap-print-bed/
 
 ===Pumpernickel2===
@@ -197,6 +208,7 @@ class ChamberRepository:
 		self.activateChamber = settings.BooleanSetting().getFromValue( 'Activate Chamber:', self, True )
 		self.bedTemperature = settings.FloatSpin().getFromValue( 20.0, 'Bed Temperature (Celcius):', self, 90.0, 60.0 )
 		self.chamberTemperature = settings.FloatSpin().getFromValue( 20.0, 'Chamber Temperature (Celcius):', self, 90.0, 30.0 )
+		self.holdingForce = settings.FloatSpin().getFromValue( 0.0, 'Holding Force (float):', self, 100.0, 0.0 )
 		self.executeTitle = 'Chamber'
 
 	def execute( self ):
@@ -216,7 +228,7 @@ class ChamberSkein:
 
 	def addParameter( self, firstWord, parameter ):
 		"Add the parameter if it is at least minus three hundred."
-		self.distanceFeedRate.addLine( firstWord + ' S' + euclidean.getRoundedToThreePlaces( parameter ) ) # Set bed temperature.
+		self.distanceFeedRate.addLine( firstWord + ' S' + euclidean.getRoundedToThreePlaces( parameter ) )
 
 	def getCraftedGcode( self, gcodeText, chamberRepository ):
 		"Parse gcode text and store the chamber gcode."
@@ -247,8 +259,9 @@ class ChamberSkein:
 		firstWord = splitLine[ 0 ]
 		if firstWord == '(<extrusion>)':
 			self.distanceFeedRate.addLine( line )
-			self.addParameter( 'M110', self.chamberRepository.bedTemperature.value ) # Set bed temperature.
-			self.addParameter( 'M111', self.chamberRepository.chamberTemperature.value ) # Set chamber temperature.
+			self.addParameter( 'M115', self.chamberRepository.bedTemperature.value ) # Set bed temperature.
+			self.addParameter( 'M116', self.chamberRepository.chamberTemperature.value ) # Set chamber temperature.
+			self.addParameter( 'M117', self.chamberRepository.holdingForce.value ) # Set holding force.
 			return
 		self.distanceFeedRate.addLine( line )
 
